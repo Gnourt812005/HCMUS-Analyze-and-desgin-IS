@@ -19,7 +19,18 @@ rectangle "Quy trình đăng ký thuê phòng" {
 	UC_XemPhong ..> UC_DangKyThuePhong : <<extend>>
 }
 
+rectangle "Quy trình thuê phòng" {
+	usecase/ "Xác nhận thuê" as UC_XacNhanThue
+	usecase/ "Kiểm tra điều kiện thuê" as UC_KiemTraDieuKienThue
+	usecase/ "Thực hiện đặt cọc" as UC_ThucHienDatCoc
+
+	' Use Case Relationships
+	UC_XacNhanThue ..> UC_KiemTraDieuKienThue : <<include>>
+	UC_XacNhanThue ..> UC_ThucHienDatCoc : <<include>>
+}
+
 ' Actor - Main Use Cases Associations
-customer --> UC_DangKyThuePhong
+customer -- UC_DangKyThuePhong
+customer -- UC_XacNhanThue
 
 @enduml
