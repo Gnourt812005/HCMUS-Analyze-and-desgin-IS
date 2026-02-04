@@ -1,0 +1,19 @@
+@startuml Simple Business Use Case
+title Simple Business Use Case
+
+left to right direction
+
+actor Customer as customer
+
+' rectangle "Online Store" {
+	usecase "Place Order" as UC_Main
+	usecase "Apply Discount" as UC_Extend
+	usecase "Process Payment" as UC_Include
+' }
+
+customer --> UC_Main
+
+UC_Extend ..> UC_Main : <<extend>>
+UC_Main ..> UC_Include : <<include>>
+
+@enduml
