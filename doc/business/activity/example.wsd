@@ -1,0 +1,83 @@
+@startuml
+title Activity Diagram: Quy trình Trả phòng & Thanh lý Hợp đồng
+
+' --- CẤU HÌNH GIAO DIỆN (OPTIONAL) ---
+skinparam activity {
+    BackgroundColor LightSkyBlue
+    BorderColor RoyalBlue
+    ArrowColor DimGray
+}
+skinparam swimlane {
+    BorderColor RoyalBlue
+    TitleBackgroundColor LightSteelBlue
+}
+
+' --- KHAI BÁO SWIMLANES (CÁC LÀN BƠI) ---
+|#HoneyDew|Khách hàng|
+|#WhiteSmoke|Nhân viên Quản lý|
+|#AliceBlue|Nhân viên Kế toán|
+
+' --- BẮT ĐẦU QUY TRÌNH (INITIAL NODE) ---
+|Khách hàng|
+start
+:Gửi yêu cầu trả phòng;
+
+|Nhân viên Quản lý|
+:Tiếp nhận yêu cầu;
+:Kiểm tra hồ sơ hợp đồng;
+
+' --- SONG SONG (FORK): Tách ra 2 luồng làm cùng lúc ---
+fork
+    |Nhân viên Quản lý|
+    :Đến phòng kiểm tra thực tế;
+    
+    ' --- RẼ NHÁNH (DECISION): Kiểm tra hư hỏng ---
+    if (Có hư hại tài sản?) then (Có)
+        #Pink:Lập biên bản hư hỏng;
+        note right
+            Ghi rõ hạng mục
+            và mức bồi thường
+        end note
+    else (Không)
+        :Xác nhận tài sản nguyên vẹn;
+    endif
+
+fork again
+    |Nhân viên Kế toán|
+    :Chốt chỉ số Điện/Nước;
+    :Tính toán tiền dịch vụ chưa thanh toán;
+end fork
+
+' --- GOM LUỒNG (JOIN): Chờ cả 2 bên xong mới đi tiếp ---
+|Nhân viên Kế toán|
+:Tổng hợp công nợ cuối cùng;
+note left
+    Công thức:
+    Tiền cọc - (Tiền nợ + Bồi thường)
+end note
+
+' --- RẼ NHÁNH PHỨC TẠP (Logic hoàn tiền) ---
+if (Số dư > 0?) then (Khách được nhận lại)
+    :Lập phiếu chi hoàn cọc;
+    :Hoàn tiền thừa cho Khách;
+    
+    |Khách hàng|
+    :Nhận tiền hoàn lại;
+else (Khách phải đóng thêm)
+    |Nhân viên Kế toán|
+    :Lập phiếu thu phát sinh;
+    
+    |Khách hàng|
+    :Thanh toán số tiền thiếu;
+    
+    |Nhân viên Kế toán|
+    :Xác nhận thanh toán;
+endif
+
+' --- KẾT THÚC QUY TRÌNH (ACTIVITY FINAL) ---
+|Nhân viên Quản lý|
+:Thu hồi chìa khóa / Thẻ từ;
+:Cập nhật trạng thái phòng: "Trống";
+stop
+
+@enduml
