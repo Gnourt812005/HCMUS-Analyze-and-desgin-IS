@@ -1,0 +1,1 @@
+1. Install PlantUML VSCode extension for previewing the diagram (Alt + D to preview)
