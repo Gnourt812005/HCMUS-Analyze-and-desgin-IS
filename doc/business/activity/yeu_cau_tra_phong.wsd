@@ -1,5 +1,5 @@
 @startuml
-title Activity Diagram: Quy trình Trả phòng và Thanh lý Hợp đồng
+title Activity Diagram: Quy trình trả phòng và hoàn cọc
 
 ' General config
 skinparam activity {
