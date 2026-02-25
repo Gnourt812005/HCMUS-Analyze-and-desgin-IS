@@ -1,0 +1,130 @@
+@startuml Database_Refined
+
+' === CONFIGURATION FOR CLEAN LAYOUT ===
+skinparam linetype ortho
+skinparam nodesep 80
+skinparam ranksep 100
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam entity {
+    BackgroundColor #E8F5E9
+    BorderColor #2E7D32
+}
+
+' --- KHU VỰC CƠ SỞ VẬT CHẤT ---
+entity ky_tuc_xa {
+}
+
+entity phong {
+}
+
+entity giuong {
+}
+
+' [NEW] Quản lý tài sản trong phòng
+entity loai_vat_tu {
+    id
+    ten_vat_tu
+    don_gia_den_bu
+}
+
+entity vat_tu_theo_phong {
+    tinh_trang
+    soluong
+}
+
+' --- KHU VỰC CON NGƯỜI ---
+entity khach_hang {
+}
+
+entity nhan_vien {
+}
+
+entity contact {
+}
+
+' --- KHU VỰC NGHIỆP VỤ ---
+entity hop_dong {
+    id
+    ngay_tao
+    ngay_hieu_luc
+    ngay_het_han
+    trang_thai (Dang thue, Da thanh ly)
+}
+
+' Bảng trung gian để 1 HĐ thuê được nhiều giường
+entity chi_tiet_hop_dong { 
+    gia_thue_thuc_te
+}
+
+entity giay_dat_coc {
+}
+
+entity chi_tiet_dat_coc {
+    gia_dat_coc_thuc_te
+}
+
+' [NEW] Quản lý Điện nước hàng tháng
+entity chi_so_dien_nuoc {
+    id
+    thang_nam
+    chi_so_cu
+    chi_so_moi
+}
+
+entity loai_dich_vu {
+    (Dien, Nuoc, Gui xe)
+    don_gia
+}
+
+' --- KHU VỰC TÀI CHÍNH & PHÁP LÝ ---
+entity bien_ban {
+    id
+    loai_bien_ban (Ban giao / Thanh ly)
+    ngay_lap
+    ghi_chu_hu_hong
+}
+
+entity hoa_don {
+    id
+    loai_hoa_don
+    tong_tien
+    trang_thai_thanh_toan
+}
+
+' --- RELATIONSHIPS ---
+
+ky_tuc_xa ||..o{ phong
+phong ||..o{ giuong
+
+' Quan hệ tài sản
+phong ||..o{ vat_tu_theo_phong
+giuong ||..o{ vat_tu_theo_phong
+loai_vat_tu ||..o{ vat_tu_theo_phong
+
+' Quan hệ khách hàng
+khach_hang ||..o{ hop_dong
+khach_hang ||..o{ contact
+khach_hang ||..o{ giay_dat_coc
+
+' Quan hệ cọc
+giay_dat_coc ||..o{ chi_tiet_dat_coc
+giuong ||..o{ chi_tiet_dat_coc
+hop_dong |o..|| giay_dat_coc
+
+' Quan hệ hợp đồng
+hop_dong ||..o{ chi_tiet_hop_dong
+giuong ||..o{ chi_tiet_hop_dong
+
+' Quan hệ biên bản & Hóa đơn
+hop_dong ||..o{ bien_ban
+hop_dong ||..o{ hoa_don
+nhan_vien ||..o{ bien_ban
+nhan_vien ||..o{ hoa_don
+
+' Quan hệ điện nước
+phong ||..o{ chi_so_dien_nuoc
+chi_so_dien_nuoc }o..|| loai_dich_vu
+hoa_don ||..o{ chi_so_dien_nuoc : "Chi tiet tien dien nuoc"
+
+@enduml
