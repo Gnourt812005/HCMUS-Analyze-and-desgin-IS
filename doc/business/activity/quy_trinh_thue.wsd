@@ -1,0 +1,115 @@
+@startuml
+title Activity Diagram: Quy trình thuê phòng
+
+' --- CẤU HÌNH ---
+skinparam activity {
+    BackgroundColor LightSkyBlue
+    BorderColor RoyalBlue
+    ArrowColor DimGray
+}
+skinparam swimlane {
+    BorderColor RoyalBlue
+    TitleBackgroundColor LightSteelBlue
+}
+
+|#HoneyDew|Khách hàng|
+|#WhiteSmoke|Nhân viên Sale|
+|#AliceBlue|Quản lý|
+|#LavenderBlush|Kế toán|
+|#LightYellow|Hệ thống|
+
+|Khách hàng|
+start
+:Xác nhận muốn thuê;
+
+partition "Kiểm tra điều kiện thuê" {
+|Nhân viên Sale|
+:Rà soát thông tin khách thuê;
+
+if (Thông tin thỏa tiêu chí?) then (Không)
+    #Pink:Thông báo lý do không đạt;
+    stop
+else (Có)
+endif
+
+label lab_RecheckInfo
+
+:Liên hệ Quản lý kiểm tra tình trạng phòng/giường;
+
+|Quản lý|
+:Kiểm tra thực tế phòng/giường;
+:Phản hồi kết quả;
+
+|Nhân viên Sale|
+if (Phòng còn trống & chưa bị đặt cọc?) then (Không)
+    #Pink:Thông báo phòng không còn trống;
+    stop
+else (Có)
+endif
+}
+
+|Nhân viên Sale|
+:Trình bày điều kiện thuê + nội quy cho khách hàng;
+
+|Khách hàng|
+
+if (Đồng ý toàn bộ điều kiện?) then (Không)
+    if (Muốn điều chỉnh thông tin thuê?) then (Có)
+        goto lab_RecheckInfo
+    else (Từ chối)
+        #Pink:Thông báo từ chối cho thuê;
+        stop
+    endif
+endif
+
+partition "Thực hiện đặt cọc" {
+|Nhân viên Sale|
+:Chuyển thông tin cho Kế toán tính tiền cọc;
+
+|Kế toán|
+:Tính toán số tiền cọc;
+:Trả kết quả cho Sale;
+
+|Nhân viên Sale|
+:Gửi yêu cầu thanh toán + thông báo rõ mức cọc tương ứng với lựa chọn của khách hàng;
+:Hướng dẫn thông tin cần thiết để khách hàng thực hiện thanh toán;
+
+|Khách hàng|
+:Thực hiện thanh toán;
+
+|Nhân viên Sale|
+:Chờ minh chứng thanh toán (≤24h);
+
+if (Có người khác đặt cọc thành công) then (Có)
+    #Pink:Thông báo huỷ yêu cầu đặt cọc;
+    stop
+else (Không)
+endif
+
+|Nhân viên Sale|
+if (Nhận thanh toán hợp lệ trong 24h?) then (Không)
+    #Pink:Thông báo huỷ yêu cầu đặt cọc;
+    stop
+else (Có)
+    :Gửi minh chứng cho Quản lý;
+endif
+
+|Quản lý|
+:Đối chiếu thông tin giao dịch & xác nhận hợp lệ;
+
+|Nhân viên Sale|
+:Thông báo đặt cọc thành công cho khách hàng;
+:Thông báo thời hạn tối đa từ thời điểm đặt cọc thành công đến khi lập hợp đồng;
+}
+
+|Hệ thống|
+:Lưu thông tin đặt cọc và phòng/giường đã cọc sẽ không tiếp nhận đặt cọc từ khách hàng khác;
+
+|Nhân viên Sale|
+:Thống nhất thời gian thực hiện thủ tục nhận phòng với khách hàng;
+
+|Khách hàng|
+:Xác nhận thời gian nhận phòng;
+
+stop
+@enduml
