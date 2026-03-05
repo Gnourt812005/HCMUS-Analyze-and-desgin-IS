@@ -13,9 +13,8 @@ skinparam swimlane {
 
 ' Swimlanes
 |#LightBlue|Khách hàng|
-|#OldLace|Nhân viên Sale|
-|#LightBlue|Nhân viên Quản lý|
-|#OldLace|Nhân viên Kế toán|
+|#OldLace|Nhân viên Quản lý|
+|#LightBlue|Nhân viên Kế toán|
 
 ' Start
 |Khách hàng|
