@@ -1,0 +1,50 @@
+@startuml
+title Activity Diagram: Tính khoản hoàn cọc và khấu trừ
+
+' General config
+skinparam activity {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+skinparam swimlane {
+    BorderColor Black
+}
+
+' Swimlanes
+|#LightBlue|Nhân viên Quản lý|
+|#OldLace|Nhân viên Kế toán|
+
+' Start
+|Nhân viên Quản lý|
+start
+repeat
+:Kiểm tra tình trạng phòng/giường thực tế;
+:Đối chiếu thông tin hợp đồng và nghĩa vụ;
+note right
+  Hợp đồng (đọc)
+  Phiếu kiểm tra phòng (ghi)
+end note
+
+|Nhân viên Kế toán|
+:Xác định mức hoàn cọc cơ bản;
+note left
+  - Chưa ký hợp đồng: hoàn 80%
+  - < 6 tháng: hoàn 50%
+  - >= 6 tháng: hoàn 70%
+  - Hết hạn hợp đồng: hoàn 100%
+
+  Phiếu đặt cọc (đọc)
+end note
+
+:Khấu trừ chi phí phát sinh;
+note right
+  Phiếu kiểm tra phòng (đọc)
+end note
+
+repeat while (Có sai sót kiểm tra?) is (Có)
+    |Nhân viên Quản lý|
+->Không;
+stop
+
+@enduml
