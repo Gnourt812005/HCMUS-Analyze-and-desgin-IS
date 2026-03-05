@@ -1,0 +1,103 @@
+@startuml
+title Activity Diagram: Yêu cầu trả phòng
+
+' General config
+skinparam activity {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+skinparam swimlane {
+    BorderColor Black
+}
+
+' Swimlanes
+|#LightBlue|Khách hàng|
+|#OldLace|Nhân viên Sale|
+|#LightBlue|Nhân viên Quản lý|
+|#OldLace|Nhân viên Kế toán|
+
+' Start
+|Khách hàng|
+start
+
+|Nhân viên Kế toán|
+:Lập bảng đối soát/phiếu thanh toán;
+note right
+    Bảng đối soát (ghi)
+    Phiếu thanh toán (ghi)
+end note
+
+|Nhân viên Quản lý|
+:Thông báo khoản hoàn cọc \nvà khấu trừ cho khách hàng;
+note right
+    Bảng đối soát (đọc)
+    Phiếu thanh toán (đọc)
+end note
+
+|Khách hàng|
+if (Đồng ý bảng đối soát?) then (Không)
+    |Nhân viên Quản lý|
+    :Kiểm tra lại phòng và yêu cầu \nKế toán rà soát lại các khoản tiền;
+    :Giải thích rõ ràng cho khách;
+    if (Khách vẫn không đồng ý?) then (Có)
+        :Lập biên bản tranh chấp \nvà đưa vào danh sách đen;
+        stop
+    else (Đồng ý)
+    endif
+else (Có)
+endif
+
+|Nhân viên Quản lý|
+:Cung cấp biên bản trả phòng \nvà thanh lý hợp đồng;
+note right
+    Biên bản trả phòng (ghi)
+end note
+
+|Khách hàng|
+:Kiểm tra biên bản trả phòng;
+note right
+    Biên bản trả phòng (đọc)
+end note
+
+:Ký biên bản trả phòng \nvà thanh lý hợp đồng;
+note right
+    Biên bản trả phòng (ghi)
+end note
+
+|Nhân viên Kế toán|
+if (Tổng khấu trừ > Tiền cọc?) then (Lớn hơn - Khách đóng thêm)
+    :Yêu cầu khách đóng thêm tiền;
+    
+    |Khách hàng|
+    if (Đồng ý đóng thêm?) then (Từ chối)
+        |Nhân viên Quản lý|
+        :Xử lý theo quy định vi phạm hợp đồng;
+        stop
+    else (Đồng ý)
+        |Khách hàng|
+        :Nộp thêm tiền mặt/chuyển khoản;
+    endif
+
+else (Nhỏ hơn hoặc bằng - Hoàn cọc)
+    |Nhân viên Kế toán|
+    :Thống nhất phương thức hoàn cọc;
+    
+    if (Bằng tiền mặt?) then (Có)
+        if (Quỹ đủ tiền mặt không?) then (Không đủ)
+            :Hẹn ngày hoàn tiền;
+            stop
+        else (Đủ)
+            :Hoàn bằng tiền mặt;
+        endif
+    else (Chuyển khoản)
+        if (Cung cấp sai STK?) then (Có)
+            :Liên hệ khách nhận lại STK đúng;
+        else (Không)
+        endif
+        :Hoàn tiền qua chuyển khoản;
+    endif
+endif
+stop
+
+@enduml
