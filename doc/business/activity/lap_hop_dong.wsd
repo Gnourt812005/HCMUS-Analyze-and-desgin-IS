@@ -1,0 +1,77 @@
+@startuml
+title Activity Diagram: Lập hợp đồng
+
+' --- CẤU HÌNH GIAO DIỆN ---
+skinparam activity {
+    BackgroundColor LightSkyBlue
+    BorderColor RoyalBlue
+    ArrowColor DimGray
+}
+skinparam swimlane {
+    BorderColor RoyalBlue
+    TitleBackgroundColor LightSteelBlue
+}
+' --- KHAI BÁO SWIMLANES (CÁC LÀN BƠI) ---
+
+|#HoneyDew|Khách hàng|
+|#AliceBlue|Nhân viên Phụ trách|
+|#OldLace|Nhân viên Kế toán|
+
+
+|Nhân viên Phụ trách|
+start
+
+:Lập hợp đồng;
+
+note right
+    Hợp đồng thuê (ghi)
+end note
+
+|Khách hàng|
+:Kiểm tra thông tin và điều khoản;
+
+note right
+    Hợp đồng thuê (đọc)
+end note
+
+if (Phát hiện sai sót?) then (Có)
+    |Nhân viên Phụ trách|
+    :Kiểm tra và lập lại hợp đồng;
+    note right
+        Hợp đồng thuê (ghi)
+    end note
+else (Không)
+endif
+
+|Nhân viên Phụ trách|
+:Hướng dẫn khách hàng ký hợp đồng;
+
+note right
+    Hợp đồng thuê (ghi)
+end note
+
+|Nhân viên Kế toán|
+:Lập phiếu thanh toán;
+
+note right
+    Hợp đồng thuê (đọc)
+    Phiếu thanh toán (ghi)
+end note
+
+
+|Khách hàng|
+:Chọn phương thức thanh toán;
+
+|Nhân viên Kế toán|
+:Xác nhận thanh toán;
+
+note right
+    Phiếu thanh toán (ghi)
+end note
+
+if (Thanh toán thành công?) then (Có)
+else (Không)
+    stop
+endif
+
+@enduml
