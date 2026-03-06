@@ -1,0 +1,50 @@
+@startuml
+title Activity Diagram: Kiểm tra điều kiện thuê
+
+skinparam activity {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+
+skinparam swimlane {
+    BorderColor Black
+}
+
+|#OldLace|Nhân viên Sale|
+|#LightBlue|Nhân viên Quản lý|
+
+|Nhân viên Sale|
+start
+:Kiểm tra thông tin khách hàng;
+
+if (Thoả tiêu chí thuê?) then (Không)
+    :Từ chối cho thuê;
+    stop
+else (Có)
+endif
+
+:Kiểm tra tình trạng phòng;
+note right
+    phòng (đọc)
+    giường (đọc)
+    trạng thái (đọc)
+end note
+
+|Nhân viên Quản lý|
+:Kiểm tra điều kiện phòng;
+note right
+    phòng (đọc)
+    giường (đọc)
+    trạng thái (đọc)
+end note
+
+if (Phòng/giường đã được giữ chỗ hay đã đặt cọc?) then (Có)
+    :Thông báo cho nhân viên sale không thể thuê phòng;
+else (Không)
+    :Thông báo cho nhân viên sale phòng/giường có thể được thuê;
+endif
+
+
+stop
+@enduml

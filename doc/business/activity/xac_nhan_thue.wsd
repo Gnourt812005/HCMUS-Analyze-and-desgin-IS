@@ -1,0 +1,59 @@
+@startuml
+title Activity Diagram: Xác nhận thuê
+
+skinparam activity {
+  BackgroundColor LightSkyBlue
+  BorderColor RoyalBlue
+  ArrowColor DimGray
+}
+
+|#HoneyDew|Khách hàng|
+|#WhiteSmoke|Nhân viên Sale|
+|#White|Others|
+
+|Khách hàng|
+start
+:Xác nhận muốn thuê;
+
+|Others|
+:Kiểm tra điều kiện thuê;
+
+|Nhân viên Sale|
+:Trình bày điều kiện thuê + nội quy cho khách hàng;
+note right
+    điều kiện thuê (đọc)
+    nội quy (đọc)
+end note
+
+|Khách hàng|
+if (Đồng ý toàn bộ điều kiện?) then (Không)
+
+  if (Muốn điều chỉnh thông tin thuê?) then (Có)
+
+    |Others|
+    :Kiểm tra điều kiện thuê;
+
+  else (Không)
+
+    |Nhân viên Sale|
+    #Pink:Thông báo từ chối cho thuê;
+    stop
+
+  endif
+  else (Có)
+endif
+
+|Others|
+:Thực hiện nghiệp vụ Thực hiện đặt cọc;
+
+|Nhân viên Sale|
+:Thống nhất thời gian thực hiện thủ tục nhận phòng với khách hàng;
+
+|Khách hàng|
+:Xác nhận thời gian nhận phòng;
+note right
+    Lịch hẹn (ghi)
+end note
+
+stop
+@enduml
