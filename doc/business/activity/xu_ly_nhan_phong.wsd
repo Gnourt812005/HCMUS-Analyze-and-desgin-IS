@@ -1,0 +1,98 @@
+@startuml
+title Activity Diagram: Xử lý nhận phòng
+
+' --- CẤU HÌNH GIAO DIỆN ---
+skinparam activity {
+    BackgroundColor LightSkyBlue
+    BorderColor RoyalBlue
+    ArrowColor DimGray
+}
+skinparam swimlane {
+    BorderColor RoyalBlue
+    TitleBackgroundColor LightSteelBlue
+}
+
+' --- KHAI BÁO SWIMLANES (CÁC LÀN BƠI) ---
+|#HoneyDew|Khách hàng|
+|#WhiteSmoke|Nhân viên Sale|
+' |#AliceBlue|Nhân viên phụ trách|
+|#OldLace|Nhân viên Quản lý|
+|#White|Others|
+
+
+|Khách hàng|
+start
+:Yêu cầu nhận phòng;
+
+|Nhân viên Sale|
+:Tiếp nhận yêu cầu nhận phòng;
+note right
+Phiếu đặt cọc (đọc)
+end note
+
+:Thu thập giấy tờ / thông tin cần thiết;
+note right
+Thông tin cư trú (ghi)
+end note
+
+if (Cung cấp đủ giấy tờ?) then (Có)
+else (Không)
+    stop
+endif
+
+:Đối chiếu thông tin khách với người đặt cọc;
+note right
+Phiếu đặt cọc (đọc)
+end note
+
+if (Thông tin khớp?) then (Có)
+else (Không)
+    :Yêu cầu người đặt cọc đến đối chiếu;
+    stop
+endif
+
+:Kiểm tra số lượng khách với thông tin đặt cọc;
+note right
+Phiếu đặt cọc (đọc)
+end note
+
+if (Số khách > số khách đặt cọc?) then (Có)
+    |Khách hàng|
+
+    if (Giảm số lượng?) then (Không)
+        stop
+    else (Có)
+        |Nhân viên Sale|
+        :Cập nhật số lượng khách;
+        note right
+        Thông tin cư trú (ghi)
+        end note
+    endif
+
+else (Không)
+endif
+
+
+|Nhân viên Quản lý|
+:Kiểm tra điều kiện lưu trú từng thành viên;
+
+if (Thông tin cư trú hợp lệ?) then (Có)
+else (Không)
+    :Yêu cầu chuẩn bị lại thông tin;
+    stop
+endif
+
+|Others|
+:Thực hiện quy trình Lập hợp đồng;
+note right
+Hợp đồng thuê (ghi)
+end note
+if (Lập hợp đồng thành công?) then (Có)
+else (Không)
+    stop
+endif
+
+:Thực hiện quy trình Bàn giao phòng;
+
+stop
+@enduml
