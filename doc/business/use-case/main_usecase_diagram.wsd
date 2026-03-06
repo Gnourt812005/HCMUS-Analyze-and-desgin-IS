@@ -29,6 +29,16 @@ rectangle "Quy trình thuê phòng" {
 	UC_XacNhanThue ..> UC_ThucHienDatCoc : <<include>>
 }
 
+rectangle "Quy trình nhận phòng, ký thoả thuận thuê và bàn giao phòng" {
+	usecase/ "Xử lý nhận phòng" as UC_XuLyNhanPhong
+	usecase/ "Lập hợp đồng" as UC_KyHopDong
+	usecase/ "Bàn giao phòng" as UC_BanGiaoPhong
+
+	' Use Case Relationships
+	UC_XuLyNhanPhong ..> UC_KyHopDong : <<include>>
+	UC_XuLyNhanPhong ..> UC_BanGiaoPhong : <<include>>
+}
+
 rectangle "Quy trình trả phòng và hoàn cọc" {
 	usecase/ "Yêu cầu trả phòng" as UC_YeuCauTraPhong
 	usecase/ "Tính khoản hoàn cọc và khấu trừ" as UC_TinhHoanCocKhauTru
@@ -42,6 +52,7 @@ rectangle "Quy trình trả phòng và hoàn cọc" {
 ' Actor - Main Use Cases Associations
 customer -- UC_DangKyThuePhong
 customer -- UC_XacNhanThue
+customer -- UC_XuLyNhanPhong
 customer -- UC_YeuCauTraPhong
 
 @enduml
