@@ -1,17 +1,40 @@
-@startuml
+@startuml ThucHienDatCoc
 title Subprocess: Thực hiện đặt cọc
 
-|#WhiteSmoke|Nhân viên Sale|
-|#LavenderBlush|Kế toán|
-|#AliceBlue|Quản lý|
-|#HoneyDew|Khách hàng|
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ActivityBackgroundColor White
+    ActivityBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 12
+    Padding 5
+
+    ' Swimlane styling
+    SwimlaneBorderColor #2D3E50
+    SwimlaneTitleBackgroundColor #F1F3F5
+    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontColor #2D3E50
+    
+    ' Note styling
+    NoteBackgroundColor #FFF9C4
+    NoteBorderColor #FBC02D
+    NoteFontSize 11
+}
+
+' --- SWIMLANES ---
+|#FFE7D9|Khách hàng|
+|#D1E9FF|Nhân viên Sale|
+|#D6FFD6|Nhân viên Quản lý|
+|#FFF5D1|Nhân viên Kế toán|
+
 
 start
 
 |Nhân viên Sale|
 :Chuyển thông tin cho Kế toán tính tiền cọc;
 
-|Kế toán|
+|Nhân viên Kế toán|
 :Tính toán số tiền cọc;
 :Trả kết quả cho Sale;
 
@@ -46,7 +69,7 @@ else (Có)
 
 endif
 
-|Quản lý|
+|Nhân viên Quản lý|
 :Đối chiếu thông tin giao dịch & xác nhận hợp lệ;
 note right
     thông tin giao dịch (đọc)

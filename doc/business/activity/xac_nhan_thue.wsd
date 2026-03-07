@@ -1,15 +1,32 @@
-@startuml
+@startuml XacNhanThue
 title Activity Diagram: Xác nhận thuê
 
-skinparam activity {
-  BackgroundColor LightSkyBlue
-  BorderColor RoyalBlue
-  ArrowColor DimGray
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ActivityBackgroundColor White
+    ActivityBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 12
+    Padding 5
+
+    ' Swimlane styling
+    SwimlaneBorderColor #2D3E50
+    SwimlaneTitleBackgroundColor #F1F3F5
+    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontColor #2D3E50
+    
+    ' Note styling
+    NoteBackgroundColor #FFF9C4
+    NoteBorderColor #FBC02D
+    NoteFontSize 11
 }
 
-|#HoneyDew|Khách hàng|
-|#WhiteSmoke|Nhân viên Sale|
-|#White|Others|
+' --- SWIMLANES ---
+|#FFE7D9|Khách hàng|
+|#D1E9FF|Nhân viên Sale|
+|#F0F0F0|Others|
+
 
 |Khách hàng|
 start
