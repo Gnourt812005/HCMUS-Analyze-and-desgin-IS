@@ -18,9 +18,8 @@ skinparam swimlane {
 ' Start
 |Nhân viên Quản lý|
 start
-:Kiểm tra tình trạng phòng/giường thực tế;
-
 repeat
+:Kiểm tra tình trạng phòng/giường thực tế;
 
 :Đối chiếu thông tin hợp đồng và nghĩa vụ;
 note right
@@ -36,6 +35,7 @@ note left
   - >= 6 tháng: hoàn 70%
   - Hết hạn hợp đồng: hoàn 100%
 
+  Nếu số người thực tế < số người đặt cọc: Phiếu thanh toán (ghi)
   Phiếu đặt cọc (đọc)
 end note
 
@@ -44,7 +44,7 @@ note right
   Phiếu kiểm tra phòng (đọc)
 end note
 
-repeat while (Có sai sót kiểm tra?) is (Có)
+repeat while (Có sai sót trong kiểm tra phòng/giường?) is (Có)
     |Nhân viên Quản lý|
 ->Không;
 stop
