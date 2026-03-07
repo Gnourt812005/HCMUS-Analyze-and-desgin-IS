@@ -1,0 +1,134 @@
+@startuml
+title Activity Diagram: Quy trình trả phòng và hoàn cọc
+
+' General config
+skinparam activity {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+skinparam swimlane {
+    BorderColor Black
+}
+
+' Swimlanes
+|#LightBlue|Khách hàng|
+|#OldLace|Nhân viên Sale|
+|#LightBlue|Nhân viên Quản lý|
+|#OldLace|Nhân viên Kế toán|
+
+' Start
+|Khách hàng|
+start
+:Yêu cầu trả phòng;
+
+|Nhân viên Sale|
+:Tiếp nhận yêu cầu trả phòng;
+
+if (Khách đổi ý không trả phòng?) then (Có)
+    :Ghi nhận hủy yêu cầu;
+    stop
+else (Không)
+    :Đăng ký thời gian trả phòng;
+endif
+
+|Khách hàng|
+:Cung cấp hợp đồng/phiếu đặt cọc;
+
+|Nhân viên Sale|
+if (Cung cấp được hợp đồng/phiếu cọc?) then (Không)
+    :Yêu cầu cung cấp thông tin cá nhân;
+    :Đối soát trên hệ thống;
+    if (Tìm thấy dữ liệu?) then (Không)
+        :Thông báo không đủ điều kiện;
+        stop
+    else (Có)
+    endif
+else (Có)
+endif
+:Nhận thông tin hợp đồng/phiếu đặt cọc;
+
+|Nhân viên Quản lý|
+:Kiểm tra tình trạng phòng/giường thực tế;
+:Đối chiếu thông tin hợp đồng và nghĩa vụ;
+:Chuyển thông tin cho Kế toán;
+
+|Nhân viên Kế toán|
+:Xác định mức hoàn cọc cơ bản;
+note right
+- Chưa ký hợp đồng: hoàn 80%
+- < 6 tháng: hoàn 50%
+- >= 6 tháng: hoàn 70%
+- Hết hạn hợp đồng: hoàn 100%
+end note
+
+:Khấu trừ chi phí phát sinh;
+:Lập bảng đối soát/phiếu thanh toán;
+:Báo lại cho Quản lý;
+
+|Nhân viên Quản lý|
+:Thông báo chi tiết khoản khấu trừ và số tiền;
+
+|Khách hàng|
+if (Đồng ý bảng đối soát?) then (Không)
+    |Nhân viên Quản lý|
+    :Kiểm tra lại phòng và Yêu cầu \nKế toán rà soát lại các khoản tiền;
+    :Giải thích rõ ràng cho khách;
+    if (Khách vẫn không đồng ý?) then (Có)
+        :Lập biên bản tranh chấp \nhoặc đưa vào danh sách đen;
+        stop
+    else (Đồng ý)
+    endif
+else (Có)
+endif
+
+|Nhân viên Quản lý|
+:Cung cấp biên bản trả phòng \nvà thanh lý hợp đồng;
+
+|Khách hàng|
+:Ký biên bản trả phòng \nvà thanh lý hợp đồng;
+
+|Nhân viên Kế toán|
+if (Tổng khấu trừ > Tiền cọc?) then (Lớn hơn - Khách đóng thêm)
+    :Yêu cầu khách đóng thêm tiền;
+    
+    |Khách hàng|
+    if (Đồng ý đóng thêm?) then (Từ chối)
+        |Nhân viên Quản lý|
+        :Xử lý theo quy định vi phạm hợp đồng;
+        stop
+    else (Đồng ý)
+        |Khách hàng|
+        :Nộp thêm tiền mặt/chuyển khoản;
+    endif
+
+else (Nhỏ hơn hoặc bằng - Hoàn cọc)
+    |Nhân viên Kế toán|
+    :Thống nhất phương thức hoàn cọc;
+    
+    if (Bằng tiền mặt?) then (Có)
+        if (Quỹ đủ tiền mặt không?) then (Không đủ)
+            :Hẹn ngày hoàn tiền;
+            stop
+        else (Đủ)
+            :Hoàn bằng tiền mặt;
+        endif
+    else (Chuyển khoản)
+        if (Cung cấp sai STK?) then (Có)
+            :Liên hệ khách nhận lại STK đúng;
+        else (Không)
+        endif
+        :Hoàn tiền qua chuyển khoản;
+    endif
+endif
+
+|Nhân viên Kế toán|
+:Ghi nhận hoàn tất thủ tục trả phòng;
+
+|Nhân viên Quản lý|
+:Thu hồi chìa khóa/thẻ từ;
+:Cập nhật thông tin bàn giao tài sản \nvà xác nhận kết thúc lưu trú;
+:Ghi nhận phòng/giường là trống;
+stop
+
+@enduml
