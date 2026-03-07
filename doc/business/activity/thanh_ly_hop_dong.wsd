@@ -1,20 +1,32 @@
-@startuml
+@startuml ThanhLyHopDong
 title Activity Diagram: Thanh lý hợp đồng
 
-' General config
-skinparam activity {
-    BackgroundColor White
-    BorderColor Black
-    ArrowColor Black
-}
-skinparam swimlane {
-    BorderColor Black
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ActivityBackgroundColor White
+    ActivityBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 12
+    Padding 5
+
+    ' Swimlane styling
+    SwimlaneBorderColor #2D3E50
+    SwimlaneTitleBackgroundColor #F1F3F5
+    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontColor #2D3E50
+    
+    ' Note styling
+    NoteBackgroundColor #FFF9C4
+    NoteBorderColor #FBC02D
+    NoteFontSize 11
 }
 
-' Swimlanes
-|#LightBlue|Khách hàng|
-|#OldLace|Nhân viên Quản lý|
-|#LightBlue|Nhân viên Kế toán|
+' --- SWIMLANES ---
+|#FFE7D9|Khách hàng|
+|#D6FFD6|Nhân viên Quản lý|
+|#FFF5D1|Nhân viên Kế toán|
+
 
 ' Start
 |Khách hàng|

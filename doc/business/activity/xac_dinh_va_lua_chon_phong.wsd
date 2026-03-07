@@ -1,0 +1,119 @@
+@startuml Activity_XacDinh_LuaChonPhong
+title UC: Xác định và lựa chọn phòng
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ActivityBackgroundColor White
+    ActivityBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 12
+    Padding 5
+
+    ' Swimlane styling
+    SwimlaneBorderColor #2D3E50
+    SwimlaneTitleBackgroundColor #F1F3F5
+    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontColor #2D3E50
+    
+    ' Note styling
+    NoteBackgroundColor #FFF9C4
+    NoteBorderColor #FBC02D
+    NoteFontSize 11
+}
+
+' --- SWIMLANES ---
+|#D1E9FF|Nhân viên Sale|
+|#FFE7D9|Khách hàng|
+
+|Nhân viên Sale|
+start
+:1. Lấy danh sách phòng/giường trống hoặc chưa cọc;
+note right #LightYellow: **[Đọc]**\nDanh sách phòng trống của toàn hệ thống
+if (Có phòng trống?) then (Không - A1)
+    :Thông báo lại cho khách hàng;
+    stop
+else (Có)
+endif
+
+' VÒNG LẶP QUAY LẠI BƯỚC 2
+repeat
+    :2. Đối chiếu ds phòng với đk cơ bản bắt buộc;
+    if (Có phòng thỏa đk bắt buộc?) then (Không - A2)
+        :Thông báo lại cho khách hàng;
+        stop
+    else (Có)
+    endif
+
+    ' VÒNG LẶP QUAY LẠI BƯỚC 3
+    repeat
+        :3. Đối chiếu ds phòng với các yêu cầu khác;
+        if (Có phòng thỏa yêu cầu khác?) then (Không - A3)
+            :Tư vấn bỏ bớt một/nhiều yêu cầu khác;
+            if (Khách chấp nhận? - A3b) then (Không)
+                :Kết thúc Usecase;
+                stop
+            else (Có - A3a)
+            endif
+        else (Có)
+            :4. Tổng hợp các phòng thỏa mãn nhu cầu;
+
+            :5. Trình bày ds phòng tiềm năng cho khách;
+
+            ' VÒNG LẶP QUAY LẠI BƯỚC 6
+            repeat
+                |Khách hàng|
+                :6. Chọn một phòng/giường muốn thuê;
+
+                |Nhân viên Sale|
+                if (Khách có chọn phòng?) then (Không chọn - A6)
+                    :Tư vấn thay đổi/bỏ yêu cầu;
+                    if (Khách thỏa hiệp? - A6b) then (Không)
+                        :Thông báo và kết thúc;
+                        stop
+                    else (Có - A6a)
+                        if (Có đổi đk bắt buộc?) then (Có)
+                        else (Chỉ đổi yêu cầu khác)
+                        endif
+                    endif
+                else (Có chọn)
+                    :7. Xác nhận lại lựa chọn tạm thời;
+                    if (Khách xác định lựa chọn?) then (Không - A7)
+                        if (Lý do?) then (Thay đổi lựa chọn - A7a)
+                        elseif (Không đáp ứng mức giá - A7b)
+                            :Tư vấn chọn lựa chọn có sẵn giá rẻ hơn;
+                            if (Khách đủ khả năng chi trả? - A7b2) then (Không)
+                                :Tư vấn bỏ một số yêu cầu khác;
+                            else (Có - A7b1)
+                            endif
+                        else (Không có ý định thuê - A7c)
+                            :Thông báo và kết thúc;
+                            stop
+                        endif
+                    else (Đồng ý)
+                        :8. Kết thúc Usecase;
+                        stop
+                    endif
+                endif
+            
+            |Nhân viên Sale|
+            
+            backward: Thực hiện lại Bước 6;
+            repeat while (Thay đổi lựa chọn phòng (A7a, A7b1)?) is (Có)
+            -> [Không];
+        endif
+        
+    |Nhân viên Sale|
+    
+    backward: Thực hiện lại Bước 3;
+    repeat while (Thay đổi/Bỏ yêu cầu khác (A3a, A6a, A7b2)?) is (Có)
+    -> [Không];
+
+|Nhân viên Sale|
+
+backward: Thực hiện lại Bước 2;
+repeat while (Thay đổi đk bắt buộc (A6a)?) is (Có)
+-> [Không];
+
+stop
+@enduml
