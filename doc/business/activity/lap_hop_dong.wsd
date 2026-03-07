@@ -1,0 +1,88 @@
+@startuml LapHopDong
+title Activity Diagram: Lập hợp đồng
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ActivityBackgroundColor White
+    ActivityBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 12
+    Padding 5
+
+    ' Swimlane styling
+    SwimlaneBorderColor #2D3E50
+    SwimlaneTitleBackgroundColor #F1F3F5
+    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontColor #2D3E50
+    
+    ' Note styling
+    NoteBackgroundColor #FFF9C4
+    NoteBorderColor #FBC02D
+    NoteFontSize 11
+}
+
+' --- SWIMLANES ---
+|#FFE7D9|Khách hàng|
+|#F3E5F5|Nhân viên Phụ trách|
+|#FFF5D1|Nhân viên Kế toán|
+
+
+
+|Nhân viên Phụ trách|
+start
+
+:Lập hợp đồng;
+
+note right
+    Hợp đồng thuê (ghi)
+end note
+
+|Khách hàng|
+:Kiểm tra thông tin và điều khoản;
+
+note right
+    Hợp đồng thuê (đọc)
+end note
+
+if (Phát hiện sai sót?) then (Có)
+    |Nhân viên Phụ trách|
+    :Kiểm tra và lập lại hợp đồng;
+    note right
+        Hợp đồng thuê (ghi)
+    end note
+else (Không)
+endif
+
+|Nhân viên Phụ trách|
+:Hướng dẫn khách hàng ký hợp đồng;
+
+note right
+    Hợp đồng thuê (ghi)
+end note
+
+|Nhân viên Kế toán|
+:Lập phiếu thanh toán;
+
+note right
+    Hợp đồng thuê (đọc)
+    Phiếu thanh toán (ghi)
+end note
+
+
+|Khách hàng|
+:Chọn phương thức thanh toán;
+
+|Nhân viên Kế toán|
+:Xác nhận thanh toán;
+
+note right
+    Phiếu thanh toán (ghi)
+end note
+
+if (Thanh toán thành công?) then (Có)
+else (Không)
+    stop
+endif
+
+@enduml

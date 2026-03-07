@@ -1,21 +1,34 @@
 @startuml Activity_DangKyThuePhong
 title UC: Đăng ký thuê phòng
 
-skinparam activity {
-    BackgroundColor LightSkyBlue
-    BorderColor RoyalBlue
-    ArrowColor DimGray
-}
-skinparam swimlane {
-    BorderColor RoyalBlue
-    TitleBackgroundColor LightSteelBlue
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ActivityBackgroundColor White
+    ActivityBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 12
+    Padding 5
+
+    ' Swimlane styling
+    SwimlaneBorderColor #2D3E50
+    SwimlaneTitleBackgroundColor #F1F3F5
+    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontColor #2D3E50
+    
+    ' Note styling
+    NoteBackgroundColor #FFF9C4
+    NoteBorderColor #FBC02D
+    NoteFontSize 11
 }
 
-|#HoneyDew|Khách hàng|
-|#WhiteSmoke|Nhân viên Sales|
-|#MistyRose|Others|
+' --- SWIMLANES ---
+|#FFE7D9|Khách hàng|
+|#D1E9FF|Nhân viên Sale|
+|#F0F0F0|Others|
 
-|Nhân viên Sales|
+
+|Nhân viên Sale|
 start
 :1. Tiếp nhận khách hàng;
 
@@ -25,7 +38,7 @@ repeat
     :Cung cấp thông tin cá nhân;
     note right #LightYellow: **[Ghi]**\nThông tin cá nhân
     
-    |Nhân viên Sales|
+    |Nhân viên Sale|
     :3. Nhận và kiểm tra thông tin;
     if (Thông tin hợp lệ?) then (Không - A3)
         if (Nhiều lần không hợp lệ?) then (Có)
@@ -39,7 +52,7 @@ repeat while (Thông tin hợp lệ?) is (Không)
 -> [Có];
 
 repeat
-    |Nhân viên Sales|
+    |Nhân viên Sale|
     :4. Yêu cầu cung cấp các yêu cầu cơ bản về phòng;
     |Khách hàng|
     :5. Nhập và cung cấp yêu cầu cơ bản;
@@ -49,7 +62,7 @@ repeat
         |Others|
         :6. << Thực hiện UC: Xác định và lựa chọn phòng >>;
 
-        |Nhân viên Sales|
+        |Nhân viên Sale|
         if (Kết quả xác định phòng? - A6) then (Thất bại)
             :Thông báo lý do thất bại;
             stop
@@ -72,7 +85,7 @@ repeat
         |Others|
         :10. << Thực hiện UC: Xem phòng >>;
 
-        |Nhân viên Sales|
+        |Nhân viên Sale|
         if (Kết quả xem phòng? - A10) then (Thất bại lý do khác - A10c)
             :Thông báo hủy và kết thúc;
             stop

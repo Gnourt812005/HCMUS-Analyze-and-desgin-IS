@@ -1,13 +1,31 @@
 @startuml Activity_XacDinh_LuaChonPhong
 title UC: Xác định và lựa chọn phòng
 
-skinparam activity {
-    BackgroundColor LightSkyBlue
-    BorderColor RoyalBlue
-    ArrowColor DimGray
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ActivityBackgroundColor White
+    ActivityBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 12
+    Padding 5
+
+    ' Swimlane styling
+    SwimlaneBorderColor #2D3E50
+    SwimlaneTitleBackgroundColor #F1F3F5
+    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontColor #2D3E50
+    
+    ' Note styling
+    NoteBackgroundColor #FFF9C4
+    NoteBorderColor #FBC02D
+    NoteFontSize 11
 }
 
-|Nhân viên Sales|
+' --- SWIMLANES ---
+|#FFE7D9|Khách hàng|
+|#D1E9FF|Nhân viên Sale|
+
 start
 :1. Lấy danh sách phòng/giường trống hoặc chưa cọc;
 note right #LightYellow: **[Đọc]**\nDanh sách phòng trống của toàn hệ thống
@@ -44,10 +62,10 @@ repeat
 
             ' VÒNG LẶP QUAY LẠI BƯỚC 6
             repeat
-                |#HoneyDew|Khách hàng|
+                |Khách hàng|
                 :6. Chọn một phòng/giường muốn thuê;
 
-                |Nhân viên Sales|
+                |Nhân viên Sale|
                 if (Khách có chọn phòng?) then (Không chọn - A6)
                     :Tư vấn thay đổi/bỏ yêu cầu;
                     if (Khách thỏa hiệp? - A6b) then (Không)
@@ -78,7 +96,7 @@ repeat
                     endif
                 endif
             
-            |Nhân viên Sales|
+            |Nhân viên Sale|
             
             backward: Thực hiện lại Bước 6;
             repeat while (Thay đổi lựa chọn phòng (A7a, A7b1)?) is (Có)

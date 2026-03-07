@@ -1,0 +1,76 @@
+@startuml XacNhanThue
+title Activity Diagram: Xác nhận thuê
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ActivityBackgroundColor White
+    ActivityBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 12
+    Padding 5
+
+    ' Swimlane styling
+    SwimlaneBorderColor #2D3E50
+    SwimlaneTitleBackgroundColor #F1F3F5
+    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontColor #2D3E50
+    
+    ' Note styling
+    NoteBackgroundColor #FFF9C4
+    NoteBorderColor #FBC02D
+    NoteFontSize 11
+}
+
+' --- SWIMLANES ---
+|#FFE7D9|Khách hàng|
+|#D1E9FF|Nhân viên Sale|
+|#F0F0F0|Others|
+
+
+|Khách hàng|
+start
+:Xác nhận muốn thuê;
+
+|Others|
+:Kiểm tra điều kiện thuê;
+
+|Nhân viên Sale|
+:Trình bày điều kiện thuê + nội quy cho khách hàng;
+note right
+    điều kiện thuê (đọc)
+    nội quy (đọc)
+end note
+
+|Khách hàng|
+if (Đồng ý toàn bộ điều kiện?) then (Không)
+
+  if (Muốn điều chỉnh thông tin thuê?) then (Có)
+
+    |Others|
+    :Kiểm tra điều kiện thuê;
+
+  else (Không)
+
+    |Nhân viên Sale|
+    #Pink:Thông báo từ chối cho thuê;
+    stop
+
+  endif
+  else (Có)
+endif
+
+|Others|
+:Thực hiện nghiệp vụ Thực hiện đặt cọc;
+
+|Nhân viên Sale|
+:Thống nhất thời gian thực hiện thủ tục nhận phòng với khách hàng;
+
+|Khách hàng|
+:Xác nhận thời gian nhận phòng;
+note right
+    Lịch hẹn (ghi)
+end note
+
+stop
+@enduml
