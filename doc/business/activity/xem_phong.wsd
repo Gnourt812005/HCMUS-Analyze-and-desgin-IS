@@ -90,7 +90,7 @@ repeat
 
     :5. Xác nhận ý định thuê của khách;
 
-    |Khách hàng|
+    |#FFE7D9|Khách hàng|
     if (Khách quyết định thuê?) then (Đồng ý)
         |Nhân viên Sale|
         :6. Kết thúc Usecase;
@@ -106,7 +106,7 @@ repeat
         endif
     endif
 
-|Nhân viên Sales|
+|Nhân viên Sale|
 
 backward: Dẫn khách đi xem phòng khác;
 

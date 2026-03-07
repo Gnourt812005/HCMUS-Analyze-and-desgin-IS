@@ -23,9 +23,10 @@ skinparam {
 }
 
 ' --- SWIMLANES ---
-|#FFE7D9|Khách hàng|
 |#D1E9FF|Nhân viên Sale|
+|#FFE7D9|Khách hàng|
 
+|Nhân viên Sale|
 start
 :1. Lấy danh sách phòng/giường trống hoặc chưa cọc;
 note right #LightYellow: **[Đọc]**\nDanh sách phòng trống của toàn hệ thống
@@ -38,7 +39,6 @@ endif
 ' VÒNG LẶP QUAY LẠI BƯỚC 2
 repeat
     :2. Đối chiếu ds phòng với đk cơ bản bắt buộc;
-    note right #LightYellow: **[Đọc]**\nDanh sách phòng trống của toàn hệ thống, \nPhiếu yêu cầu thuê phòng (Draft)
     if (Có phòng thỏa đk bắt buộc?) then (Không - A2)
         :Thông báo lại cho khách hàng;
         stop
@@ -57,7 +57,7 @@ repeat
             endif
         else (Có)
             :4. Tổng hợp các phòng thỏa mãn nhu cầu;
-            note right #LightYellow: **[Ghi]**\nDanh sách phòng tiềm năng
+
             :5. Trình bày ds phòng tiềm năng cho khách;
 
             ' VÒNG LẶP QUAY LẠI BƯỚC 6
@@ -103,13 +103,13 @@ repeat
             -> [Không];
         endif
         
-    |Nhân viên Sales|
+    |Nhân viên Sale|
     
     backward: Thực hiện lại Bước 3;
     repeat while (Thay đổi/Bỏ yêu cầu khác (A3a, A6a, A7b2)?) is (Có)
     -> [Không];
 
-|Nhân viên Sales|
+|Nhân viên Sale|
 
 backward: Thực hiện lại Bước 2;
 repeat while (Thay đổi đk bắt buộc (A6a)?) is (Có)
