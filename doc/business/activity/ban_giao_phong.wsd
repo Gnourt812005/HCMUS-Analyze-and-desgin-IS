@@ -1,0 +1,70 @@
+@startuml
+title Activity Diagram: Bàn giao phòng
+
+' --- CẤU HÌNH GIAO DIỆN ---
+skinparam activity {
+    BackgroundColor LightSkyBlue
+    BorderColor RoyalBlue
+    ArrowColor DimGray
+}
+skinparam swimlane {
+    BorderColor RoyalBlue
+    TitleBackgroundColor LightSteelBlue
+}
+
+' --- SWIMLANE ---
+|#HoneyDew|Khách hàng|
+|#OldLace|Nhân viên Quản lý|
+
+
+|Nhân viên Quản lý|
+start
+:Dẫn khách lên phòng;
+
+:Kiểm tra hiện trạng khu vực phòng ở;
+
+:Kiểm tra các vật dụng được cấp;
+note right
+    Danh sách vật dụng (đọc)
+end note
+
+if (Có vật dụng hư hỏng hoặc thiếu?) then (Có)
+
+    :Ghi nhận vào biên bản bàn giao;
+    note right
+        Biên bản bàn giao (ghi)
+    end note
+
+    :Cấp lại vật dụng cho khách;
+
+else (Không)
+
+endif
+
+:Giải thích quy định sử dụng\nvà lưu ý an toàn;
+
+
+|Khách hàng|
+:Xem và xác nhận biên bản bàn giao;
+note right
+    Biên bản bàn giao (đọc)
+end note
+
+
+|Nhân viên Quản lý|
+:Hướng dẫn khách ký biên bản;
+note right
+    Biên bản bàn giao (ghi)
+end note
+
+
+:Nhân viên quản lý ký xác nhận;
+note right
+    Biên bản bàn giao (ghi)
+end note
+
+
+:Giao bản sao biên bản \nbàn giao cho khách hàng;
+stop
+
+@enduml
