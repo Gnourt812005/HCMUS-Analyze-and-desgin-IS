@@ -37,15 +37,8 @@ if (Thoả tiêu chí thuê?) then (Không)
 else (Có)
 endif
 
-:Kiểm tra tình trạng phòng;
-note right
-    phòng (đọc)
-    giường (đọc)
-    trạng thái (đọc)
-end note
-
 |Nhân viên Quản lý|
-:Kiểm tra điều kiện phòng;
+:Kiểm tra tình trạng phòng;
 note right
     phòng (đọc)
     giường (đọc)
