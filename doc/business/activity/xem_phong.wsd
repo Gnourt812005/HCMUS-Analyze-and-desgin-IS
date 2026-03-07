@@ -1,13 +1,29 @@
-@startuml Activity_XemPhong
+@startuml XemPhong
 title UC: Xem phòng
 
-skinparam activity {
-    BackgroundColor LightSkyBlue
-    BorderColor RoyalBlue
-    ArrowColor DimGray
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ActivityBackgroundColor White
+    ActivityBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 12
+    Padding 5
+
+    ' Swimlane styling
+    SwimlaneBorderColor #2D3E50
+    SwimlaneTitleBackgroundColor #F1F3F5
+    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontColor #2D3E50
+    
+    ' Note styling
+    NoteBackgroundColor #FFF9C4
+    NoteBorderColor #FBC02D
+    NoteFontSize 11
 }
 
-|Nhân viên Sales|
+' --- SWIMLANES ---
+|#D1E9FF|Nhân viên Sale|
 start
 :Điểm hẹn xem phòng;
 if (Khách hàng đến? - A1) then (Không)
@@ -74,13 +90,13 @@ repeat
 
     :5. Xác nhận ý định thuê của khách;
 
-    |#HoneyDew|Khách hàng|
+    |Khách hàng|
     if (Khách quyết định thuê?) then (Đồng ý)
-        |Nhân viên Sales|
+        |Nhân viên Sale|
         :6. Kết thúc Usecase;
         stop
     else (Chưa quyết định - A5)
-        |Nhân viên Sales|
+        |Nhân viên Sale|
         if (Lý do?) then (Muốn điều chỉnh yêu cầu - A5b)
             :Ghi nhận, xử lý tiếp ở UC Đăng ký;
             note right #LightYellow: **[Ghi]**\nGhi chú vào Lịch hẹn xem phòng
