@@ -1,5 +1,5 @@
 @startuml
-title Activity Diagram: Yêu cầu trả phòng
+title Activity Diagram: Thanh lý hợp đồng
 
 ' General config
 skinparam activity {
