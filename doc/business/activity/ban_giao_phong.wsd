@@ -52,8 +52,10 @@ else (Không)
 
 endif
 
-:Giải thích quy định sử dụng\nvà lưu ý an toàn;
-
+:Giải thích quy định sử dụng và lưu ý an toàn;
+note right
+Nội quy (đọc)
+end note
 
 |Khách hàng|
 :Xem và xác nhận biên bản bàn giao;
