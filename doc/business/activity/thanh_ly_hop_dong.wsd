@@ -40,7 +40,7 @@ if (Đồng ý bảng đối soát?) then (Không)
     :Kiểm tra lại phòng và yêu cầu \nKế toán rà soát lại các khoản tiền;
     :Giải thích rõ ràng cho khách;
     if (Khách vẫn không đồng ý?) then (Có)
-        :Lập biên bản tranh chấp \nvà đưa vào danh sách đen;
+        :Lập biên bản tranh chấp;
         stop
     else (Đồng ý)
     endif
