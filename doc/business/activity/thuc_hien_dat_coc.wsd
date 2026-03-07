@@ -1,0 +1,84 @@
+@startuml ThucHienDatCoc
+title Activity Diagram: Thực hiện đặt cọc
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ActivityBackgroundColor White
+    ActivityBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+
+    ' Swimlane styling
+    SwimlaneBorderColor #2D3E50
+    SwimlaneTitleBackgroundColor #F1F3F5
+    SwimlaneTitleFontSize 24
+    SwimlaneTitleFontColor #2D3E50
+    
+    ' Note styling
+    NoteBackgroundColor #FFF9C4
+    NoteBorderColor #FBC02D
+    NoteFontSize 24
+}
+
+' --- SWIMLANES ---
+|#FFE7D9|Khách hàng|
+|#D1E9FF|Nhân viên Sale|
+|#D6FFD6|Nhân viên Quản lý|
+|#FFF5D1|Nhân viên Kế toán|
+
+|Nhân viên Sale|
+start
+
+:Chuyển thông tin cho Kế toán tính tiền cọc;
+
+|Nhân viên Kế toán|
+:Tính toán số tiền cọc;
+:Trả kết quả cho Sale;
+
+|Nhân viên Sale|
+:Gửi yêu cầu thanh toán + thông báo mức cọc;
+:Hướng dẫn thông tin thanh toán;
+
+fork
+|Khách hàng|
+:Thực hiện thanh toán;
+
+|Nhân viên Sale|
+if (Thanh toán trước 24h?) then (Có)
+    if (Có người đã đặt cọc trước?) then (Có)
+        #Pink:Hoàn tiền và thông báo huỷ yêu cầu đặt cọc;
+        stop
+    else (Không)
+    endif
+else (Không)
+endif
+
+fork again
+
+|Nhân viên Sale|
+if (Nhận thanh toán hợp lệ trong 24h?) then (Không)
+    #Pink:Thông báo huỷ yêu cầu đặt cọc;
+    stop
+else (Có)
+    :Gửi minh chứng cho Quản lý;
+endif
+
+end fork
+
+|Nhân viên Quản lý|
+:Đối chiếu thông tin giao dịch & xác nhận hợp lệ;
+note right
+    thông tin giao dịch (đọc)
+    phòng (ghi)
+    giường (ghi)
+    giấy đặt cọc (ghi)
+end note
+
+|Nhân viên Sale|
+:Thông báo đặt cọc thành công;
+:Thông báo thời hạn lập hợp đồng;
+
+stop
+@enduml

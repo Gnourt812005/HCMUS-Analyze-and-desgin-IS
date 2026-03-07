@@ -1,110 +1,112 @@
-@startuml Activity Diagram: Quy trình Đăng ký & Lựa chọn Thuê phòng
-title Activity Diagram: Quy trình Đăng ký Thuê phòng
+@startuml Activity_DangKyThuePhong
+title Activity Diagram: Đăng ký thuê phòng
 
-' --- CẤU HÌNH GIAO DIỆN ---
-skinparam activity {
-    BackgroundColor LightSkyBlue
-    BorderColor RoyalBlue
-    ArrowColor DimGray
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ActivityBackgroundColor White
+    ActivityBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+
+    ' Swimlane styling
+    SwimlaneBorderColor #2D3E50
+    SwimlaneTitleBackgroundColor #F1F3F5
+    SwimlaneTitleFontSize 24
+    SwimlaneTitleFontColor #2D3E50
+    
+    ' Note styling
+    NoteBackgroundColor #FFF9C4
+    NoteBorderColor #FBC02D
+    NoteFontSize 24
 }
-skinparam swimlane {
-    BorderColor RoyalBlue
-    TitleBackgroundColor LightSteelBlue
-}
 
-' --- KHAI BÁO SWIMLANES ---
-|#HoneyDew|Khách hàng|
-|#WhiteSmoke|Nhân viên Sales|
+' --- SWIMLANES ---
+|#FFE7D9|Khách hàng|
+|#D1E9FF|Nhân viên Sale|
+|#F0F0F0|Others|
 
-' --- BẮT ĐẦU QUY TRÌNH ---
-|Khách hàng|
+
+|Nhân viên Sale|
 start
-:Liên hệ đăng ký thuê phòng; 
+:1. Tiếp nhận khách hàng;
 
-|Nhân viên Sales|
-:Tiếp nhận khách hàng; 
-
-' --- VALIDATION LOOP (A3) ---
 repeat
-    :Yêu cầu cung cấp thông tin cá nhân; 
+    |Nhân viên Sale|
+    :2. Yêu cầu cung cấp thông tin cá nhân (CCCD, SĐT,...);
     |Khách hàng|
-    :Cung cấp CCCD, SĐT...; 
-    |Nhân viên Sales|
-    :Kiểm tra thông tin; 
-repeat while (Thông tin hợp lệ?) is (Không)
--> [Có];
-
-' --- LABEL: ĐIỂM QUAY LẠI KHI THAY ĐỔI YÊU CẦU (A10.b) ---
-label lab_ChangeReq
-
-:Yêu cầu cung cấp tiêu chí phòng; 
-|Khách hàng|
-:Cung cấp yêu cầu (Giá, khu vực...); 
-
-' --- LABEL: ĐIỂM QUAY LẠI KHI KHÔNG ƯNG THÔNG TIN PHÒNG (A10.a) ---
-label lab_SelectRoom
-
-' --- SUB-PROCESS: XÁC ĐỊNH & LỰA CHỌN PHÒNG ---
-partition "UC: Xác định và lựa chọn phòng" {
-    |Nhân viên Sales|
-    :Lấy danh sách phòng trống;
-    :Đối chiếu điều kiện bắt buộc & ưu tiên;
+    :Cung cấp thông tin cá nhân;
+    |Nhân viên Sale|
+    :3. Nhận và kiểm tra thông tin;
     
-    if (Tìm được phòng phù hợp?) then (Không)
-        :Thông báo thất bại;
-        stop
-    else (Có)
-        :Tổng hợp và Trình bày danh sách;
+    if (Thông tin hợp lệ?) then (Có)
+        ' Thoát vòng lặp để đi thẳng xuống Bước 4
+        break
+    else (Không - A3)
+        if (Nhiều lần không hợp lệ?) then (Có)
+            :Thông báo hủy và kết thúc;
+            stop
+        else (Không)
+            ' Chạy xuống cuối và tự động vòng lên nhận lại thông tin
+        endif
     endif
-    
+repeat while ()
+
+repeat
+    |Nhân viên Sale|
+    :4. Yêu cầu cung cấp các yêu cầu cơ bản về phòng;
     |Khách hàng|
-    :Chọn phòng/giường muốn thuê;
-    
-    |Nhân viên Sales|
-    if (Khách chốt chọn phòng?) then (Không)
-        :Tư vấn hoặc Kết thúc;
-        stop
-    else (Có)
-        :Xác nhận lựa chọn tạm thời;
-    endif
-}
+    :5. Nhập và cung cấp yêu cầu cơ bản;
 
-' --- QUY TRÌNH CHÍNH TIẾP TỤC ---
-:Ghi nhận thông tin đăng ký; 
+    repeat
+        |Others|
+        :6. << Thực hiện UC: Xác định và lựa chọn phòng >>;
 
-if (Khách có nhu cầu xem phòng?) then (Không)
-    :Thông báo thành công; 
-    stop
-else (Có)
-    :Sắp xếp lịch xem phòng; 
-    :Thông báo lịch hẹn (Email/SĐT); 
-endif
+        |Nhân viên Sale|
+        if (Kết quả xác định phòng? - A6) then (Thất bại)
+            :Thông báo lý do thất bại;
+            stop
+        else (Thành công)
+        endif
 
-' --- SUB-PROCESS: XEM PHÒNG ---
-partition "UC: Xem phòng" {
-    |Nhân viên Sales|
-    :Tiếp đón tại điểm hẹn;
-    :Giới thiệu thông tin, nội quy, hình thức thuê;
-    :Xác nhận ý định thuê;
-}
+        :7. Ghi nhận lại thông tin đăng ký;
+        note right #LightYellow: **[Ghi]**\nHồ sơ đăng ký thuê phòng
 
-' --- XỬ LÝ KẾT QUẢ SAU KHI XEM (A10) ---
-|Khách hàng|
-if (Quyết định thuê?) then (Đồng ý)
-    stop
-else (Không đồng ý / Điều chỉnh)
-    |Nhân viên Sales|
-    ' A10.a: Không đồng ý thông tin cơ bản -> Quay lại chọn phòng
-    if (Lý do: Không ưng thông tin cơ bản?) then (Đúng)
-        :Thêm điều kiện vào yêu cầu; 
-        goto lab_SelectRoom
-    ' A10.b: Muốn điều chỉnh yêu cầu -> Quay lại bước nhập yêu cầu
-    elseif (Lý do: Muốn điều chỉnh yêu cầu?) then (Đúng)
-        goto lab_ChangeReq
-    else (Lý do khác/Huỷ)
-        :Thông báo hủy đăng ký; 
-        stop
-    endif
-endif
+        if (Khách có ý định xem phòng? - A8) then (Không)
+            :Thông báo thành công và kết thúc;
+            stop
+        else (Có)
+        endif
 
+        :8. Sắp xếp lịch xem phòng;
+        :9. Thông báo lịch hẹn xem phòng (Email/SĐT);
+        note right #LightYellow: **[Ghi]**\nLịch hẹn xem phòng
+
+        |Others|
+        :10. << Thực hiện UC: Xem phòng >>;
+
+        |Nhân viên Sale|
+        if (Kết quả xem phòng? - A10) then (Thất bại lý do khác - A10c)
+            :Thông báo hủy và kết thúc;
+            stop
+        elseif (Không đồng ý thông tin cơ bản - A10a) then (Có)
+            :Thêm điều kiện đó vào yêu cầu của khách;
+        elseif (Muốn điều chỉnh yêu cầu - A10b) then (Có)
+            ' Bỏ qua để vòng lặp ngoài bắt điều kiện
+        else (Thành công)
+            :11. Kết thúc Usecase;
+            stop
+        endif
+
+    |Nhân viên Sale|
+    backward: Thực hiện lại Bước 6;
+    repeat while (Không ưng ý thông tin cơ bản (A10a)?) is (Có)
+    -> [Không];
+
+|Nhân viên Sale|
+backward: Thực hiện lại Bước 4;
+repeat while (Khách muốn điều chỉnh yêu cầu (A10b)?) is (Có)
+-> [Không];
+stop
 @enduml

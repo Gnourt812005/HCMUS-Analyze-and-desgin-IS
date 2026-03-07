@@ -1,0 +1,83 @@
+@startuml BanGiaoPhong
+title Activity Diagram: Bàn giao phòng
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ActivityBackgroundColor White
+    ActivityBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+
+    ' Swimlane styling
+    SwimlaneBorderColor #2D3E50
+    SwimlaneTitleBackgroundColor #F1F3F5
+    SwimlaneTitleFontSize 24
+    SwimlaneTitleFontColor #2D3E50
+    
+    ' Note styling
+    NoteBackgroundColor #FFF9C4
+    NoteBorderColor #FBC02D
+    NoteFontSize 24
+}
+
+' --- SWIMLANES ---
+|#FFE7D9|Khách hàng|
+|#D6FFD6|Nhân viên Quản lý|
+
+
+
+|Nhân viên Quản lý|
+start
+:Dẫn khách lên phòng;
+
+:Kiểm tra hiện trạng khu vực phòng ở;
+
+:Kiểm tra các vật dụng được cấp;
+note right
+    Danh sách vật dụng (đọc)
+end note
+
+if (Có vật dụng hư hỏng hoặc thiếu?) then (Có)
+
+    :Ghi nhận vào biên bản bàn giao;
+    note right
+        Biên bản bàn giao (ghi)
+    end note
+
+    :Cấp lại vật dụng cho khách;
+
+else (Không)
+
+endif
+
+:Giải thích quy định sử dụng và lưu ý an toàn;
+note right
+Nội quy (đọc)
+end note
+
+|Khách hàng|
+:Xem và xác nhận biên bản bàn giao;
+note right
+    Biên bản bàn giao (đọc)
+end note
+
+
+|Nhân viên Quản lý|
+:Hướng dẫn khách ký biên bản;
+note right
+    Biên bản bàn giao (ghi)
+end note
+
+
+:Nhân viên quản lý ký xác nhận;
+note right
+    Biên bản bàn giao (ghi)
+end note
+
+
+:Giao bản sao biên bản \nbàn giao cho khách hàng;
+stop
+
+@enduml

@@ -1,10 +1,12 @@
-@startuml Database_Refined
+@startuml Database_Conceptual
 
 ' === CONFIGURATION FOR CLEAN LAYOUT ===
 skinparam linetype ortho
-skinparam nodesep 80
-skinparam ranksep 100
+skinparam nodesep 120
+skinparam ranksep 120
 skinparam shadowing false
+skinparam classFontSize 24
+skinparam defaultFontSize 24
 skinparam backgroundColor #FFFFFF
 skinparam entity {
     BackgroundColor #E8F5E9
@@ -13,118 +15,168 @@ skinparam entity {
 
 ' --- KHU VỰC CƠ SỞ VẬT CHẤT ---
 entity ky_tuc_xa {
+    * ma_co_so
+    ten_co_so
+    dia_chi
+    so_dien_thoai
 }
 
 entity phong {
+    * ma_phong
+    loai_phong: Nam/Nu/Mix
 }
 
 entity giuong {
+    * ma_giuong
+    don_gia_tham_khao
+    trang_thai: Trong/Da thue
 }
 
-' [NEW] Quản lý tài sản trong phòng
 entity loai_vat_tu {
-    id
+    * ma_vat_tu
     ten_vat_tu
     don_gia_den_bu
 }
 
 entity vat_tu_theo_phong {
+    so_luong
     tinh_trang
-    soluong
 }
 
-' --- KHU VỰC CON NGƯỜI ---
+' Danh mục tiện ích dùng chung
+entity tien_ich {
+    * ma_tien_ich
+    ten_tien_ich (Vi du: Ban cong, Thang may, Nuoi pet)
+}
+
+entity chi_tiet_tien_ich {
+    mo_ta_chi_tiet
+}
+
+entity noi_quy {
+    * ma_noi_quy
+    tieu_de
+    noi_dung
+}
+
+' --- KHU VỰC CON NGƯỜI & CHĂM SÓC KHÁCH HÀNG ---
 entity khach_hang {
+    * cccd
+    ho_ten
+    ngay_sinh
+    gioi_tinh
+    so_dien_thoai
+    dia_chi_thuong_tru
 }
 
 entity nhan_vien {
+    * ma_nhan_vien
+    ho_ten
+    chuc_vu
+    so_dien_thoai
 }
 
-entity contact {
+entity lien_he {
+    * so_dien_thoai
+    ho_ten
+    nhu_cau_ghi_chu
 }
 
-' --- KHU VỰC NGHIỆP VỤ ---
+entity lich_hen {
+    * ma_lich_hen
+    thoi_gian_hen
+    loai_hen: Xem phong / nhan phong
+    trang_thai: Cho xac nhan/Hoan thanh/Huy
+}
+
+' --- KHU VỰC NGHIỆP VỤ LƯU TRÚ ---
 entity hop_dong {
-    id
-    ngay_tao
-    ngay_hieu_luc
-    ngay_het_han
-    trang_thai (Dang thue, Da thanh ly)
+    * ma_hop_dong
+    ngay_ky
+    ngay_bat_dau
+    ngay_ket_thuc
+    so_nguoi
+    tien_coc_giu_lai
+    trang_thai: Hieu luc / Thanh ly
 }
 
-' Bảng trung gian để 1 HĐ thuê được nhiều giường
 entity chi_tiet_hop_dong { 
     gia_thue_thuc_te
 }
 
 entity giay_dat_coc {
+    * ma_giay_coc
+    ngay_lap
+    han_chot_ky_hd
+    so_nguoi
+    trang_thai: Moi tao / Da chuyen HD / Huy
 }
 
 entity chi_tiet_dat_coc {
-    gia_dat_coc_thuc_te
-}
-
-' [NEW] Quản lý Điện nước hàng tháng
-entity chi_so_dien_nuoc {
-    id
-    thang_nam
-    chi_so_cu
-    chi_so_moi
-}
-
-entity loai_dich_vu {
-    (Dien, Nuoc, Gui xe)
-    don_gia
+    gia_coc_thuc_te
 }
 
 ' --- KHU VỰC TÀI CHÍNH & PHÁP LÝ ---
 entity bien_ban {
-    id
-    loai_bien_ban (Ban giao / Thanh ly)
+    * ma_bien_ban
+    loai_bien_ban: Ban giao / Thanh ly / Su co
     ngay_lap
-    ghi_chu_hu_hong
+    noi_dung_ghi_nhan
 }
 
-entity hoa_don {
-    id
-    loai_hoa_don
-    tong_tien
-    trang_thai_thanh_toan
+entity phieu_thanh_toan {
+    * ma_phieu
+    phuong_thuc: Tien mat / Chuyen khoan
+    so_tien
+    ngay_thanh_toan
 }
 
-' --- RELATIONSHIPS ---
+' --- RELATIONSHIPS (TỐI ƯU LAYOUT) ---
 
-ky_tuc_xa ||..o{ phong
-phong ||..o{ giuong
+' Ép Ký túc xá -> Phòng -> Giường đi theo chiều dọc từ trên xuống
+ky_tuc_xa ||-down-o{ phong
+phong ||-down-o{ giuong
 
-' Quan hệ tài sản
-phong ||..o{ vat_tu_theo_phong
-giuong ||..o{ vat_tu_theo_phong
-loai_vat_tu ||..o{ vat_tu_theo_phong
+' Nhóm tài sản đẩy sang bên trái (left)
+phong ||-left-o{ vat_tu_theo_phong
+giuong ||-left-o{ vat_tu_theo_phong
+loai_vat_tu ||-down-o{ vat_tu_theo_phong
 
-' Quan hệ khách hàng
-khach_hang ||..o{ hop_dong
-khach_hang ||..o{ contact
-khach_hang ||..o{ giay_dat_coc
+' Kéo khóa ngoại từ cả 3 bảng vào chi tiết tiện ích
+ky_tuc_xa ||-right-o{ chi_tiet_tien_ich
+phong ||-right-o{ chi_tiet_tien_ich
+tien_ich ||-down-o{ chi_tiet_tien_ich
 
-' Quan hệ cọc
-giay_dat_coc ||..o{ chi_tiet_dat_coc
-giuong ||..o{ chi_tiet_dat_coc
-hop_dong |o..|| giay_dat_coc
+' Nhóm nội quy đẩy nhẹ sang góc trên
+ky_tuc_xa |o-up-o{ noi_quy 
+phong |o-up-o{ noi_quy 
 
-' Quan hệ hợp đồng
-hop_dong ||..o{ chi_tiet_hop_dong
-giuong ||..o{ chi_tiet_hop_dong
+' Khách hàng và các thực thể liên quan đẩy dàn ngang (right)
+' khach_hang ||-right-o{ hop_dong
+khach_hang }|-right-o{ hop_dong
+khach_hang ||-up-o{ lien_he
+khach_hang ||-down-o{ giay_dat_coc
 
-' Quan hệ biên bản & Hóa đơn
-hop_dong ||..o{ bien_ban
-hop_dong ||..o{ hoa_don
-nhan_vien ||..o{ bien_ban
-nhan_vien ||..o{ hoa_don
+' Lịch hẹn đẩy sang phải của liên hệ
+lien_he ||-right-o{ lich_hen
+nhan_vien |o-up-o{ lich_hen 
+phong |o-up-o{ lich_hen 
 
-' Quan hệ điện nước
-phong ||..o{ chi_so_dien_nuoc
-chi_so_dien_nuoc }o..|| loai_dich_vu
-hoa_don ||..o{ chi_so_dien_nuoc : "Chi tiet tien dien nuoc"
+' Chi tiết cọc và chi tiết hợp đồng
+giay_dat_coc ||----o{ chi_tiet_dat_coc
+giuong ||----o{ chi_tiet_dat_coc
+hop_dong |o-left-|| giay_dat_coc
+
+hop_dong ||-down-o{ chi_tiet_hop_dong
+giuong ||-right-o{ chi_tiet_hop_dong
+
+' Biên bản và hóa đơn đẩy xuống dưới (down)
+hop_dong ||-down-o{ bien_ban
+nhan_vien ||-right-o{ bien_ban
+
+' Phiếu thanh toán dàn ngang
+hop_dong |o-right-o{ phieu_thanh_toan 
+giay_dat_coc |o-right-o{ phieu_thanh_toan 
+nhan_vien ||-up-o{ phieu_thanh_toan
 
 @enduml

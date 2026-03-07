@@ -1,0 +1,97 @@
+@startuml XuLyNhanPhong
+title Activity Diagram: Xử lý nhận phòng
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ActivityBackgroundColor White
+    ActivityBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+
+    ' Swimlane styling
+    SwimlaneBorderColor #2D3E50
+    SwimlaneTitleBackgroundColor #F1F3F5
+    SwimlaneTitleFontSize 24
+    SwimlaneTitleFontColor #2D3E50
+    
+    ' Note styling
+    NoteBackgroundColor #FFF9C4
+    NoteBorderColor #FBC02D
+    NoteFontSize 24
+}
+
+' --- SWIMLANES ---
+|#FFE7D9|Khách hàng|
+|#D1E9FF|Nhân viên Sale|
+|#D6FFD6|Nhân viên Quản lý|
+|#F0F0F0|Others|
+
+
+
+|Khách hàng|
+start
+:Yêu cầu nhận phòng;
+
+|Nhân viên Sale|
+:Tiếp nhận yêu cầu nhận phòng;
+note right
+Phiếu đặt cọc (đọc)
+end note
+
+:Thu thập giấy tờ / thông tin cần thiết;
+
+
+if (Cung cấp đủ giấy tờ?) then (Có)
+else (Không)
+    stop
+endif
+
+:Đối chiếu thông tin khách với người đặt cọc;
+
+
+if (Thông tin khớp?) then (Có)
+else (Không)
+    :Yêu cầu người đặt cọc đến đối chiếu;
+    stop
+endif
+
+:Kiểm tra số lượng khách với thông tin đặt cọc;
+
+
+if (Số khách > số khách đặt cọc?) then (Có)
+    |Khách hàng|
+
+    if (Giảm số lượng?) then (Không)
+        stop
+    else (Có)
+        |Nhân viên Sale|
+        :Cập nhật số lượng khách;
+    endif
+
+else (Không)
+endif
+
+
+|Nhân viên Quản lý|
+:Kiểm tra điều kiện lưu trú từng thành viên;
+
+if (Thông tin cư trú hợp lệ?) then (Có)
+else (Không)
+    :Yêu cầu chuẩn bị lại thông tin;
+    stop
+endif
+
+|Others|
+:Thực hiện quy trình Lập hợp đồng;
+
+if (Lập hợp đồng thành công?) then (Có)
+else (Không)
+    stop
+endif
+
+:Thực hiện quy trình Bàn giao phòng;
+
+stop
+@enduml

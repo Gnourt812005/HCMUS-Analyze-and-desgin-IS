@@ -1,0 +1,120 @@
+@startuml XemPhong
+title Activity Diagram: Xem phòng
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ActivityBackgroundColor White
+    ActivityBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+
+    ' Swimlane styling
+    SwimlaneBorderColor #2D3E50
+    SwimlaneTitleBackgroundColor #F1F3F5
+    SwimlaneTitleFontSize 24
+    SwimlaneTitleFontColor #2D3E50
+    
+    ' Note styling
+    NoteBackgroundColor #FFF9C4
+    NoteBorderColor #FBC02D
+    NoteFontSize 24
+}
+
+' --- SWIMLANES ---
+|#D1E9FF|Nhân viên Sale|
+start
+:Điểm hẹn xem phòng;
+if (Khách hàng đến? - A1) then (Không)
+    :Nhắc nhở (sđt);
+    note right #LightYellow: **[Đọc]**\nDanh sách lịch hẹn xem phòng
+
+    if (Khách hàng đến ?)then (Không)
+        :Hẹn thời điểm khác;
+        note right #LightYellow: **[Ghi]**\nDanh sách lịch hẹn xem phòng
+        stop
+    else (Có)
+    endif
+else (Có)
+endif
+:1. Tiếp đón khách hàng;
+note right #LightYellow: **[Đọc]**\nHồ sơ đăng ký thuê phòng
+
+' VÒNG LẶP QUAY LẠI BƯỚC 2
+repeat
+    :2. Giới thiệu thông tin cơ bản;
+    note right #LightYellow: **[Đọc]**\nThông tin cơ bản của phòng và KTX: nội quy, bảng giá, các chi phí,...
+    if (Đồng ý nội quy KTX? - A2a) then (Không)
+        :Giải thích và thuyết phục;
+        if (Khách chấp nhận?) then (Không)
+            :Thông báo và kết thúc;
+            stop
+        else (Có)
+        endif
+    else (Có)
+    endif
+
+    if (Đồng ý thông tin cơ bản khác? - A2b) then (Không)
+        :Ghi nhận, xử lí tiếp ở UC Đăng ký;
+        note right #LightYellow: **[Ghi]**\nGhi chú vào Lịch xem phòng của khách hàng
+        stop
+    else (Có)
+    endif
+
+    :3. Giới thiệu quy định cọc-giữ phòng, lưu trú;
+    note right #LightYellow: **[Đọc]**\nChính sách đặt cọc-giữ phòng, lưu trú
+    if (Đồng ý các quy định? - A3) then (Không)
+        :Giải thích và thuyết phục;
+        if (Khách chấp nhận?) then (Không)
+            :Thông báo và kết thúc;
+            stop
+        else (Có)
+        endif
+    else (Có)
+    endif
+
+    if (Khách thuộc diện thuê nhóm? - A4.1) then (Có)
+        :4. Trao đổi 2 hình thức (thuê nguyên phòng/ở ghép);
+        if (Chấp nhận quy định hình thức? - A4.2) then (Không)
+            :Giải thích và thuyết phục;
+            if (Khách chấp nhận?) then (Không)
+                :Thông báo và kết thúc;
+                stop
+            else (Có)
+            endif
+        else (Có)
+        endif
+    else (Không)
+    endif
+
+    :5. Xác nhận ý định thuê của khách;
+
+    |#FFE7D9|Khách hàng|
+    if (Khách quyết định thuê?) then (Đồng ý)
+        |Nhân viên Sale|
+        :6. Kết thúc Usecase;
+        stop
+    else (Chưa quyết định - A5)
+        |Nhân viên Sale|
+        if (Lý do?) then (Muốn điều chỉnh yêu cầu - A5b)
+            :Ghi nhận, xử lý tiếp ở UC Đăng ký;
+            note right #LightYellow: **[Ghi]**\nGhi chú vào Lịch hẹn xem phòng
+            stop
+        else (Muốn xem phòng khác - A5a)
+            ' Nhánh này sẽ chạy thẳng xuống điều kiện vòng lặp bên dưới
+        endif
+    endif
+
+|Nhân viên Sale|
+
+backward: Dẫn khách đi xem phòng khác;
+
+
+repeat while (Phòng gần & NV không vướng lịch? - A5a1) is (Có)
+-> Không - A5a2;
+:Hẹn khách vào thời điểm khác;
+note right #LightYellow: **[Ghi]**\nDanh sách lịch hẹn xem phòng
+stop
+
+@enduml
