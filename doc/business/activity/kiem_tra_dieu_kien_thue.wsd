@@ -32,7 +32,7 @@ start
 :Kiểm tra thông tin khách hàng;
 
 if (Thoả tiêu chí thuê?) then (Không)
-    :Từ chối cho thuê;
+    #Pink:Từ chối cho thuê;
     stop
 else (Có)
 endif
@@ -42,7 +42,6 @@ endif
 note right
     phòng (đọc)
     giường (đọc)
-    trạng thái (đọc)
 end note
 
 if (Phòng/giường đã được giữ chỗ hay đã đặt cọc?) then (Có)
