@@ -35,6 +35,13 @@ start
 |Others|
 :Kiểm tra điều kiện thuê;
 
+if (Điều kiện thuê hợp lệ?) then (Không)
+  |Nhân viên Sale|
+  #Pink:Thông báo phòng/giường không thể cho thuê;
+  stop
+else (Có)
+endif
+
 |Nhân viên Sale|
 :Trình bày điều kiện thuê + nội quy cho khách hàng;
 note right
@@ -44,19 +51,9 @@ end note
 
 |Khách hàng|
 if (Đồng ý toàn bộ điều kiện?) then (Không)
-
-  if (Muốn điều chỉnh thông tin thuê?) then (Có)
-
-    |Others|
-    :Kiểm tra điều kiện thuê;
-
-  else (Không)
-
     |Nhân viên Sale|
     #Pink:Thông báo từ chối cho thuê;
     stop
-
-  endif
   else (Có)
 endif
 

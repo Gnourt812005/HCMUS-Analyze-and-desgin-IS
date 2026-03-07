@@ -1,5 +1,5 @@
 @startuml ThucHienDatCoc
-title Subprocess: Thực hiện đặt cọc
+title Activity Diagram: Thực hiện đặt cọc
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -28,10 +28,9 @@ skinparam {
 |#D6FFD6|Nhân viên Quản lý|
 |#FFF5D1|Nhân viên Kế toán|
 
-
+|Nhân viên Sale|
 start
 
-|Nhân viên Sale|
 :Chuyển thông tin cho Kế toán tính tiền cọc;
 
 |Nhân viên Kế toán|
@@ -42,32 +41,31 @@ start
 :Gửi yêu cầu thanh toán + thông báo mức cọc;
 :Hướng dẫn thông tin thanh toán;
 
+fork
 |Khách hàng|
 :Thực hiện thanh toán;
 
 |Nhân viên Sale|
-:Chờ minh chứng thanh toán (≤24h);
-
-if (Có người khác đặt cọc thành công?) then (Có)
-
-#Pink:Thông báo huỷ yêu cầu đặt cọc;
-stop
-
+if (Thanh toán trước 24h?) then (Có)
+    if (Có người đã đặt cọc trước?) then (Có)
+        #Pink:Hoàn tiền và thông báo huỷ yêu cầu đặt cọc;
+        stop
+    else (Không)
+    endif
 else (Không)
 endif
 
+fork again
+
 |Nhân viên Sale|
-
 if (Nhận thanh toán hợp lệ trong 24h?) then (Không)
-
-#Pink:Thông báo huỷ yêu cầu đặt cọc;
-stop
-
+    #Pink:Thông báo huỷ yêu cầu đặt cọc;
+    stop
 else (Có)
-
-:Gửi minh chứng cho Quản lý;
-
+    :Gửi minh chứng cho Quản lý;
 endif
+
+end fork
 
 |Nhân viên Quản lý|
 :Đối chiếu thông tin giao dịch & xác nhận hợp lệ;
@@ -75,7 +73,7 @@ note right
     thông tin giao dịch (đọc)
     phòng (ghi)
     giường (ghi)
-    trạng thái (ghi)
+    giấy đặt cọc (ghi)
 end note
 
 |Nhân viên Sale|
