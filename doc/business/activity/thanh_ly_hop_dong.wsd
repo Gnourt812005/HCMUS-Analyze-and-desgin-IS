@@ -52,7 +52,7 @@ if (Đồng ý bảng đối soát?) then (Không)
     :Kiểm tra lại phòng và yêu cầu \nKế toán rà soát lại các khoản tiền;
     :Giải thích rõ ràng cho khách;
     if (Khách vẫn không đồng ý?) then (Có)
-        :Lập biên bản tranh chấp \nvà đưa vào danh sách đen;
+        :Lập biên bản tranh chấp;
         stop
     else (Đồng ý)
     endif
@@ -60,7 +60,7 @@ else (Có)
 endif
 
 |Nhân viên Quản lý|
-:Cung cấp biên bản trả phòng \nvà thanh lý hợp đồng;
+:Ghi biên bản trả phòng \nvà thanh lý hợp đồng;
 note right
     Biên bản trả phòng (ghi)
 end note
@@ -102,10 +102,9 @@ else (Nhỏ hơn hoặc bằng - Hoàn cọc)
             :Hoàn bằng tiền mặt;
         endif
     else (Chuyển khoản)
-        if (Cung cấp sai STK?) then (Có)
+        while (Cung cấp sai STK?) is (Có)
             :Liên hệ khách nhận lại STK đúng;
-        else (Không)
-        endif
+        endwhile (Không)
         :Hoàn tiền qua chuyển khoản;
     endif
 endif

@@ -1,5 +1,5 @@
 @startuml Activity_DangKyThuePhong
-title UC: Đăng ký thuê phòng
+title Activity Diagram: Đăng ký thuê phòng
 
 ' --- STYLE CONFIGURATION ---
 skinparam {

@@ -1,5 +1,5 @@
 @startuml Activity_XacDinh_LuaChonPhong
-title UC: Xác định và lựa chọn phòng
+title Activity Diagram: Xác định và lựa chọn phòng
 
 ' --- STYLE CONFIGURATION ---
 skinparam {

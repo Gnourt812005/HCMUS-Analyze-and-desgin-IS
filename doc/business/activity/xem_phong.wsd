@@ -1,5 +1,5 @@
 @startuml XemPhong
-title UC: Xem phòng
+title Activity Diagram: Xem phòng
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
