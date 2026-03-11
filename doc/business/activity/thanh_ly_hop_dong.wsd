@@ -1,4 +1,4 @@
-@startuml ThanhLyHopDong
+@startuml Activity_ThanhLyHopDong
 title Activity Diagram: Thanh lý hợp đồng
 
 ' --- STYLE CONFIGURATION ---

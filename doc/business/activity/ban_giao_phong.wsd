@@ -1,4 +1,4 @@
-@startuml BanGiaoPhong
+@startuml Activity_BanGiaoPhong
 title Activity Diagram: Bàn giao phòng
 
 ' --- STYLE CONFIGURATION ---

@@ -1,4 +1,4 @@
-@startuml XuLyNhanPhong
+@startuml Activity_XuLyNhanPhong
 title Activity Diagram: Xử lý nhận phòng
 
 ' --- STYLE CONFIGURATION ---

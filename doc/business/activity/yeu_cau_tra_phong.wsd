@@ -1,4 +1,4 @@
-@startuml YeuCauTraPhong
+@startuml Activity_YeuCauTraPhong
 title Activity Diagram: Yêu cầu trả phòng
 
 ' --- STYLE CONFIGURATION ---
