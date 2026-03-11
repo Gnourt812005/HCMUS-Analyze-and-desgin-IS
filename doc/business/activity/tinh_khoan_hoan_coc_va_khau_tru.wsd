@@ -1,4 +1,4 @@
-@startuml TinhKhoanHoanCocVaKhauTru
+@startuml Activity_TinhKhoanHoanCocVaKhauTru
 title Activity Diagram: Tính khoản hoàn cọc và khấu trừ
 
 ' --- STYLE CONFIGURATION ---
