@@ -1,4 +1,4 @@
-@startuml HomeStay Dorm
+@startuml BusinessUsecase
 title HomeStay Dorm Business Use Case Diagram
 skinparam packageStyle rectangle
 

@@ -1,4 +1,4 @@
-@startuml XemPhong
+@startuml Activity_XemPhong
 title Activity Diagram: Xem phòng
 
 ' --- STYLE CONFIGURATION ---

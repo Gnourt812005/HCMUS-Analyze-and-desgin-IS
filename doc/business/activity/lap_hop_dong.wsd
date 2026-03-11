@@ -1,4 +1,4 @@
-@startuml LapHopDong
+@startuml Activity_LapHopDong
 title Activity Diagram: Lập hợp đồng
 
 ' --- STYLE CONFIGURATION ---

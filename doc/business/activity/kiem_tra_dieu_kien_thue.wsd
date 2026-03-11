@@ -1,4 +1,4 @@
-@startuml KiemTraDieuKienThue
+@startuml Activity_KiemTraDieuKienThue
 title Activity Diagram: Kiểm tra điều kiện thuê
 
 ' --- STYLE CONFIGURATION ---

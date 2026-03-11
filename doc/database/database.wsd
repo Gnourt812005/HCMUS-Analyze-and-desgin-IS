@@ -1,4 +1,4 @@
-@startuml Database_Conceptual
+@startuml Database_ER
 
 ' === CONFIGURATION FOR CLEAN LAYOUT ===
 skinparam linetype ortho

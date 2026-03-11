@@ -1,4 +1,4 @@
-@startuml ThucHienDatCoc
+@startuml Activity_ThucHienDatCoc
 title Activity Diagram: Thực hiện đặt cọc
 
 ' --- STYLE CONFIGURATION ---
