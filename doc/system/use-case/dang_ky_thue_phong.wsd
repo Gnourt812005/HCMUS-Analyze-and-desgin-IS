@@ -1,0 +1,54 @@
+@startuml SystemUsecase
+title Đăng ký thuê phòng - Use Case Diagram
+
+skinparam packageStyle rectangle
+
+' Direction
+left to right direction
+
+' Define S.Actors
+actor "Khách hàng" as customer #Lime
+actor "Nhân viên quản lý chi nhánh" as manager #DarkOrange
+actor "Nhân viên sale" as sale #DeepSkyBlue
+actor "Admin" as admin #Crimson
+
+
+' rectangle "Màn hình chung" {
+' 	usecase/ "Đăng ký thuê phòng" as UC_DangKyThuePhong
+' 	usecase/ "Xác định và chọn phòng" as UC_XacDinhVaChonPhong
+' 	usecase/ "Xem phòng" as UC_XemPhong
+
+' 	' Use Case Relationships
+' 	UC_DangKyThuePhong ..> UC_XacDinhVaChonPhong : <<include>>
+' 	UC_XemPhong ..> UC_DangKyThuePhong : <<extend>>
+' }
+
+rectangle "Màn hình chung"{
+    usecase "Đăng nhập" as UC_DangNhap
+    usecase "Đăng xuất" as UC_DangXuat
+    usecase "Quản ly tài khoản" as UC_QuanLyTaiKhoan
+
+    UC_DangXuat ..> UC_DangNhap : <<extend>>
+    UC_QuanLyTaiKhoan ..> UC_DangNhap : <<extend>>
+}
+
+rectangle "Màn hình nhân viên quản lý chi nhánh"{
+
+}
+
+rectangle "Màn hình nhân viên sale"{
+    usecase "Quản lý lịch xem phòng" as UC_QuanLyLichXemPhong
+
+    UC_QuanLyLichXemPhong ..> UC_DangNhap : <<extend>>
+}
+
+rectangle "Màn hình Admin"{
+    usecase "Quản lý ký túc xá" as UC_QuanLyKyTucXa
+
+    UC_QuanLyKyTucXa ..> UC_DangNhap : <<extend>>
+}
+
+' Actor - Main Use Cases Associations
+' customer -- UC_DangKyThuePhong
+
+@enduml
