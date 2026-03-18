@@ -1,0 +1,92 @@
+@startuml BusinessUsecase
+title HomeStay Dorm Business Use Case Diagram
+skinparam packageStyle rectangle
+
+' Direction
+left to right direction
+
+' Define B.Actors
+actor "Khách hàng" as customer
+actor "Nhân viên" as employee
+' actor "Nhân viên sale" as employee_sale
+' actor "Nhân viên kế toán" as employee_accountant
+' actor "Nhân viên quản lý" as employee_manager
+' actor "Nhân viên phụ trách" as employee_in_charge
+
+' Entity Managment Use-case'
+' Admin Use-case'
+
+rectangle "Màn hình ADMIN quản lý" {
+  usecase "Tạo tài khoản nhân viên" as UC_TaoTaiKhoanNhanVien
+  usecase "Quản lý ký túc xá" as UC_QuanLyKyTucXa
+  usecase "Quản lý phòng" as UC_QuanLyPhong
+  usecase "Quản lý nhân viên" as UC_QuanLyNhanVien
+  usecase "Quản lý hợp đồng" as UC_QuanLyHopDong
+}
+
+rectangle "Màn hình chung" {
+  usecase "Đăng nhập" as UC_DangNhap
+  usecase "Đăng xuất" as UC_DangXuat
+  usecase "Quản lý thông tin cá nhân" as UC_QuanLyThongTinCaNhan
+}
+
+' Admin sub-system'
+rectangle "Màn hình của nhân viên" {
+  usecase "Quản lý đơn đăng ký xem phòng" as UC_QuanLyDonDangKyXemPhong
+  usecase "Quản lý đơn đăng ký thuê" as UC_QuanLyDonDangKyThue
+  usecase "Lập hợp đồng" as UC_LapHopDong
+  usecase "Lập biên bản bàn giao phòng" as UC_LapBienBanBanGiaoPhong
+  usecase "Quản lý yêu cầu trả phòng" as UC_QuanLyYeuCauTraPhong
+  usecase "Thanh lý hợp đồng" as UC_ThanhLyHopDong
+
+  employee -- UC_DangNhap
+  UC_DangNhap <.. UC_QuanLyDonDangKyXemPhong : <<extend>>
+  UC_DangNhap <.. UC_QuanLyDonDangKyThue : <<extend>>
+  UC_DangNhap <.. UC_LapHopDong : <<extend>>
+  UC_LapHopDong ..> UC_LapBienBanBanGiaoPhong : <<include>>
+  UC_DangNhap <.. UC_QuanLyYeuCauTraPhong : <<extend>>
+  UC_QuanLyYeuCauTraPhong ..> UC_ThanhLyHopDong : <<include>>
+}
+
+' Customer sub-system'
+rectangle "Màn hình của khách hàng" {
+  usecase "Đăng ký" as UC_DangKy
+  usecase "Xem danh sách phòng" as UC_XemDanhSachPhong
+  usecase "Xem chi tiết phòng" as UC_XemChiTietPhong
+
+  usecase "Đăng ký xem phòng" as UC_DangKyXemPhong
+
+  usecase "Đăng ký thuê" as UC_DangKyThue
+  usecase "Kiểm tra điều kiện thuê" as UC_KiemTraDieuKienThue
+
+  usecase "Thực hiện đặt cọc" as UC_ThucHienDatCoc
+
+  usecase "Yêu cầu trả phòng" as UC_YeuCauTraPhong
+
+  usecase "Thanh toán" as UC_ThanhToan
+  customer -- UC_DangKy
+  customer -- UC_DangNhap
+
+  UC_DangNhap <.. UC_QuanLyThongTinCaNhan : <<extend>>
+  UC_DangNhap <.. UC_DangXuat : <<extend>>
+  UC_DangNhap <.. UC_XemDanhSachPhong : <<extend>>
+
+  UC_XemDanhSachPhong <.. UC_XemChiTietPhong : <<extend>>
+  UC_XemChiTietPhong <.. UC_DangKyXemPhong : <<extend>>
+
+  UC_XemChiTietPhong <.. UC_DangKyThue : <<extend>>
+  
+  UC_DangKyThue ..> UC_KiemTraDieuKienThue : <<include>>
+  UC_DangKyThue ..> UC_ThucHienDatCoc : <<include>>
+
+  UC_ThucHienDatCoc ..> UC_ThanhToan : <<include>>
+
+}
+
+' usecase "Xử lý nhận phòng" as UC_XuLyNhanPhong
+
+' usecase "Tính khoản hoàn cọc và khấu trừ" as UC_TinhHoanCocKhauTru
+
+' Actor - Main Use Cases Associations
+
+@enduml
