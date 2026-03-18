@@ -55,6 +55,7 @@ bower_components/
 # Temporary files
 tmp/
 temp/
+local*/
 
 # Yarn Integrity file
 .yarn-integrity
