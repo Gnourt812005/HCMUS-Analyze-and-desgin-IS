@@ -36,6 +36,5 @@ UC_QuanLyYeuCauTraPhong ..> UC_DangNhap : <<extend>>
 
 UC_TinhKhoanHoanCoc ..> UC_QuanLyYeuCauTraPhong : <<extend>>
 UC_ThanhLyHopDong ..> UC_QuanLyYeuCauTraPhong : <<extend>>
-UC_ThanhLyHopDong ..> UC_QuanLyPhong : <<include>>
 
 @enduml
