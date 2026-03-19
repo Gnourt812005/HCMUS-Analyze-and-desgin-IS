@@ -10,9 +10,9 @@ actor/ "Khách hàng" as customer
 
 rectangle "Hệ thống Homestay Dorm" {
 	rectangle "Quy trình đăng ký thuê phòng" {
-		usecase/ "UC1: Đăng ký thuê phòng" as UC_DangKyThuePhong
-		usecase/ "UC2: Xác định và chọn phòng" as UC_XacDinhVaChonPhong
-		usecase/ "UC3: Xem phòng" as UC_XemPhong
+		usecase/ "Đăng ký thuê phòng" as UC_DangKyThuePhong <<UC01>>
+		usecase/ "Xác định và chọn phòng" as UC_XacDinhVaChonPhong <<UC02>>
+		usecase/ "Xem phòng" as UC_XemPhong <<UC03>>
 
 		' Use Case Relationships
 		UC_DangKyThuePhong ..> UC_XacDinhVaChonPhong : <<include>>
@@ -20,9 +20,9 @@ rectangle "Hệ thống Homestay Dorm" {
 	}
 
 	rectangle "Quy trình thuê phòng" {
-		usecase/ "UC4: Xác nhận thuê" as UC_XacNhanThue
-		usecase/ "UC5: Kiểm tra điều kiện thuê" as UC_KiemTraDieuKienThue
-		usecase/ "UC6: Thực hiện đặt cọc" as UC_ThucHienDatCoc
+		usecase/ "Xác nhận thuê" as UC_XacNhanThue <<UC04>>
+		usecase/ "Kiểm tra điều kiện thuê" as UC_KiemTraDieuKienThue <<UC05>>
+		usecase/ "Thực hiện đặt cọc" as UC_ThucHienDatCoc <<UC06>>
 
 		' Use Case Relationships
 		UC_XacNhanThue ..> UC_KiemTraDieuKienThue : <<include>>
@@ -30,9 +30,9 @@ rectangle "Hệ thống Homestay Dorm" {
 	}
 
 	rectangle "Quy trình nhận phòng, ký thoả thuận thuê và bàn giao phòng" {
-		usecase/ "UC7: Xử lý nhận phòng" as UC_XuLyNhanPhong
-		usecase/ "UC8: Lập hợp đồng" as UC_KyHopDong
-		usecase/ "UC9: Bàn giao phòng" as UC_BanGiaoPhong
+		usecase/ "Xử lý nhận phòng" as UC_XuLyNhanPhong <<UC07>>
+		usecase/ "Lập hợp đồng" as UC_KyHopDong <<UC08>>
+		usecase/ "Bàn giao phòng" as UC_BanGiaoPhong <<UC09>>
 
 		' Use Case Relationships
 		UC_XuLyNhanPhong ..> UC_KyHopDong : <<include>>
@@ -40,9 +40,9 @@ rectangle "Hệ thống Homestay Dorm" {
 	}
 
 	rectangle "Quy trình trả phòng và hoàn cọc" {
-		usecase/ "UC10: Yêu cầu trả phòng" as UC_YeuCauTraPhong
-		usecase/ "UC11: Tính khoản hoàn cọc và khấu trừ" as UC_TinhHoanCocKhauTru
-		usecase/ "UC12: Thanh lý hợp đồng" as UC_ThanhLyHopDong
+		usecase/ "Yêu cầu trả phòng" as UC_YeuCauTraPhong <<UC10>>
+		usecase/ "Tính khoản hoàn cọc và khấu trừ" as UC_TinhHoanCocKhauTru <<UC11>>
+		usecase/ "Thanh lý hợp đồng" as UC_ThanhLyHopDong <<UC12>>
 
 		' Use Case Relationships
 		UC_YeuCauTraPhong ..> UC_TinhHoanCocKhauTru : <<include>>

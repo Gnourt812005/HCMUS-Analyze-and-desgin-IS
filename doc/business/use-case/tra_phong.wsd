@@ -1,0 +1,23 @@
+@startuml BusinessUsecase
+skinparam packageStyle rectangle
+
+' Direction
+left to right direction
+
+' Define B.Actors
+actor/ "Khách hàng" as customer
+
+rectangle "Quy trình trả phòng và hoàn cọc" {
+  usecase/ "Yêu cầu trả phòng" as UC_YeuCauTraPhong <<UC10>>
+  usecase/ "Tính khoản hoàn cọc và khấu trừ" as UC_TinhHoanCocKhauTru <<UC11>>
+  usecase/ "Thanh lý hợp đồng" as UC_ThanhLyHopDong <<UC12>>
+
+  ' Use Case Relationships
+  UC_YeuCauTraPhong ..> UC_TinhHoanCocKhauTru : <<include>>
+  UC_YeuCauTraPhong ..> UC_ThanhLyHopDong : <<include>>
+}
+
+' Actor - Main Use Cases Associations
+customer -- UC_YeuCauTraPhong
+
+@enduml
