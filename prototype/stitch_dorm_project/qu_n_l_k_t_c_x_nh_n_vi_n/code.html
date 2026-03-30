@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-error-container": "#93000a",
+              "tertiary": "#943700",
+              "surface-variant": "#e1e3e4",
+              "on-primary-fixed": "#00174b",
+              "on-error": "#ffffff",
+              "tertiary-fixed-dim": "#ffb596",
+              "outline": "#737686",
+              "surface-container-highest": "#e1e3e4",
+              "primary-container": "#2563eb",
+              "primary-fixed-dim": "#b4c5ff",
+              "on-tertiary-fixed-variant": "#7d2d00",
+              "surface-container-low": "#f3f4f5",
+              "secondary-fixed": "#ffddb8",
+              "primary": "#004ac6",
+              "on-primary-container": "#eeefff",
+              "error": "#ba1a1a",
+              "on-tertiary-fixed": "#360f00",
+              "secondary-fixed-dim": "#ffb95f",
+              "on-surface": "#191c1d",
+              "background": "#f8f9fa",
+              "secondary-container": "#fea619",
+              "secondary": "#855300",
+              "on-tertiary-container": "#ffede6",
+              "surface-bright": "#f8f9fa",
+              "on-secondary-fixed-variant": "#653e00",
+              "on-secondary-fixed": "#2a1700",
+              "error-container": "#ffdad6",
+              "surface-container-high": "#e7e8e9",
+              "surface-tint": "#0053db",
+              "on-secondary-container": "#684000",
+              "inverse-surface": "#2e3132",
+              "surface-dim": "#d9dadb",
+              "outline-variant": "#c3c6d7",
+              "on-tertiary": "#ffffff",
+              "surface-container": "#edeeef",
+              "on-background": "#191c1d",
+              "inverse-primary": "#b4c5ff",
+              "primary-fixed": "#dbe1ff",
+              "tertiary-container": "#bc4800",
+              "surface-container-lowest": "#ffffff",
+              "surface": "#f8f9fa",
+              "on-primary": "#ffffff",
+              "on-secondary": "#ffffff",
+              "tertiary-fixed": "#ffdbcd",
+              "on-primary-fixed-variant": "#003ea8",
+              "on-surface-variant": "#434655",
+              "inverse-on-surface": "#f0f1f2"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f5;
+        }
+        .sidebar-logo {
+            font-family: 'Manrope', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-surface-container-low text-on-surface">
+<!-- SideNavBar (Execution from JSON) -->
+<aside class="fixed left-0 top-0 h-full flex flex-col z-50 overflow-y-auto bg-slate-50 dark:bg-slate-950 h-screen w-64 border-r border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none">
+<!-- Header Section -->
+<div class="p-6">
+<div class="text-xl font-black tracking-tighter text-blue-800 dark:text-blue-400 mb-1">The Digital Architect</div>
+<div class="font-manrope font-bold tracking-tight text-xs text-slate-500 uppercase">Management Portal</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 px-2 space-y-1">
+<!-- Ký túc xá (Active) -->
+<a class="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-400 font-bold border-r-4 border-blue-700 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20 transition-all active:opacity-80 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined">domain</span>
+<span class="font-inter text-sm">Ký túc xá</span>
+</a>
+<!-- Phòng -->
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">bed</span>
+<span class="font-inter text-sm">Phòng</span>
+</a>
+<!-- Lịch xem -->
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-inter text-sm">Lịch xem</span>
+</a>
+<!-- Đơn hàng -->
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="font-inter text-sm">Đơn hàng</span>
+</a>
+<!-- Hợp đồng -->
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-inter text-sm">Hợp đồng</span>
+</a>
+<!-- Nhân viên -->
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">badge</span>
+<span class="font-inter text-sm">Nhân viên</span>
+</a>
+</nav>
+<!-- CTA Button -->
+<!-- Footer Navigation -->
+<div class="mt-auto border-t border-slate-200 dark:border-slate-800 p-2 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-inter text-sm">Cài đặt</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-inter text-sm">Đăng xuất</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen p-8">
+<!-- Dashboard Canvas -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden min-h-[calc(100vh-4rem)]"><div class="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-container-low">
+<div>
+<h1 class="text-xl font-bold text-on-surface">Danh sách cơ sở</h1>
+<p class="text-sm text-on-surface-variant">Quản lý thông tin và trạng thái các cơ sở ký túc xá</p>
+</div>
+<button class="flex items-center justify-center gap-2 bg-primary text-white px-6 py-2.5 rounded-lg font-bold text-sm shadow-sm hover:brightness-110 transition-all">
+<span class="material-symbols-outlined text-[20px]">add</span>
+    Thêm cơ sở mới
+  </button>
+</div>
+<!-- Table Implementation -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest font-label font-bold text-outline">Mã KTX</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest font-label font-bold text-outline">Tên cơ sở</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest font-label font-bold text-outline">Địa chỉ</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest font-label font-bold text-outline">Số phòng</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest font-label font-bold text-outline">Trạng thái</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest font-label font-bold text-outline text-right">Thao tác</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low font-body text-sm text-on-surface">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-50 transition-colors duration-150">
+<td class="px-6 py-5 font-mono text-xs font-semibold text-primary">KTX-001</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Modern architectural dorm building with glass windows and clean white concrete facade in a professional urban setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqmzy41ABqcMgg_mpEuCBhSVcM5KnwOEN-Nit-XjaEAfIsrcphvZWFBROrIHp0ktIYBXsouZgzaIEIHBi7u4dxqbLYKKiYZaxLV3CSJJuKnFgG5eatB_sTj6kq5Y-xCBgQ-hPHHP6ds-Hsgkcl7jq-qHoxPiDZoTlZeW2KCLor2WLsX8hAffT8CbgNoYPQ54Wl30gU8YybXsJcM8AgpqfqWHhoGpZhGmLwUsgrjv-gbGCfPK-9r7r1Ii55djq_A-7-x9VRhEr4XKI"/>
+</div>
+<span class="font-bold text-on-surface">Cơ sở Diamond Residence</span>
+</div>
+</td>
+<td class="px-6 py-5 text-on-surface-variant">123 Đường Trần Duy Hưng, Cầu Giấy, Hà Nội</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2">
+<span class="font-semibold">45</span>
+<span class="text-[10px] text-outline px-1.5 py-0.5 bg-surface-container rounded uppercase">Phòng</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                    Đang hoạt động
+                                </span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-50 transition-colors duration-150">
+<td class="px-6 py-5 font-mono text-xs font-semibold text-primary">KTX-002</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Interior of a luxury studio room with minimalist furniture, high ceiling, and large windows providing natural bright lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3xITXvh060Ibo18mBDNz6T5k16E799bj_ubzm5GI5IQlnk6mNMpXN6YgMYQQ_Vaw2R58_yVYlxXR1uQRBgdwzxyE15IjH7DIm7Qt6izbion907ebRPUB037N3VcQtsRzF8PLCqWWoiVVguNGk5xv6inzNp2nzEtxiPwna_rFQaszBHSEy6flDQj4c6w3nkBySS9CKyhX2xTxkRUewG308uuKBig0GK8ytaicQV-cJdKBbuaC_ljCwX20SBdeld5pK4VD7sOuep_Q"/>
+</div>
+<span class="font-bold text-on-surface">Cơ sở Sky Central</span>
+</div>
+</td>
+<td class="px-6 py-5 text-on-surface-variant">456 Đường Nguyễn Trãi, Thanh Xuân, Hà Nội</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2">
+<span class="font-semibold">32</span>
+<span class="text-[10px] text-outline px-1.5 py-0.5 bg-surface-container rounded uppercase">Phòng</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                    Đang hoạt động
+                                </span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-50 transition-colors duration-150">
+<td class="px-6 py-5 font-mono text-xs font-semibold text-primary">KTX-003</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Renovation site of a modern apartment building with scaffolds and architectural blueprints visible in the foreground under bright sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsE0yUDR9i2-rsNweW4PcghQRG8ai8g3vwo5EfERyqK25-MYZ1i34WYTKmTA_u5w11DiYU5yKMgSVZuGYuTufAP961sfiyy2C5WiWhVKg-f7OmpKn0_8pPZtmUhGi7zxOxTQ7y-eG7PbcRzyfEemKE7aJWgZBupCWPcmpjLxSrtu2uBFa71kgjWAPwWbtJnQ3qeXIOc2Lh7RBDGZLvbNCeQTwCoMlmKuhku1U4NAuYgjKbBooKKvl31JDkfpDv2UejOsoPxbnbTKU"/>
+</div>
+<span class="font-bold text-on-surface">Cơ sở West Point</span>
+</div>
+</td>
+<td class="px-6 py-5 text-on-surface-variant">789 Đường Phạm Văn Đồng, Bắc Từ Liêm, Hà Nội</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2">
+<span class="font-semibold">60</span>
+<span class="text-[10px] text-outline px-1.5 py-0.5 bg-surface-container rounded uppercase">Phòng</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                                    Đang sửa chữa
+                                </span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-slate-50 transition-colors duration-150">
+<td class="px-6 py-5 font-mono text-xs font-semibold text-primary">KTX-004</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Wide angle shot of a sleek corporate residential tower with glass curtain walls reflecting the blue sky at dawn" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLk7zk_odUTxnXvazGRnzQHdw5wZp3cJePXsngPj5XSIJ5F2qQVoEvLq0rpc_XNyAF3WcAmXr5MazKZEshgO-1wtOWrLoPRdN-sDyi5xMyzU6YDB4f0q5_gWo-OzB6xH1ySJNLiU0gS4gi5BIDZ-iIapTUlgNE7gsZT47GSGT4hlHe3ehNBZecIRrLyGy078JGmRTAHKUyXvGpppgjfm-DGEK8Fk-3N3yVESfrmI5NUkK5PZsoCiX_PsHk93hqlBg5IlHYgaEWi_A"/>
+</div>
+<span class="font-bold text-on-surface">Cơ sở Landmark South</span>
+</div>
+</td>
+<td class="px-6 py-5 text-on-surface-variant">12 Lạc Long Quân, Tây Hồ, Hà Nội</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2">
+<span class="font-semibold">24</span>
+<span class="text-[10px] text-outline px-1.5 py-0.5 bg-surface-container rounded uppercase">Phòng</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                    Đang hoạt động
+                                </span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-slate-50 transition-colors duration-150">
+<td class="px-6 py-5 font-mono text-xs font-semibold text-primary">KTX-005</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="New apartment complex with multiple balconies and manicured landscaping in a quiet residential neighborhood" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCATxJrhNRbslVIr8ogHLhuan1uRWYS_N2Re12wXbScN4_PSzjmV76H9YKu_zeFrivX2cxcIZRcT6WXkEKgQ5O8K2a02j_SQ8gwzFx247W9WUF9JDOTpGJLAWg9THWYNjAIbR3cRmUbJZ4eHRXENoFXHwAdACvq5cpAGxrNnzJKLRaUnzhEgoWPe9mgOuVDU5BuVmeK7Terzn_hY6rt72D2SsUEnGDZlIW6coi6ekavR6MFrOWrqJY4aaky376G7Ij2U7k8vPbS0_g"/>
+</div>
+<span class="font-bold text-on-surface">Cơ sở Green View</span>
+</div>
+</td>
+<td class="px-6 py-5 text-on-surface-variant">55 Giải Phóng, Hai Bà Trưng, Hà Nội</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2">
+<span class="font-semibold">18</span>
+<span class="text-[10px] text-outline px-1.5 py-0.5 bg-surface-container rounded uppercase">Phòng</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                                    Tạm ngưng
+                                </span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Empty State / Load More (Minimal) -->
+<div class="p-6 border-t border-surface-container-low flex justify-between items-center bg-surface-container-lowest">
+<span class="text-xs text-outline font-medium">Hiển thị 5 trên 12 cơ sở</span>
+<div class="flex gap-2">
+<button class="p-2 rounded hover:bg-surface-container-low text-outline transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="p-2 rounded hover:bg-surface-container-low text-outline transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

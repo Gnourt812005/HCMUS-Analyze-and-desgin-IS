@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-error-container": "#93000a",
+              "tertiary": "#943700",
+              "surface-variant": "#e1e3e4",
+              "on-primary-fixed": "#00174b",
+              "on-error": "#ffffff",
+              "tertiary-fixed-dim": "#ffb596",
+              "outline": "#737686",
+              "surface-container-highest": "#e1e3e4",
+              "primary-container": "#2563eb",
+              "primary-fixed-dim": "#b4c5ff",
+              "on-tertiary-fixed-variant": "#7d2d00",
+              "surface-container-low": "#f3f4f5",
+              "secondary-fixed": "#ffddb8",
+              "primary": "#004ac6",
+              "on-primary-container": "#eeefff",
+              "error": "#ba1a1a",
+              "on-tertiary-fixed": "#360f00",
+              "secondary-fixed-dim": "#ffb95f",
+              "on-surface": "#191c1d",
+              "background": "#f8f9fa",
+              "secondary-container": "#fea619",
+              "secondary": "#855300",
+              "on-tertiary-container": "#ffede6",
+              "surface-bright": "#f8f9fa",
+              "on-secondary-fixed-variant": "#653e00",
+              "on-secondary-fixed": "#2a1700",
+              "error-container": "#ffdad6",
+              "surface-container-high": "#e7e8e9",
+              "surface-tint": "#0053db",
+              "on-secondary-container": "#684000",
+              "inverse-surface": "#2e3132",
+              "surface-dim": "#d9dadb",
+              "outline-variant": "#c3c6d7",
+              "on-tertiary": "#ffffff",
+              "surface-container": "#edeeef",
+              "on-background": "#191c1d",
+              "inverse-primary": "#b4c5ff",
+              "primary-fixed": "#dbe1ff",
+              "tertiary-container": "#bc4800",
+              "surface-container-lowest": "#ffffff",
+              "surface": "#f8f9fa",
+              "on-primary": "#ffffff",
+              "on-secondary": "#ffffff",
+              "tertiary-fixed": "#ffdbcd",
+              "on-primary-fixed-variant": "#003ea8",
+              "on-surface-variant": "#434655",
+              "inverse-on-surface": "#f0f1f2"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface-container-low text-on-surface antialiased flex">
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full flex flex-col z-50 overflow-y-auto bg-slate-50 dark:bg-slate-950 h-screen w-64 border-r border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none">
+<!-- Brand Identity -->
+<div class="p-6 flex flex-col gap-1">
+<span class="text-xl font-black tracking-tighter text-blue-800 dark:text-blue-400">The Digital Architect</span>
+<span class="font-manrope font-bold tracking-tight text-xs uppercase opacity-60">Management Portal</span>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 px-3 py-4 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">domain</span>
+<span class="text-sm font-inter">Ký túc xá</span>
+</a>
+<!-- Active Tab: Ph\u00f2ng (Rooms) -->
+<a class="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-400 font-bold border-r-4 border-blue-700 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20 transition-all" href="#">
+<span class="material-symbols-outlined">bed</span>
+<span class="text-sm font-inter">Phòng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="text-sm font-inter">Lịch xem</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="text-sm font-inter">Đơn hàng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="text-sm font-inter">Hợp đồng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">badge</span>
+<span class="text-sm font-inter">Nhân viên</span>
+</a>
+</nav>
+<!-- CTA & Footer -->
+<div class="p-4 flex flex-col gap-2">
+<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-inter">Cài đặt</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-sm font-inter">Đăng xuất</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="ml-64 flex-1 min-h-screen p-8"><div class="flex justify-between items-center mb-6">
+<div>
+<h1 class="text-2xl font-bold text-on-surface">Danh sách phòng</h1>
+<p class="text-sm text-on-surface-variant">Quản lý thông tin chi tiết các phòng trong hệ thống</p>
+</div>
+<button class="bg-primary text-on-primary py-2.5 px-6 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-[20px]">add</span>
+    Thêm phòng mới
+  </button>
+</div>
+<!-- Content Container (Bento Grid Style Table Area) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">Hình ảnh</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">Tên phòng</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">Thuộc KTX</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">Giá thuê</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant text-center">Số giường</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">Trạng thái</th>
+<th class="px-6 py-4"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container/30 transition-colors group">
+<td class="px-6 py-4">
+<div class="w-24 h-16 rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" data-alt="modern minimalist dormitory room with warm wood accents and high-end built-in furniture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6Bxnh4SGDLHuiscDGs_ImZaDHuhJCJY4dtudiDCujvnlrpJprP1Vk58m9KuRKK0Wh5lVNr5jeFL8V5th4isdA7N28kZSgdFpfQAno2006a6RPc_TPV1Rf_wZDuyfgGyv2EXZZi2C8ItzzMX2_HzmayNQC9tWjfwUQgZPasRQZeq_Jj-rMjejmlKAwusdMP4_oFlLrCF4nkC0ZzzDbORmNRD_Gxce1n15cpVDfYQAfI_F-EAUrLLg0V1BG6KO6AZnIXKPc7QL95ys"/>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-manrope font-bold text-on-surface block">Lux Suite 402</span>
+<span class="text-[10px] text-on-surface-variant/70 uppercase tracking-tighter">ID: LX-402-A</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-medium text-on-surface-variant">Sky Tower Residences</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-secondary font-bold text-sm tracking-tight bg-secondary-container/20 px-3 py-1 rounded-full">4.500.000đ</span>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="text-sm font-medium text-on-surface-variant">02</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-green-100 text-green-700">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                CÒN TRỐNG
+                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="material-symbols-outlined text-outline-variant hover:text-primary transition-colors">more_vert</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container/30 transition-colors group">
+<td class="px-6 py-4">
+<div class="w-24 h-16 rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" data-alt="sleek interior design of a designer hostel room with industrial elements and premium bedding" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1CSpiC2T3gEearj4K4srS6TmwibfGiiH92I01jBaBLlVD8MRZcNo1JE6hrT3w2bwwXaF3w6m0LPFe3M8ZKUvds8SyTIVp_UHAR4XKLMt2Heth8hzQ3fr9DYGsl5l9btVHFvUyFKSgh92GlHxEQ1ct1kFSjYej0x2x4qpC5J9ZA6xjke89u0Od7-XYVlYiL2N3MTd4-4fwAhHeg4erKakQL8XiaZCOSg5eXDgW9NLuFkbsUlZg4GmAuAmXNjr4QSe_BFemvQ6GjP8"/>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-manrope font-bold text-on-surface block">Studio B-12</span>
+<span class="text-[10px] text-on-surface-variant/70 uppercase tracking-tighter">ID: ST-B12-M</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-medium text-on-surface-variant">Green Valley Campus</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-secondary font-bold text-sm tracking-tight bg-secondary-container/20 px-3 py-1 rounded-full">3.200.000đ</span>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="text-sm font-medium text-on-surface-variant">04</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-primary-container/10 text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                ĐÃ ĐẶT
+                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="material-symbols-outlined text-outline-variant hover:text-primary transition-colors">more_vert</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container/30 transition-colors group">
+<td class="px-6 py-4">
+<div class="w-24 h-16 rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" data-alt="contemporary dorm room with floor-to-ceiling windows and minimalist workspace" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBep7qzEpSuFrwC22d2b91U35QkNZNjC3P6AWu5CWa5vO6bPCqkzOz_REE9-7kMtuL98FGKSBy4T2ArXfvthsKtcjiYoEaOeb14fZSqdptzuRHDbJRWUeCvmoWehBVYQSJYhwcpfuDk6UTNepQr38HbfTewgMcI4wNdPgFpKHE4G6SiFTMBJkQ_33F-oKYc33TOLE7fL5_cbtXjCM9n3fJ5PApMuWR5gvU060CGD9ngX2CYCfYb_HkpYtKQsS0CAVllvOt2nkfSlRQ"/>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-manrope font-bold text-on-surface block">Standard 105</span>
+<span class="text-[10px] text-on-surface-variant/70 uppercase tracking-tighter">ID: SD-105-X</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-medium text-on-surface-variant">Sky Tower Residences</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-secondary font-bold text-sm tracking-tight bg-secondary-container/20 px-3 py-1 rounded-full">2.800.000đ</span>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="text-sm font-medium text-on-surface-variant">01</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-error-container/20 text-error">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                                ĐANG SỬA
+                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="material-symbols-outlined text-outline-variant hover:text-primary transition-colors">more_vert</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container/30 transition-colors group">
+<td class="px-6 py-4">
+<div class="w-24 h-16 rounded-lg overflow-hidden bg-surface-container-high">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" data-alt="bright and airy high-end apartment room with neutral colors and architectural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvLHnkBJevf2DNFBoR_jIwF-q4QzFZXqZOcRdACXVoXw8ftH2nceZG21Uv3HY8hhEGSRL_87rhnpXbmAcFN2ysqg1AamLWPR1mSG6iyLl_KDgkCxI0KiErLJg4ZQhR1RNJqt0temkHwibdxc48mpJT-qj_WGEHFN1H30yFOxs6_LeQihpqcwErnGX4RUUFJl-w_ZeyEcHuVzCUTNhqSMgOFMHca7AlD9Wd7kWNL4w_kwWkbDQlgYJQkjLdLCeOy_uBnA7sT26ilUc"/>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-manrope font-bold text-on-surface block">Grand Loft 01</span>
+<span class="text-[10px] text-on-surface-variant/70 uppercase tracking-tighter">ID: GL-001-K</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-medium text-on-surface-variant">The Urban Collective</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-secondary font-bold text-sm tracking-tight bg-secondary-container/20 px-3 py-1 rounded-full">5.800.000đ</span>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="text-sm font-medium text-on-surface-variant">02</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-green-100 text-green-700">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                CÒN TRỐNG
+                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="material-symbols-outlined text-outline-variant hover:text-primary transition-colors">more_vert</button>
+</td>
+</tr>
+</tbody>
+</table>
+<!-- Minimal Pagination -->
+<div class="px-6 py-4 bg-surface-container-low/50 flex items-center justify-between border-t border-outline-variant/10">
+<span class="text-xs text-on-surface-variant font-medium">Hiển thị 1 - 4 trên 128 phòng</span>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="p-2 rounded-lg bg-primary text-on-primary shadow-md">
+<span class="text-xs font-bold px-1">1</span>
+</button>
+<button class="p-2 rounded-lg hover:bg-surface-container-high transition-colors">
+<span class="text-xs font-medium px-1">2</span>
+</button>
+<button class="p-2 rounded-lg hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>
