@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Khôi phục mật khẩu - DormArch</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "background": "#f8f9fa",
+              "on-primary-fixed": "#00174b",
+              "surface-container-high": "#e7e8e9",
+              "secondary-fixed-dim": "#ffb95f",
+              "secondary-fixed": "#ffddb8",
+              "on-tertiary-container": "#ffede6",
+              "surface-container-low": "#f3f4f5",
+              "surface-container-highest": "#e1e3e4",
+              "error": "#ba1a1a",
+              "inverse-primary": "#b4c5ff",
+              "surface-variant": "#e1e3e4",
+              "on-secondary-fixed-variant": "#653e00",
+              "surface-container": "#edeeef",
+              "tertiary-fixed": "#ffdbcd",
+              "on-surface-variant": "#434655",
+              "on-primary": "#ffffff",
+              "inverse-on-surface": "#f0f1f2",
+              "surface-tint": "#0053db",
+              "primary-fixed-dim": "#b4c5ff",
+              "outline-variant": "#c3c6d7",
+              "surface": "#f8f9fa",
+              "surface-dim": "#d9dadb",
+              "on-secondary": "#ffffff",
+              "on-tertiary-fixed": "#360f00",
+              "on-error": "#ffffff",
+              "on-tertiary": "#ffffff",
+              "on-background": "#191c1d",
+              "primary-fixed": "#dbe1ff",
+              "error-container": "#ffdad6",
+              "on-tertiary-fixed-variant": "#7d2d00",
+              "tertiary-container": "#bc4800",
+              "inverse-surface": "#2e3132",
+              "secondary-container": "#fea619",
+              "surface-container-lowest": "#ffffff",
+              "tertiary-fixed-dim": "#ffb596",
+              "on-secondary-container": "#684000",
+              "on-secondary-fixed": "#2a1700",
+              "surface-bright": "#f8f9fa",
+              "primary": "#004ac6",
+              "outline": "#737686",
+              "on-primary-container": "#eeefff",
+              "tertiary": "#943700",
+              "primary-container": "#2563eb",
+              "on-surface": "#191c1d",
+              "on-error-container": "#93000a",
+              "secondary": "#855300",
+              "on-primary-fixed-variant": "#003ea8"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .tonal-transition { transition: background-color 0.3s ease; }
+      .glass-effect { backdrop-filter: blur(24px); }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl shadow-sm dark:shadow-none tonal-transition">
+<nav class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+<div class="text-2xl font-bold tracking-tighter text-blue-700 dark:text-blue-400 font-headline">DormArch</div>
+<div class="hidden md:flex items-center space-x-8 font-manrope text-sm font-medium tracking-tight">
+<a class="text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors" href="#">Trang chủ</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors" href="#">Giới thiệu</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors" href="#">Hỗ trợ</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-4 py-2 font-manrope text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-all rounded-lg active:scale-95 duration-200">Đăng nhập</button>
+<button class="px-5 py-2 bg-gradient-to-br from-primary to-primary-container text-on-primary font-manrope text-sm font-bold rounded-lg shadow-sm hover:brightness-110 active:scale-95 transition-all">Đăng ký</button>
+</div>
+</nav>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex items-center justify-center px-6 pt-24 pb-12 relative overflow-hidden">
+<!-- Abstract Architectural Shapes (Background) -->
+<div class="absolute top-1/4 -left-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
+<div class="absolute bottom-1/4 -right-20 w-80 h-80 bg-secondary/5 rounded-full blur-3xl"></div>
+<!-- Auth Card -->
+<div class="relative w-full max-w-md">
+<div class="bg-surface-container-lowest p-8 md:p-10 rounded-xl shadow-[0_32px_64px_-12px_rgba(25,28,29,0.06)] border border-outline-variant/15">
+<div class="mb-10 text-center">
+<div class="inline-flex items-center justify-center w-16 h-16 bg-surface-container-high rounded-full mb-6">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="lock_reset">lock_reset</span>
+</div>
+<h1 class="font-headline text-3xl font-extrabold tracking-tight text-on-surface mb-3">Khôi phục mật khẩu</h1>
+<p class="text-on-surface-variant text-sm leading-relaxed">
+                        Nhập địa chỉ email liên kết với tài khoản của bạn để nhận mã OTP xác thực.
+                    </p>
+</div>
+<form class="space-y-6">
+<div class="space-y-2">
+<label class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant ml-1" for="email">Email</label>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline text-lg group-focus-within:text-primary transition-colors" data-icon="mail">mail</span>
+</div>
+<input class="block w-full pl-11 pr-4 py-3.5 bg-surface-container-high border-0 rounded-lg focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest text-on-surface placeholder:text-outline transition-all duration-200 outline-none" id="email" name="email" placeholder="example@dormarch.vn" required="" type="email"/>
+</div>
+</div>
+<button class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline font-bold text-sm tracking-wide rounded-lg shadow-lg shadow-primary/20 hover:brightness-105 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2" type="submit">
+<span>Gửi mã OTP</span>
+<span class="material-symbols-outlined text-lg" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</form>
+<div class="mt-8 pt-8 border-t border-outline-variant/15 text-center">
+<a class="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-on-primary-fixed-variant transition-colors group" href="#">
+<span class="material-symbols-outlined text-lg transition-transform group-hover:-translate-x-1" data-icon="keyboard_backspace">keyboard_backspace</span>
+                        Quay lại trang Đăng nhập
+                    </a>
+</div>
+</div>
+<!-- Decorative Element -->
+<div class="mt-8 flex justify-center gap-2">
+<div class="h-1.5 w-8 bg-primary rounded-full"></div>
+<div class="h-1.5 w-1.5 bg-surface-container-highest rounded-full"></div>
+<div class="h-1.5 w-1.5 bg-surface-container-highest rounded-full"></div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-8 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+<div class="flex flex-col md:flex-row justify-between items-center px-8 max-w-7xl mx-auto gap-4">
+<div class="font-manrope font-bold text-slate-900 dark:text-white">DormArch</div>
+<p class="font-inter text-xs text-slate-500 dark:text-slate-400">
+                © 2024 DormArch. Hệ thống quản lý ký túc xá hiện đại.
+            </p>
+<div class="flex gap-6">
+<a class="font-inter text-xs text-slate-500 dark:text-slate-400 hover:text-blue-700 dark:hover:text-blue-300 transition-all opacity-80 hover:opacity-100" href="#">Điều khoản</a>
+<a class="font-inter text-xs text-slate-500 dark:text-slate-400 hover:text-blue-700 dark:hover:text-blue-300 transition-all opacity-80 hover:opacity-100" href="#">Chính sách bảo mật</a>
+<a class="font-inter text-xs text-slate-500 dark:text-slate-400 hover:text-blue-700 dark:hover:text-blue-300 transition-all opacity-80 hover:opacity-100" href="#">Liên hệ</a>
+</div>
+</div>
+</footer>
+</body></html>

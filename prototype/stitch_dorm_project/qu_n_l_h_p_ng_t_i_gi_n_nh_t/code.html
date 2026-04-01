@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hợp đồng của tôi - DormArch</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-primary-fixed": "#00174b",
+              "tertiary-fixed-dim": "#ffb596",
+              "on-tertiary-container": "#ffede6",
+              "surface": "#f8f9fa",
+              "surface-container-lowest": "#ffffff",
+              "surface-container-high": "#e7e8e9",
+              "inverse-primary": "#b4c5ff",
+              "secondary-fixed-dim": "#ffb95f",
+              "on-surface-variant": "#434655",
+              "secondary-fixed": "#ffddb8",
+              "surface-bright": "#f8f9fa",
+              "tertiary-fixed": "#ffdbcd",
+              "surface-container-low": "#f3f4f5",
+              "surface-container-highest": "#e1e3e4",
+              "on-surface": "#191c1d",
+              "on-tertiary-fixed": "#360f00",
+              "secondary-container": "#fea619",
+              "surface-dim": "#d9dadb",
+              "surface-container": "#edeeef",
+              "primary": "#004ac6",
+              "on-background": "#191c1d",
+              "surface-tint": "#0053db",
+              "on-secondary-fixed": "#2a1700",
+              "secondary": "#855300",
+              "primary-fixed": "#dbe1ff",
+              "primary-fixed-dim": "#b4c5ff",
+              "outline-variant": "#c3c6d7",
+              "on-secondary": "#ffffff",
+              "outline": "#737686",
+              "on-primary-container": "#eeefff",
+              "inverse-on-surface": "#f0f1f2",
+              "background": "#f8f9fa",
+              "tertiary": "#943700",
+              "on-tertiary": "#ffffff",
+              "on-secondary-fixed-variant": "#653e00",
+              "inverse-surface": "#2e3132",
+              "on-tertiary-fixed-variant": "#7d2d00",
+              "on-secondary-container": "#684000",
+              "error-container": "#ffdad6",
+              "on-primary": "#ffffff",
+              "on-error-container": "#93000a",
+              "error": "#ba1a1a",
+              "on-error": "#ffffff",
+              "tertiary-container": "#bc4800",
+              "surface-variant": "#e1e3e4",
+              "primary-container": "#2563eb",
+              "on-primary-fixed-variant": "#003ea8"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+      body { font-family: 'Inter', sans-serif; }
+      h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased min-h-screen flex flex-col">
+<!-- Top Navigation Bar (Consistent with SCREEN_22) -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100/50 dark:border-slate-800/50 shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+<div class="text-2xl font-extrabold tracking-tighter text-blue-700 dark:text-blue-400">DormArch</div>
+<div class="hidden md:flex space-x-8 font-manrope antialiased text-sm font-medium tracking-tight">
+<a class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors" href="#">Trang chủ</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors" href="#">Danh sách phòng</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors" href="#">Dịch vụ</a>
+<a class="text-blue-700 dark:text-blue-400 border-b-2 border-blue-700 dark:border-blue-400 pb-1" href="#">Hợp đồng</a>
+</div>
+<div class="flex items-center space-x-4">
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-slate-50 rounded-full transition-all">notifications</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/10">
+<img alt="Ảnh đại diện người dùng" data-alt="professional portrait of a young male architect in a clean studio setting with soft natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDj78moMfpUywIp7z0SEsZzrzx3CMMoBzZ1lcKotmQP3kH_h9VnqEO6wTB0Mc_I4erbc9q45cnnhES1atAaL-erGGz_WAQuHNnN2NjISiDzNaeqHTtcvj-nLCejg5jl2hIxkDbFJfWI4kRg7db46BAPjqoa1iQXNBxld60wz2ABG1lDoWKwRBQIi2-bvdJWYMiU3vIa7Aao7Q6TxNo7MKwyiqKKRpKqN0fYmml5ak1c7k-JbOW2Om5cf77q7gRki3qMPM1dD0dYB1E"/>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-grow pt-24 pb-12 px-6">
+<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
+<!-- Sidebar Navigation (Matching Visual Style of SCREEN_22) -->
+<aside class="md:col-span-3 space-y-2">
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-outline-variant/10">
+<nav class="flex flex-col space-y-1">
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-sm">Thông tin cá nhân</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="text-sm">Lịch xem phòng</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="text-sm">Đơn hàng</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-primary/10 text-primary font-semibold transition-all" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">description</span>
+<span class="text-sm">Hợp đồng</span>
+</a>
+<div class="pt-4 mt-4 border-t border-outline-variant/20">
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-error hover:bg-error/5 transition-all" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-sm">Đăng xuất</span>
+</a>
+</div>
+</nav>
+</div>
+<!-- Support Card (Matching Visual Style of SCREEN_22) -->
+<div class="bg-primary text-white rounded-xl p-6 shadow-sm overflow-hidden relative">
+<div class="relative z-10">
+<h4 class="font-headline font-bold text-lg mb-2">Cần hỗ trợ?</h4>
+<p class="text-xs opacity-90 mb-4 leading-relaxed">Đội ngũ DormArch luôn sẵn sàng giải đáp thắc mắc của bạn 24/7.</p>
+<button class="bg-white text-primary px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:brightness-95 transition-all">Liên hệ ngay</button>
+</div>
+<span class="material-symbols-outlined absolute -bottom-4 -right-4 text-7xl opacity-20 rotate-12">support_agent</span>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<div class="md:col-span-9">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+<div>
+<nav class="flex items-center gap-2 text-sm text-outline mb-2">
+<span>Người dùng</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-primary font-medium">Hợp đồng</span>
+</nav>
+<h1 class="text-4xl font-extrabold font-headline tracking-tight text-on-surface">Hợp đồng của tôi</h1>
+</div>
+</div>
+<!-- Bento Grid of Contracts -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Contract Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 flex flex-col group transition-all duration-300 hover:shadow-lg">
+<div class="p-6 flex-1">
+<div class="flex justify-between items-start mb-6">
+<div class="w-14 h-14 bg-primary/5 rounded-2xl flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">contract</span>
+</div>
+<span class="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider rounded-full">Đang hiệu lực</span>
+</div>
+<h3 class="text-xl font-bold font-headline mb-1 text-on-surface">Phòng Premium A-102</h3>
+<p class="text-xs text-outline mb-6 flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">pin_drop</span>
+                            Khu căn hộ Horizon, Quận 1
+                        </p>
+<div class="space-y-4 mb-4">
+<div class="flex items-center justify-between text-sm">
+<span class="text-outline">Thời hạn thuê</span>
+<span class="font-medium">01/01/2024 — 31/12/2024</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-sm text-outline">Giá thuê hàng tháng</span>
+<span class="text-lg font-bold text-secondary">12.500.000đ</span>
+</div>
+</div>
+</div>
+<div class="px-6 pb-6">
+<button class="w-full py-3 border border-outline-variant/30 rounded-lg text-primary font-semibold text-sm hover:bg-primary hover:text-white transition-all duration-300 flex items-center justify-center gap-2">
+                            Xem hợp đồng
+                            <span class="material-symbols-outlined text-sm">visibility</span>
+</button>
+</div>
+</div>
+<!-- Contract Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 flex flex-col group transition-all duration-300 hover:shadow-lg">
+<div class="p-6 flex-1">
+<div class="flex justify-between items-start mb-6">
+<div class="w-14 h-14 bg-primary/5 rounded-2xl flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">home_storage</span>
+</div>
+<span class="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider rounded-full">Đang hiệu lực</span>
+</div>
+<h3 class="text-xl font-bold font-headline mb-1 text-on-surface">Kho lưu trữ Mini B-05</h3>
+<p class="text-xs text-outline mb-6 flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">pin_drop</span>
+                            Khu căn hộ Horizon, Quận 1
+                        </p>
+<div class="space-y-4 mb-4">
+<div class="flex items-center justify-between text-sm">
+<span class="text-outline">Thời hạn thuê</span>
+<span class="font-medium">15/02/2024 — 15/02/2025</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-sm text-outline">Giá thuê hàng tháng</span>
+<span class="text-lg font-bold text-secondary">2.200.000đ</span>
+</div>
+</div>
+</div>
+<div class="px-6 pb-6">
+<button class="w-full py-3 border border-outline-variant/30 rounded-lg text-primary font-semibold text-sm hover:bg-primary hover:text-white transition-all duration-300 flex items-center justify-center gap-2">
+                            Xem hợp đồng
+                            <span class="material-symbols-outlined text-sm">visibility</span>
+</button>
+</div>
+</div>
+<!-- Contract Card 3 - Placeholder -->
+</div>
+<!-- Auxiliary Information Section -->
+</div>
+</div>
+</main>
+<!-- Footer (Consistent with SCREEN_22) -->
+<footer class="w-full mt-auto bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-6 py-12 max-w-7xl mx-auto">
+<div class="space-y-4">
+<div class="text-xl font-bold text-slate-900 dark:text-slate-100">DormArch</div>
+<p class="font-manrope text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Hệ thống quản lý phòng trọ kiến trúc số hàng đầu, mang đến không gian sống tiện nghi và hiện đại.</p>
+</div>
+<div>
+<h5 class="font-bold text-on-surface mb-4">Khám phá</h5>
+<ul class="space-y-2 font-manrope text-sm text-slate-500 dark:text-slate-400">
+<li><a class="hover:text-blue-600 dark:hover:text-blue-400 transition-all" href="#">Về chúng tôi</a></li>
+<li><a class="hover:text-blue-600 dark:hover:text-blue-400 transition-all" href="#">Danh sách phòng</a></li>
+<li><a class="hover:text-blue-600 dark:hover:text-blue-400 transition-all" href="#">Dịch vụ tiện ích</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-bold text-on-surface mb-4">Pháp lý</h5>
+<ul class="space-y-2 font-manrope text-sm text-slate-500 dark:text-slate-400">
+<li><a class="hover:text-blue-600 dark:hover:text-blue-400 transition-all" href="#">Chính sách bảo mật</a></li>
+<li><a class="hover:text-blue-600 dark:hover:text-blue-400 transition-all" href="#">Điều khoản sử dụng</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-bold text-on-surface mb-4">Liên hệ</h5>
+<ul class="space-y-2 font-manrope text-sm text-slate-500 dark:text-slate-400">
+<li class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-sm">mail</span>
+<span>support@dormarch.vn</span>
+</li>
+<li class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-sm">call</span>
+<span>1900 8888</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="max-w-7xl mx-auto px-6 py-6 border-t border-slate-200 dark:border-slate-800">
+<p class="font-manrope text-sm text-slate-500 dark:text-slate-400 text-center md:text-left">© 2024 DormArch. Hệ thống quản lý phòng trọ kiến trúc số.</p>
+</div>
+</footer>
+</body></html>

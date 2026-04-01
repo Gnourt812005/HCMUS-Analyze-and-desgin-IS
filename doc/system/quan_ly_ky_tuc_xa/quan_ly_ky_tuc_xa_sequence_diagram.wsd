@@ -1,0 +1,144 @@
+@startuml QuanLyKyTucXa_SequenceDiagram
+title Sequence Diagram: Quản lý ký túc xá (UC17)
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    ParticipantPadding 20
+    BoxPadding 10
+}
+
+actor "Nhân viên quản lý" as Actor
+boundary "ScreenDormManagement" as MainGUI <<boundary>>
+boundary "ScreenDormDetail" as DetailGUI <<boundary>>
+boundary "FormDorm" as FormGUI <<boundary>>
+control "Dorm" as BUS <<control>>
+database "DormDB" as DAO <<database>>
+
+autonumber
+
+== Kịch bản 1 & 2: Xem danh sách và Chi tiết ==
+Actor -> MainGUI: Chọn tab "Ký túc xá"
+activate MainGUI
+MainGUI -> BUS: getDorms()
+activate BUS
+BUS -> DAO: fetchAll()
+activate DAO
+DAO --> BUS: Danh sách KTX
+deactivate DAO
+BUS --> MainGUI: Trả về dữ liệu
+deactivate BUS
+MainGUI --> Actor: Hiển thị danh sách lên dgvDorm
+
+Actor -> MainGUI: Click vào một KTX cụ thể
+MainGUI -> DetailGUI: Mở màn hình Chi tiết (id)
+activate DetailGUI
+DetailGUI -> BUS: getDormDetail(id)
+activate BUS
+BUS -> DAO: fetchById(id)
+activate DAO
+DAO --> BUS: Chi tiết KTX & DS Phòng
+deactivate DAO
+BUS --> DetailGUI: Trả về dữ liệu chi tiết
+deactivate BUS
+DetailGUI --> Actor: Hiển thị thông tin lên màn hình
+deactivate MainGUI
+
+== Kịch bản 3: Thêm ký túc xá mới ==
+Actor -> MainGUI: Nhấn nút "Thêm cơ sở mới"
+activate MainGUI
+MainGUI -> FormGUI: Mở Form Thêm mới
+activate FormGUI
+deactivate MainGUI
+
+Actor -> FormGUI: Nhập thông tin và nhấn "Lưu"
+FormGUI -> FormGUI: Kiểm tra tính hợp lệ (A2)
+alt Hợp lệ
+    FormGUI -> BUS: createDorm(data)
+    activate BUS
+    BUS -> DAO: checkIdExists(id)
+    activate DAO
+    DAO --> BUS: Kết quả (Trùng/Không trùng)
+    deactivate DAO
+    
+    alt Trùng ID (A3.1)
+        BUS --> FormGUI: Báo lỗi trùng ID
+        FormGUI --> Actor: Hiển thị lỗi "Mã cơ sở đã tồn tại"
+    else Hợp lệ
+        BUS -> DAO: insert(data)
+        activate DAO
+        DAO --> BUS: Lưu thành công
+        deactivate DAO
+        BUS --> FormGUI: Trả kết quả thành công
+        deactivate BUS
+        FormGUI --> Actor: Thông báo "Thêm thành công"
+        FormGUI -> MainGUI: Tải lại danh sách
+        destroy FormGUI
+    end
+end
+
+== Kịch bản 4: Cập nhật thông tin cơ bản ==
+Actor -> DetailGUI: Nhấn nút "Cập nhật"
+activate DetailGUI
+DetailGUI -> DetailGUI: Mở khóa các trường nhập liệu (Input fields)
+
+Actor -> DetailGUI: Thay đổi thông tin và nhấn "Lưu thay đổi"
+DetailGUI -> DetailGUI: Kiểm tra tính hợp lệ (Validate)
+
+alt Hợp lệ
+    DetailGUI -> BUS: updateDorm(id, data)
+    activate BUS
+    BUS -> DAO: update(id, data)
+    activate DAO
+    DAO --> BUS: Cập nhật thành công
+    deactivate DAO
+    BUS --> DetailGUI: Trả kết quả thành công
+    deactivate BUS
+    
+    DetailGUI --> Actor: Thông báo "Cập nhật thành công"
+    DetailGUI -> DetailGUI: Khóa các trường & Hiển thị thông tin mới
+end
+deactivate DetailGUI
+
+== Kịch bản 5: Thêm phòng (Gắn liền với KTX hiện tại) ==
+Actor -> DetailGUI: Nhấn nút "Thêm phòng"
+activate DetailGUI
+DetailGUI -> FormGUI: Hiển thị Popup "Thêm phòng mới"
+activate FormGUI
+
+Actor -> FormGUI: Nhập Mã phòng, chọn Loại và nhấn "Lưu"
+FormGUI -> BUS: addRoomToDorm(dormId, roomData)
+activate BUS
+BUS -> DAO: updateRoom(dormId, roomData)
+activate DAO
+DAO --> BUS: Thành công
+deactivate DAO
+BUS --> FormGUI: Trả kết quả
+deactivate BUS
+
+FormGUI --> Actor: Thông báo thành công
+FormGUI -> DetailGUI: Làm mới Danh sách phòng
+destroy FormGUI
+deactivate DetailGUI
+
+== Kịch bản 6: Ẩn Ký túc xá (Xóa mềm) ==
+Actor -> DetailGUI: Nhấn nút "Ẩn cơ sở"
+activate DetailGUI
+DetailGUI -> DetailGUI: Hiển thị Popup cảnh báo
+Actor -> DetailGUI: Nhấn "Xác nhận"
+DetailGUI -> BUS: hideDorm(id)
+activate BUS
+BUS -> DAO: updateStatus(id, "Đã ẩn")
+activate DAO
+DAO --> BUS: Cập nhật thành công
+deactivate DAO
+BUS --> DetailGUI: Trả kết quả thành công
+deactivate BUS
+DetailGUI --> Actor: Thông báo ẩn cơ sở thành công
+DetailGUI -> DetailGUI: Cập nhật Badge trạng thái & Đổi tên nút
+deactivate DetailGUI
+
+@enduml

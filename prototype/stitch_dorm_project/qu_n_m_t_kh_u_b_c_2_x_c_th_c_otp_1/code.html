@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Xác thực mã OTP - DormArch</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "background": "#f8f9fa",
+              "on-primary-fixed": "#00174b",
+              "surface-container-high": "#e7e8e9",
+              "secondary-fixed-dim": "#ffb95f",
+              "secondary-fixed": "#ffddb8",
+              "on-tertiary-container": "#ffede6",
+              "surface-container-low": "#f3f4f5",
+              "surface-container-highest": "#e1e3e4",
+              "error": "#ba1a1a",
+              "inverse-primary": "#b4c5ff",
+              "surface-variant": "#e1e3e4",
+              "on-secondary-fixed-variant": "#653e00",
+              "surface-container": "#edeeef",
+              "tertiary-fixed": "#ffdbcd",
+              "on-surface-variant": "#434655",
+              "on-primary": "#ffffff",
+              "inverse-on-surface": "#f0f1f2",
+              "surface-tint": "#0053db",
+              "primary-fixed-dim": "#b4c5ff",
+              "outline-variant": "#c3c6d7",
+              "surface": "#f8f9fa",
+              "surface-dim": "#d9dadb",
+              "on-secondary": "#ffffff",
+              "on-tertiary-fixed": "#360f00",
+              "on-error": "#ffffff",
+              "on-tertiary": "#ffffff",
+              "on-background": "#191c1d",
+              "primary-fixed": "#dbe1ff",
+              "error-container": "#ffdad6",
+              "on-tertiary-fixed-variant": "#7d2d00",
+              "tertiary-container": "#bc4800",
+              "inverse-surface": "#2e3132",
+              "secondary-container": "#fea619",
+              "surface-container-lowest": "#ffffff",
+              "tertiary-fixed-dim": "#ffb596",
+              "on-secondary-container": "#684000",
+              "on-secondary-fixed": "#2a1700",
+              "surface-bright": "#f8f9fa",
+              "primary": "#004ac6",
+              "outline": "#737686",
+              "on-primary-container": "#eeefff",
+              "tertiary": "#943700",
+              "primary-container": "#2563eb",
+              "on-surface": "#191c1d",
+              "on-error-container": "#93000a",
+              "secondary": "#855300",
+              "on-primary-fixed-variant": "#003ea8"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tonal-transition { transition: background-color 0.3s ease; }
+        .ghost-border { border: 1px solid rgba(195, 198, 215, 0.15); }
+    </style>
+</head>
+<body class="bg-background font-body text-on-background antialiased min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm">
+<div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+<div class="text-2xl font-bold tracking-tighter text-blue-700 font-headline">DormArch</div>
+<nav class="hidden md:flex items-center gap-8 font-manrope text-sm font-medium tracking-tight">
+<a class="text-slate-600 hover:text-blue-600 transition-colors" href="#">Trang chủ</a>
+<a class="text-slate-600 hover:text-blue-600 transition-colors" href="#">Giới thiệu</a>
+<a class="text-slate-600 hover:text-blue-600 transition-colors" href="#">Hỗ trợ</a>
+</nav>
+<div class="flex items-center gap-3">
+<button class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100/50 transition-all rounded-lg active:scale-95">Đăng nhập</button>
+<button class="px-4 py-2 text-sm font-medium bg-primary text-on-primary rounded-lg shadow-sm hover:brightness-110 transition-all active:scale-95">Đăng ký</button>
+</div>
+</div>
+</header>
+<!-- Main Content: OTP Verification Canvas -->
+<main class="flex-grow flex items-center justify-center pt-24 pb-12 px-4 relative overflow-hidden">
+<!-- Abstract Architectural Background Elements -->
+<div class="absolute top-20 -left-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10"></div>
+<div class="absolute bottom-10 -right-20 w-80 h-80 bg-secondary/5 rounded-full blur-3xl -z-10"></div>
+<div class="max-w-md w-full">
+<div class="bg-surface-container-lowest p-8 md:p-10 rounded-xl shadow-[0_32px_64px_-12px_rgba(25,28,29,0.06)] relative overflow-hidden">
+<!-- Decorative Accent -->
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-primary-container"></div>
+<div class="mb-10 text-center">
+<div class="inline-flex items-center justify-center w-16 h-16 bg-surface-container-high rounded-full mb-6 text-primary">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">shield_lock</span>
+</div>
+<h1 class="font-headline text-3xl font-extrabold text-on-background tracking-tight mb-3">Xác thực mã OTP</h1>
+<p class="text-on-surface-variant text-sm leading-relaxed">Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư đến và nhập mã gồm 6 chữ số dưới đây.</p>
+</div>
+<form class="space-y-8">
+<div class="flex justify-between gap-2 md:gap-3">
+<input aria-label="OTP Digit 1" class="w-12 h-14 md:w-14 md:h-16 text-center text-xl font-bold bg-surface-container-high border-none rounded-lg focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all" maxlength="1" type="text"/>
+<input aria-label="OTP Digit 2" class="w-12 h-14 md:w-14 md:h-16 text-center text-xl font-bold bg-surface-container-high border-none rounded-lg focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all" maxlength="1" type="text"/>
+<input aria-label="OTP Digit 3" class="w-12 h-14 md:w-14 md:h-16 text-center text-xl font-bold bg-surface-container-high border-none rounded-lg focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all" maxlength="1" type="text"/>
+<input aria-label="OTP Digit 4" class="w-12 h-14 md:w-14 md:h-16 text-center text-xl font-bold bg-surface-container-high border-none rounded-lg focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all" maxlength="1" type="text"/>
+<input aria-label="OTP Digit 5" class="w-12 h-14 md:w-14 md:h-16 text-center text-xl font-bold bg-surface-container-high border-none rounded-lg focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all" maxlength="1" type="text"/>
+<input aria-label="OTP Digit 6" class="w-12 h-14 md:w-14 md:h-16 text-center text-xl font-bold bg-surface-container-high border-none rounded-lg focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all" maxlength="1" type="text"/>
+</div>
+<div class="space-y-4">
+<button class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-semibold rounded-lg shadow-sm hover:brightness-105 transition-all active:scale-[0.98]" type="submit">
+                            Xác thực OTP
+                        </button>
+<div class="flex flex-col items-center gap-6">
+<button class="text-sm font-medium text-slate-500 hover:text-blue-700 transition-colors inline-flex items-center gap-2 group" type="button">
+<span class="material-symbols-outlined text-lg group-hover:rotate-180 transition-transform duration-500">refresh</span>
+                                Gửi lại mã (60s)
+                            </button>
+<div class="w-full h-px bg-outline-variant/15"></div>
+<a class="text-sm font-semibold text-primary hover:underline flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-lg">arrow_back</span>
+                                Quay lại đăng nhập
+                            </a>
+</div>
+</div>
+</form>
+</div>
+<!-- Contextual Help Card (Bento Style Sub-element) -->
+<div class="mt-6 p-4 bg-surface-container-low rounded-lg border border-outline-variant/10 flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">info</span>
+<p class="text-xs text-on-surface-variant font-medium leading-tight">
+                    Không nhận được mã? Hãy kiểm tra thư mục Thư rác (Spam) hoặc thử lại sau vài phút.
+                </p>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-8 border-t border-slate-200 bg-slate-50">
+<div class="flex flex-col md:flex-row justify-between items-center px-8 max-w-7xl mx-auto gap-4">
+<div class="flex flex-col items-center md:items-start gap-1">
+<span class="font-manrope font-bold text-slate-900 text-lg">DormArch</span>
+<p class="font-inter text-xs text-slate-500">© 2024 DormArch. Hệ thống quản lý ký túc xá hiện đại.</p>
+</div>
+<nav class="flex gap-6">
+<a class="text-xs text-slate-500 hover:text-blue-700 transition-all font-inter" href="#">Điều khoản</a>
+<a class="text-xs text-slate-500 hover:text-blue-700 transition-all font-inter" href="#">Chính sách bảo mật</a>
+<a class="text-xs text-slate-500 hover:text-blue-700 transition-all font-inter" href="#">Liên hệ</a>
+</nav>
+</div>
+</footer>
+</body></html>

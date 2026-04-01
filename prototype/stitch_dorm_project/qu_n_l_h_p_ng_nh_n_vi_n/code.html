@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quản lý Hợp đồng - The Digital Architect</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-error-container": "#93000a",
+              "tertiary": "#943700",
+              "surface-variant": "#e1e3e4",
+              "on-primary-fixed": "#00174b",
+              "on-error": "#ffffff",
+              "tertiary-fixed-dim": "#ffb596",
+              "outline": "#737686",
+              "surface-container-highest": "#e1e3e4",
+              "primary-container": "#2563eb",
+              "primary-fixed-dim": "#b4c5ff",
+              "on-tertiary-fixed-variant": "#7d2d00",
+              "surface-container-low": "#f3f4f5",
+              "secondary-fixed": "#ffddb8",
+              "primary": "#004ac6",
+              "on-primary-container": "#eeefff",
+              "error": "#ba1a1a",
+              "on-tertiary-fixed": "#360f00",
+              "secondary-fixed-dim": "#ffb95f",
+              "on-surface": "#191c1d",
+              "background": "#f8f9fa",
+              "secondary-container": "#fea619",
+              "secondary": "#855300",
+              "on-tertiary-container": "#ffede6",
+              "surface-bright": "#f8f9fa",
+              "on-secondary-fixed-variant": "#653e00",
+              "on-secondary-fixed": "#2a1700",
+              "error-container": "#ffdad6",
+              "surface-container-high": "#e7e8e9",
+              "surface-tint": "#0053db",
+              "on-secondary-container": "#684000",
+              "inverse-surface": "#2e3132",
+              "surface-dim": "#d9dadb",
+              "outline-variant": "#c3c6d7",
+              "on-tertiary": "#ffffff",
+              "surface-container": "#edeeef",
+              "on-background": "#191c1d",
+              "inverse-primary": "#b4c5ff",
+              "primary-fixed": "#dbe1ff",
+              "tertiary-container": "#bc4800",
+              "surface-container-lowest": "#ffffff",
+              "surface": "#f8f9fa",
+              "on-primary": "#ffffff",
+              "on-secondary": "#ffffff",
+              "tertiary-fixed": "#ffdbcd",
+              "on-primary-fixed-variant": "#003ea8",
+              "on-surface-variant": "#434655",
+              "inverse-on-surface": "#f0f1f2"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f5; /* surface-container-low per rule */
+        }
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #c3c6d7;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="text-on-surface">
+<!-- SideNavBar Component -->
+<aside class="fixed left-0 top-0 h-full flex flex-col z-50 overflow-y-auto bg-slate-50 dark:bg-slate-950 h-screen w-64 border-r border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none sidebar-scroll">
+<!-- Brand Header -->
+<div class="p-6">
+<h1 class="text-xl font-black tracking-tighter text-blue-800 dark:text-blue-400 font-manrope">The Digital Architect</h1>
+<p class="font-manrope font-bold tracking-tight text-xs text-slate-500 mt-1 uppercase">Management Portal</p>
+</div>
+<!-- Employee Profile -->
+<div class="px-6 mb-8 flex items-center gap-3">
+<img alt="Employee Profile Picture" class="w-10 h-10 rounded-full object-cover" data-alt="professional headshot of a male architect in a clean studio setting with soft natural morning light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_ZDtvSvRmBF_SyKOigvkgLI803FVH8oimkSVJob_SEmZWxHJU6OApp1a4DLnpNXBIv9qOcG3CsI3W30YYvXjhL_XFVukd6IccRryz9nqu_-36wdu-FFPp36tRPfpAYU-5tg-CKlcpUWVojYVN6893QpxOcDPCHQe4zVsjJjsnkRbL4y3zLP21RGZC-kKvEQK1Edd6jJoBaaikOprINuY48GFEya21t6Ce-Txy9YfLColkaSpaNVNU2omrTxN9tqJ2nWc5yAJHSvs"/>
+<div>
+<p class="font-inter text-sm font-bold text-slate-800 dark:text-slate-200">Nhân viên</p>
+<p class="font-inter text-[10px] uppercase tracking-widest text-slate-400">Admin Access</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 px-2 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">domain</span>
+<span class="font-inter text-sm">Ký túc xá</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">bed</span>
+<span class="font-inter text-sm">Phòng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-inter text-sm">Lịch xem</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="font-inter text-sm">Đơn hàng</span>
+</a>
+<!-- ACTIVE TAB: Hợp đồng -->
+<a class="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-400 font-bold border-r-4 border-blue-700 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20 active:opacity-80 active:scale-[0.98] transition-all" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-inter text-sm">Hợp đồng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">badge</span>
+<span class="font-inter text-sm">Nhân viên</span>
+</a>
+</nav>
+<!-- CTA & Footer -->
+<div class="p-4 mt-auto border-t border-slate-200 dark:border-slate-800">
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-blue-600 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">settings</span>
+<span class="font-inter text-xs uppercase tracking-widest">Cài đặt</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-slate-500 hover:text-error transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">logout</span>
+<span class="font-inter text-xs uppercase tracking-widest">Đăng xuất</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen p-8 bg-surface-container-low">
+<!-- Contracts Table Container -->
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-2xl font-bold font-display text-on-surface">Danh sách Hợp đồng</h2>
+<button class="px-6 py-2.5 bg-primary text-on-primary font-inter font-bold text-sm rounded-lg shadow-sm hover:brightness-110 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-xl">add</span>
+    Tạo hợp đồng mới
+  </button>
+</div><section class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-high border-b border-outline-variant/15">
+<tr>
+<th class="px-6 py-4 font-manrope font-bold text-xs uppercase tracking-widest text-on-surface-variant">Mã hợp đồng</th>
+<th class="px-6 py-4 font-manrope font-bold text-xs uppercase tracking-widest text-on-surface-variant">Khách hàng</th>
+<th class="px-6 py-4 font-manrope font-bold text-xs uppercase tracking-widest text-on-surface-variant">Phòng</th>
+<th class="px-6 py-4 font-manrope font-bold text-xs uppercase tracking-widest text-on-surface-variant">Ngày bắt đầu</th>
+<th class="px-6 py-4 font-manrope font-bold text-xs uppercase tracking-widest text-on-surface-variant text-right">Trạng thái</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container transition-colors duration-150 group">
+<td class="px-6 py-5 font-inter text-sm font-bold text-primary">#CNT-8821</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs">NL</div>
+<span class="font-inter text-sm text-on-surface">Nguyễn Văn Lộc</span>
+</div>
+</td>
+<td class="px-6 py-5 font-inter text-sm text-on-surface-variant">A-102 (Deluxe)</td>
+<td class="px-6 py-5 font-inter text-sm text-on-surface-variant">12/10/2023</td>
+<td class="px-6 py-5 text-right">
+<span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-bold text-[10px] uppercase tracking-wider">Đang hiệu lực</span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container transition-colors duration-150 group">
+<td class="px-6 py-5 font-inter text-sm font-bold text-primary">#CNT-9014</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary font-bold text-xs">TH</div>
+<span class="font-inter text-sm text-on-surface">Trần Minh Huy</span>
+</div>
+</td>
+<td class="px-6 py-5 font-inter text-sm text-on-surface-variant">B-305 (Studio)</td>
+<td class="px-6 py-5 font-inter text-sm text-on-surface-variant">05/11/2023</td>
+<td class="px-6 py-5 text-right">
+<span class="px-3 py-1 rounded-full bg-amber-100 text-amber-700 font-bold text-[10px] uppercase tracking-wider">Chờ ký</span>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container transition-colors duration-150 group">
+<td class="px-6 py-5 font-inter text-sm font-bold text-primary">#CNT-7732</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant font-bold text-xs">PA</div>
+<span class="font-inter text-sm text-on-surface">Phạm Ngọc Anh</span>
+</div>
+</td>
+<td class="px-6 py-5 font-inter text-sm text-on-surface-variant">C-201 (Basic)</td>
+<td class="px-6 py-5 font-inter text-sm text-on-surface-variant">20/09/2023</td>
+<td class="px-6 py-5 text-right">
+<span class="px-3 py-1 rounded-full bg-slate-100 text-slate-500 font-bold text-[10px] uppercase tracking-wider">Kết thúc</span>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container transition-colors duration-150 group">
+<td class="px-6 py-5 font-inter text-sm font-bold text-primary">#CNT-1109</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs">LD</div>
+<span class="font-inter text-sm text-on-surface">Lê Quốc Dũng</span>
+</div>
+</td>
+<td class="px-6 py-5 font-inter text-sm text-on-surface-variant">A-404 (Penthouse)</td>
+<td class="px-6 py-5 font-inter text-sm text-on-surface-variant">01/12/2023</td>
+<td class="px-6 py-5 text-right">
+<span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-bold text-[10px] uppercase tracking-wider">Đang hiệu lực</span>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container transition-colors duration-150 group">
+<td class="px-6 py-5 font-inter text-sm font-bold text-primary">#CNT-4456</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-error-container flex items-center justify-center text-on-error-container font-bold text-xs">HT</div>
+<span class="font-inter text-sm text-on-surface">Hoàng Thanh Tùng</span>
+</div>
+</td>
+<td class="px-6 py-5 font-inter text-sm text-on-surface-variant">D-102 (Standard)</td>
+<td class="px-6 py-5 font-inter text-sm text-on-surface-variant">15/08/2023</td>
+<td class="px-6 py-5 text-right">
+<span class="px-3 py-1 rounded-full bg-error-container text-on-error-container font-bold text-[10px] uppercase tracking-wider">Thanh lý</span>
+</td>
+</tr>
+<!-- Row 6 -->
+<tr class="hover:bg-surface-container transition-colors duration-150 group">
+<td class="px-6 py-5 font-inter text-sm font-bold text-primary">#CNT-2290</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs">MV</div>
+<span class="font-inter text-sm text-on-surface">Mai Văn Vũ</span>
+</div>
+</td>
+<td class="px-6 py-5 font-inter text-sm text-on-surface-variant">B-202 (Suite)</td>
+<td class="px-6 py-5 font-inter text-sm text-on-surface-variant">10/11/2023</td>
+<td class="px-6 py-5 text-right">
+<span class="px-3 py-1 rounded-full bg-amber-100 text-amber-700 font-bold text-[10px] uppercase tracking-wider">Chờ ký</span>
+</td>
+</tr>
+<!-- Row 7 -->
+<tr class="hover:bg-surface-container transition-colors duration-150 group">
+<td class="px-6 py-5 font-inter text-sm font-bold text-primary">#CNT-3381</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs">VH</div>
+<span class="font-inter text-sm text-on-surface">Võ Hoàng Nam</span>
+</div>
+</td>
+<td class="px-6 py-5 font-inter text-sm text-on-surface-variant">C-105 (Standard)</td>
+<td class="px-6 py-5 font-inter text-sm text-on-surface-variant">02/12/2023</td>
+<td class="px-6 py-5 text-right">
+<span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-bold text-[10px] uppercase tracking-wider">Đang hiệu lực</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Subtle Table Footer Navigation -->
+<div class="px-6 py-4 flex items-center justify-between bg-surface-container-low/50">
+<span class="text-xs font-inter text-on-surface-variant">Hiển thị 1-7 trong tổng số 142 hợp đồng</span>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg border border-outline-variant/15 text-on-surface-variant hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="p-2 rounded-lg border border-outline-variant/15 text-on-surface-variant hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Contextual Action (Floating Filter for Staff) -->
+<div class="fixed bottom-8 right-8 flex flex-col gap-4">
+<button class="p-4 bg-surface-container-lowest text-primary rounded-full shadow-lg border border-outline-variant/15 hover:scale-105 transition-transform">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+<button class="p-4 bg-primary text-on-primary rounded-full shadow-lg hover:scale-105 transition-transform">
+<span class="material-symbols-outlined">search</span>
+</button>
+</div>
+</body></html>

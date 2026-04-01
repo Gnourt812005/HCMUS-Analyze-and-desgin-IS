@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-error-container": "#93000a",
+              "tertiary": "#943700",
+              "surface-variant": "#e1e3e4",
+              "on-primary-fixed": "#00174b",
+              "on-error": "#ffffff",
+              "tertiary-fixed-dim": "#ffb596",
+              "outline": "#737686",
+              "surface-container-highest": "#e1e3e4",
+              "primary-container": "#2563eb",
+              "primary-fixed-dim": "#b4c5ff",
+              "on-tertiary-fixed-variant": "#7d2d00",
+              "surface-container-low": "#f3f4f5",
+              "secondary-fixed": "#ffddb8",
+              "primary": "#004ac6",
+              "on-primary-container": "#eeefff",
+              "error": "#ba1a1a",
+              "on-tertiary-fixed": "#360f00",
+              "secondary-fixed-dim": "#ffb95f",
+              "on-surface": "#191c1d",
+              "background": "#f8f9fa",
+              "secondary-container": "#fea619",
+              "secondary": "#855300",
+              "on-tertiary-container": "#ffede6",
+              "surface-bright": "#f8f9fa",
+              "on-secondary-fixed-variant": "#653e00",
+              "on-secondary-fixed": "#2a1700",
+              "error-container": "#ffdad6",
+              "surface-container-high": "#e7e8e9",
+              "surface-tint": "#0053db",
+              "on-secondary-container": "#684000",
+              "inverse-surface": "#2e3132",
+              "surface-dim": "#d9dadb",
+              "outline-variant": "#c3c6d7",
+              "on-tertiary": "#ffffff",
+              "surface-container": "#edeeef",
+              "on-background": "#191c1d",
+              "inverse-primary": "#b4c5ff",
+              "primary-fixed": "#dbe1ff",
+              "tertiary-container": "#bc4800",
+              "surface-container-lowest": "#ffffff",
+              "surface": "#f8f9fa",
+              "on-primary": "#ffffff",
+              "on-secondary": "#ffffff",
+              "tertiary-fixed": "#ffdbcd",
+              "on-primary-fixed-variant": "#003ea8",
+              "on-surface-variant": "#434655",
+              "inverse-on-surface": "#f0f1f2"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-manrope { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tonal-shift-bg-surface-container-low {
+            background-color: #f3f4f5;
+        }
+    </style>
+</head>
+<body class="bg-surface-container-low text-on-surface antialiased">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full w-64 flex flex-col z-50 overflow-y-auto bg-slate-50 border-r border-slate-200 shadow-sm">
+<div class="p-6 flex flex-col gap-1">
+<h1 class="text-xl font-black tracking-tighter text-blue-800 font-manrope">The Digital Architect</h1>
+<p class="font-manrope font-bold tracking-tight text-xs text-slate-500 uppercase">Management Portal</p>
+</div>
+<nav class="flex-1 px-2 py-4">
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 font-medium hover:bg-slate-100 transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-blue-600" data-icon="domain">domain</span>
+<span class="font-inter text-sm">Ký túc xá</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 font-medium hover:bg-slate-100 transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-blue-600" data-icon="bed">bed</span>
+<span class="font-inter text-sm">Phòng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 font-medium hover:bg-slate-100 transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-blue-600" data-icon="calendar_month">calendar_month</span>
+<span class="font-inter text-sm">Lịch xem</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 font-medium hover:bg-slate-100 transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-blue-600" data-icon="shopping_cart">shopping_cart</span>
+<span class="font-inter text-sm">Đơn hàng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 font-medium hover:bg-slate-100 transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-blue-600" data-icon="description">description</span>
+<span class="font-inter text-sm">Hợp đồng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-blue-700 font-bold border-r-4 border-blue-700 bg-blue-50 transition-all opacity-80 scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-blue-700" data-icon="badge">badge</span>
+<span class="font-inter text-sm">Nhân viên</span>
+</a>
+</div>
+</nav>
+<div class="p-4 mt-auto border-t border-slate-100">
+<div class="flex items-center gap-3 px-3 py-3 mb-4">
+<div class="w-10 h-10 rounded-lg overflow-hidden bg-slate-200">
+<img alt="Employee Profile Picture" class="w-full h-full object-cover" data-alt="Professional headshot of a male property manager in a corporate setting, soft studio lighting, clean background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDbnungX8Cjkwkx4bRlUPUt9e1Hnu4wcm4D07qjjYtZ4EhzPBJ8UX9UDRhS3J0neYvdMs4vpy_Av1oSs2m-D1Lf2A8RH6LC8FJVN2YwD-csajZttrBdcBFIZwG02iwO_X6i0XSA5aecSpDCJV_mKcCxNXsgiMe-mbuYyfeXcZIWduxWmPuryDF-ig8txYXWRX5srfVo_8g4fantjDWs-POAbTCHK4EnuEDf_pgxCaTYH1DOU0nPcgSeFSS_0yYtf8Mb_XnrbLPgT8"/>
+</div>
+<div class="flex flex-col">
+<span class="text-xs font-bold font-manrope">Admin User</span>
+<span class="text-[10px] uppercase tracking-widest text-slate-400">Chief Architect</span>
+</div>
+</div>
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="settings">settings</span>
+<span class="font-inter text-sm">Cài đặt</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-red-600 font-medium hover:bg-red-50 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="logout">logout</span>
+<span class="font-inter text-sm">Đăng xuất</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen p-8">
+<div class="max-w-7xl mx-auto">
+<!-- Employee Table Container -->
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-2xl font-bold font-manrope text-slate-800">Danh sách nhân viên</h2>
+<button class="flex items-center gap-2 bg-[#2563EB] hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-manrope font-bold transition-all shadow-sm">
+<span class="material-symbols-outlined text-lg">add</span>
+<span>Thêm nhân viên</span>
+</button>
+</div><div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden border border-outline-variant/10">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low/50">
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest text-on-surface-variant font-bold font-label">Avatar</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest text-on-surface-variant font-bold font-label">Tên nhân viên</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest text-on-surface-variant font-bold font-label">Email</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest text-on-surface-variant font-bold font-label">Vai trò</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest text-on-surface-variant font-bold font-label">Trạng thái</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors duration-150">
+<td class="px-6 py-4">
+<div class="w-10 h-10 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a young professional woman smiling, soft natural lighting, blurred office interior background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJQgZhffGf1_S8FDkYypy0KzAp1dBvs39itiXPg3_Q_i0b7St4B3qBNl3MdSXhbcEoBvP9Z3nUjjlPwKDw8Om2aEAv51jdcITHKXKtchzLEfdSAZpmteEcS2AY2rIeHjKxVpzv5VdSEiERc3Z3Ai9yRJSTvbUagaDB2eOPx0uuFSmHw3MU4f7nqpMZhlYoKuFATwgW8BNkUV9Bliwx-dAgXE-qqYOZ8AzJDnD6TaHfbo73uTGHXLW4DkrncSSPcj2cfezfR_dWZek"/>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-manrope font-bold text-on-surface body-md">Lê Thu Hà</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-on-surface-variant font-body body-md">ha.le@arch-digital.vn</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-on-surface font-medium body-md">Quản lý cơ sở</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Đang làm việc</span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors duration-150">
+<td class="px-6 py-4">
+<div class="w-10 h-10 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Middle-aged man in business casual attire looking directly at the camera, warm friendly lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIWJxnqISK_IFkNSRpeie9rm1ZQ17rdLmhg-Na8l-CciZeyjqGBrEe1rWOE9zytgH75XFGEL2Sto8JhLmwSqWQIWIg1EaSouER-CavS3wkbQ3kAv2X6wL4Q0XzK1DQ8HUnFLOQ3S_ynM3Rm0ye7RmbTqfli8nHqLl7cwr5VumsRkYnXPbuqM0yMVzqMuzZ1cZ7x0m9yEjaJPdNnGYAmavSRlrW--0790lqEymP4Wtp0bpT9x_qaghCH8s9Xb9Z3rwqaNG0gdIOnmA"/>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-manrope font-bold text-on-surface body-md">Nguyễn Minh Tuấn</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-on-surface-variant font-body body-md">tuan.nguyen@arch-digital.vn</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-on-surface font-medium body-md">Kế toán</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Đang làm việc</span>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors duration-150">
+<td class="px-6 py-4">
+<div class="w-10 h-10 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a young Asian woman with a creative professional look, clean minimal studio background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxI3AEuJPWZtr4T8JBfWAaxqPDqCECxL_D9YEcl1E_8KrCIQeqcczQedmtK8h7o8DL_JYROttbk1dTo8p7_h-xR8CMpm_5O_4T9d2RSqHk458HeuVOdOcWv0XoTf6KVuZYyNXea7GeprYV0VPV0EZaA6AyANAyU2OUqCUkosjSOMb73TywqmRJ6cjGlAkIRPMS-mkzEtJcvtXAC-4spfH_RIk9ry8Arma4ZOAlYXCpXDAwd-AROQcmfYasFZGB9EHN2xkk3B9hInA"/>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-manrope font-bold text-on-surface body-md">Trần Bảo Anh</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-on-surface-variant font-body body-md">anh.tran@arch-digital.vn</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-on-surface font-medium body-md">Nhân viên kinh doanh</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary-container/20 text-on-secondary-container">Nghỉ phép</span>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors duration-150">
+<td class="px-6 py-4">
+<div class="w-10 h-10 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a friendly smiling male employee, bright office setting, professional yet approachable vibe" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvh8ZPEY1CGUdIQSZnEXgvxK0Hcaru_U-ybjOQyOwNQahVSj17g5o4zk-5a9DC6hwW05xN2AVdRQbiH75amYPOyxeHx3yQF4E5UfVnjGXFtnMaLDsmBsNb9izMaMSRkc9vgW0UaNYsJeWIlru2iSCPrSS0DjycUOI1K60zsOXQOb3AqZ_UycZipPs_ddz9T37CkFGkN1mCUGwQea85cB6KRjO-YcGTQ-wVpE_vklTydqgxO0JDl0bwA3XFhkWgwLhcNv9nhscKhNo"/>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-manrope font-bold text-on-surface body-md">Phạm Hoàng Nam</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-on-surface-variant font-body body-md">nam.pham@arch-digital.vn</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-on-surface font-medium body-md">Kỹ thuật viên</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Đang làm việc</span>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors duration-150">
+<td class="px-6 py-4">
+<div class="w-10 h-10 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close up portrait of a serious but professional male executive, minimalist gray background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDu-fxB68MPP-sYVXwdXAAw-XPrJ6NdrO3ymmMtya1yUfaR_lnC-S-WJ8YzKVgPnaNdpjlnqJErfcY3LS5MWCYGtpU-4ffwgkjbCI4KiN-Q8whrzkoL-U1JqgN5n1p764TXjPTNsIVsJ0spzf1EdgjS8kkIQ8WGenFiC6fIZJZb_d7He9M_wa-Bt6prTnQ7Fse0Fw8mo30bvUydCaby5jRjpWTyY8zSOOIX61-VEyin66hMA7b2Ua6f_0-mXVIseykDflxGLKGPlWo"/>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-manrope font-bold text-on-surface body-md">Vũ Đức Long</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-on-surface-variant font-body body-md">long.vu@arch-digital.vn</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-on-surface font-medium body-md">Bảo vệ</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-container/40 text-on-error-container">Nghỉ việc</span>
+</td>
+</tr>
+<!-- Row 6 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors duration-150">
+<td class="px-6 py-4">
+<div class="w-10 h-10 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a confident female manager in a modern office lobby, high-end editorial lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6QsJHd_buINojX8v-3ENpYqCDPFsDk0pkJlBXQW60wIRnIUYZMKnNqZB1yHicyU-ROA7Wj3ViLCqWBPF-CHFXAHp7twkZz0SOPoI3EVMHOOGG3WN_1GcqV3EtHb-gvHfe14ZNWAkcvyAvUfpabo0LZip3cfKqlqiMRt60gBbTHrCEVsRWdsVBvBDp_J8bUMBzHyNctREUbrxn0KjhSJWNIykAiekJeLQlz1lv6sBx0txQ-aaPxxNgwizl0_-ej9o8DEh8ahuPUuI"/>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-manrope font-bold text-on-surface body-md">Đặng Kim Chi</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-on-surface-variant font-body body-md">chi.dang@arch-digital.vn</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-on-surface font-medium body-md">Lễ tân</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Đang làm việc</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination-less Footer / Subtle Detail -->
+<div class="mt-4 flex justify-between items-center px-2">
+<span class="text-[10px] font-label uppercase tracking-widest text-slate-400">Showing 6 of 42 employees</span>
+<div class="flex gap-2">
+<button class="p-2 rounded hover:bg-surface-container-high transition-colors text-slate-400 hover:text-primary">
+<span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="p-2 rounded hover:bg-surface-container-high transition-colors text-slate-400 hover:text-primary">
+<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

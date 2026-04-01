@@ -1,0 +1,84 @@
+@startuml QuanLyKyTucXa_ClassDiagram
+title Class Diagram: Quản lý ký túc xá (UC17)
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+}
+
+' --- BOUNDARY LAYER ---
+class "ScreenDormManagement" as ScreenDM <<boundary>> {
+    - dgvDorm: GridView
+    - txtSearch: TextBox
+    - btnAddNew: Button
+    + dgvDorm_Load(): void
+    + btnSearch_Click(): void
+    + btnAddNew_Click(): void
+}
+
+class "ScreenDormDetail" as ScreenDD <<boundary>> {
+    - lblName: Label
+    - lblAddress: Label
+    - dgvRoom: GridView
+    - btnUpdate: Button
+    - btnHide: Button
+    - btnAddNewRoom: Button
+    + ScreenDormDetail_Load(): void
+    + btnUpdate_Click(): void
+    + btnHide_Click(): void
+    + btnAddNewRoom_Click(): void
+}
+
+class "FormDorm" as FormDorm <<boundary>> {
+    - txtId: TextBox
+    - txtName: TextBox
+    - txtAddress: TextBox
+    - txtHotline: TextBox
+    - clbUtilities: CheckedListBox
+    - btnSave: Button
+    - btnCancel: Button
+    + btnSave_Click(): void
+}
+
+' --- BUSINESS LAYER ---
+class "Dorm" as Dorm <<control>> {
+    - id: string
+    - name: string
+    - address: string
+    - hotline: string
+    - facilities: List<string>
+    - status: string
+    + getDorms(): List<Dorm>
+    + getDormDetail(id: string): Dorm
+    + createDorm(data: Dorm): boolean
+    + updateDorm(id: string, data: Dorm): boolean
+    + hideDorm(id: string): boolean
+    + addRoomToDorm(dormId: string, roomData: any): boolean
+}
+
+' --- DATABASE LAYER ---
+class "DormDB" as DormDB <<entity>> {
+    + fetchAll(): List
+    + fetchById(id: string): Dorm
+    + insert(data: Dorm): boolean
+    + update(id: string, data: Dorm): boolean
+    + insertRoom(dormId: string, roomData: any): boolean
+    + updateStatus(id: string, status: string): boolean
+    + checkIdExists(id: string): boolean
+}
+
+' --- RELATIONSHIPS ---
+ScreenDM "1" --> "1" Dorm
+ScreenDD "1" --> "1" Dorm
+FormDorm "1" --> "1" Dorm
+Dorm "1" --> "1" DormDB
+ScreenDM ..> ScreenDD : Mở Chi tiết 
+ScreenDM ..> FormDorm : Mở Form Thêm 
+ScreenDD ..> FormDorm : Mở Form Sửa 
+
+@enduml

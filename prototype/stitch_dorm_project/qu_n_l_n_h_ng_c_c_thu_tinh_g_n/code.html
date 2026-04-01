@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DormArch - Quản lý Đặt cọc &amp; Đăng ký</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-primary-fixed": "#00174b",
+                        "tertiary-fixed-dim": "#ffb596",
+                        "on-tertiary-container": "#ffede6",
+                        "surface": "#f8f9fa",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#e7e8e9",
+                        "inverse-primary": "#b4c5ff",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "on-surface-variant": "#434655",
+                        "secondary-fixed": "#ffddb8",
+                        "surface-bright": "#f8f9fa",
+                        "tertiary-fixed": "#ffdbcd",
+                        "surface-container-low": "#f3f4f5",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-surface": "#191c1d",
+                        "on-tertiary-fixed": "#360f00",
+                        "secondary-container": "#fea619",
+                        "surface-dim": "#d9dadb",
+                        "surface-container": "#edeeef",
+                        "primary": "#004ac6",
+                        "on-background": "#191c1d",
+                        "surface-tint": "#0053db",
+                        "on-secondary-fixed": "#2a1700",
+                        "secondary": "#855300",
+                        "primary-fixed": "#dbe1ff",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "outline-variant": "#c3c6d7",
+                        "on-secondary": "#ffffff",
+                        "outline": "#737686",
+                        "on-primary-container": "#eeefff",
+                        "inverse-on-surface": "#f0f1f2",
+                        "background": "#f8f9fa",
+                        "tertiary": "#943700",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "inverse-surface": "#2e3132",
+                        "on-tertiary-fixed-variant": "#7d2d00",
+                        "on-secondary-container": "#684000",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#bc4800",
+                        "surface-variant": "#e1e3e4",
+                        "primary-container": "#2563eb",
+                        "on-primary-fixed-variant": "#003ea8"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-headline { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+<!-- Top Navigation Bar (Updated to match SCREEN_22 style) -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100/50 dark:border-slate-800/50 shadow-sm">
+<div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+<div class="text-2xl font-extrabold tracking-tighter text-blue-700 dark:text-blue-400">DormArch</div>
+<div class="hidden md:flex space-x-8 font-manrope antialiased text-sm font-medium tracking-tight">
+<a class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors" href="#">Trang chủ</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors" href="#">Danh sách phòng</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors" href="#">Dịch vụ</a>
+<a class="text-blue-700 dark:text-blue-400 border-b-2 border-blue-700 dark:border-blue-400 pb-1" href="#">Hợp đồng</a>
+</div>
+<div class="flex items-center space-x-4">
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-slate-50 rounded-full transition-all">notifications</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/10">
+<img alt="Ảnh đại diện người dùng" data-alt="portrait of a professional young man in a clean white studio setting with soft natural lighting and blurred background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDj78moMfpUywIp7z0SEsZzrzx3CMMoBzZ1lcKotmQP3kH_h9VnqEO6wTB0Mc_I4erbc9q45cnnhES1atAaL-erGGz_WAQuHNnN2NjISiDzNaeqHTtcvj-nLCejg5jl2hIxkDbFJfWI4kRg7db46BAPjqoa1iQXNBxld60wz2ABG1lDoWKwRBQIi2-bvdJWYMiU3vIa7Aao7Q6TxNo7MKwyiqKKRpKqN0fYmml5ak1c7k-JbOW2Om5cf77q7gRki3qMPM1dD0dYB1E"/>
+</div>
+</div>
+</div>
+</nav>
+<div class="flex-grow pt-24 pb-12 px-6">
+<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
+<!-- Left Sidebar (Updated to match SCREEN_22 style) -->
+<aside class="md:col-span-3 space-y-2">
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm">
+<nav class="flex flex-col space-y-1">
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-sm">Thông tin cá nhân</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="text-sm">Lịch xem phòng</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-primary/10 text-primary font-semibold transition-all" href="#">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">shopping_cart</span>
+<span class="text-sm">Đơn hàng</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="text-sm">Hợp đồng</span>
+</a>
+<div class="pt-4 mt-4 border-t border-outline-variant/20">
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-error hover:bg-error/5 transition-all" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-sm">Đăng xuất</span>
+</a>
+</div>
+</nav>
+</div>
+<!-- Support Card (From SCREEN_22) -->
+<div class="bg-primary-container text-on-primary-container rounded-xl p-6 shadow-sm overflow-hidden relative">
+<div class="relative z-10">
+<h4 class="font-headline font-bold text-lg mb-2">Cần hỗ trợ?</h4>
+<p class="text-xs opacity-90 mb-4 leading-relaxed">Đội ngũ DormArch luôn sẵn sàng giải đáp thắc mắc của bạn 24/7.</p>
+<button class="bg-surface-container-lowest text-primary px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:brightness-95 transition-all">Liên hệ ngay</button>
+</div>
+<span class="material-symbols-outlined absolute -bottom-4 -right-4 text-7xl opacity-10 rotate-12">support_agent</span>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="md:col-span-9">
+<!-- Header Section -->
+<div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<h1 class="text-4xl font-extrabold tracking-tight text-on-surface mb-2">Quản lý Đơn của tôi</h1>
+<p class="text-on-surface-variant text-base">Theo dõi và quản lý các yêu cầu đặt phòng của bạn một cách kiến trúc.</p>
+</div>
+<div class="flex items-center gap-2 bg-surface-container p-1 rounded-xl">
+<button class="px-6 py-2.5 rounded-lg text-sm font-bold bg-surface-container-lowest text-primary shadow-sm transition-all">Đơn Đặt Cọc</button>
+<button class="px-6 py-2.5 rounded-lg text-sm font-medium text-on-surface-variant hover:text-primary transition-all">Đơn Đăng Ký Thuê</button>
+</div>
+</div>
+<!-- Dashboard Content: Data Table -->
+<div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/10 overflow-hidden">
+<!-- Table Header/Filters -->
+<div class="px-6 py-5 flex flex-col md:flex-row justify-between items-center border-b border-outline-variant/10 gap-4">
+<div class="relative w-full md:w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-high border-none rounded-lg focus:ring-2 focus:ring-primary/20 text-sm" placeholder="Tìm kiếm mã đơn, tên phòng..." type="text"/>
+</div>
+</div>
+<!-- Table Content -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-6 py-4 text-[0.6875rem] font-bold text-outline uppercase tracking-wider">Mã đơn</th>
+<th class="px-6 py-4 text-[0.6875rem] font-bold text-outline uppercase tracking-wider">Tên phòng</th>
+<th class="px-6 py-4 text-[0.6875rem] font-bold text-outline uppercase tracking-wider">Số giường</th>
+<th class="px-6 py-4 text-[0.6875rem] font-bold text-outline uppercase tracking-wider">Tổng tiền</th>
+<th class="px-6 py-4 text-[0.6875rem] font-bold text-outline uppercase tracking-wider">Ngày giao dịch</th>
+<th class="px-6 py-4 text-[0.6875rem] font-bold text-outline uppercase tracking-wider">Trạng thái</th>
+<th class="px-6 py-4 text-[0.6875rem] font-bold text-outline uppercase tracking-wider text-right">Hành động</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-5 text-sm font-bold text-primary">#DA-9921</td>
+<td class="px-6 py-5">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-on-surface">Luxury Studio A1</span>
+<span class="text-xs text-outline">Khu đô thị Azure, Tòa S1</span>
+</div>
+</td>
+<td class="px-6 py-5 text-sm font-medium">01 Giường</td>
+<td class="px-6 py-5">
+<span class="text-sm font-bold text-secondary">2.500.000đ</span>
+</td>
+<td class="px-6 py-5 text-sm text-on-surface-variant">12/10/2023</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Đã thanh toán</span>
+</td>
+<td class="px-6 py-5 text-right space-x-2">
+<button class="text-primary hover:underline text-sm font-bold">Xem chi tiết</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-5 text-sm font-bold text-primary">#DA-8842</td>
+<td class="px-6 py-5">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-on-surface">Standard Duo B4</span>
+<span class="text-xs text-outline">Làng Đại học, Block C</span>
+</div>
+</td>
+<td class="px-6 py-5 text-sm font-medium">02 Giường</td>
+<td class="px-6 py-5">
+<span class="text-sm font-bold text-secondary">1.200.000đ</span>
+</td>
+<td class="px-6 py-5 text-sm text-on-surface-variant">15/10/2023</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-secondary-container/20 text-on-secondary-container">Đang chờ</span>
+</td>
+<td class="px-6 py-5 text-right space-x-3">
+<button class="text-primary hover:underline text-sm font-bold">Xem chi tiết</button>
+<button class="text-error hover:underline text-sm font-bold">Hủy cọc</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-5 text-sm font-bold text-primary">#DA-7710</td>
+<td class="px-6 py-5">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-on-surface">Penthouse Dorm X</span>
+<span class="text-xs text-outline">Trung tâm Q1, Tòa G</span>
+</div>
+</td>
+<td class="px-6 py-5 text-sm font-medium">01 Giường</td>
+<td class="px-6 py-5">
+<span class="text-sm font-bold text-secondary">5.000.000đ</span>
+</td>
+<td class="px-6 py-5 text-sm text-on-surface-variant">05/10/2023</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-error-container/40 text-error">Đã hủy</span>
+</td>
+<td class="px-6 py-5 text-right space-x-2">
+<button class="text-primary hover:underline text-sm font-bold">Xem chi tiết</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-5 text-sm font-bold text-primary">#DA-6651</td>
+<td class="px-6 py-5">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-on-surface">Loft Bed Private</span>
+<span class="text-xs text-outline">Khu dân cư Him Lam</span>
+</div>
+</td>
+<td class="px-6 py-5 text-sm font-medium">01 Giường</td>
+<td class="px-6 py-5">
+<span class="text-sm font-bold text-secondary">1.800.000đ</span>
+</td>
+<td class="px-6 py-5 text-sm text-on-surface-variant">20/09/2023</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Đã thanh toán</span>
+</td>
+<td class="px-6 py-5 text-right space-x-2">
+<button class="text-primary hover:underline text-sm font-bold">Xem chi tiết</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer/Pagination -->
+<div class="px-6 py-4 flex items-center justify-between border-t border-outline-variant/10">
+<p class="text-xs text-outline font-medium">Hiển thị 1 - 4 trên 12 đơn đặt cọc</p>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-outline">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-on-primary text-xs font-bold shadow-sm">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-xs font-medium">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-xs font-medium">3</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-outline">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Contextual Information Card (Architectural Style) -->
+</main>
+</div>
+</div>
+<!-- Footer (Updated to match SCREEN_22 style) -->
+<footer class="w-full mt-auto bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-6 py-12 max-w-7xl mx-auto">
+<div class="space-y-4">
+<div class="text-xl font-bold text-slate-900 dark:text-slate-100">DormArch</div>
+<p class="font-manrope text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Hệ thống quản lý phòng trọ kiến trúc số hàng đầu, mang đến không gian sống tiện nghi và hiện đại.</p>
+</div>
+<div>
+<h5 class="font-bold text-on-surface mb-4">Khám phá</h5>
+<ul class="space-y-2 font-manrope text-sm text-slate-500 dark:text-slate-400">
+<li><a class="hover:text-blue-600 dark:hover:text-blue-400 transition-all" href="#">Về chúng tôi</a></li>
+<li><a class="hover:text-blue-600 dark:hover:text-blue-400 transition-all" href="#">Danh sách phòng</a></li>
+<li><a class="hover:text-blue-600 dark:hover:text-blue-400 transition-all" href="#">Dịch vụ tiện ích</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-bold text-on-surface mb-4">Pháp lý</h5>
+<ul class="space-y-2 font-manrope text-sm text-slate-500 dark:text-slate-400">
+<li><a class="hover:text-blue-600 dark:hover:text-blue-400 transition-all" href="#">Chính sách bảo mật</a></li>
+<li><a class="hover:text-blue-600 dark:hover:text-blue-400 transition-all" href="#">Điều khoản sử dụng</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-bold text-on-surface mb-4">Liên hệ</h5>
+<ul class="space-y-2 font-manrope text-sm text-slate-500 dark:text-slate-400">
+<li class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-sm">mail</span>
+<span>support@dormarch.vn</span>
+</li>
+<li class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-sm">call</span>
+<span>1900 8888</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="max-w-7xl mx-auto px-6 py-6 border-t border-slate-200 dark:border-slate-800">
+<p class="font-manrope text-sm text-slate-500 dark:text-slate-400 text-center md:text-left">© 2024 DormArch. Hệ thống quản lý phòng trọ kiến trúc số.</p>
+</div>
+</footer>
+</body></html>

@@ -2,6 +2,17 @@
 title HomeStay Dorm Business Use Case Diagram
 skinparam packageStyle rectangle
 
+' --- SETUP LAYOUT ---
+' skinparam linetype ortho
+' skinparam nodesep 60
+' skinparam ranksep 80
+' skinparam wrapWidth 200
+
+
+skinparam nodesep 50
+skinparam ranksep 60
+skinparam wrapWidth 200
+
 ' Direction
 left to right direction
 
