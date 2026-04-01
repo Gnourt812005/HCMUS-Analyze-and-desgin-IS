@@ -1,0 +1,66 @@
+@startuml ClassDiagramSample
+' --- Cấu hình giao diện một chút cho đẹp ---
+skinparam classAttributeIconSize 0
+skinparam monochrome false
+skinparam shadowing true
+
+title Hệ thống Quản lý Đơn hàng - Template by Gemini
+
+' --- Định nghĩa các Class ---
+
+abstract class User {
+    - String id
+    - String name
+    # String email
+    + login(): boolean
+}
+
+class Customer {
+    - String shippingAddress
+    - String phone
+    + placeOrder()
+}
+
+class Order {
+    - String orderId
+    - Date createdDate
+    - Status status
+    + calculateTotal(): double
+}
+
+class OrderDetail {
+    - int quantity
+    - double tax
+}
+
+class Product {
+    + String name
+    + double price
+    + updateStock(int amount)
+}
+
+enum Status {
+    NEW
+    PAID
+    SHIPPED
+    CANCELLED
+}
+
+' --- Định nghĩa các mối quan hệ ---
+
+' Kế thừa (Inheritance)
+User <|-- Customer
+
+' Quan hệ 1 - n (Association/Composition)
+Customer "1" *-- "many" Order : đặt hàng
+
+' Quan hệ Composition (Order chứa OrderDetail)
+Order "1" *-- "1..*" OrderDetail
+
+' Quan hệ Association (OrderDetail liên kết với Product)
+OrderDetail "many" --> "1" Product : tham chiếu
+
+' Ghi chú (Note)
+note right of Order : Trạng thái mặc định\nlà NEW khi khởi tạo.
+
+@enduml
