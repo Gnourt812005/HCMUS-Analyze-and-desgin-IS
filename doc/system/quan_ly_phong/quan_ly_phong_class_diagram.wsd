@@ -1,0 +1,98 @@
+@startuml QuanLyPhong_ClassDiagram
+title Class Diagram: Quản lý phòng (UC18)
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+}
+
+' --- BOUNDARY LAYER ---
+class "ScreenRoomManagement" as ScreenRM <<boundary>> {
+    - dgvRoom: GridView
+    - txtSearch: TextBox
+    - btnAddNew: Button
+    + dgvRoom_Load(): void
+    + btnSearch_Click(): void
+    + btnAddNew_Click(): void
+}
+
+class "ScreenRoomDetail" as ScreenRD <<boundary>> {
+    - lblRoomId: Label
+    - lblDormName: Label
+    - dgvBed: GridView
+    - btnUpdate: Button
+    - btnDelete: Button
+    - btnAddNewBed: Button
+    + ScreenRoomDetail_Load(): void
+    + btnUpdate_Click(): void
+    + btnDelete_Click(): void
+    + btnAddNewBed_Click(): void
+}
+
+class "FormRoom" as FormRoom <<boundary>> {
+    - cbDorm: ComboBox
+    - txtRoomId: TextBox
+    - cbRoomType: ComboBox
+    - clbUtilities: CheckedListBox
+    - btnSave: Button
+    - btnCancel: Button
+    + btnSave_Click(): void
+}
+
+class "FormBed" as FormBed <<boundary>> {
+    - txtBedId: TextBox
+    - txtPrice: TextBox
+    - btnSave: Button
+    - btnCancel: Button
+    + btnSave_Click(): void
+}
+
+' --- BUSINESS LAYER ---
+class "Room" as Room <<control>> {
+    - roomId: string
+    - dormId: string
+    - type: string
+    - facilities: List<string>
+    + getRooms(): List<Room>
+    + getRoomDetail(id: string): Room
+    + createRoom(data: Room): boolean
+    + updateRoom(id: string, data: Room): boolean
+    + deleteRoom(id: string): boolean
+    + addBed(roomId: string, bedData: any): boolean
+    + updateBed(bedId: string, bedData: any): boolean
+    + deleteBed(bedId: string): boolean
+}
+
+' --- DATABASE LAYER ---
+class "RoomDB" as RoomDB <<entity>> {
+    + fetchAll(): List
+    + fetchById(id: string): Room
+    + insert(data: Room): boolean
+    + update(id: string, data: Room): boolean
+    + remove(id: string): boolean
+    + insertBed(data: any): boolean
+    + updateBed(bedId: string, data: any): boolean
+    + removeBed(bedId: string): boolean
+    + checkRoomIdExists(dormId: string, roomId: string): boolean
+    + checkBedInEffect(bedId: string): boolean
+}
+
+' --- RELATIONSHIPS ---
+ScreenRM "1" --> "1" Room
+ScreenRD "1" --> "1" Room
+FormRoom "1" --> "1" Room
+FormBed "1" --> "1" Room
+
+Room "1" --> "1" RoomDB
+
+ScreenRM ..> ScreenRD : Mở Chi tiết
+ScreenRM ..> FormRoom : Mở Form Thêm Phòng
+ScreenRD ..> FormRoom : Mở Form Sửa Phòng
+ScreenRD ..> FormBed : Mở Form Giường
+
+@enduml

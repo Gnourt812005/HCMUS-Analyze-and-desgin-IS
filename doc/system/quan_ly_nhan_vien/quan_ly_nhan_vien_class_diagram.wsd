@@ -1,0 +1,77 @@
+@startuml QuanLyNhanVien_ClassDiagram
+title Class Diagram: Quản lý nhân viên (UC16)
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+}
+
+' --- BOUNDARY LAYER ---
+class "ScreenEmployeeManagement" as ScreenEM <<boundary>> {
+    - dgvEmployee: GridView
+    - txtSearch: TextBox
+    - btnAddNew: Button
+    - btnEdit: Button
+    - btnDelete: Button
+    + dgvEmployee_Load(): void
+    + btnSearch_Click(): void
+    + btnAddNew_Click(): void
+    + btnEdit_Click(): void
+    + btnDelete_Click(): void
+}
+
+class "ScreenEmployeeDetail" as ScreenED <<boundary>> {
+    - txtEmail: TextBox
+    - txtPassword: TextBox
+    - txtName: TextBox
+    - txtRole: TextBox
+    - txtPhone: TextBox
+    - btnSave: Button
+    - btnCancel: Button
+    + btnSave_Click(): void
+    + btnCancel_Click(): void
+}
+
+class "PopupConfirm" as Popup <<boundary>> {
+    - lblMessage: Label
+    - btnConfirm: Button
+    - btnCancel: Button
+    + btnConfirm_Click(): void
+}
+
+' --- BUSINESS LAYER ---
+class "Employee" as Employee <<control>> {
+    - id: int
+    - email: string
+    - password: string
+    - name: string
+    - role: string
+    - phone: string
+    + getEmployees(): List<Employee>
+    + createEmployee(data: Employee): boolean
+    + updateEmployee(id: int, data: Employee): boolean
+    + deleteEmployee(id: int): boolean
+}
+
+' --- DATABASE LAYER ---
+class "EmployeeDB" as EmployeeDB <<entity>> {
+    + fetchAll(): List
+    + insert(data: Employee): boolean
+    + update(id: int, data: Employee): boolean
+    + remove(id: int): boolean
+    + checkEmailExists(email: string): boolean
+}
+
+' --- RELATIONSHIPS ---
+ScreenEM "1" --> "1" Employee
+ScreenED "1" --> "1" Employee
+Employee "1" --> "1" EmployeeDB
+ScreenEM ..> ScreenED : Mở Form 
+ScreenEM ..> Popup : Mở Popup 
+
+@enduml
