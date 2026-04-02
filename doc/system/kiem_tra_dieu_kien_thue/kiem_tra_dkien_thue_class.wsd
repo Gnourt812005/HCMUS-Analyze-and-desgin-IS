@@ -1,0 +1,35 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+title Class Diagram - UC14: Kiểm tra điều kiện thuê
+
+package "Presentation Layer" {
+    class "MH_NoiQuy" <<boundary>> {
+        + hienThiNoiDung(noi_dung)
+        + xacNhanDongY()
+    }
+}
+
+package "Business Logic Layer" {
+    class "XuLyDatCoc" <<control>> {
+        + kiemTraThongTin(data)
+    }
+}
+
+package "Data Access Layer" {
+    class "NoiQuy" <<entity>> {
+        - ma_noi_quy: String
+        - noi_dung: String
+        + getDetails()
+    }
+    class "KhachHang" <<entity>> {
+        - cccd: String
+        + save()
+    }
+}
+
+"MH_NoiQuy" ..> "XuLyDatCoc"
+"XuLyDatCoc" ..> "NoiQuy"
+"XuLyDatCoc" ..> "KhachHang"
+
+@enduml

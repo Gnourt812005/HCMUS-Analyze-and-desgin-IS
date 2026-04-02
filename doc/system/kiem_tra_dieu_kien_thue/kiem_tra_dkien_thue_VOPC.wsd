@@ -1,0 +1,21 @@
+@startuml
+skinparam style strictuml
+header VOPC - UC14: Kiểm tra điều kiện thuê
+
+actor "Khách hàng" as Actor
+
+boundary "MH_NoiQuy" as Boundary1 <<boundary>>
+boundary "MH_CanhBao" as Boundary2 <<boundary>>
+
+control "XuLyKiemTra" as Control <<control>>
+
+entity "NoiQuy" as EntityNQ <<entity>>
+entity "KhachHang" as EntityKH <<entity>>
+
+' Relationships
+Actor -- Boundary1 : 1..*
+Boundary1 -- Control : 1
+Control -- Boundary2 : 1
+Control -- EntityNQ : 1..*
+Control -- EntityKH : 1..*
+@enduml

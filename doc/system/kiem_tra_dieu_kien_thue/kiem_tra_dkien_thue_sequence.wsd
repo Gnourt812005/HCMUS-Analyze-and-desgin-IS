@@ -1,0 +1,29 @@
+@startuml
+
+title Sequence Diagram - Kiểm tra điều kiện thuê (UC14)
+
+autonumber
+
+actor "Khách hàng" as ActorKH
+boundary "UI: Policy Page" as PolicyUI
+control "Business: Policy Service" as PolicyService
+database "Database: Regulation" as RegDB
+
+PolicyUI -> PolicyService : getLatestRegulations()
+PolicyService -> RegDB : findActivePolicy()
+RegDB --> PolicyService : nội dung nội quy (noi_dung)
+PolicyService --> PolicyUI : displayPolicyContent()
+
+PolicyUI --> ActorKH : Hiển thị màn hình nội quy KTX
+
+alt Khách hàng không đồng ý (A2)
+    ActorKH -> PolicyUI : Nhấn "Không đồng ý"
+    PolicyUI --> ActorKH : Thông báo "Không thể thuê phòng/giường"
+else Khách hàng đồng ý
+    ActorKH -> PolicyUI : Nhấn "Đồng ý"
+    PolicyUI -> PolicyService : confirmAgreement(customerId)
+    PolicyService --> PolicyUI : Agreement Saved
+    PolicyUI --> ActorKH : Chuyển hướng về luồng Đặt cọc
+end
+
+@enduml
