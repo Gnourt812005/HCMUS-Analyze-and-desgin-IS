@@ -116,7 +116,7 @@ activate GUI_Preview
 Actor -> GUI_Preview: Nhập ngày giờ (datepickerPreviewDate)
 Actor -> GUI_Preview: Bấm "Xác nhận" (btnConfirmPreviewDate_Click)
 
-GUI_Preview -> BUS_Preview: addPreviewForm(roomID, userID, previewDate)
+GUI_Preview -> BUS_Preview: addUserPreviewForm(roomID, userID, previewDate)
 activate BUS_Preview
 
 BUS_Preview -> DAO_Preview: checkUsersDuplicatedPreviewDate(userID, previewDate)
@@ -138,7 +138,7 @@ alt Không trùng lịch
     deactivate BUS_Preview
 
     alt Có nhân viên rảnh
-        BUS_Preview -> DAO_Preview: addPreviewForm(roomID, userID, previewDate, employeeID)
+        BUS_Preview -> DAO_Preview: addUserPreviewForm(roomID, userID, previewDate, employeeID)
         activate DAO_Preview
         deactivate DAO_Preview
     end
