@@ -1,0 +1,35 @@
+@startuml
+actor "Quản lý chi nhánh" as QuanLy
+boundary ": CalculateRefundScreen" as Screen
+entity ": Contract" as Contract
+entity ": RefundCalculation" as Calc
+database ": RefundCalculationDB" as DB
+
+QuanLy -> Screen: 1: Show()
+activate Screen
+Screen -> Contract: 2: GetContractInfo()
+activate Contract
+deactivate Contract
+deactivate Screen
+
+QuanLy -> Screen: 3: Nhập hư hỏng và phí phát sinh
+activate Screen
+deactivate Screen
+
+QuanLy -> Screen: 4: btnCalculate_Click()
+activate Screen
+Screen -> Calc: 5: CalculateTotal()
+activate Calc
+deactivate Calc
+deactivate Screen
+
+QuanLy -> Screen: 6: btnSave_Click()
+activate Screen
+Screen -> Calc: 7: SaveCalculation()
+activate Calc
+Calc -> DB: 8: Insert()
+activate DB
+deactivate DB
+deactivate Calc
+deactivate Screen
+@enduml
