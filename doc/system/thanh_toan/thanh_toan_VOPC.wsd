@@ -1,0 +1,21 @@
+@startuml
+skinparam style strictuml
+header VOPC - UC15: Thanh toán
+
+actor "Khách hàng" as Actor
+
+boundary "MH_ThanhToan" as Boundary1 <<boundary>>
+boundary "MH_HoaDon" as Boundary2 <<boundary>>
+
+control "XuLyThanhToan" as Control <<control>>
+
+entity "PhieuThanhToan" as EntityPTT <<entity>>
+entity "HopDong" as EntityHD <<entity>>
+
+' Relationships
+Actor -- Boundary1 : 1..*
+Boundary1 -- Control : 1
+Control -- Boundary2 : 1
+Control -- EntityPTT : 1..*
+Control -- EntityHD : 1..*
+@enduml
