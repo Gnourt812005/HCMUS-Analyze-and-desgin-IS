@@ -1,0 +1,41 @@
+@startuml
+
+title Sequence Diagram - Đặt cọc (UC13)
+
+autonumber
+
+actor "Khách hàng" as ActorKH
+boundary "UI: Booking Page" as BookingUI
+control "Business: Booking Service" as BookingService
+database "Database: Room/Customer" as RoomDB
+
+ActorKH -> BookingUI : Chọn phòng/giường muốn thuê
+BookingUI -> ActorKH : Hiển thị form điền thông tin khách hàng
+ActorKH -> BookingUI : Nhập CCCD, Họ tên, SĐT và xác nhận
+
+BookingUI -> BookingService : validateAndProcess(customerData, roomId)
+
+alt Thông tin thiếu hoặc sai định dạng (A4)
+    BookingService --> BookingUI : Validation Error
+    BookingUI --> ActorKH : Thông báo lỗi và yêu cầu nhập lại
+else Thông tin hợp lệ
+    BookingService -> BookingService : call UC14 (Kiểm tra điều kiện)
+    
+    ActorKH -> BookingUI : Nhấn nút "Đặt cọc"
+    BookingService -> RoomDB : getRoomPrice(roomId)
+    RoomDB --> BookingService : don_gia_thue
+    
+    BookingService -> BookingService : calculateDepositAmount(don_gia_thue)
+    BookingService --> BookingUI : showSummary(depositAmount)
+    
+    alt Khách hàng muốn thay đổi thông tin (A8)
+        ActorKH -> BookingUI : Nhấn nút "Thay đổi thông tin"
+        BookingUI --> ActorKH : Quay lại bước chọn phòng/nhập liệu
+    else Xác nhận thanh toán
+        ActorKH -> BookingUI : Nhấn nút "Thanh toán"
+        BookingUI -> BookingService : call UC15 (Thanh toán)
+        BookingService --> BookingUI : Payment Redirect
+    end
+end
+
+@enduml

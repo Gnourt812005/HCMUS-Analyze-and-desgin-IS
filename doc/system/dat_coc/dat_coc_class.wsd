@@ -1,0 +1,51 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+title Class Diagram - UC13: Đặt cọc
+
+package "Presentation Layer" {
+    class "MH_DatCoc" <<boundary>> {
+        + hienThiDanhSachPhong()
+        + nhapThongTinKhachHang()
+        + hienThiTongTien(so_tien)
+    }
+}
+
+package "Business Logic Layer" {
+    class "XuLyDatCoc" <<control>> {
+        - ma_phong: String
+        - so_tien_coc: Double
+        + kiemTraThongTin(data)
+        + tinhTienCoc()
+        + taoPhieuTam()
+    }
+}
+
+package "Data Access Layer" {
+    class "KhachHang" <<entity>> {
+        - cccd: String
+        - ho_ten: String
+        - ngay_sinh: Date
+        - so_dien_thoai: String
+        + save()
+    }
+    class "Phong" <<entity>> {
+        - ma_phong: String
+        - loai_phong: String
+        - gia_thue: Double
+        + getPrice()
+        + updateStatus()
+    }
+    class "Giuong" <<entity>> {
+        - ma_giuong: String
+        - trang_thai: String
+        + checkAvailable()
+    }
+}
+
+"MH_DatCoc" ..> "XuLyDatCoc"
+"XuLyDatCoc" ..> "KhachHang"
+"XuLyDatCoc" ..> "Phong"
+"XuLyDatCoc" ..> "Giuong"
+
+@enduml
