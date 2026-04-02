@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-secondary": "#ffffff",
+              "error": "#ba1a1a",
+              "on-tertiary-fixed-variant": "#7d2d00",
+              "on-background": "#191c1d",
+              "inverse-surface": "#2e3132",
+              "on-tertiary": "#ffffff",
+              "on-surface": "#191c1d",
+              "surface-bright": "#f8f9fa",
+              "on-primary-fixed-variant": "#003ea8",
+              "on-secondary-container": "#684000",
+              "outline": "#737686",
+              "on-tertiary-fixed": "#360f00",
+              "on-tertiary-container": "#ffede6",
+              "on-primary": "#ffffff",
+              "surface-variant": "#e1e3e4",
+              "secondary-fixed-dim": "#ffb95f",
+              "primary": "#004ac6",
+              "primary-fixed-dim": "#b4c5ff",
+              "tertiary": "#943700",
+              "secondary": "#855300",
+              "surface-tint": "#0053db",
+              "tertiary-fixed-dim": "#ffb596",
+              "on-surface-variant": "#434655",
+              "surface-dim": "#d9dadb",
+              "on-error-container": "#93000a",
+              "on-secondary-fixed-variant": "#653e00",
+              "secondary-fixed": "#ffddb8",
+              "surface": "#f8f9fa",
+              "on-error": "#ffffff",
+              "surface-container-highest": "#e1e3e4",
+              "surface-container-lowest": "#ffffff",
+              "primary-fixed": "#dbe1ff",
+              "surface-container-high": "#e7e8e9",
+              "inverse-on-surface": "#f0f1f2",
+              "inverse-primary": "#b4c5ff",
+              "primary-container": "#2563eb",
+              "background": "#f8f9fa",
+              "surface-container": "#edeeef",
+              "surface-container-low": "#f3f4f5",
+              "outline-variant": "#c3c6d7",
+              "secondary-container": "#fea619",
+              "tertiary-fixed": "#ffdbcd",
+              "tertiary-container": "#bc4800",
+              "on-secondary-fixed": "#2a1700",
+              "error-container": "#ffdad6",
+              "on-primary-fixed": "#00174b",
+              "on-primary-container": "#eeefff"
+            },
+            fontFamily: {
+              "headline": ["Manrope", "sans-serif"],
+              "body": ["Inter", "sans-serif"],
+              "label": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-nav {
+            backdrop-filter: blur(24px);
+        }
+        .truncate-2-lines {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm font-manrope antialiased tracking-tight">
+<div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-bold tracking-tighter text-blue-700">DormArch</span>
+<div class="hidden md:flex gap-6">
+<a class="text-blue-700 font-semibold border-b-2 border-blue-700 pb-1" href="#">Trang chủ</a>
+<a class="text-slate-600 hover:text-blue-600 transition-colors" href="#">Danh sách phòng</a>
+<a class="text-slate-600 hover:text-blue-600 transition-colors" href="#">Về chúng tôi</a>
+<a class="text-slate-600 hover:text-blue-600 transition-colors" href="#">Cẩm nang thuê phòng</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-5 py-2 rounded-xl text-blue-700 font-medium hover:bg-slate-50 transition-all duration-200 scale-95 active:opacity-80">Đăng nhập</button>
+<button class="bg-primary-container text-on-primary-container px-6 py-2 rounded-xl font-semibold shadow-md hover:brightness-110 transition-all">Bắt đầu ngay</button>
+</div>
+</div>
+</nav>
+<main class="pt-24 pb-20">
+<!-- Hero & Filter Section -->
+<section class="max-w-7xl mx-auto px-6 mb-16">
+<div class="relative overflow-hidden rounded-[2rem] bg-slate-900 p-12 md:p-20 mb-[-4rem]">
+<img alt="Modern apartment interior" class="absolute inset-0 w-full h-full object-cover opacity-40" data-alt="luxury modern minimalist studio apartment with large windows soft sunlight and high-end furniture in a clean architectural style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOzmeul2v6MfGR_-MS02KeTB7nwUly0ji4WnI86yLzOlLfq8cKc8QoO2bjdUP-feRW507kMfdrKIV0EFR3Tn2oZqIGz-cJTsGfLLVnTgKaybskPhcdcXWlFUWzvN_LcsoqkPnyyLYcH9O-lLoHLuUEsx3DG5TCmbrnKhdxAW_oq1ukRHLHaJD1D2g5G_DKP3ssARqlq5svkedIy9eyQRobjbfoEYti9MZOCkvJEECuhtK_2CyvejYToDxO3vqIRkLHR7zFKtfLNKQ"/>
+<div class="relative z-10 max-w-2xl">
+<h1 class="font-headline text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-6 leading-tight">
+                        Tìm không gian <span class="text-primary-fixed-dim">lý tưởng</span> cho cuộc sống mới.
+                    </h1>
+<p class="text-slate-200 text-lg md:text-xl font-light mb-8 leading-relaxed">
+                        Hệ thống quản lý và tìm kiếm phòng trọ, kí túc xá hiện đại. Minh bạch thông tin, tối ưu trải nghiệm.
+                    </p>
+</div>
+</div>
+<!-- Filter Panel (Overlapping) -->
+<div class="relative z-20 max-w-6xl mx-auto">
+<div class="bg-surface-container-lowest p-8 rounded-[1.5rem] shadow-2xl shadow-slate-200/50 border border-outline-variant/10">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+<!-- Location Filter -->
+<div class="space-y-3">
+<label class="text-xs font-bold text-outline tracking-widest uppercase flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">location_on</span> Khu vực
+                            </label>
+<div class="grid grid-cols-1 gap-2">
+<select class="w-full bg-surface-container-high border-none rounded-lg text-sm py-3 px-4 focus:ring-2 focus:ring-primary focus:bg-white transition-all">
+<option>Thành phố Hồ Chí Minh</option>
+<option>Hà Nội</option>
+<option>Đà Nẵng</option>
+</select>
+</div>
+</div>
+<div class="space-y-3">
+<label class="text-xs font-bold text-outline tracking-widest uppercase">Quận / Huyện</label>
+<select class="w-full bg-surface-container-high border-none rounded-lg text-sm py-3 px-4 focus:ring-2 focus:ring-primary focus:bg-white transition-all">
+<option>Quận 1</option>
+<option>Quận 7</option>
+<option>Quận Bình Thạnh</option>
+<option>Thủ Đức</option>
+</select>
+</div>
+<!-- Price Range -->
+<div class="space-y-3">
+<label class="text-xs font-bold text-outline tracking-widest uppercase flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">payments</span> Khoảng giá (VND)
+                            </label>
+<div class="flex items-center gap-2">
+<input class="w-full bg-surface-container-high border-none rounded-lg text-sm py-3 px-4 focus:ring-2 focus:ring-primary focus:bg-white transition-all" placeholder="Từ" type="number"/>
+<span class="text-outline">-</span>
+<input class="w-full bg-surface-container-high border-none rounded-lg text-sm py-3 px-4 focus:ring-2 focus:ring-primary focus:bg-white transition-all" placeholder="Đến" type="number"/>
+</div>
+</div>
+<!-- Search Button -->
+<button class="bg-primary-container text-white h-[48px] rounded-lg font-bold flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-blue-200">
+<span class="material-symbols-outlined">search</span> Tìm kiếm
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Room Grid Section -->
+<section class="max-w-7xl mx-auto px-6 mt-12">
+<div class="flex justify-between items-end mb-10">
+<div>
+<h2 class="font-headline text-3xl font-extrabold text-on-surface tracking-tight mb-2">Phòng nổi bật</h2>
+<p class="text-outline">Khám phá những lựa chọn hàng đầu dựa trên đánh giá của người dùng</p>
+</div>
+<button class="text-primary font-semibold flex items-center gap-1 hover:underline underline-offset-4">
+                    Xem tất cả <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+<!-- Card 1 -->
+<div class="group cursor-pointer bg-surface-container-lowest rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-slate-200/80 transition-all duration-500 border border-outline-variant/10">
+<div class="aspect-[4/3] overflow-hidden relative">
+<img alt="Luxury Studio" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="bright modern studio apartment interior with white walls minimalist decor and soft afternoon sun coming through window" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6NBBMtPGDdDfZ1a5TzhqZRfWB2ou4UVdm4kBgLWPKUY-yIxEUSx2NAO6otK7rdMLUMHsP-J_D3tSaKb1m0t0ckJ4Gh41BYBM1LHmll3xVKzd2u65yJylWfPHBjTiMzxdKCbg54VmSuTHiI8O2M6RrZJXYMvXzDI3elUNWSudXQu-6jk_AYMYFkZnGd00lxvZQ8SG0nGJTuJY5r0_i46vbnlZgR0F0AfuH5Mf6on8FDInWYq2ZtEWt6hhrV7A_xUG0L2Y62H3QrAg"/>
+<div class="absolute top-4 left-4">
+<span class="bg-white/90 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full text-primary shadow-sm">Có sẵn</span>
+</div>
+</div>
+<div class="p-5">
+<h3 class="font-headline text-lg font-bold text-on-surface truncate-2-lines mb-2 group-hover:text-primary transition-colors">Căn hộ Studio cao cấp Landmark 81 - View sông</h3>
+<p class="text-sm text-outline mb-4 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span> Bình Thạnh, TP.HCM
+                        </p>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+<span class="text-xl font-extrabold text-secondary">8.500.000 <small class="text-xs font-medium text-outline">/tháng</small></span>
+<div class="flex items-center gap-1 text-secondary-container">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold text-on-surface">4.9</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group cursor-pointer bg-surface-container-lowest rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-slate-200/80 transition-all duration-500 border border-outline-variant/10">
+<div class="aspect-[4/3] overflow-hidden relative">
+<img alt="Cozy Room" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="cozy bedroom with warm ambient lighting wooden textures and a small desk near the window" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlR7mQoF_wbtpQYJxgIbYtJPAJXANGSV-H-3aHglmpu4pT1r248ZEtG3xCZ5EIuz4lLM29g4yvMF1tP0nYMUEa3ClWoM51E0Cmctd5Oe44ScYmDdn_27ivMFYMbCZN8V32cxy5vtnv9TnrSqEfMp-arMbnDS-y8lr--ihJ6TmkZ2bRstD6sW0vK-wjGT8FLgfKPYoo-5eFyXNus7nfuZ9FA8pm6zAT1EiaiBiUjYIxj-vk4yMB5icoj2iaBw-d7TbW9iWV2d6F6E0"/>
+<div class="absolute top-4 left-4">
+<span class="bg-white/90 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full text-primary shadow-sm">Mới đăng</span>
+</div>
+</div>
+<div class="p-5">
+<h3 class="font-headline text-lg font-bold text-on-surface truncate-2-lines mb-2 group-hover:text-primary transition-colors">Phòng trọ Full nội thất Quận 1 - Gần chợ Bến Thành</h3>
+<p class="text-sm text-outline mb-4 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span> Quận 1, TP.HCM
+                        </p>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+<span class="text-xl font-extrabold text-secondary">5.200.000 <small class="text-xs font-medium text-outline">/tháng</small></span>
+<div class="flex items-center gap-1 text-secondary-container">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold text-on-surface">4.7</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group cursor-pointer bg-surface-container-lowest rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-slate-200/80 transition-all duration-500 border border-outline-variant/10">
+<div class="aspect-[4/3] overflow-hidden relative">
+<img alt="Shared Dorm" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="neat shared dormitory room with bunk beds and individual storage lockers clean and organized space" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBClafbdaTGmHHumH_1M3uWEyDj6L3nVvdrVM1NdRpa8rD3bzy7uwxIyGXTK9lAb9ccTGduKfd9NzhjPGaXoXwDieAW2TLDkOBJOQEPa0eqmJbBn0wOARBQNe8LSBSbGmy2oPPcYfDGEJtILwTStirRzOxTbrs5_lpkqZ3iPp5uBpD4jNVYiSdVlu12x9ZNkPcv2JNz9C9lrxKd0B2CpZsWPNQ75E3hJT-X8zCEPc4FENKRPU00lRtn204KuY28mNbtL3a1inwQJIc"/>
+<div class="absolute top-4 left-4">
+<span class="bg-white/90 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full text-secondary shadow-sm">Kí túc xá</span>
+</div>
+</div>
+<div class="p-5">
+<h3 class="font-headline text-lg font-bold text-on-surface truncate-2-lines mb-2 group-hover:text-primary transition-colors">Kí túc xá SleepBox cao cấp - Gần làng Đại Học</h3>
+<p class="text-sm text-outline mb-4 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span> Thủ Đức, TP.HCM
+                        </p>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+<span class="text-xl font-extrabold text-secondary">1.800.000 <small class="text-xs font-medium text-outline">/tháng</small></span>
+<div class="flex items-center gap-1 text-secondary-container">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold text-on-surface">4.5</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="group cursor-pointer bg-surface-container-lowest rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-slate-200/80 transition-all duration-500 border border-outline-variant/10">
+<div class="aspect-[4/3] overflow-hidden relative">
+<img alt="Modern Loft" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="industrial style loft apartment with exposed brick walls large windows and modern furniture in natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcJk7Fp2yBm9zegLIy53KbBj464rrzUvuIVWI8pTj7KSfn5AH2UHbxzPqUWOLDaQWHKmActpPhWvcA81DGjlsIeaFCL_VFeWpOH9kXa7I4LMA9iMd8a52l1RJ1XtJ2vQJmi1GJpOJfwNymv9QA08NpkILFnpKooQmVuWBAUCsg6vmUsRWTiyv7R4f-YH7KvvZypEH-aMXfYn4HsTcZdwfXdAA2tvOVM8KBkUA2F-4RfSjknVFakf6TMlD6T62onN7ru1YMVKNCdlU"/>
+<div class="absolute top-4 left-4">
+<span class="bg-white/90 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full text-error shadow-sm">Giá tốt</span>
+</div>
+</div>
+<div class="p-5">
+<h3 class="font-headline text-lg font-bold text-on-surface truncate-2-lines mb-2 group-hover:text-primary transition-colors">Phòng Gác lửng phong cách tối giản - Khu KDC Him Lam</h3>
+<p class="text-sm text-outline mb-4 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span> Quận 7, TP.HCM
+                        </p>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+<span class="text-xl font-extrabold text-secondary">4.500.000 <small class="text-xs font-medium text-outline">/tháng</small></span>
+<div class="flex items-center gap-1 text-secondary-container">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold text-on-surface">4.8</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Bento Features Section -->
+<section class="max-w-7xl mx-auto px-6 mt-24">
+<h2 class="font-headline text-3xl font-extrabold text-on-surface tracking-tight mb-12 text-center">Tại sao chọn DormArch?</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[240px]">
+<div class="md:col-span-2 bg-primary-container rounded-3xl p-8 flex flex-col justify-end relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-150 transition-transform duration-700"></div>
+<div class="relative z-10">
+<span class="material-symbols-outlined text-white text-5xl mb-4">verified_user</span>
+<h3 class="text-2xl font-bold text-white mb-2">Thông tin xác thực 100%</h3>
+<p class="text-blue-100 max-w-md">Mọi phòng đăng tải đều được đội ngũ kiểm duyệt thực tế trước khi hiển thị cho người dùng.</p>
+</div>
+</div>
+<div class="bg-surface-container-high rounded-3xl p-8 flex flex-col justify-center border border-outline-variant/20">
+<span class="material-symbols-outlined text-primary text-5xl mb-4">payments</span>
+<h3 class="text-xl font-bold text-on-surface mb-2">Thanh toán an toàn</h3>
+<p class="text-outline text-sm">Hệ thống thanh toán tiền phòng trực tuyến minh bạch, lịch sử rõ ràng.</p>
+</div>
+<div class="bg-surface-container-high rounded-3xl p-8 flex flex-col justify-center border border-outline-variant/20">
+<span class="material-symbols-outlined text-primary text-5xl mb-4">support_agent</span>
+<h3 class="text-xl font-bold text-on-surface mb-2">Hỗ trợ 24/7</h3>
+<p class="text-outline text-sm">Đội ngũ hỗ trợ luôn sẵn sàng giải đáp mọi thắc mắc trong quá trình thuê phòng.</p>
+</div>
+<div class="md:col-span-2 bg-secondary-container rounded-3xl p-8 flex items-center justify-between relative overflow-hidden group">
+<div class="relative z-10 max-w-xs">
+<h3 class="text-2xl font-bold text-on-secondary-container mb-2">Hợp đồng điện tử</h3>
+<p class="text-on-secondary-container opacity-80">Ký kết hợp đồng thuê ngay trên ứng dụng với giá trị pháp lý tương đương giấy tờ.</p>
+</div>
+<span class="material-symbols-outlined text-[120px] text-on-secondary-container/10 absolute -right-4 -bottom-4 rotate-12" style="font-variation-settings: 'FILL' 1;">contract</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full mt-auto bg-slate-50 dark:bg-slate-950 font-inter text-sm text-slate-500 border-t border-slate-200">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-8 py-12 max-w-7xl mx-auto">
+<div class="space-y-4">
+<span class="text-xl font-black text-slate-900 dark:text-slate-100">DormArch</span>
+<p class="leading-relaxed">Giải pháp quản lý và vận hành phòng trọ toàn diện, mang lại sự tiện nghi và an tâm cho cả chủ nhà và khách thuê.</p>
+</div>
+<div class="space-y-4">
+<h4 class="font-bold text-slate-900 dark:text-slate-100">Liên hệ</h4>
+<div class="flex flex-col gap-2">
+<span class="hover:text-blue-500 transition-all cursor-pointer">Hotline: 1900-1234</span>
+<span class="hover:text-blue-500 transition-all cursor-pointer">Email: contact@dormarch.vn</span>
+<span class="hover:text-blue-500 transition-all cursor-pointer">Address: 123 Digital Ave, Tech City</span>
+</div>
+</div>
+<div class="space-y-4">
+<h4 class="font-bold text-slate-900 dark:text-slate-100">Pháp lý</h4>
+<div class="flex flex-col gap-2">
+<a class="hover:text-blue-500 transition-all underline" href="#">Điều khoản dịch vụ</a>
+<a class="hover:text-blue-500 transition-all underline" href="#">Chính sách bảo mật</a>
+<p class="mt-4 text-xs">© 2024 DormArch Management. All rights reserved.</p>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

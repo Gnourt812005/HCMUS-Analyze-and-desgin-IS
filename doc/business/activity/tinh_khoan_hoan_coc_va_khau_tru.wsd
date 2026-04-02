@@ -1,4 +1,4 @@
-@startuml TinhKhoanHoanCocVaKhauTru
+@startuml Activity_TinhKhoanHoanCocVaKhauTru
 title Activity Diagram: Tính khoản hoàn cọc và khấu trừ
 
 ' --- STYLE CONFIGURATION ---
@@ -7,19 +7,19 @@ skinparam {
     ActivityBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 12
+    DefaultFontSize 24
     Padding 5
 
     ' Swimlane styling
     SwimlaneBorderColor #2D3E50
     SwimlaneTitleBackgroundColor #F1F3F5
-    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontSize 24
     SwimlaneTitleFontColor #2D3E50
     
     ' Note styling
     NoteBackgroundColor #FFF9C4
     NoteBorderColor #FBC02D
-    NoteFontSize 11
+    NoteFontSize 24
 }
 
 ' --- SWIMLANES ---
@@ -30,9 +30,8 @@ skinparam {
 ' Start
 |Nhân viên Quản lý|
 start
-:Kiểm tra tình trạng phòng/giường thực tế;
-
 repeat
+:Kiểm tra tình trạng phòng/giường thực tế;
 
 :Đối chiếu thông tin hợp đồng và nghĩa vụ;
 note right
@@ -48,6 +47,7 @@ note left
   - >= 6 tháng: hoàn 70%
   - Hết hạn hợp đồng: hoàn 100%
 
+  Nếu số người thực tế < số người đặt cọc: Phiếu thanh toán (ghi)
   Phiếu đặt cọc (đọc)
 end note
 
@@ -56,7 +56,7 @@ note right
   Phiếu kiểm tra phòng (đọc)
 end note
 
-repeat while (Có sai sót kiểm tra?) is (Có)
+repeat while (Có sai sót trong kiểm tra phòng/giường?) is (Có)
     |Nhân viên Quản lý|
 ->Không;
 stop

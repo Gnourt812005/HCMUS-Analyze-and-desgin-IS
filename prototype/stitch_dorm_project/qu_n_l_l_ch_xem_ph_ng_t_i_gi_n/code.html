@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lịch xem phòng của tôi - DormArch</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "on-primary-fixed": "#00174b",
+                "tertiary-fixed-dim": "#ffb596",
+                "on-tertiary-container": "#ffede6",
+                "surface": "#f8f9fa",
+                "surface-container-lowest": "#ffffff",
+                "surface-container-high": "#e7e8e9",
+                "inverse-primary": "#b4c5ff",
+                "secondary-fixed-dim": "#ffb95f",
+                "on-surface-variant": "#434655",
+                "secondary-fixed": "#ffddb8",
+                "surface-bright": "#f8f9fa",
+                "tertiary-fixed": "#ffdbcd",
+                "surface-container-low": "#f3f4f5",
+                "surface-container-highest": "#e1e3e4",
+                "on-surface": "#191c1d",
+                "on-tertiary-fixed": "#360f00",
+                "secondary-container": "#fea619",
+                "surface-dim": "#d9dadb",
+                "surface-container": "#edeeef",
+                "primary": "#004ac6",
+                "on-background": "#191c1d",
+                "surface-tint": "#0053db",
+                "on-secondary-fixed": "#2a1700",
+                "secondary": "#855300",
+                "primary-fixed": "#dbe1ff",
+                "primary-fixed-dim": "#b4c5ff",
+                "outline-variant": "#c3c6d7",
+                "on-secondary": "#ffffff",
+                "outline": "#737686",
+                "on-primary-container": "#eeefff",
+                "inverse-on-surface": "#f0f1f2",
+                "background": "#f8f9fa",
+                "tertiary": "#943700",
+                "on-tertiary": "#ffffff",
+                "on-secondary-fixed-variant": "#653e00",
+                "inverse-surface": "#2e3132",
+                "on-tertiary-fixed-variant": "#7d2d00",
+                "on-secondary-container": "#684000",
+                "error-container": "#ffdad6",
+                "on-primary": "#ffffff",
+                "on-error-container": "#93000a",
+                "error": "#ba1a1a",
+                "on-error": "#ffffff",
+                "tertiary-container": "#bc4800",
+                "surface-variant": "#e1e3e4",
+                "primary-container": "#2563eb",
+                "on-primary-fixed-variant": "#003ea8"
+              },
+              fontFamily: {
+                "headline": ["Manrope"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+              },
+              borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+            },
+          },
+        }
+      </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, .font-headline { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100/50 dark:border-slate-800/50 shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+<div class="text-2xl font-extrabold tracking-tighter text-blue-700 dark:text-blue-400">DormArch</div>
+<div class="hidden md:flex space-x-8 font-manrope antialiased text-sm font-medium tracking-tight">
+<a class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors" href="#">Trang chủ</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors" href="#">Danh sách phòng</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors" href="#">Dịch vụ</a>
+<a class="text-blue-700 dark:text-blue-400 border-b-2 border-blue-700 dark:border-blue-400 pb-1" href="#">Hợp đồng</a>
+</div>
+<div class="flex items-center space-x-4">
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-slate-50 rounded-full transition-all">notifications</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/10">
+<img alt="Ảnh đại diện người dùng" data-alt="portrait of a professional young man in a clean white studio setting with soft natural lighting and blurred background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDj78moMfpUywIp7z0SEsZzrzx3CMMoBzZ1lcKotmQP3kH_h9VnqEO6wTB0Mc_I4erbc9q45cnnhES1atAaL-erGGz_WAQuHNnN2NjISiDzNaeqHTtcvj-nLCejg5jl2hIxkDbFJfWI4kRg7db46BAPjqoa1iQXNBxld60wz2ABG1lDoWKwRBQIi2-bvdJWYMiU3vIa7Aao7Q6TxNo7MKwyiqKKRpKqN0fYmml5ak1c7k-JbOW2Om5cf77q7gRki3qMPM1dD0dYB1E"/>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-grow pt-24 pb-12 px-6">
+<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
+<!-- Left Sidebar -->
+<aside class="md:col-span-3 space-y-4">
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm">
+<nav class="flex flex-col space-y-1">
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-sm">Thông tin cá nhân</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-primary/10 text-primary font-semibold transition-all" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_today</span>
+<span class="text-sm">Lịch xem phòng</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="text-sm">Đơn hàng</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-all" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="text-sm">Hợp đồng</span>
+</a>
+<div class="pt-4 mt-4 border-t border-outline-variant/20">
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-error hover:bg-error/5 transition-all" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-sm">Đăng xuất</span>
+</a>
+</div>
+</nav>
+</div>
+<!-- Support Card -->
+<div class="bg-primary-container text-on-primary-container rounded-xl p-6 shadow-sm overflow-hidden relative">
+<div class="relative z-10">
+<h4 class="font-headline font-bold text-lg mb-2">Cần hỗ trợ?</h4>
+<p class="text-xs opacity-90 mb-4 leading-relaxed">Đội ngũ DormArch luôn sẵn sàng giải đáp thắc mắc của bạn 24/7.</p>
+<button class="bg-surface-container-lowest text-primary px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:brightness-95 transition-all">Liên hệ ngay</button>
+</div>
+<span class="material-symbols-outlined absolute -bottom-4 -right-4 text-7xl opacity-10 rotate-12">support_agent</span>
+</div>
+</aside>
+<!-- Profile Section / Viewing Schedule (Main Content) -->
+<section class="md:col-span-9 space-y-8">
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+<h1 class="text-3xl font-extrabold text-on-surface tracking-tight">Lịch xem phòng của tôi</h1>
+</div>
+<!-- Data Table Section -->
+<div class="bg-surface-container-lowest rounded-3xl shadow-sm border border-outline-variant/10 overflow-hidden">
+<div class="px-8 py-6 border-b border-outline-variant/10">
+<h3 class="text-lg font-bold text-on-surface">Danh sách chi tiết</h3>
+<p class="text-sm text-outline">Quản lý và theo dõi trạng thái các cuộc hẹn xem phòng của bạn.</p>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low/50">
+<th class="px-8 py-4 text-xs font-bold uppercase tracking-wider text-outline">Mã đơn</th>
+<th class="px-8 py-4 text-xs font-bold uppercase tracking-wider text-outline">Tên phòng</th>
+<th class="px-8 py-4 text-xs font-bold uppercase tracking-wider text-outline">Ngày &amp; Giờ xem</th>
+<th class="px-8 py-4 text-xs font-bold uppercase tracking-wider text-outline">Trạng thái</th>
+<th class="px-8 py-4 text-xs font-bold uppercase tracking-wider text-outline text-right">Hành động</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors group">
+<td class="px-8 py-5">
+<span class="font-mono text-sm font-semibold text-primary">#VX123</span>
+</td>
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-container-high">
+<img alt="Phòng Studio Modern" data-alt="minimalist modern studio apartment interior with large window and soft natural morning light architectural photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfwvLMaesy4kZILZUNIGAbWbSl-lw-eBMDmH02n8wrjgkr-Xi6zSFwC7cTfuSF8w1ZZZ-jmxx89l4vIRQv6ryf5AZzvUkzbwc8C0dv-uXfl0znFUz4sL64_b-rBN4kxAD9YIl9X5iSY2WAogd3aY08CYnwSUdrxOiUDu0Vovh4X5DL_-LTf4YU_9OCvqueW_KnDWSvDhob8pRq_B2K1Abu_n3G_sKQqX1CF5FcGDIeLcLVXhNoAGeGlRILlBCSLentF76YLbloq0Q"/>
+</div>
+<span class="font-semibold text-sm">Studio Modern - Tầng 5</span>
+</div>
+</td>
+<td class="px-8 py-5">
+<div class="text-sm">
+<p class="font-semibold">15 Tháng 10, 2024</p>
+<p class="text-outline text-xs">14:30 - 15:30</p>
+</div>
+</td>
+<td class="px-8 py-5">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-secondary-container text-on-secondary-container">
+                                        Chờ xác nhận
+                                    </span>
+</td>
+<td class="px-8 py-5 text-right">
+<button class="text-error font-semibold text-sm hover:underline underline-offset-4 decoration-2">Hủy lịch</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors group">
+<td class="px-8 py-5">
+<span class="font-mono text-sm font-semibold text-primary">#VX124</span>
+</td>
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-container-high">
+<img alt="Phòng Deluxe View Hồ" data-alt="luxurious bedroom with city lake view at sunset warm indoor lighting and clean aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAE1z4Lgvu0Ub9INn6QCJwf7Cv0gtNcvWK281kG7GAq_kXBc_ft9j0qNqrjCue7pAN7eKY1FMu7-UWP2OMJy5wbvMpJQrlLf_QezR7jiK1fTuvpkBt4RUAEhHUWko4UaZN2BAbOlhJXAOreHv-9NIO9PmiIkZ8VOx5Xjvy3WT3P6SdMIgehxBKS5_Zc4SIDs9QtZZPDIyyKw-RxZOheGDaeB9VO9Ur-b71KxiwzKdtJY0dW7lLNuNmdg6OGcaR5thYXkxAVmUOCqA"/>
+</div>
+<span class="font-semibold text-sm">Deluxe View Hồ - Tầng 12</span>
+</div>
+</td>
+<td class="px-8 py-5">
+<div class="text-sm">
+<p class="font-semibold">16 Tháng 10, 2024</p>
+<p class="text-outline text-xs">09:00 - 10:00</p>
+</div>
+</td>
+<td class="px-8 py-5">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                                        Đã chốt
+                                    </span>
+</td>
+<td class="px-8 py-5 text-right">
+<button class="text-outline/40 cursor-not-allowed font-semibold text-sm" disabled="">Hủy lịch</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors group">
+<td class="px-8 py-5">
+<span class="font-mono text-sm font-semibold text-primary">#VX119</span>
+</td>
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-container-high">
+<img alt="Penthouse Suite" data-alt="ultra modern penthouse apartment living room with expansive windows and industrial design elements" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtjxmBRTzuEvOiIzE_kFEZ7fMCnUMTau0a4a82dfejocdHej7EPYO7PpbO56aI_R7yxmUnQdFt_czg7Dmy-h-559pXiwoqSLoRpBv_y-d0hDIKEr9duVt7Ecs9L23vT6Ejqlpqf6yYZRZNSDfJuNhsRk6_O7YnnRT9P4Duc7zOgUTfuzJsqGBmH0zojRNUCg-8DdIshGZhvIVUrPrWywbaybA5ufg2rOcb9i-UxIXh1Q28hflNgYqOPjLMoFF3nmq8QUhPoGyvYBQ"/>
+</div>
+<span class="font-semibold text-sm">Penthouse Suite - Tầng 20</span>
+</div>
+</td>
+<td class="px-8 py-5">
+<div class="text-sm">
+<p class="font-semibold">12 Tháng 10, 2024</p>
+<p class="text-outline text-xs">16:00 - 17:00</p>
+</div>
+</td>
+<td class="px-8 py-5">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-error-container text-on-error-container">
+                                        Đã hủy
+                                    </span>
+</td>
+<td class="px-8 py-5 text-right">
+<button class="text-primary font-semibold text-sm hover:underline underline-offset-4 decoration-2">Đặt lại</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors group">
+<td class="px-8 py-5">
+<span class="font-mono text-sm font-semibold text-primary">#VX125</span>
+</td>
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-container-high">
+<img alt="Phòng Đơn Classic" data-alt="cozy single bedroom with wooden furniture and warm soft fabrics in a modern dorm architecture style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6gg0_5zCk0YNvESQzjruHNp5kRaMiCoNeTk0OJCEqPofNqWRxtSM69dTfKGJzSln8Mvr3chgxlp7SvozJ7zuJyvX9O-AtrLh4uVpxNfl0y5QKeEMe5RNvA_Ib-hda-udag5JwiCbrGKgMldI66LEEsrgbc9Lnbc4OdpOZzPl-BPZM-NO8JkB4R8j7dYPIYeXtN33Rlh6XA-IEmiZoSRnxfzPt8vJ5QILf3ePvfboHiGjCnaODJFSoBoHYcOpC1qyyDkhqg-wqc0o"/>
+</div>
+<span class="font-semibold text-sm">Phòng Đơn Classic</span>
+</div>
+</td>
+<td class="px-8 py-5">
+<div class="text-sm">
+<p class="font-semibold">18 Tháng 10, 2024</p>
+<p class="text-outline text-xs">10:30 - 11:30</p>
+</div>
+</td>
+<td class="px-8 py-5">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-secondary-container text-on-secondary-container">
+                                        Chờ xác nhận
+                                    </span>
+</td>
+<td class="px-8 py-5 text-right">
+<button class="text-error font-semibold text-sm hover:underline underline-offset-4 decoration-2">Hủy lịch</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-8 py-4 bg-surface-container-low/30 border-t border-outline-variant/10 flex items-center justify-between">
+<p class="text-xs text-outline font-medium">Hiển thị 4 trên 12 cuộc hẹn</p>
+<div class="flex items-center gap-2">
+<button class="p-1.5 rounded-lg border border-outline-variant/30 hover:bg-surface-container-low disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<span class="text-xs font-bold px-3 py-1 bg-primary text-on-primary rounded-lg">1</span>
+<button class="p-1.5 rounded-lg border border-outline-variant/30 hover:bg-surface-container-low">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full mt-auto bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-6 py-12 max-w-7xl mx-auto">
+<div class="space-y-4">
+<div class="text-xl font-bold text-slate-900 dark:text-slate-100">DormArch</div>
+<p class="font-manrope text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Hệ thống quản lý phòng trọ kiến trúc số hàng đầu, mang đến không gian sống tiện nghi và hiện đại.</p>
+</div>
+<div>
+<h5 class="font-bold text-on-surface mb-4">Khám phá</h5>
+<ul class="space-y-2 font-manrope text-sm text-slate-500 dark:text-slate-400">
+<li><a class="hover:text-blue-600 dark:hover:text-blue-400 transition-all" href="#">Về chúng tôi</a></li>
+<li><a class="hover:text-blue-600 dark:hover:text-blue-400 transition-all" href="#">Danh sách phòng</a></li>
+<li><a class="hover:text-blue-600 dark:hover:text-blue-400 transition-all" href="#">Dịch vụ tiện ích</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-bold text-on-surface mb-4">Pháp lý</h5>
+<ul class="space-y-2 font-manrope text-sm text-slate-500 dark:text-slate-400">
+<li><a class="hover:text-blue-600 dark:hover:text-blue-400 transition-all" href="#">Chính sách bảo mật</a></li>
+<li><a class="hover:text-blue-600 dark:hover:text-blue-400 transition-all" href="#">Điều khoản sử dụng</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-bold text-on-surface mb-4">Liên hệ</h5>
+<ul class="space-y-2 font-manrope text-sm text-slate-500 dark:text-slate-400">
+<li class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-sm">mail</span>
+<span>support@dormarch.vn</span>
+</li>
+<li class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-sm">call</span>
+<span>1900 8888</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="max-w-7xl mx-auto px-6 py-6 border-t border-slate-200 dark:border-slate-800">
+<p class="font-manrope text-sm text-slate-500 dark:text-slate-400 text-center md:text-left">© 2024 DormArch. Hệ thống quản lý phòng trọ kiến trúc số.</p>
+</div>
+</footer>
+</body></html>

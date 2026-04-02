@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-error-container": "#93000a",
+              "tertiary": "#943700",
+              "surface-variant": "#e1e3e4",
+              "on-primary-fixed": "#00174b",
+              "on-error": "#ffffff",
+              "tertiary-fixed-dim": "#ffb596",
+              "outline": "#737686",
+              "surface-container-highest": "#e1e3e4",
+              "primary-container": "#2563eb",
+              "primary-fixed-dim": "#b4c5ff",
+              "on-tertiary-fixed-variant": "#7d2d00",
+              "surface-container-low": "#f3f4f5",
+              "secondary-fixed": "#ffddb8",
+              "primary": "#004ac6",
+              "on-primary-container": "#eeefff",
+              "error": "#ba1a1a",
+              "on-tertiary-fixed": "#360f00",
+              "secondary-fixed-dim": "#ffb95f",
+              "on-surface": "#191c1d",
+              "background": "#f8f9fa",
+              "secondary-container": "#fea619",
+              "secondary": "#855300",
+              "on-tertiary-container": "#ffede6",
+              "surface-bright": "#f8f9fa",
+              "on-secondary-fixed-variant": "#653e00",
+              "on-secondary-fixed": "#2a1700",
+              "error-container": "#ffdad6",
+              "surface-container-high": "#e7e8e9",
+              "surface-tint": "#0053db",
+              "on-secondary-container": "#684000",
+              "inverse-surface": "#2e3132",
+              "surface-dim": "#d9dadb",
+              "outline-variant": "#c3c6d7",
+              "on-tertiary": "#ffffff",
+              "surface-container": "#edeeef",
+              "on-background": "#191c1d",
+              "inverse-primary": "#b4c5ff",
+              "primary-fixed": "#dbe1ff",
+              "tertiary-container": "#bc4800",
+              "surface-container-lowest": "#ffffff",
+              "surface": "#f8f9fa",
+              "on-primary": "#ffffff",
+              "on-secondary": "#ffffff",
+              "tertiary-fixed": "#ffdbcd",
+              "on-primary-fixed-variant": "#003ea8",
+              "on-surface-variant": "#434655",
+              "inverse-on-surface": "#f0f1f2"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      h1, h2, h3, .brand-font {
+        font-family: 'Manrope', sans-serif;
+      }
+      .tonal-shift-bg-surface-container-low {
+        background-color: #f3f4f5;
+      }
+    </style>
+</head>
+<body class="bg-surface-container-low text-on-surface antialiased">
+<!-- SideNavBar Component -->
+<aside class="fixed left-0 top-0 h-full flex flex-col z-50 overflow-y-auto bg-slate-50 dark:bg-slate-950 h-screen w-64 border-r border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none tonal-shift-bg-surface-container-low">
+<div class="p-6">
+<div class="text-xl font-black tracking-tighter text-blue-800 dark:text-blue-400">The Digital Architect</div>
+<p class="font-manrope font-bold tracking-tight text-xs text-slate-500 mt-1">Management Portal</p>
+</div>
+<nav class="flex-1 px-2 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="domain">domain</span>
+<span class="text-sm">Ký túc xá</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="bed">bed</span>
+<span class="text-sm">Phòng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
+<span class="text-sm">Lịch xem</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-400 font-bold border-r-4 border-blue-700 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20" href="#">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span class="text-sm">Đơn hàng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="text-sm">Hợp đồng</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="badge">badge</span>
+<span class="text-sm">Nhân viên</span>
+</a>
+</nav>
+<div class="mt-auto p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 px-2 mb-4">
+<img alt="Employee Profile Picture" class="w-8 h-8 rounded-full bg-surface-container-high" data-alt="professional corporate headshot of a management employee with soft studio lighting and neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2I0p1YDtf4Li8c4pmhTZNK08Jr9VjAvrlAozSCmtF8tS1h4HFaV9uzOwWLweaQflemC0QqvXOHLnwTalV9-nvtI2SJdYud9NRFDPOWmoMnbi6jDAA_ChZT7iBZyeMahz0hib3yPPZVK-oMX7jN8uUNxicMEd_TfrUm0XORYKrYPFK_mHI0nGUaqJPQaF7SrX_PUJt-4wPoRoFrL8JNyjsH9K8KdWd_pV9kyI6qv0x5y2Vp0N1To8L5oWNPeDKaJ7k-SjD1KiQf8E"/>
+<div>
+<p class="text-xs font-bold text-on-surface">Admin User</p>
+<p class="text-[10px] uppercase tracking-widest text-slate-500">Staff ID: 9821</p>
+</div>
+</div>
+<a class="flex items-center gap-3 px-4 py-2 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="settings">settings</span>
+<span class="text-xs">Cài đặt</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="logout">logout</span>
+<span class="text-xs">Đăng xuất</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen p-8">
+<!-- Layout follows "The Editorial Voice" and "Asymmetric Anchoring" -->
+<div class="max-w-7xl mx-auto">
+<!-- Table Container using Level 2 Surface -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container text-on-surface-variant">
+<th class="px-6 py-4 font-headline font-bold text-sm tracking-tight uppercase tracking-widest text-[10px]">Mã đơn</th>
+<th class="px-6 py-4 font-headline font-bold text-sm tracking-tight uppercase tracking-widest text-[10px]">Khách hàng</th>
+<th class="px-6 py-4 font-headline font-bold text-sm tracking-tight uppercase tracking-widest text-[10px]">Phòng</th>
+<th class="px-6 py-4 font-headline font-bold text-sm tracking-tight uppercase tracking-widest text-[10px]">Số tiền</th>
+<th class="px-6 py-4 font-headline font-bold text-sm tracking-tight uppercase tracking-widest text-[10px]">Trạng thái</th>
+<th class="px-6 py-4 font-headline font-bold text-sm tracking-tight uppercase tracking-widest text-[10px]">Thao tác</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/15">
+<!-- Order Item 1 -->
+<tr class="hover:bg-surface-container-low transition-colors duration-150">
+<td class="px-6 py-5 text-sm font-semibold text-primary">#ORD-2094</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs">NL</div>
+<div>
+<p class="text-sm font-medium text-on-surface">Nguyễn Văn Linh</p>
+<p class="text-[11px] text-on-surface-variant">0908 123 456</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-2 py-1 rounded bg-surface-container-high text-on-surface text-xs font-medium">B-302</span>
+</td>
+<td class="px-6 py-5 text-sm font-bold text-secondary">
+                                4.500.000đ
+                            </td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Cọc phòng</span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary hover:bg-primary/5 p-2 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Order Item 2 -->
+<tr class="hover:bg-surface-container-low transition-colors duration-150">
+<td class="px-6 py-5 text-sm font-semibold text-primary">#ORD-2105</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary font-bold text-xs">MT</div>
+<div>
+<p class="text-sm font-medium text-on-surface">Minh Thảo</p>
+<p class="text-[11px] text-on-surface-variant">0912 888 999</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-2 py-1 rounded bg-surface-container-high text-on-surface text-xs font-medium">A-101</span>
+</td>
+<td class="px-6 py-5 text-sm font-bold text-secondary">
+                                3.200.000đ
+                            </td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Đã thuê</span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary hover:bg-primary/5 p-2 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Order Item 3 -->
+<tr class="hover:bg-surface-container-low transition-colors duration-150">
+<td class="px-6 py-5 text-sm font-semibold text-primary">#ORD-2118</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary font-bold text-xs">PK</div>
+<div>
+<p class="text-sm font-medium text-on-surface">Phạm Khánh</p>
+<p class="text-[11px] text-on-surface-variant">0888 555 111</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-2 py-1 rounded bg-surface-container-high text-on-surface text-xs font-medium">C-504</span>
+</td>
+<td class="px-6 py-5 text-sm font-bold text-secondary">
+                                2.800.000đ
+                            </td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Cọc phòng</span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary hover:bg-primary/5 p-2 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Order Item 4 -->
+<tr class="hover:bg-surface-container-low transition-colors duration-150">
+<td class="px-6 py-5 text-sm font-semibold text-primary">#ORD-2122</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface font-bold text-xs">HT</div>
+<div>
+<p class="text-sm font-medium text-on-surface">Hoàng Thiên</p>
+<p class="text-[11px] text-on-surface-variant">0707 999 000</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-2 py-1 rounded bg-surface-container-high text-on-surface text-xs font-medium">B-201</span>
+</td>
+<td class="px-6 py-5 text-sm font-bold text-secondary">
+                                5.100.000đ
+                            </td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Đã thuê</span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary hover:bg-primary/5 p-2 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Order Item 5 -->
+<tr class="hover:bg-surface-container-low transition-colors duration-150">
+<td class="px-6 py-5 text-sm font-semibold text-primary">#ORD-2130</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs">TD</div>
+<div>
+<p class="text-sm font-medium text-on-surface">Trần Diệp</p>
+<p class="text-[11px] text-on-surface-variant">0934 112 233</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="px-2 py-1 rounded bg-surface-container-high text-on-surface text-xs font-medium">A-412</span>
+</td>
+<td class="px-6 py-5 text-sm font-bold text-secondary">
+                                4.000.000đ
+                            </td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-container text-on-error-container">Trễ hạn</span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary hover:bg-primary/5 p-2 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+<!-- Pagination footer with Ghost Border feel -->
+<div class="px-6 py-4 bg-surface-container-lowest flex items-center justify-between border-t border-outline-variant/15">
+<span class="text-xs text-on-surface-variant font-medium">Hiển thị 5 / 24 đơn hàng</span>
+<div class="flex gap-2">
+<button class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 cursor-not-allowed">Trước</button>
+<button class="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-on-primary">1</button>
+<button class="px-3 py-1.5 rounded-lg text-xs font-bold text-on-surface hover:bg-surface-container-high">2</button>
+<button class="px-3 py-1.5 rounded-lg text-xs font-bold text-on-surface hover:bg-surface-container-high">3</button>
+<button class="px-3 py-1.5 rounded-lg text-xs font-bold text-primary hover:bg-primary/5">Sau</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

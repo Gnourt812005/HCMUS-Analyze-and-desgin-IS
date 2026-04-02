@@ -1,4 +1,4 @@
-@startuml BanGiaoPhong
+@startuml Activity_BanGiaoPhong
 title Activity Diagram: Bàn giao phòng
 
 ' --- STYLE CONFIGURATION ---
@@ -7,19 +7,19 @@ skinparam {
     ActivityBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 12
+    DefaultFontSize 24
     Padding 5
 
     ' Swimlane styling
     SwimlaneBorderColor #2D3E50
     SwimlaneTitleBackgroundColor #F1F3F5
-    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontSize 24
     SwimlaneTitleFontColor #2D3E50
     
     ' Note styling
     NoteBackgroundColor #FFF9C4
     NoteBorderColor #FBC02D
-    NoteFontSize 11
+    NoteFontSize 24
 }
 
 ' --- SWIMLANES ---
@@ -52,8 +52,10 @@ else (Không)
 
 endif
 
-:Giải thích quy định sử dụng\nvà lưu ý an toàn;
-
+:Giải thích quy định sử dụng và lưu ý an toàn;
+note right
+Nội quy (đọc)
+end note
 
 |Khách hàng|
 :Xem và xác nhận biên bản bàn giao;

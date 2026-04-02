@@ -1,0 +1,39 @@
+@startuml DangXuat_SequenceDiagram
+title Sequence Diagram: Đăng xuất
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    ParticipantPadding 20
+    BoxPadding 10
+}
+
+actor "Khách hàng / Nhân viên" as Actor
+boundary "ScreenHome" as GUI <<boundary>>
+control "User" as BUS <<control>>
+database "UserDB" as DAO <<database>>
+
+autonumber
+
+Actor -> GUI: Bấm nút "Đăng xuất"
+
+activate GUI
+GUI -> BUS: logout()
+activate BUS
+
+BUS -> DAO: clearSession()
+activate DAO
+DAO --> BUS: Trả kết quả (Done)
+deactivate DAO
+
+BUS --> GUI: Xác nhận đăng xuất thành công
+deactivate BUS
+
+GUI --> Actor: Thông báo đăng xuất thành công
+GUI -> GUI: Điều hướng về trang chủ
+deactivate GUI
+
+@enduml

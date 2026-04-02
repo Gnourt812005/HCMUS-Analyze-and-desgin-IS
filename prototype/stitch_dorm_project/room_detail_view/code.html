@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Chi tiết phòng - DormArch</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-secondary": "#ffffff",
+              "error": "#ba1a1a",
+              "on-tertiary-fixed-variant": "#7d2d00",
+              "on-background": "#191c1d",
+              "inverse-surface": "#2e3132",
+              "on-tertiary": "#ffffff",
+              "on-surface": "#191c1d",
+              "surface-bright": "#f8f9fa",
+              "on-primary-fixed-variant": "#003ea8",
+              "on-secondary-container": "#684000",
+              "outline": "#737686",
+              "on-tertiary-fixed": "#360f00",
+              "on-tertiary-container": "#ffede6",
+              "on-primary": "#ffffff",
+              "surface-variant": "#e1e3e4",
+              "secondary-fixed-dim": "#ffb95f",
+              "primary": "#004ac6",
+              "primary-fixed-dim": "#b4c5ff",
+              "tertiary": "#943700",
+              "secondary": "#855300",
+              "surface-tint": "#0053db",
+              "tertiary-fixed-dim": "#ffb596",
+              "on-surface-variant": "#434655",
+              "surface-dim": "#d9dadb",
+              "on-error-container": "#93000a",
+              "on-secondary-fixed-variant": "#653e00",
+              "secondary-fixed": "#ffddb8",
+              "surface": "#f8f9fa",
+              "on-error": "#ffffff",
+              "surface-container-highest": "#e1e3e4",
+              "surface-container-lowest": "#ffffff",
+              "primary-fixed": "#dbe1ff",
+              "surface-container-high": "#e7e8e9",
+              "inverse-on-surface": "#f0f1f2",
+              "inverse-primary": "#b4c5ff",
+              "primary-container": "#2563eb",
+              "background": "#f8f9fa",
+              "surface-container": "#edeeef",
+              "surface-container-low": "#f3f4f5",
+              "outline-variant": "#c3c6d7",
+              "secondary-container": "#fea619",
+              "tertiary-fixed": "#ffdbcd",
+              "tertiary-container": "#bc4800",
+              "on-secondary-fixed": "#2a1700",
+              "error-container": "#ffdad6",
+              "on-primary-fixed": "#00174b",
+              "on-primary-container": "#eeefff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background font-body text-on-surface">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 shadow-sm dark:shadow-none font-manrope antialiased tracking-tight">
+<div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+<div class="text-2xl font-bold tracking-tighter text-blue-700 dark:text-blue-400">DormArch</div>
+<div class="hidden md:flex space-x-8">
+<a class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors" href="#">Trang chủ</a>
+<a class="text-blue-700 dark:text-blue-400 font-semibold border-b-2 border-blue-700 dark:border-blue-400 pb-1" href="#">Danh sách phòng</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors" href="#">Về chúng tôi</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors" href="#">Cẩm nang thuê phòng</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-blue-700 dark:text-blue-400 font-semibold px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-200 rounded-lg scale-95 active:opacity-80">Đăng nhập</button>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container border border-outline-variant/20">
+<img class="w-full h-full object-cover" data-alt="User profile avatar of a young professional with a friendly smile in a minimalist studio setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCROa1Tez0Rwr2B7VByvvtBQG98yXB8kCHS6CD8E6eg-zTOsF34MYJh0V_wskIGjdQ_9zeb0dXPw8vuNt86VA81VXh6GmcdR0ulvBmNVPVVOcFmK1Ls08eXpCP1hi2FyHGWaPCa90j-9ln7ZyQO3hRy4BdvZVK3l292QETM7tN6BQAbQjIpjn6Uthe_jilVQMoCui3vVWnLhLnJ7egHZPFSc-2i22dh1M23sGWMtn1SLTMLpIdqIBRoHiOYKKAj6hNS2T0sem4iop8"/>
+</div>
+</div>
+</div>
+</nav>
+<main class="pt-24 pb-12 max-w-7xl mx-auto px-6">
+<!-- Breadcrumb -->
+<nav class="mb-8 flex items-center gap-2 text-sm text-on-surface-variant font-label">
+<a class="hover:text-primary transition-colors" href="#">Trang chủ</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Danh sách phòng</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-on-surface font-medium">Studio Cao Cấp Quận 1</span>
+</nav>
+<!-- Top Block (60-40 split) -->
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-12">
+<!-- Left: Media (60%) -->
+<div class="lg:col-span-3 space-y-4">
+<div class="relative group aspect-[16/10] bg-surface-container rounded-xl overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Modern studio apartment interior with sleek furniture, large windows, and bright natural light coming from the balcony" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBPTBNFbK_co022W7gTgHonJ1bb72Alu46_70yLV6FWwX7Otb-H4sLnUgqp0G3CGHoOMpR5wm-wDSgwBUed5tIiKC16BLlZLMLFZAxXcSWQai606-pk3c36F75VNCnQ4MAbPBQemOyBQ0OBr5eKDl4Hh92MevczWnzq5Y3t67o5w2lwgd991aIooWXG3bD5PyC9YV91mqhxYCeHR2L32kfftOF3HyWGkTIMyUqtRF-GTQNsJ33ngICWqUyNV7BJ3QtNke5j97XTek"/>
+<!-- Slider Arrows -->
+<button class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/40 transition-all">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/40 transition-all">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+<!-- Status Badge -->
+<div class="absolute top-6 left-6 flex gap-2">
+<span class="px-4 py-1.5 rounded-full bg-emerald-500 text-white text-xs font-bold uppercase tracking-widest shadow-lg">Còn trống</span>
+<span class="px-4 py-1.5 rounded-full bg-black/40 backdrop-blur-md text-white text-xs font-bold uppercase tracking-widest">Mới nhất</span>
+</div>
+<!-- Dots Navigation -->
+<div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+<div class="w-8 h-1.5 rounded-full bg-white shadow-sm"></div>
+<div class="w-2 h-1.5 rounded-full bg-white/50"></div>
+<div class="w-2 h-1.5 rounded-full bg-white/50"></div>
+<div class="w-2 h-1.5 rounded-full bg-white/50"></div>
+</div>
+</div>
+<!-- Thumbnails -->
+<div class="flex gap-4 overflow-x-auto hide-scrollbar pb-2">
+<div class="min-w-[120px] aspect-video rounded-lg overflow-hidden border-2 border-primary cursor-pointer ring-4 ring-primary/10">
+<img class="w-full h-full object-cover" data-alt="Living area of a modern apartment with contemporary decor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuATtFSuGXIBc5fHP5viPYHrJrfFwp4RNYvlNzjeoTDhHmlpQas7A193FC9f3lgmaFFE_Xn1ay4tHTDhiFDR5ZkMoxOEqGoQk2BcuLSuSWIBoKrwP7Cu4Hz2NIMC6Yf-ur8Ga1j17pu58kOah-7gTZSnqN3X6pcN8pta7NjaqMVRpdV11jF0WaIfzTBE4Wl-cqFv74bRkfHoydOz_vCetbBcVaozw_WnxC9qFG55PjwxbfDqHj3SaMJFG1N6lgDgQ8NnQ8nMLztne-w"/>
+</div>
+<div class="min-w-[120px] aspect-video rounded-lg overflow-hidden border border-outline-variant/20 cursor-pointer hover:border-primary/50 transition-colors">
+<img class="w-full h-full object-cover" data-alt="Sleek modern kitchen area with minimalist cabinetry" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCankES5s1QxYlhBscwwlBQAL8wXQu79XNFfxmBJ-CregfX2E4lwwW-QSHH9DAvnj2MtQaVY9ZdBfFFgkIjRGjW-Kjrtium4sd-EVmklbWIqDUSrbxeQr4v6oARPg5bUefsgrK8oniHZTNPMQ0L_Qf4f2bkxv0CFa1lqeMjjsC5TZwGnZjb9RC_4MS86UEDhUdfyIGT9AkWQqmHkbiaseMcz9hia97DjW_d1ZzAkJJhFa2NVbN3zNKQifIsJUjEUQIlUTHVZzrrZy0"/>
+</div>
+<div class="min-w-[120px] aspect-video rounded-lg overflow-hidden border border-outline-variant/20 cursor-pointer hover:border-primary/50 transition-colors">
+<img class="w-full h-full object-cover" data-alt="Elegant bathroom with marble tiling and modern fixtures" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBc5SNPBQ2qnDDY2Fl7Sv1xuyLwCchYb9ff35P2qFUfhReNP5Qz-VmKz5KUWwfa_lOrkcpeyKpF3YdnsLuNEHEfBYIZ_-KQhBWsYPaRRuFHaBG_25GGD5ZvcA0VpcrLhKH54Wiu1IH27lruBZBnDIiZcH3mewc16B8SIGE0heItGiForEqkiCoi4myxh2Zy_8pMNyMFOve2A4GuEuMHCs_o4YkoA_VgIxrhouVVE1fLla14pZNLoKSUBu_1uF_KEpZof74yLy7i5IU"/>
+</div>
+<div class="min-w-[120px] aspect-video rounded-lg overflow-hidden border border-outline-variant/20 cursor-pointer hover:border-primary/50 transition-colors">
+<img class="w-full h-full object-cover" data-alt="Bedroom setup with premium bedding and warm lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGjOOl9XxIxQJbND-DGc9FvqRfIWl6EjyJcNYxwWSvfCu27cD3xzUjnEwrscYemXnACwrt1ZjWJr4Mf1__iU_GHrFAmqrIgXwhCleaKuBCSbLfnT0TSbJpsDaPq43r5jxdRLm2tnSLsCNS1B30rurrs4U-NTvnvk9CLQTbFSkYx0hsTbm_DLIIG0aix8s2vKzEJHlMAGrJX7nTBQtto5X0dLVfTKm2ftTnMpEVXsAXYe1GcniOb4JwvUtm3pJaojLYiYh4wN6giCk"/>
+</div>
+</div>
+</div>
+<!-- Right: Actions (40%) -->
+<div class="lg:col-span-2 flex flex-col justify-between p-8 bg-surface-container-low rounded-2xl border border-outline-variant/10">
+<div class="space-y-6">
+<div>
+<span class="text-primary font-bold text-xs uppercase tracking-widest block mb-2">Mã phòng: DA-Q1-102</span>
+<h1 class="font-headline text-4xl font-extrabold tracking-tight text-on-surface leading-tight">Studio Cao Cấp Sân Thượng - Quận 1</h1>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">location_on</span>
+<span class="text-sm">123 Trần Hưng Đạo, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh</span>
+</div>
+<div class="py-6 border-y border-outline-variant/20">
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-headline font-black text-secondary">12.500.000</span>
+<span class="text-lg font-medium text-secondary/80">VNĐ/tháng</span>
+</div>
+<p class="text-xs text-on-surface-variant mt-2 font-label">* Giá chưa bao gồm phí quản lý và tiền điện nước</p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/10">
+<span class="text-[10px] uppercase font-bold text-on-surface-variant block mb-1">Diện tích</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">square_foot</span>
+<span class="font-bold">45 m²</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/10">
+<span class="text-[10px] uppercase font-bold text-on-surface-variant block mb-1">Tầng</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">layers</span>
+<span class="font-bold">Tầng 5</span>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-4 mt-8">
+<button class="w-full py-5 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">key</span>
+                        Thuê ngay
+                    </button>
+<button class="w-full py-5 bg-transparent border-2 border-primary text-primary font-bold rounded-xl hover:bg-primary/5 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">calendar_today</span>
+                        Đăng ký xem phòng
+                    </button>
+<button class="w-full py-2 text-primary font-bold text-sm hover:underline flex items-center justify-center gap-1 transition-all opacity-80 hover:opacity-100">
+                        Đặt cọc giữ chỗ (Hoàn phí 100%)
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Bottom Block (Full-width) -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-12 pt-12 border-t border-outline-variant/30">
+<!-- Information & Description -->
+<div class="lg:col-span-2 space-y-12">
+<section>
+<h2 class="font-headline text-2xl font-extrabold mb-8 flex items-center gap-3">
+<span class="w-2 h-8 bg-primary rounded-full"></span>
+                        Tiện ích căn hộ
+                    </h2>
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
+<div class="flex flex-col items-center gap-3 p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5 hover:border-primary/30 transition-all group">
+<div class="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">ac_unit</span>
+</div>
+<span class="text-xs font-bold font-label uppercase text-on-surface-variant group-hover:text-primary transition-colors">Điều hòa</span>
+</div>
+<div class="flex flex-col items-center gap-3 p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5 hover:border-primary/30 transition-all group">
+<div class="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">water_heater</span>
+</div>
+<span class="text-xs font-bold font-label uppercase text-on-surface-variant group-hover:text-primary transition-colors">Máy nước nóng</span>
+</div>
+<div class="flex flex-col items-center gap-3 p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5 hover:border-primary/30 transition-all group">
+<div class="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">local_parking</span>
+</div>
+<span class="text-xs font-bold font-label uppercase text-on-surface-variant group-hover:text-primary transition-colors">Hầm để xe</span>
+</div>
+<div class="flex flex-col items-center gap-3 p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5 hover:border-primary/30 transition-all group">
+<div class="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">wifi</span>
+</div>
+<span class="text-xs font-bold font-label uppercase text-on-surface-variant group-hover:text-primary transition-colors">High-speed Wifi</span>
+</div>
+<div class="flex flex-col items-center gap-3 p-6 rounded-2xl bg-surface-container-low border border-outline-variant/5 hover:border-primary/30 transition-all group">
+<div class="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-3xl">local_laundry_service</span>
+</div>
+<span class="text-xs font-bold font-label uppercase text-on-surface-variant group-hover:text-primary transition-colors">Máy giặt chung</span>
+</div>
+</div>
+</section>
+<section>
+<h2 class="font-headline text-2xl font-extrabold mb-6 flex items-center gap-3">
+<span class="w-2 h-8 bg-primary rounded-full"></span>
+                        Mô tả chi tiết &amp; Quy định
+                    </h2>
+<div class="prose prose-slate max-w-none text-on-surface-variant leading-relaxed space-y-4">
+<p>Chào mừng bạn đến với căn Studio cao cấp tại trái tim Quận 1. Căn hộ được thiết kế theo phong cách tối giản Modern Architecture với cửa kính sát trần mang lại tầm nhìn bao quát thành phố và ánh sáng tự nhiên ngập tràn.</p>
+<div class="bg-surface-container-lowest p-8 rounded-2xl border-l-4 border-primary shadow-sm space-y-4 mt-8">
+<h4 class="font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">info</span>
+                                Chi phí &amp; Biểu phí hàng tháng:
+                            </h4>
+<ul class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-medium">
+<li class="flex justify-between items-center py-2 border-b border-outline-variant/10">
+<span>Tiền điện:</span>
+<span class="text-primary">4.000 VNĐ / kWh</span>
+</li>
+<li class="flex justify-between items-center py-2 border-b border-outline-variant/10">
+<span>Tiền nước:</span>
+<span class="text-primary">100.000 VNĐ / người</span>
+</li>
+<li class="flex justify-between items-center py-2 border-b border-outline-variant/10">
+<span>Phí quản lý:</span>
+<span class="text-primary">200.000 VNĐ / phòng</span>
+</li>
+<li class="flex justify-between items-center py-2 border-b border-outline-variant/10">
+<span>Internet &amp; Truyền hình:</span>
+<span class="text-emerald-600 font-bold uppercase text-[10px]">Miễn phí</span>
+</li>
+</ul>
+</div>
+<div class="mt-8 space-y-4">
+<h4 class="font-bold text-on-surface">Nội quy tòa nhà:</h4>
+<ul class="space-y-3">
+<li class="flex gap-3 text-sm">
+<span class="material-symbols-outlined text-primary text-base">check_circle</span>
+                                    Giờ giấc tự do, khóa vân tay an ninh 2 lớp.
+                                </li>
+<li class="flex gap-3 text-sm">
+<span class="material-symbols-outlined text-primary text-base">check_circle</span>
+                                    Cho phép nuôi thú cưng nhỏ (có cam kết vệ sinh).
+                                </li>
+<li class="flex gap-3 text-sm">
+<span class="material-symbols-outlined text-primary text-base">check_circle</span>
+                                    Tối đa 2 người ở để đảm bảo chất lượng sống.
+                                </li>
+<li class="flex gap-3 text-sm">
+<span class="material-symbols-outlined text-error text-base">cancel</span>
+                                    Không hút thuốc trong phòng và khu vực hành lang chung.
+                                </li>
+</ul>
+</div>
+</div>
+</section>
+</div>
+<!-- Sidebar Context -->
+<div class="space-y-8">
+<div class="bg-surface-container-high p-8 rounded-2xl">
+<h3 class="font-headline font-bold text-xl mb-6">Liên hệ quản lý</h3>
+<div class="flex items-center gap-4 mb-6">
+<div class="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md">
+<img class="w-full h-full object-cover" data-alt="Portrait of a professional property manager in a light blue shirt with a trustworthy smile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvNPINQkjyLjv1ZZnv-38YZNdwglmKAnjwtTz_XPa28kYmhNoz02VPrd5z6r7tkiH9W2sVWVuffpWZcJ4q1WpHaRpFg0fF0-IS8H1TEVeRPM0VFeMZqJWioUy9AqIkGBbIoTT3-xgAGIsDeny2l0GArepmXWS4h5NHOguMC5cZ0KGj4yUW9WpkTDqAYiMCupQDDURBB0NxwNrn8QTdBOmL_afbXsdncb9sjmSLTYeUnED4ITGMX89UKvfVmXUK9SxoW81hBn6zz4Q"/>
+</div>
+<div>
+<p class="font-bold text-on-surface">Nguyễn Minh Quân</p>
+<p class="text-xs text-on-surface-variant">Quản lý khu vực Quận 1</p>
+</div>
+</div>
+<div class="space-y-4">
+<a class="w-full py-4 bg-white border border-outline-variant/20 rounded-xl flex items-center justify-center gap-3 hover:bg-slate-50 transition-colors" href="tel:0901234567">
+<span class="material-symbols-outlined text-primary">phone_in_talk</span>
+<span class="font-bold text-sm">0901.234.567</span>
+</a>
+<a class="w-full py-4 bg-white border border-outline-variant/20 rounded-xl flex items-center justify-center gap-3 hover:bg-slate-50 transition-colors" href="#">
+<span class="material-symbols-outlined text-primary">chat</span>
+<span class="font-bold text-sm">Nhắn tin Zalo</span>
+</a>
+</div>
+</div>
+<div class="bg-primary/5 p-8 rounded-2xl border border-primary/10">
+<h3 class="font-headline font-bold text-xl mb-4">Vị trí bản đồ</h3>
+<div class="aspect-square bg-surface-variant rounded-xl overflow-hidden relative grayscale hover:grayscale-0 transition-all duration-500">
+<img class="w-full h-full object-cover" data-alt="Minimalist urban map illustration showing street grids with a primary color location pin" data-location="Ho Chi Minh City" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCUlg4QCDV0QS0MEacTUKHGFxqteLhXVfJymr6uqdVJfRD6KEyOQqqWnQbRZuVW1iJZ_-L2aOlIyqNPThdwcMWuBjaIES9ljWIEU4sN4kv1ah4KzTO7fqu044VRs4s9KzGXEWsYL8kQwkh3vrjfjaTnE95sziWUe3JooueW6Tqs3cmfC46vvPS_ZsvorIzOLp49ASR7igsRocALIlu0NwjYrMnT3T-qlt_DqecTphykBPcIFOF1MfIMvGba56iEwvSW-tSPK-iuXk"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-5xl animate-bounce" style="font-variation-settings: 'FILL' 1;">location_on</span>
+</div>
+</div>
+<p class="text-xs text-on-surface-variant mt-4 text-center">Gần trạm tàu điện, chợ Bến Thành, siêu thị Co.op Mart</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full mt-auto bg-slate-50 dark:bg-slate-950 font-inter text-sm text-slate-500 dark:text-slate-400">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-8 py-12 max-w-7xl mx-auto border-t border-slate-200 dark:border-slate-800">
+<div>
+<div class="text-xl font-black text-slate-900 dark:text-slate-100 mb-4">DormArch</div>
+<p class="max-w-xs leading-relaxed">Nền tảng quản lý và tìm kiếm phòng trọ hiện đại, minh bạch và chuyên nghiệp hàng đầu Việt Nam.</p>
+</div>
+<div class="space-y-4">
+<h4 class="font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest text-xs">Liên hệ</h4>
+<div class="flex flex-col space-y-2">
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-300 underline transition-all" href="#">Hotline: 1900-1234</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-300 underline transition-all" href="#">Email: contact@dormarch.vn</a>
+<span class="text-slate-500 dark:text-slate-400">Address: 123 Digital Ave, Tech City</span>
+</div>
+</div>
+<div class="space-y-4">
+<h4 class="font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest text-xs">Hỗ trợ khách hàng</h4>
+<div class="flex flex-col space-y-2">
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-300 underline transition-all" href="#">Chính sách bảo mật</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-300 underline transition-all" href="#">Điều khoản sử dụng</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-300 underline transition-all" href="#">Quy trình khiếu nại</a>
+</div>
+</div>
+</div>
+<div class="max-w-7xl mx-auto px-8 py-6 border-t border-slate-200/50 dark:border-slate-800/50 text-center">
+<p>© 2024 DormArch Management. All rights reserved.</p>
+</div>
+</footer>
+</body></html>

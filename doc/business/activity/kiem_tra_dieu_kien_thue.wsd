@@ -1,4 +1,4 @@
-@startuml KiemTraDieuKienThue
+@startuml Activity_KiemTraDieuKienThue
 title Activity Diagram: Kiểm tra điều kiện thuê
 
 ' --- STYLE CONFIGURATION ---
@@ -7,19 +7,19 @@ skinparam {
     ActivityBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 12
+    DefaultFontSize 24
     Padding 5
 
     ' Swimlane styling
     SwimlaneBorderColor #2D3E50
     SwimlaneTitleBackgroundColor #F1F3F5
-    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontSize 24
     SwimlaneTitleFontColor #2D3E50
     
     ' Note styling
     NoteBackgroundColor #FFF9C4
     NoteBorderColor #FBC02D
-    NoteFontSize 11
+    NoteFontSize 24
 }
 
 ' --- SWIMLANES ---

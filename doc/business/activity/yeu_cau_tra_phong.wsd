@@ -1,4 +1,4 @@
-@startuml YeuCauTraPhong
+@startuml Activity_YeuCauTraPhong
 title Activity Diagram: Yêu cầu trả phòng
 
 ' --- STYLE CONFIGURATION ---
@@ -7,19 +7,19 @@ skinparam {
     ActivityBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 12
+    DefaultFontSize 24
     Padding 5
 
     ' Swimlane styling
     SwimlaneBorderColor #2D3E50
     SwimlaneTitleBackgroundColor #F1F3F5
-    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontSize 24
     SwimlaneTitleFontColor #2D3E50
     
     ' Note styling
     NoteBackgroundColor #FFF9C4
     NoteBorderColor #FBC02D
-    NoteFontSize 11
+    NoteFontSize 24
 }
 
 ' --- SWIMLANES ---
@@ -47,14 +47,9 @@ endif
 
 |Khách hàng|
 :Cung cấp hợp đồng/phiếu đặt cọc;
-note right
-        Hợp đồng (ghi)
-        Phiếu đặt cọc (ghi)
-end note
 
 |Nhân viên Sale|
 if (Cung cấp được hợp đồng/phiếu cọc?) then (Không)
-    :Yêu cầu cung cấp thông tin cá nhân;
     :Đối soát trên hệ thống;
     note right
         Hợp đồng (đọc)
@@ -75,7 +70,13 @@ endif
 |Nhân viên Quản lý|
 :Thu hồi chìa khóa/thẻ từ;
 :Cập nhật thông tin bàn giao tài sản \nvà xác nhận kết thúc lưu trú;
+note right
+  Hợp đồng (ghi)
+end note
 :Ghi nhận phòng/giường là trống;
+note right
+  Phòng/giường (ghi)
+end note
 stop
 
 @enduml

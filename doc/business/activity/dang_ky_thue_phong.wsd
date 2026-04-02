@@ -1,5 +1,5 @@
 @startuml Activity_DangKyThuePhong
-title UC: Đăng ký thuê phòng
+title Activity Diagram: Đăng ký thuê phòng
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -7,19 +7,19 @@ skinparam {
     ActivityBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 12
+    DefaultFontSize 24
     Padding 5
 
     ' Swimlane styling
     SwimlaneBorderColor #2D3E50
     SwimlaneTitleBackgroundColor #F1F3F5
-    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontSize 24
     SwimlaneTitleFontColor #2D3E50
     
     ' Note styling
     NoteBackgroundColor #FFF9C4
     NoteBorderColor #FBC02D
-    NoteFontSize 11
+    NoteFontSize 24
 }
 
 ' --- SWIMLANES ---
@@ -33,30 +33,31 @@ start
 :1. Tiếp nhận khách hàng;
 
 repeat
+    |Nhân viên Sale|
     :2. Yêu cầu cung cấp thông tin cá nhân (CCCD, SĐT,...);
     |Khách hàng|
     :Cung cấp thông tin cá nhân;
-    note right #LightYellow: **[Ghi]**\nThông tin cá nhân
-    
     |Nhân viên Sale|
     :3. Nhận và kiểm tra thông tin;
-    if (Thông tin hợp lệ?) then (Không - A3)
+    
+    if (Thông tin hợp lệ?) then (Có)
+        ' Thoát vòng lặp để đi thẳng xuống Bước 4
+        break
+    else (Không - A3)
         if (Nhiều lần không hợp lệ?) then (Có)
             :Thông báo hủy và kết thúc;
             stop
         else (Không)
+            ' Chạy xuống cuối và tự động vòng lên nhận lại thông tin
         endif
-    else (Có)
     endif
-repeat while (Thông tin hợp lệ?) is (Không)
--> [Có];
+repeat while ()
 
 repeat
     |Nhân viên Sale|
     :4. Yêu cầu cung cấp các yêu cầu cơ bản về phòng;
     |Khách hàng|
     :5. Nhập và cung cấp yêu cầu cơ bản;
-    note right #LightYellow: **[Ghi]**\nPhiếu yêu cầu thuê phòng (Draft)
 
     repeat
         |Others|
@@ -98,12 +99,12 @@ repeat
             stop
         endif
 
-    |Nhân viên Sales|
+    |Nhân viên Sale|
     backward: Thực hiện lại Bước 6;
     repeat while (Không ưng ý thông tin cơ bản (A10a)?) is (Có)
     -> [Không];
 
-|Nhân viên Sales|
+|Nhân viên Sale|
 backward: Thực hiện lại Bước 4;
 repeat while (Khách muốn điều chỉnh yêu cầu (A10b)?) is (Có)
 -> [Không];

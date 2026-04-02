@@ -1,4 +1,4 @@
-@startuml XuLyNhanPhong
+@startuml Activity_XuLyNhanPhong
 title Activity Diagram: Xử lý nhận phòng
 
 ' --- STYLE CONFIGURATION ---
@@ -7,19 +7,19 @@ skinparam {
     ActivityBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 12
+    DefaultFontSize 24
     Padding 5
 
     ' Swimlane styling
     SwimlaneBorderColor #2D3E50
     SwimlaneTitleBackgroundColor #F1F3F5
-    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontSize 24
     SwimlaneTitleFontColor #2D3E50
     
     ' Note styling
     NoteBackgroundColor #FFF9C4
     NoteBorderColor #FBC02D
-    NoteFontSize 11
+    NoteFontSize 24
 }
 
 ' --- SWIMLANES ---
@@ -41,9 +41,7 @@ Phiếu đặt cọc (đọc)
 end note
 
 :Thu thập giấy tờ / thông tin cần thiết;
-note right
-Thông tin cư trú (ghi)
-end note
+
 
 if (Cung cấp đủ giấy tờ?) then (Có)
 else (Không)
@@ -51,9 +49,7 @@ else (Không)
 endif
 
 :Đối chiếu thông tin khách với người đặt cọc;
-note right
-Phiếu đặt cọc (đọc)
-end note
+
 
 if (Thông tin khớp?) then (Có)
 else (Không)
@@ -62,9 +58,7 @@ else (Không)
 endif
 
 :Kiểm tra số lượng khách với thông tin đặt cọc;
-note right
-Phiếu đặt cọc (đọc)
-end note
+
 
 if (Số khách > số khách đặt cọc?) then (Có)
     |Khách hàng|
@@ -74,9 +68,6 @@ if (Số khách > số khách đặt cọc?) then (Có)
     else (Có)
         |Nhân viên Sale|
         :Cập nhật số lượng khách;
-        note right
-        Thông tin cư trú (ghi)
-        end note
     endif
 
 else (Không)
@@ -94,9 +85,7 @@ endif
 
 |Others|
 :Thực hiện quy trình Lập hợp đồng;
-note right
-Hợp đồng thuê (ghi)
-end note
+
 if (Lập hợp đồng thành công?) then (Có)
 else (Không)
     stop

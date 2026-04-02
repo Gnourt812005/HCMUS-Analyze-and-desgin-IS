@@ -1,4 +1,4 @@
-@startuml LapHopDong
+@startuml Activity_LapHopDong
 title Activity Diagram: Lập hợp đồng
 
 ' --- STYLE CONFIGURATION ---
@@ -7,19 +7,19 @@ skinparam {
     ActivityBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 12
+    DefaultFontSize 24
     Padding 5
 
     ' Swimlane styling
     SwimlaneBorderColor #2D3E50
     SwimlaneTitleBackgroundColor #F1F3F5
-    SwimlaneTitleFontSize 13
+    SwimlaneTitleFontSize 24
     SwimlaneTitleFontColor #2D3E50
     
     ' Note styling
     NoteBackgroundColor #FFF9C4
     NoteBorderColor #FBC02D
-    NoteFontSize 11
+    NoteFontSize 24
 }
 
 ' --- SWIMLANES ---
@@ -32,40 +32,29 @@ skinparam {
 |Nhân viên Phụ trách|
 start
 
-:Lập hợp đồng;
+repeat
+    :Lập hợp đồng;
+    note right: Hợp đồng (ghi)
 
-note right
-    Hợp đồng thuê (ghi)
-end note
-
-|Khách hàng|
-:Kiểm tra thông tin và điều khoản;
-
-note right
-    Hợp đồng thuê (đọc)
-end note
-
-if (Phát hiện sai sót?) then (Có)
-    |Nhân viên Phụ trách|
-    :Kiểm tra và lập lại hợp đồng;
-    note right
-        Hợp đồng thuê (ghi)
-    end note
-else (Không)
-endif
+    |Khách hàng|
+    :Kiểm tra thông tin và điều khoản;
+    note right: Hợp đồng (đọc)
+    
+repeat while (Phát hiện sai sót?) is (Có)
+-> Không;
 
 |Nhân viên Phụ trách|
 :Hướng dẫn khách hàng ký hợp đồng;
 
 note right
-    Hợp đồng thuê (ghi)
+    Hợp đồng (ghi)
 end note
 
 |Nhân viên Kế toán|
 :Lập phiếu thanh toán;
 
 note right
-    Hợp đồng thuê (đọc)
+    Hợp đồng (đọc)
     Phiếu thanh toán (ghi)
 end note
 

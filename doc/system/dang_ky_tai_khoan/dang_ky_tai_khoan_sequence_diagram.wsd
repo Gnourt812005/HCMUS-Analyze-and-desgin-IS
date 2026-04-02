@@ -1,0 +1,56 @@
+@startuml DangKyTaiKhoan_SequenceDiagram
+title Sequence Diagram: Đăng ký tài khoản
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    ParticipantPadding 20
+    BoxPadding 10
+}
+
+actor "Khách hàng" as Actor
+boundary "ScreenRegister" as GUI <<boundary>>
+control "User" as BUS <<control>>
+database "UserDB" as DAO <<database>>
+
+autonumber
+
+Actor -> GUI: Nhập email, mật khẩu và xác nhận mật khẩu
+Actor -> GUI: Bấm nút "Đăng ký"
+
+activate GUI
+GUI -> GUI: Kiểm tra thông tin đầu vào (validate)
+
+alt Thông tin trống (A5.1)
+    GUI --> Actor: Hiển thị thông báo lỗi (Yêu cầu nhập đủ)
+else Thông tin đầy đủ
+    GUI -> BUS: register(email, password)
+    activate BUS
+    
+    BUS -> DAO: checkEmailExists(email)
+    activate DAO
+    DAO --> BUS: Trả về kết quả (True/False)
+    deactivate DAO
+    
+    alt Email đã tồn tại (A5.2)
+        BUS --> GUI: Thông báo Email đã tồn tại
+        GUI --> Actor: Hiển thị lỗi "Email đã tồn tại"
+    else Email chưa tồn tại
+        BUS -> DAO: insert(user)
+        activate DAO
+        DAO --> BUS: Kết quả lưu thành công
+        deactivate DAO
+        
+        BUS --> GUI: Trả kết quả đăng ký thành công
+        deactivate BUS
+        
+        GUI --> Actor: Hiển thị màn hình đăng ký thành công
+        GUI -> GUI: Điều hướng về trang chủ
+    end
+end
+deactivate GUI
+
+@enduml

@@ -1,0 +1,34 @@
+@startuml DangXuat_ClassDiagram
+title Class Diagram: Đăng xuất
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+}
+
+' --- BOUNDARY LAYER ---
+class "ScreenHome" as ScreenHome <<boundary>> {
+    - btnLogout: Button
+    + btnLogout_Click(): void
+}
+
+' --- BUSINESS LAYER ---
+class "User" as User <<control>> {
+    + logout(): void
+}
+
+' --- DATABASE LAYER ---
+class "UserDB" as UserDB <<entity>> {
+    + clearSession(): void
+}
+
+' --- RELATIONSHIPS ---
+ScreenHome "1" --> "1" User
+User "1" --> "1" UserDB
+
+@enduml
