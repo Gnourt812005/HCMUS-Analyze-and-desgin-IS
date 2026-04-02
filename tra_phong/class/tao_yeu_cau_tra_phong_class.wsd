@@ -23,7 +23,7 @@ class CheckoutRequest {
 
 class CheckoutRequestDB {
   + <<static>> Insert(): bool
-  + <<static>> RemoveById(requestID: int): bool
+  + <<static>> RemoveById(): bool
 }
 
 class Contract {
@@ -33,11 +33,11 @@ class Contract {
   DepositAmount: float
   StayDuration: int
   LiquidationFileUrl: string
-  + <<static>> GetActiveContractByCustomer(customerID: int): Contract
+  + <<static>> GetActiveContractByCustomer(): Contract
 }
 
 class ContractDB {
-  + <<static>> GetActiveByCustomer(customerID: int): Contract
+  + <<static>> GetActiveByCustomer(): Contract
 }
 
 @enduml

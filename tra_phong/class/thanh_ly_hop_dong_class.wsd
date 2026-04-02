@@ -41,7 +41,7 @@ class RefundCalculation {
   DamageFee: float
   ExtraDebt: float
   FinalRefundAmount: float
-  + <<static>> GetByRequestId(requestId: int): RefundCalculation
+  + <<static>> GetByRequestId(): RefundCalculation
 }
 
 @enduml

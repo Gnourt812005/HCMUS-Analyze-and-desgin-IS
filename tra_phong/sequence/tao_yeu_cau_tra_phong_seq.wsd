@@ -21,18 +21,8 @@ deactivate KhachHang
 KhachHang -> Screen: 4: Chọn phòng/giường cần trả
 activate KhachHang
 activate Screen
-deactivate Screen
-deactivate KhachHang
-
 KhachHang -> Screen: 5: Nhập thông tin và tải giấy tờ
-activate KhachHang
-activate Screen
-deactivate Screen
-deactivate KhachHang
-
 KhachHang -> Screen: 6: btnSubmit_Click()
-activate Screen
-activate KhachHang
 alt Điền đầy đủ thông tin
     Screen -> Request: 7: CreateRequest()
     activate Request

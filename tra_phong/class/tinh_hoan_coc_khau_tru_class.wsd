@@ -38,7 +38,7 @@ class Contract {
 }
 
 class ContractDB {
-  + <<static>> GetById(contractId: int): Contract
+  + <<static>> GetById(): Contract
 }
 
 @enduml

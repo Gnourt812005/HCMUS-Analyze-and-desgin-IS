@@ -19,10 +19,10 @@ class RequestDetailScreen {
 class CheckoutRequest {
   RequestID: int
   CustomerID: int
-  ContractID: int
   ExpectedDate: datetime
   Status: string
   CreatedAt: datetime
+  DocumentUrl: string
   + <<static>> GetListByCustomer(customerID: int): List
   + <<static>> GetById(requestID: int): CheckoutRequest
 }

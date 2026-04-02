@@ -19,13 +19,7 @@ deactivate NV
 NV -> Screen: 3: Xác nhận thanh toán và tải biên bản
 activate Screen
 activate NV
-deactivate Screen
-deactivate NV
-
 NV -> Screen: 4: btnComplete_Click()
-activate Screen
-activate NV
-
 alt Tải đầy đủ biên bản thanh lý
     Screen -> Contract: 5: LiquidateContract()
     activate Contract
