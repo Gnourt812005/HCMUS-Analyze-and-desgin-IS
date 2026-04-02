@@ -33,11 +33,12 @@ class Contract {
   Status: string
   DepositAmount: float
   StayDuration: int
+  LiquidationFileUrl: string
   + <<static>> GetContractInfo(): Contract
 }
 
 class ContractDB {
-  + <<static>> GetById(): Contract
+  + <<static>> GetById(contractId: int): Contract
 }
 
 @enduml

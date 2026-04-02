@@ -7,6 +7,7 @@ database ": CheckoutRequestDB" as RequestDB
 database ": ContractDB" as ContractDB
 
 KhachHang -> Screen: 1: Show()
+activate KhachHang
 activate Screen
 Screen -> Contract: 2: GetActiveContractByCustomer()
 activate Contract
@@ -15,18 +16,23 @@ activate ContractDB
 deactivate ContractDB
 deactivate Contract
 deactivate Screen
+deactivate KhachHang
 
 KhachHang -> Screen: 4: Chọn phòng/giường cần trả
+activate KhachHang
 activate Screen
 deactivate Screen
+deactivate KhachHang
 
 KhachHang -> Screen: 5: Nhập thông tin và tải giấy tờ
+activate KhachHang
 activate Screen
 deactivate Screen
+deactivate KhachHang
 
 KhachHang -> Screen: 6: btnSubmit_Click()
 activate Screen
-
+activate KhachHang
 alt Điền đầy đủ thông tin
     Screen -> Request: 7: CreateRequest()
     activate Request
@@ -36,9 +42,12 @@ alt Điền đầy đủ thông tin
     deactivate RequestDB
     deactivate Request
 end
+deactivate KhachHang
 
 alt  Đã tạo yêu cầu trả phòng
+activate KhachHang
     KhachHang -> Screen: 9: btnSubmit_Cancel()
+    activate KhachHang
     activate Screen
     Screen -> Request: 10: CancelRequest()
     activate Request
@@ -47,5 +56,6 @@ alt  Đã tạo yêu cầu trả phòng
     activate RequestDB
     deactivate RequestDB
     deactivate Request
+    deactivate KhachHang
 end
 @enduml
