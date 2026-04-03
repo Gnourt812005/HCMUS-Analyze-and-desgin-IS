@@ -1,0 +1,91 @@
+@startuml QuanLyHopDong_ClassDiagram
+title Class Diagram: Quản lý hợp đồng
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+}
+
+' --- BOUNDARY LAYER ---
+class "ScreenContractManagement" as ScreenCM <<boundary>> {
+    - dgvContract: GridView
+    - txtSearch: TextBox
+    - btnSearch: Button
+    - btnAddNew: Button
+    + dgvContract_Load(): void
+    + btnSearch_Click(): void
+    + btnAddNew_Click(): void
+}
+
+class "ScreenContractDetail" as ScreenCD <<boundary>> {
+    - lblCustomerName: Label
+    - lblBedId: Label
+    - lblStatus: Label
+    - btnUpdate: Button
+    - btnCancelContract: Button
+    + ScreenContractDetail_Load(): void
+    + btnUpdate_Click(): void
+    + btnCancelContract_Click(): void
+}
+
+class "FormContract" as FormContract <<boundary>> {
+    - txtStartDate: TextBox
+    - txtEndDate: TextBox
+    - txtNumberOfCustomer: TextBox
+    - panelBedSelection: Panel
+    - btnSave: Button
+    - btnCancel: Button
+    + txtNumberOfCustomer_Changed(): void
+    + cbRoom_SelectedIndexChanged(): void
+    + btnSave_Click(): void
+}
+
+' --- BUSINESS LAYER ---
+class "ContractBUS" as ContractBUS <<control>> {
+    - id: string
+    - customer_id: string
+    - bed_id: string
+    - branch_manager_id: string
+    - start_date: date
+    - end_date: date
+    - status: string
+    - number_of_customer: int
+    - file_id: string
+    - selected_beds: List<string>
+    + getContracts(keyword: string): List<ContractBUS>
+    + getContractDetail(id: string): ContractBUS
+    + getRooms(): List<Room>
+    + getAvailableBedsByRoom(roomId: string): List<Bed>
+    + createContract(data: ContractBUS, bedList: List<string>): boolean
+    + updateContract(id: string, data: ContractBUS): boolean
+    + cancelContract(id: string): boolean
+}
+
+' --- DATABASE LAYER ---
+class "ContractDAO" as ContractDAO <<entity>> {
+    + fetchAll(): List
+    + fetchByKeyword(keyword: string): List
+    + fetchById(id: string): ContractBUS
+    + fetchRooms(): List
+    + fetchAvailableBeds(roomId: string): List
+    + insertContract(data: ContractBUS): string
+    + insertContractDetails(contractId: string, bedId: string): boolean
+    + update(id: string, data: ContractBUS): boolean
+    + updateStatus(id: string, status: string): boolean
+}
+
+' --- RELATIONSHIPS ---
+ScreenCM "1" --> "1" ContractBUS
+ScreenCD "1" --> "1" ContractBUS
+FormContract "1" --> "1" ContractBUS
+ContractBUS "1" --> "1" ContractDAO
+ScreenCM ..> ScreenCD : Mở Chi tiết
+ScreenCM ..> FormContract : Mở Form Thêm
+ScreenCD ..> FormContract : Mở Form Sửa
+
+@enduml

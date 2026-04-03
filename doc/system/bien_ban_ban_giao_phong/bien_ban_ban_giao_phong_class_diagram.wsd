@@ -1,0 +1,67 @@
+@startuml QuanLyBienBan_ClassDiagram
+title Class Diagram: Lập biên bản bàn giao phòng
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+}
+
+' --- BOUNDARY LAYER ---
+class "ScreenContractDetail" as ScreenCD <<boundary>> {
+    - btnHandoverReport: Button
+    + btnHandoverReport_Click(): void
+}
+
+class "ScreenReportList" as ScreenRL <<boundary>> {
+    - dgvReports: GridView
+    - btnAddNew: Button
+    + loadReports(contractId: string): void
+    + btnAddNew_Click(): void
+}
+
+class "FormReport" as FormReport <<boundary>> {
+    - chkBed: CheckBox
+    - chkMattress: CheckBox
+    - chkCabinet: CheckBox
+    - chkKey: CheckBox
+    - txtNote: TextBox
+    - btnSaveAndSign: Button
+    - btnCancel: Button
+    + btnSaveAndSign_Click(): void
+}
+
+' --- BUSINESS LAYER ---
+class "ReportBUS" as ReportBUS <<control>> {
+    - id: string
+    - contract_id: string
+    - bed_status: string
+    - mattress_status: string
+    - cabinet_status: string
+    - key_status: string
+    - note: string
+    - created_date: date
+    - created_by: string
+    + getReportsByContract(contractId: string): List<ReportBUS>
+    + createHandoverReport(data: ReportBUS, bedId: string): boolean
+}
+
+' --- DATABASE LAYER ---
+class "ReportDAO" as ReportDAO <<entity>> {
+    + fetchByContractId(contractId: string): List
+    + insert(data: ReportBUS): boolean
+    + updateBedStatus(bedId: string, status: string): boolean
+}
+
+' --- RELATIONSHIPS ---
+ScreenCD ..> ScreenRL : Mở danh sách Biên bản
+ScreenRL "1" --> "1" ReportBUS
+FormReport "1" --> "1" ReportBUS
+ReportBUS "1" --> "1" ReportDAO
+ScreenRL ..> FormReport : Mở Form Lập mới
+
+@enduml

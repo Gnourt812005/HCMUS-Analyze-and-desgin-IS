@@ -1,0 +1,92 @@
+@startuml QuanLyBienBan_SequenceDiagram_Updated
+title Sequence Diagram: Lập biên bản bàn giao phòng (UC21)
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    ParticipantPadding 20
+    BoxPadding 10
+}
+
+actor "Nhân viên quản lý" as Actor
+boundary "ScreenContractDetail" as DetailGUI <<boundary>>
+boundary "ScreenReportList" as ListGUI <<boundary>>
+boundary "FormReport" as FormGUI <<boundary>>
+control "ReportBUS" as BUS <<control>>
+database "ReportDAO" as DAO <<database>>
+
+autonumber
+
+== Kịch bản 1: Xem danh sách biên bản bàn giao ==
+Actor -> DetailGUI: Nhấn nút "Biên bản bàn giao"
+activate DetailGUI
+DetailGUI -> ListGUI: Mở màn hình DS Biên bản
+activate ListGUI
+deactivate DetailGUI
+
+ListGUI -> BUS: getReportsByContract(contractId)
+activate BUS
+BUS -> DAO: fetchByContractId(contractId)
+activate DAO
+DAO --> BUS: Trả về dữ liệu biên bản
+deactivate DAO
+BUS --> ListGUI: Danh sách biên bản
+deactivate BUS
+
+ListGUI --> Actor: Hiển thị DS (Mã BB, Mã HĐ, Ngày lập, Người TH, Tình trạng)
+
+== Kịch bản 2: Thêm biên bản bàn giao phòng ==
+Actor -> ListGUI: Nhấn nút "Lập biên bản mới"
+ListGUI -> FormGUI: Mở Form Lập biên bản
+activate FormGUI
+
+' --- Truy xuất vật tư tự động ---
+FormGUI -> BUS: getEquipmentsByBed(bedId)
+activate BUS
+BUS -> DAO: fetchEquipments(bedId)
+activate DAO
+DAO --> BUS: Danh mục vật tư (Giường, nệm, tủ, chìa khóa)
+deactivate DAO
+BUS --> FormGUI: Trả về danh mục vật tư
+deactivate BUS
+
+FormGUI --> Actor: Hiển thị bảng checklist vật dụng (Tên, Trạng thái)
+
+' --- Thao tác người dùng ---
+Actor -> FormGUI: Tích chọn trạng thái thực tế (Tốt/Hư/Thiếu)
+Actor -> FormGUI: Nhập ghi chú (Hướng dẫn an toàn/tiện ích)
+
+alt Chọn "Lưu & Ký xác nhận"
+    Actor -> FormGUI: Nhấn "Lưu & Ký xác nhận"
+    FormGUI -> BUS: createHandoverReport(data, bedId)
+    activate BUS
+    
+    ' Transaction: Lưu BB và Cập nhật Giường
+    BUS -> DAO: insert(data)
+    activate DAO
+    DAO --> BUS: Lưu biên bản thành công
+    deactivate DAO
+    
+    BUS -> DAO: updateBedStatus(bedId, "Đã thuê")
+    activate DAO
+    DAO --> BUS: Cập nhật thành công
+    deactivate DAO
+    
+    BUS --> FormGUI: Trả kết quả hoàn tất
+    deactivate BUS
+    
+    FormGUI --> Actor: Thông báo "Bàn giao thành công"
+    FormGUI -> ListGUI: Tải lại danh sách (Làm mới KB1)
+    destroy FormGUI
+
+else Chọn "Hủy" hoặc Đóng Form
+    Actor -> FormGUI: Nhấn "Hủy" hoặc đóng Form
+    FormGUI -> FormGUI: Xóa các dữ liệu đang nhập dở
+    FormGUI --> Actor: Đóng Form, quay lại màn hình chi tiết hợp đồng
+    deactivate FormGUI
+end
+
+@enduml

@@ -1,0 +1,138 @@
+@startuml QuanLyHopDong_SequenceDiagram
+title Sequence Diagram: Quản lý hợp đồng
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    ParticipantPadding 20
+    BoxPadding 10
+}
+
+actor "Nhân viên phụ trách" as Actor
+boundary "ScreenContractManagement" as MainGUI <<boundary>>
+boundary "ScreenContractDetail" as DetailGUI <<boundary>>
+boundary "FormContract" as FormGUI <<boundary>>
+control "ContractBUS" as BUS <<control>>
+database "ContractDAO" as DAO <<database>>
+
+autonumber
+
+== Kịch bản 1: Xem danh sách, Tìm kiếm và Chi tiết ==
+
+' --- XEM DANH SÁCH MẶC ĐỊNH ---
+Actor -> MainGUI: Chọn tab "Quản lý hợp đồng"
+activate MainGUI
+MainGUI -> BUS: getContracts()
+activate BUS
+BUS -> DAO: fetchAll()
+activate DAO
+DAO --> BUS: Danh sách Hợp đồng
+deactivate DAO
+BUS --> MainGUI: Trả về dữ liệu
+deactivate BUS
+MainGUI --> Actor: Hiển thị danh sách (Mã HD, KH, Giường, Ngày ký, TT)
+
+' --- BỔ SUNG LUỒNG TÌM KIẾM ---
+Actor -> MainGUI: Nhập từ khóa & Nhấn "Tìm kiếm"
+MainGUI -> BUS: getContracts(keyword)
+activate BUS
+BUS -> DAO: fetchByKeyword(keyword)
+activate DAO
+DAO --> BUS: Danh sách kết quả lọc
+deactivate DAO
+BUS --> MainGUI: Trả về dữ liệu
+deactivate BUS
+MainGUI --> Actor: Hiển thị danh sách đã lọc lên dgvContract
+
+' --- XEM CHI TIẾT ---
+Actor -> MainGUI: Chọn một hợp đồng cụ thể
+MainGUI -> DetailGUI: Mở màn hình Chi tiết (id)
+activate DetailGUI
+DetailGUI -> BUS: getContractDetail(id)
+activate BUS
+BUS -> DAO: fetchById(id)
+activate DAO
+DAO --> BUS: Chi tiết Hợp đồng
+deactivate DAO
+BUS --> DetailGUI: Trả về dữ liệu chi tiết
+deactivate BUS
+DetailGUI --> Actor: Hiển thị thông tin lên màn hình
+deactivate MainGUI
+
+== Kịch bản 2: Thêm hợp đồng mới ==
+Actor -> MainGUI: Nhấn nút "Lập hợp đồng mới"
+activate MainGUI
+MainGUI -> FormGUI: Mở Form Thêm mới
+activate FormGUI
+deactivate MainGUI
+
+FormGUI -> BUS: getPendingDepositForms()
+activate BUS
+BUS -> DAO: fetchPendingDepositForms()
+activate DAO
+DAO --> BUS: DS Phiếu đặt cọc (từ bảng deposit_form)
+deactivate DAO
+BUS --> FormGUI: Trả về dữ liệu
+deactivate BUS
+FormGUI --> Actor: Hiển thị DS Phiếu đặt cọc chờ
+
+Actor -> FormGUI: Chọn 1 phiếu đặt cọc
+FormGUI -> FormGUI: Tự động điền (Mã KH, Số người)
+
+Actor -> FormGUI: Nhập Ngày bắt đầu, Ngày kết thúc, Kỳ thanh toán, Số phòng, Số giường & nhấn "Lưu"
+FormGUI -> FormGUI: Kiểm tra tính hợp lệ (A2)
+alt Hợp lệ
+    FormGUI -> BUS: createContract(data)
+    activate BUS
+    BUS -> DAO: insert(data)
+    activate DAO
+    DAO --> BUS: Lưu thành công
+    deactivate DAO
+    BUS --> FormGUI: Trả kết quả thành công
+    deactivate BUS
+    FormGUI --> Actor: Thông báo "Lập hợp đồng thành công"
+    FormGUI -> MainGUI: Tải lại danh sách
+    destroy FormGUI
+end
+
+== Kịch bản 3: Cập nhật hợp đồng ==
+Actor -> DetailGUI: Nhấn nút "Cập nhật"
+activate DetailGUI
+DetailGUI -> DetailGUI: Mở khóa các trường nhập liệu (Input fields)
+
+Actor -> DetailGUI: Thay đổi thông tin và nhấn "Lưu thay đổi"
+DetailGUI -> DetailGUI: Kiểm tra tính hợp lệ (A2)
+
+alt Hợp lệ
+    DetailGUI -> BUS: updateContract(id, data)
+    activate BUS
+    BUS -> DAO: update(id, data)
+    activate DAO
+    DAO --> BUS: Cập nhật thành công
+    deactivate DAO
+    BUS --> DetailGUI: Trả kết quả thành công
+    deactivate BUS
+    
+    DetailGUI --> Actor: Thông báo cập nhật thành công
+    DetailGUI -> DetailGUI: Khóa các trường & Hiển thị thông tin mới
+end
+
+== Kịch bản 4: Huỷ/Xoá hợp đồng ==
+Actor -> DetailGUI: Nhấn nút "Huỷ hợp đồng"
+DetailGUI -> DetailGUI: Hiển thị Popup cảnh báo
+Actor -> DetailGUI: Nhấn "Xác nhận"
+DetailGUI -> BUS: cancelContract(id)
+activate BUS
+BUS -> DAO: updateStatus(id, "Đã hủy")
+activate DAO
+DAO --> BUS: Cập nhật thành công
+deactivate DAO
+BUS --> DetailGUI: Trả kết quả thành công
+deactivate BUS
+DetailGUI --> Actor: Thông báo thành công & Cập nhật trạng thái
+deactivate DetailGUI
+
+@enduml
