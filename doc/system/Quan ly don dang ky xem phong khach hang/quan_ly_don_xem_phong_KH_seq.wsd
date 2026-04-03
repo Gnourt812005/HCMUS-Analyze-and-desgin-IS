@@ -1,0 +1,133 @@
+@startuml QuanLyDonXemPhongKH_SequenceDiagram
+title Sequence Diagram: Quản lý đơn đăng ký xem phòng khách hàng
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    ParticipantPadding 20
+    BoxPadding 10
+}
+
+actor "Nhân viên sales" as Actor
+boundary "ClientPreviewSchedule\nManagementScreen" as GUI_Management <<boundary>>
+boundary "ScreenPreviewSchedule\nDetailsView" as GUI_Details <<boundary>>
+boundary "CreatePreviewSchedule\nScreen" as GUI_Create <<boundary>>
+boundary "ReschedulePreview\nScreen" as GUI_Reschedule <<boundary>>
+
+control "PreviewForm" as BUS_Preview <<control>>
+control "Room" as BUS_Room <<control>>
+
+database "PreviewFormDB" as DAO_Preview <<database>>
+database "RoomDB" as DAO_Room <<database>>
+database "UtilitiesDB" as DAO_Utils <<database>>
+database "BedDB" as DAO_Bed <<database>>
+
+autonumber
+
+== Mở danh sách đơn đăng ký xem phòng ==
+Actor -> GUI_Management: showPreviewSchedules(EmployeeID)
+activate GUI_Management
+
+GUI_Management -> BUS_Preview: getPreviewFormsByEmployeeID(EmployeeID)
+activate BUS_Preview
+
+BUS_Preview -> DAO_Preview: getPreviewFormsByEmployeeID(EmployeeID)
+activate DAO_Preview
+deactivate DAO_Preview
+
+deactivate BUS_Preview
+
+GUI_Management -> BUS_Room: getRoomsList(roomIDs)
+activate BUS_Room
+
+BUS_Room -> DAO_Room: getRoomList(roomIDs)
+activate DAO_Room
+
+opt Lấy tiện ích phòng
+    DAO_Room -> DAO_Utils: getUtilitiesByRoomID(roomID)
+    activate DAO_Utils
+    deactivate DAO_Utils
+end
+
+opt Lấy giá giường
+    DAO_Room -> DAO_Bed: getBedPrice(roomID)
+    activate DAO_Bed
+    deactivate DAO_Bed
+end
+
+deactivate DAO_Room
+deactivate BUS_Room
+
+== Xem Chi tiết đơn đăng ký ==
+Actor -> GUI_Management: listPreviewSchedules_ItemClick()
+GUI_Management -> GUI_Details: showPreviewScheduleDetails(PreviewScheduleID)
+deactivate GUI_Management
+activate GUI_Details
+
+GUI_Details -> BUS_Preview: getPreviewFormDetails(PreviewScheduleID)
+activate BUS_Preview
+deactivate BUS_Preview
+
+== Tạo đơn đăng ký xem phòng (Bởi Nhân viên) ==
+Actor -> GUI_Management: btnCreatePreviewSchedule_Click(EmployeeID)
+activate GUI_Management
+GUI_Management -> GUI_Create: showCreatePreviewScreen()
+deactivate GUI_Management
+activate GUI_Create
+
+Actor -> GUI_Create: Điền thông tin đơn xem phòng mới
+Actor -> GUI_Create: btnConfirmCreate_Click(newForm)
+
+GUI_Create -> BUS_Preview: createEmployeePreviewForm(roomID, userID, employeeID, previewDate)
+activate BUS_Preview
+
+BUS_Preview -> DAO_Preview: checkEmployeesDuplicatedPreviewDate(employeeID, previewDate)
+activate DAO_Preview
+deactivate DAO_Preview
+
+BUS_Preview -> DAO_Preview: checkRoomsDuplicatedPreviewDate(roomID, previewDate)
+activate DAO_Preview
+deactivate DAO_Preview
+
+alt Không trùng lịch
+    BUS_Preview -> DAO_Preview: createEmployeePreviewForm(roomID, userID, previewDate, employeeID)
+    activate DAO_Preview
+    deactivate DAO_Preview
+end
+
+deactivate BUS_Preview
+deactivate GUI_Create
+
+== Dời lịch xem phòng (Reschedule) ==
+Actor -> GUI_Details: btnReschedulePreviewSchedule_Click()
+GUI_Details -> GUI_Reschedule: showReschedulePreviewScreen()    
+deactivate GUI_Details
+activate GUI_Reschedule
+
+Actor -> GUI_Reschedule: Nhập ngày giờ mới (datepickerPreviewDate)
+Actor -> GUI_Reschedule: btnConfirmReschedule_Click(newForm)
+
+GUI_Reschedule -> BUS_Preview: reschedulePreviewForm(previewFormID, newPreviewDate)
+activate BUS_Preview
+
+BUS_Preview -> DAO_Preview: checkEmployeesDuplicatedPreviewDate(employeeID, newPreviewDate)
+activate DAO_Preview
+deactivate DAO_Preview
+
+BUS_Preview -> DAO_Preview: checkRoomsDuplicatedPreviewDate(roomID, newPreviewDate)
+activate DAO_Preview
+deactivate DAO_Preview
+
+alt Không trùng lịch mới
+    BUS_Preview -> DAO_Preview: reschedulePreviewForm(previewFormID, newPreviewDate)
+    activate DAO_Preview
+    deactivate DAO_Preview
+end
+
+deactivate BUS_Preview
+deactivate GUI_Reschedule
+
+@enduml

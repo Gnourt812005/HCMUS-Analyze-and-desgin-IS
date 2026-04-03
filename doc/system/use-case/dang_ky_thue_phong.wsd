@@ -26,6 +26,9 @@ rectangle "Màn hình chung"{
     usecase "Xem danh sách phòng" as UC_XemDanhSachPhong
     usecase "Xem chi tiết phòng" as UC_XemChiTietPhong
 
+    user -> UC_DangNhap
+    user -> UC_XemDanhSachPhong
+
     UC_DangXuat ..> UC_DangNhap : <<extend>>
     UC_QuanLyTaiKhoan ..> UC_DangNhap : <<extend>>
     UC_XemChiTietPhong ..> UC_XemDanhSachPhong : <<extend>>
@@ -34,20 +37,32 @@ rectangle "Màn hình chung"{
 rectangle "Màn hình khách hàng"{
     usecase "Đăng ký tài khoản" as UC_DangKyTaiKhoan
 
-    usecase "Đăng ký thuê phòng" as UC_DangKyThuePhong
     usecase "Đăng ký xem phòng" as UC_DangKyXemPhong
-    usecase "Quản lý đơn đăng ký thuê phòng" as UC_QuanLyDonDangKyThuePhong
-    usecase "Xóa đơn đăng ký thuê phòng" as UC_XoaDonDangKyThuePhong
+    usecase "Quản lý lịch xem phòng" as UC_QuanLyDonXemPhong
+    usecase "Hủy lịch xem phòng" as UC_HuyLichXemPhong
+    usecase "Quan tâm phòng" as UC_QuanTamPhong
+    usecase "Quản lý phòng đã quan tâm" as UC_QuanLyPhongQuanTam
+
+    ' usecase "Quản lý đơn đăng ký thuê phòng" as UC_QuanLyDonDangKyThuePhong
+    ' usecase "Xóa đơn đăng ký thuê phòng" as UC_XoaDonDangKyThuePhong
+    ' usecase "Đăng ký thuê phòng" as UC_DangKyThuePhong
     
-
     customer -- UC_DangKyTaiKhoan
-    user -- UC_XemDanhSachPhong
 
-    UC_DangKyThuePhong ..> UC_XemChiTietPhong : <<extend>>
-    UC_DangKyThuePhong ..> UC_DangNhap : <<include>>
-    UC_QuanLyDonDangKyThuePhong ..> UC_DangNhap : <<extend>>
-    UC_XoaDonDangKyThuePhong ..> UC_QuanLyDonDangKyThuePhong : <<extend>>
-    UC_DangKyXemPhong ..> UC_DangKyThuePhong : <<extend>>
+    UC_DangKyXemPhong ..> UC_XemChiTietPhong : <<extend>>
+    UC_DangKyXemPhong ..> UC_DangNhap : <<extend>>
+    UC_HuyLichXemPhong ..> UC_QuanLyDonXemPhong : <<extend>>
+    UC_QuanTamPhong ..> UC_XemChiTietPhong : <<extend>>
+    UC_QuanLyDonXemPhong ..> UC_DangNhap : <<extend>>
+    UC_QuanLyPhongQuanTam ..> UC_DangNhap : <<extend>>
+    UC_DangKyXemPhong ..> UC_QuanLyPhongQuanTam : <<extend>>
+
+
+    ' UC_QuanLyDonDangKyThuePhong ..> UC_DangNhap : <<extend>>
+    ' UC_XoaDonDangKyThuePhong ..> UC_QuanLyDonDangKyThuePhong : <<extend>>
+    ' UC_DangKyXemPhong ..> UC_DangKyThuePhong : <<extend>>
+    ' UC_DangKyThuePhong ..> UC_XemChiTietPhong : <<extend>>
+    ' UC_DangKyThuePhong ..> UC_DangNhap : <<include>>
 }
 
 ' rectangle "Màn hình nhân viên quản lý chi nhánh"{
@@ -61,13 +76,13 @@ rectangle "Màn hình khách hàng"{
 ' }
 
 rectangle "Màn hình nhân viên sale"{
-    usecase "Quản lý lịch xem phòng" as UC_QuanLyLichXemPhong
-    usecase "Dời lịch xem phòng" as UC_DoiLichXemPhong
-    usecase "Tạo lịch xem phòng" as UC_TaoLichXemPhong
+    usecase "Quản lý lịch xem phòng khách hàng" as UC_QuanLyLichXemPhongKH
+    usecase "Dời lịch xem phòng khách hàng" as UC_DoiLichXemPhongKH
+    usecase "Tạo lịch xem phòng khách hàng" as UC_TaoLichXemPhongKH
 
-    UC_QuanLyLichXemPhong ..> UC_DangNhap : <<extend>>
-    UC_DoiLichXemPhong ..> UC_QuanLyLichXemPhong : <<extend>>
-    UC_TaoLichXemPhong ..> UC_QuanLyLichXemPhong : <<extend>>
+    UC_QuanLyLichXemPhongKH ..> UC_DangNhap : <<extend>>
+    UC_DoiLichXemPhongKH ..> UC_QuanLyLichXemPhongKH : <<extend>>
+    UC_TaoLichXemPhongKH ..> UC_QuanLyLichXemPhongKH : <<extend>>
 }
 
 ' rectangle "Màn hình Admin"{
@@ -80,8 +95,6 @@ rectangle "Màn hình nhân viên sale"{
 '     UC_TaoTaiKhoanNhanVien ..> UC_QuanLyNhanVien : <<extend>>
 ' }
 
-' Actor - Main Use Cases Associations
-user -- UC_DangNhap
 
 
 @enduml
