@@ -17,6 +17,7 @@ const Sidebar = () => {
 
   const menuItems = [
     { path: '/profile', icon: 'person', label: 'Thông tin cá nhân' },
+    { path: '/favorites', icon: 'favorite', label: 'Phòng quan tâm' },
     { path: '/viewing-history', icon: 'calendar_today', label: 'Lịch xem phòng' },
     { path: '/orders', icon: 'shopping_cart', label: 'Đơn hàng' },
     { path: '/contracts', icon: 'description', label: 'Hợp đồng' },

@@ -14,6 +14,7 @@ import Profile from './pages/Profile';
 import Contracts from './pages/Contracts';
 import ViewingHistory from './pages/ViewingHistory';
 import Orders from './pages/Orders';
+import Favorites from './pages/Favorites';
 import PasswordRecovery from './pages/PasswordRecovery';
 import Register from './pages/Register';
 
@@ -125,6 +126,7 @@ const App = () => {
           <Route path="/booking/step2-payment" element={<ProtectedRoute><BookingStep2 /></ProtectedRoute>} />
           <Route path="/viewing-request" element={<ProtectedRoute><ViewingRequest /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
           <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
           <Route path="/viewing-history" element={<ProtectedRoute><ViewingHistory /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />

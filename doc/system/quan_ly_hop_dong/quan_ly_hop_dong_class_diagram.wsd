@@ -1,5 +1,5 @@
 @startuml QuanLyHopDong_ClassDiagram
-title Class Diagram: Quản lý hợp đồng
+title Class Diagram - UC20: Quản lý hợp đồng
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -46,7 +46,7 @@ class "FormContract" as FormContract <<boundary>> {
 }
 
 ' --- BUSINESS LAYER ---
-class "ContractBUS" as ContractBUS <<control>> {
+class "Contract" as Contract <<control>> {
     - id: string
     - customer_id: string
     - bed_id: string
@@ -57,33 +57,33 @@ class "ContractBUS" as ContractBUS <<control>> {
     - number_of_customer: int
     - file_id: string
     - selected_beds: List<string>
-    + getContracts(keyword: string): List<ContractBUS>
-    + getContractDetail(id: string): ContractBUS
-    + getRooms(): List<Room>
-    + getAvailableBedsByRoom(roomId: string): List<Bed>
-    + createContract(data: ContractBUS, bedList: List<string>): boolean
-    + updateContract(id: string, data: ContractBUS): boolean
-    + cancelContract(id: string): boolean
+    + <<static>> getContracts(keyword: string): List<Contract>
+    + <<static>> getContractDetail(id: string): Contract
+    + <<static>> getRooms(): List<Room>
+    + <<static>> getAvailableBedsByRoom(roomId: string): List<Bed>
+    + <<static>> createContract(data: Contract, bedList: List<string>): boolean
+    + <<static>> updateContract(id: string, data: Contract): boolean
+    + <<static>> cancelContract(id: string): boolean
 }
 
 ' --- DATABASE LAYER ---
-class "ContractDAO" as ContractDAO <<entity>> {
-    + fetchAll(): List
-    + fetchByKeyword(keyword: string): List
-    + fetchById(id: string): ContractBUS
-    + fetchRooms(): List
-    + fetchAvailableBeds(roomId: string): List
-    + insertContract(data: ContractBUS): string
-    + insertContractDetails(contractId: string, bedId: string): boolean
-    + update(id: string, data: ContractBUS): boolean
-    + updateStatus(id: string, status: string): boolean
+class "ContractDB" as ContractDB <<entity>> {
+    + <<static>> fetchAll(): List
+    + <<static>> fetchByKeyword(keyword: string): List
+    + <<static>> fetchById(id: string): Contract
+    + <<static>> fetchRooms(): List
+    + <<static>> fetchAvailableBeds(roomId: string): List
+    + <<static>> insertContract(data: Contract): string
+    + <<static>> insertContractDetails(contractId: string, bedId: string): boolean
+    + <<static>> update(id: string, data: Contract): boolean
+    + <<static>> updateStatus(id: string, status: string): boolean
 }
 
 ' --- RELATIONSHIPS ---
-ScreenCM "1" --> "1" ContractBUS
-ScreenCD "1" --> "1" ContractBUS
-FormContract "1" --> "1" ContractBUS
-ContractBUS "1" --> "1" ContractDAO
+ScreenCM "1" --> "1" Contract
+ScreenCD "1" --> "1" Contract
+FormContract "1" --> "1" Contract
+Contract "1" --> "1" ContractDB
 ScreenCM ..> ScreenCD : Mở Chi tiết
 ScreenCM ..> FormContract : Mở Form Thêm
 ScreenCD ..> FormContract : Mở Form Sửa

@@ -1,5 +1,5 @@
 @startuml QuanLyHopDong_SequenceDiagram
-title Sequence Diagram: Quản lý hợp đồng
+title Sequence Diagram - UC20: Quản lý hợp đồng
 
 ' --- STYLE CONFIGURATION ---
 skinparam {

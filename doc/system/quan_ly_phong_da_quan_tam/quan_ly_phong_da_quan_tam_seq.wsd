@@ -1,0 +1,136 @@
+@startuml QuanLyPhongDaQuanTam_SequenceDiagram
+title Sequence Diagram - UC7: Quản lý phòng đã quan tâm
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    ParticipantPadding 20
+    BoxPadding 10
+}
+
+actor "Khách hàng" as Actor
+boundary "FavoriteManagementScreen" as GUI_Favorite <<boundary>>
+boundary "ScreenRoomDetailsView" as GUI_Details <<boundary>>
+boundary "ScreenPreviewRequestView" as GUI_Preview <<boundary>>
+control "Room" as BUS_Room <<control>>
+control "FavoriteRequest" as BUS_Fav <<control>>
+control "PreviewRequest" as BUS_Preview <<control>>
+database "FavoriteRoomDB" as DAO_Fav <<database>>
+database "RoomDB" as DAO_Room <<database>>
+database "UtilitiesDB" as DAO_Utils <<database>>
+database "BedDB" as DAO_Bed <<database>>
+database "PreviewFormDB" as DAO_Preview <<database>>
+database "SalesEmployeeDB" as DAO_Sales <<database>>
+
+autonumber
+
+== Mở danh sách phòng đã quan tâm ==
+Actor -> GUI_Favorite: showFavoriteRooms()
+activate GUI_Favorite
+
+GUI_Favorite -> BUS_Room: getFavoriteRoomsByUserID(userID)
+activate BUS_Room
+deactivate GUI_Favorite
+
+BUS_Room -> DAO_Fav: getFavoriteRoomIDsByUserID(userID)
+activate DAO_Fav
+deactivate DAO_Fav
+
+BUS_Room -> DAO_Room: getFavoriteRooms(roomIDs)
+activate DAO_Room
+deactivate BUS_Room
+
+opt Lấy tiện ích phòng
+    DAO_Room -> DAO_Utils: getUtilitiesByRoomID(roomID)
+    activate DAO_Utils
+    deactivate DAO_Utils
+end
+
+opt Lấy giá giường
+    DAO_Room -> DAO_Bed: getBedPrice(roomID)
+    activate DAO_Bed
+    deactivate DAO_Bed
+end
+
+deactivate DAO_Room
+deactivate BUS_Room
+deactivate GUI_Favorite
+
+== Chọn xem Chi tiết 1 phòng ==
+Actor -> GUI_Favorite: Bấm vào 1 phòng (listFavoriteRooms_ItemClick)
+activate GUI_Favorite
+GUI_Favorite -> GUI_Details: showRoomDetails(roomID)
+activate GUI_Details
+deactivate GUI_Favorite
+deactivate GUI_Details
+
+== Quan tâm phòng (Favorite) ==
+Actor -> GUI_Details: Bấm nút "Quan tâm" (btnFavorite_Click)
+activate GUI_Details
+alt Đã Quan tâm
+    GUI_Details -> BUS_Fav: removeFavoriteRoom(roomID, userID)
+    activate BUS_Fav
+
+    BUS_Fav -> DAO_Fav: removeFavoriteRoom(roomID, userID)
+    activate DAO_Fav
+    deactivate DAO_Fav
+
+    deactivate BUS_Fav
+else Chưa Quan tâm
+    GUI_Details -> BUS_Fav: addFavoriteRoom(roomID, userID)
+    activate BUS_Fav
+
+    BUS_Fav -> DAO_Fav: addFavoriteRoom(roomID, userID)
+    activate DAO_Fav
+    deactivate DAO_Fav
+
+    deactivate BUS_Fav
+end
+deactivate GUI_Details
+
+== Đăng ký xem phòng ==
+Actor -> GUI_Details: Bấm nút "Đăng ký xem phòng" (btnPreviewRequest_Click)
+activate GUI_Details
+GUI_Details -> GUI_Preview: showPreviewRequestScreen()
+deactivate GUI_Details
+activate GUI_Preview
+
+Actor -> GUI_Preview: Nhập ngày giờ (datepickerPreviewDate)
+Actor -> GUI_Preview: Bấm "Xác nhận" (btnConfirmPreviewDate_Click)
+
+GUI_Preview -> BUS_Preview: addUserPreviewForm(roomID, userID, previewDate)
+activate BUS_Preview
+deactivate GUI_Preview
+
+BUS_Preview -> DAO_Preview: checkUsersDuplicatedPreviewDate(userID, previewDate)
+activate DAO_Preview
+deactivate DAO_Preview
+
+BUS_Preview -> DAO_Preview: checkRoomsDuplicatedPreviewDate(roomID, previewDate)
+activate DAO_Preview
+deactivate DAO_Preview
+
+alt Không trùng lịch
+    BUS_Preview -> BUS_Preview: assignSalesEmployee(previewDate)
+    activate BUS_Preview
+    
+    BUS_Preview -> DAO_Sales: getAvailableSalesEmployee(previewDate)
+    activate DAO_Sales
+    deactivate DAO_Sales
+    
+    deactivate BUS_Preview
+
+    alt Có nhân viên rảnh
+        BUS_Preview -> DAO_Preview: addUserPreviewForm(roomID, userID, previewDate, employeeID)
+        activate DAO_Preview
+        deactivate DAO_Preview
+    end
+end
+
+deactivate BUS_Preview
+deactivate GUI_Preview
+
+@enduml

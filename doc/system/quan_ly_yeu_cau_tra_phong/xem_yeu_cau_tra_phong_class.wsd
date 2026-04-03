@@ -1,0 +1,77 @@
+@startuml ViewCheckoutRequests_ClassDiagram
+title Class Diagram - UC23: Xem yêu cầu trả phòng
+
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+}
+
+class "ScreenCheckoutRequestList" as RequestListScreen <<boundary>> {
+  - dgvRequests: DataGridView
+  - btnViewDetail: Button
+  + show(): void
+  + loadRequests(): void
+  + btnViewDetailClick(): void
+}
+
+class "ScreenCheckoutRequestDetail" as RequestDetailScreen <<boundary>> {
+  - imgLiquidationFile: Image
+  - btnBack: Button
+  + show(requestID: int): void
+  + loadDetail(): void
+}
+
+class "CheckoutRequest" as CheckoutRequest <<control>> {
+  - requestID: int
+  - customerID: int
+  - expectedDate: DateTime
+  - status: string
+  - createdAt: DateTime
+  - documentUrl: string
+  + <<static>> getListByCustomer(customerID: int): List<CheckoutRequest>
+  + <<static>> getById(requestID: int): CheckoutRequest
+}
+
+class "CheckoutRequestDB" as CheckoutRequestDB <<entity>> {
+  + <<static>> getListByCustomer(customerID: int): List<CheckoutRequest>
+  + <<static>> getById(requestID: int): CheckoutRequest
+}
+
+class "RefundCalculation" as RefundCalculation <<control>> {
+  - calculationID: int
+  - requestID: int
+  - depositAmount: float
+  - damageFee: float
+  - extraDebt: float
+  - finalRefundAmount: float
+  + <<static>> getByRequestId(requestID: int): RefundCalculation
+}
+
+class "RefundCalculationDB" as RefundCalculationDB <<entity>> {
+  + <<static>> getByRequestId(requestID: int): RefundCalculation
+}
+
+class "Contract" as Contract <<control>> {
+  - contractID: int
+  - depositAmount: float
+  - liquidationDocUrl: string
+  + <<static>> getById(contractID: int): Contract
+}
+
+class "ContractDB" as ContractDB <<entity>> {
+  + <<static>> getById(contractID: int): Contract
+}
+
+RequestListScreen --> CheckoutRequest
+RequestDetailScreen --> CheckoutRequest
+RequestDetailScreen --> RefundCalculation
+RequestDetailScreen --> Contract
+CheckoutRequest --> CheckoutRequestDB
+RefundCalculation --> RefundCalculationDB
+Contract --> ContractDB
+
+@enduml

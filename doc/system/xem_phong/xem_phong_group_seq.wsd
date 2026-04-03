@@ -1,0 +1,94 @@
+﻿@startuml XemDanhSachPhong_SequenceDiagram
+title Sequence Diagram - UC1, 2, 3, 6
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    ParticipantPadding 20
+    BoxPadding 10
+}
+
+actor "Khách hàng" as Actor
+boundary "ScreenDormsView" as GUI_Dorms <<boundary>>
+boundary "ScreenRoomsView" as GUI_Rooms <<boundary>>
+boundary "ScreenRoomDetailsView" as GUI_Details <<boundary>>
+boundary "ScreenPreviewRequestView" as GUI_Preview <<boundary>>
+control "Dorm" as BUS_Dorm <<control>>
+control "Room" as BUS_Room <<control>>
+control "FavoriteRequest" as BUS_Fav <<control>>
+control "PreviewRequest" as BUS_Preview <<control>>
+database "DormDB" as DAO_Dorm <<database>>
+database "RoomDB" as DAO_Room <<database>>
+database "UtilitiesDB" as DAO_Utils <<database>>
+database "BedDB" as DAO_Bed <<database>>
+database "FavoriteRoomDB" as DAO_Fav <<database>>
+database "PreviewFormDB" as DAO_Preview <<database>>
+database "SalesEmployeeDB" as DAO_Sales <<database>>
+
+autonumber
+
+== Mở danh sách ký túc xá ==
+Actor -> GUI_Dorms: Yêu cầu danh sách KTX
+GUI_Dorms -> BUS_Dorm: getDormsList()
+
+== Chọn ký túc xá ==
+Actor -> GUI_Dorms: Chọn KTX cụ thể (gridDormsCellClick)
+GUI_Dorms -> GUI_Rooms: Truyền dormID và mở màn hình Danh sách phòng
+
+== Lọc danh sách phòng ==
+Actor -> GUI_Rooms: Tùy chỉnh bộ lọc (Criteria)
+Actor -> GUI_Rooms: Nhấn "Tìm kiếm" (btnSearchRoomClick)
+
+GUI_Rooms -> BUS_Room: getRoomsList(dormID, criteria)
+BUS_Room -> DAO_Room: getRoomsList(dormID, criteria)
+
+opt Lấy tiện ích phòng
+    DAO_Room -> DAO_Utils: getUtilitiesByRoomID(roomID)
+end
+
+opt Lấy giá giường
+    DAO_Room -> DAO_Bed: getBedPrice(roomID)
+end
+
+== Xem chi tiết phòng ==
+Actor -> GUI_Rooms: Chọn 1 phòng (gridRoomsCellClick)
+GUI_Rooms -> GUI_Details: Truyền roomID và mở màn hình Chi tiết phòng
+
+== Quan tâm phòng ==
+Actor -> GUI_Details: Nhấn "Quan tâm" (btnFavoriteClick)
+
+alt Đã nằm trong danh sách Quan tâm
+    GUI_Details -> BUS_Fav: removeFavoriteRoom(roomID, userID)
+    BUS_Fav -> DAO_Fav: removeFavoriteRoom(roomID, userID)
+else Chưa nằm trong danh sách Quan tâm
+    GUI_Details -> BUS_Fav: addFavoriteRoom(roomID, userID)
+    BUS_Fav -> DAO_Fav: addFavoriteRoom(roomID, userID)
+end
+
+== Đăng ký lịch xem phòng ==
+Actor -> GUI_Details: Nhấn "Đăng ký xem phòng" (btnPreviewRequestClick)
+GUI_Details -> GUI_Preview: showPreviewRequestScreen()
+
+Actor -> GUI_Preview: Chọn ngày/giờ (datepickerPreviewDate)
+Actor -> GUI_Preview: Nhấn "Xác nhận" (btnConfirmPreviewDateClick)
+
+GUI_Preview -> BUS_Preview: addUserPreviewForm(roomID, userID, previewDate)
+BUS_Preview -> DAO_Preview: checkUsersDuplicatedPreviewDate(userID, previewDate)
+BUS_Preview -> DAO_Preview: checkRoomsDuplicatedPreviewDate(roomID, previewDate)
+
+alt Không trùng lịch
+    BUS_Preview -> BUS_Preview: assignSalesEmployee(previewDate)
+    BUS_Preview -> DAO_Sales: getAvailableSalesEmployee(previewDate)
+
+    alt Có nhân viên sẵn sàng
+        BUS_Preview -> DAO_Preview: addUserPreviewForm(roomID, userID, previewDate, employeeID)
+    end
+end
+
+deactivate BUS_Preview
+deactivate GUI_Preview
+
+@enduml

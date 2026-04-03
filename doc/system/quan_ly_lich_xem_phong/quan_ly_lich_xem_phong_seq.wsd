@@ -1,0 +1,54 @@
+@startuml QuanLyLichXemPhong_SequenceDiagram
+title Sequence Diagram - UC4, 5: Quản lý lịch xem phòng
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    ParticipantPadding 20
+    BoxPadding 10
+}
+
+actor "Customer" as Actor
+boundary "ScreenViewingSchedule" as GUI_List <<boundary>>
+boundary "ScreenViewingScheduleDetail" as GUI_Details <<boundary>>
+
+control "ViewingSchedule" as BUS_Preview <<control>>
+control "Room" as BUS_Room <<control>>
+
+database "ViewingScheduleDB" as DB_Preview <<database>>
+database "RoomDB" as DB_Room <<database>>
+database "UtilitiesDB" as DB_Utils <<database>>
+database "BedDB" as DB_Bed <<database>>
+
+autonumber
+
+== Xem danh sách lịch hẹn xem phòng ==
+
+Actor -> GUI_List: showClientPreviewSchedules(userID)
+GUI_List -> BUS_Preview: getViewingSchedulesByUserID(userID)
+BUS_Preview -> DB_Preview: getViewingSchedulesByUserID(userID)
+
+GUI_List -> BUS_Room: getRoomsList(roomIDs)
+BUS_Room -> DB_Room: getRoomsList(roomIDs)
+
+loop cho từng roomID trong danh sách roomIDs
+    DB_Room -> DB_Utils: getUtilitiesByRoomID(roomID)
+    DB_Room -> DB_Bed: getBedPrice(roomID)
+end
+
+== Xem chi tiết lịch hẹn ==
+
+Actor -> GUI_List: listPreviewSchedulesItemClick()
+GUI_List -> GUI_Details: showPreviewScheduleDetails(viewingScheduleID)
+GUI_Details -> BUS_Preview: getViewingScheduleDetails(viewingScheduleID)
+
+== Hủy lịch hẹn xem phòng ==
+
+Actor -> GUI_Details: Nhấn nút Hủy lịch hẹn (btnCancelPreviewScheduleClick)
+GUI_Details -> BUS_Preview: cancelPreviewSchedule(viewingScheduleID)
+BUS_Preview -> DB_Preview: cancelPreviewSchedule(viewingScheduleID)
+
+@enduml

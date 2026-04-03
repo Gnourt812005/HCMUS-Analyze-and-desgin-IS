@@ -1,6 +1,6 @@
 @startuml
 skinparam style strictuml
-header VOPC - UC13: Đặt cọc
+header VOPC - UC14: Đặt cọc
 
 actor "Khách hàng" as Actor
 

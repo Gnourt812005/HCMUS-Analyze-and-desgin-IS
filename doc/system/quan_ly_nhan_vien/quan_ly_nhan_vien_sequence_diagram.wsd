@@ -1,5 +1,5 @@
 @startuml QuanLyNhanVien_SequenceDiagram
-title Sequence Diagram: Quản lý nhân viên (UC16)
+title Sequence Diagram - UC17: Quản lý nhân viên (UC17)
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -16,116 +16,79 @@ boundary "ScreenEmployeeManagement" as MainGUI <<boundary>>
 boundary "ScreenEmployeeDetail" as DetailGUI <<boundary>>
 boundary "PopupConfirm" as Popup <<boundary>>
 control "Employee" as BUS <<control>>
-database "EmployeeDB" as DAO <<database>>
+database "EmployeeDB" as DB <<database>>
 
 autonumber
 
 == Kịch bản 1: Xem danh sách nhân viên ==
 Actor -> MainGUI: Chọn tab "Nhân viên"
-activate MainGUI
 MainGUI -> BUS: getEmployees()
-activate BUS
-BUS -> DAO: fetchAll()
-activate DAO
-DAO --> BUS: Trả về danh sách nhân viên
-deactivate DAO
-BUS --> MainGUI: Trả về dữ liệu nhân viên
-deactivate BUS
-MainGUI --> Actor: Hiển thị danh sách lên dgvEmployee
-deactivate MainGUI
+BUS -> DB: fetchAll()
+DB --> BUS: Danh sách nhân viên
+BUS --> MainGUI: Dữ liệu
+MainGUI --> Actor: Hiển thị danh sách
 
-== Kịch bản 2: Thêm nhân viên mới ==
-Actor -> MainGUI: Nhấn nút "Thêm nhân viên"
-activate MainGUI
-MainGUI -> DetailGUI: Mở Form "Thêm mới" (Form_Load)
-activate DetailGUI
-deactivate MainGUI
+== Kịch bản 2: Thêm mới nhân viên ==
+Actor -> MainGUI: Nhấn "Thêm nhân viên"
+MainGUI -> DetailGUI: showForm("Thêm mới")
 
-Actor -> DetailGUI: Nhập thông tin (Email, Pass, Họ tên...)
-Actor -> DetailGUI: Nhấn nút "Lưu" (btnSave_Click)
+Actor -> DetailGUI: Nhập thông tin (Email, Mật khẩu, Tên...)
+Actor -> DetailGUI: Nhấn "Lưu" (btnSaveClick)
 
-DetailGUI -> DetailGUI: Kiểm tra thông tin (Validate)
-alt Thông tin trống (A2.1) hoặc Sai định dạng (A2.2)
-    DetailGUI --> Actor: Hiển thị báo lỗi (Highlight đỏ)
-else Thông tin hợp lệ
+DetailGUI -> DetailGUI: validate()
+alt Dữ liệu không hợp lệ
+    DetailGUI --> Actor: Hiển thị thông báo lỗi
+else Hợp lệ
     DetailGUI -> BUS: createEmployee(data)
-    activate BUS
-    BUS -> DAO: checkEmailExists(email)
-    activate DAO
-    DAO --> BUS: Trả về True/False
-    deactivate DAO
-    
-    alt Email đã tồn tại (A3)
-        BUS --> DetailGUI: Thông báo Email tồn tại
-        DetailGUI --> Actor: Hiển thị lỗi "Email đã tồn tại"
+    BUS -> DB: checkEmailExists(email)
+    alt Email đã tồn tại
+        DB --> BUS: Trả về true
+        BUS --> DetailGUI: Thông báo lỗi ("Email đã tồn tại")
     else Email chưa tồn tại
-        BUS -> DAO: insert(data)
-        activate DAO
-        DAO --> BUS: Lưu thành công
-        deactivate DAO
-        BUS --> DetailGUI: Kết quả tạo thành công
-        deactivate BUS
-        DetailGUI --> Actor: Thông báo "Thêm thành công"
-        DetailGUI -> MainGUI: Tải lại danh sách (Refresh)
-        destroy DetailGUI
+        DB --> BUS: Trả về false
+        BUS -> DB: insert(data)
+        DB --> BUS: Thành công
+        BUS --> DetailGUI: Trả về kết quả (Thành công)
+        DetailGUI --> Actor: Thông báo thành công
+        DetailGUI -> MainGUI: refreshList()
     end
 end
 
 == Kịch bản 3: Cập nhật thông tin nhân viên ==
-Actor -> MainGUI: Nhấn icon "Sửa" trên dòng nhân viên
-activate MainGUI
+Actor -> MainGUI: Nhấn biểu tượng "Sửa"
 MainGUI -> BUS: getEmployeeDetail(id)
-activate BUS
-BUS -> DAO: fetchById(id)
-activate DAO
-DAO --> BUS: Trả về thông tin nhân viên
-deactivate DAO
-BUS --> MainGUI: Trả về dữ liệu chi tiết
-deactivate BUS
-MainGUI -> DetailGUI: Hiển thị Form "Cập nhật" (Điền sẵn dữ liệu)
-activate DetailGUI
-deactivate MainGUI
+BUS -> DB: fetchById(id)
+DB --> BUS: Dữ liệu nhân viên
+BUS --> MainGUI: Trả về kết quả
+MainGUI -> DetailGUI: showForm("Cập nhật", data)
 
 Actor -> DetailGUI: Chỉnh sửa thông tin
-Actor -> DetailGUI: Nhấn nút "Cập nhật" (btnUpdate_Click)
-DetailGUI -> DetailGUI: Kiểm tra tính hợp lệ (Validate)
+Actor -> DetailGUI: Nhấn "Cập nhật" (btnUpdateClick)
+DetailGUI -> DetailGUI: validate()
 
-alt Dữ liệu không hợp lệ (A2)
-    DetailGUI --> Actor: Hiển thị lỗi (Highlight đỏ)
+alt Dữ liệu không hợp lệ
+    DetailGUI --> Actor: Hiển thị thông báo lỗi
 else Hợp lệ
     DetailGUI -> BUS: updateEmployee(id, data)
-    activate BUS
-    BUS -> DAO: update(id, data)
-    activate DAO
-    DAO --> BUS: Cập nhật thành công
-    deactivate DAO
-    BUS --> DetailGUI: Kết quả cập nhật thành công
-    deactivate BUS
-    DetailGUI --> Actor: Thông báo "Cập nhật thành công"
-    DetailGUI -> MainGUI: Làm mới dòng dữ liệu (Refresh row)
-    destroy DetailGUI
+    BUS -> DB: update(id, data)
+    DB --> BUS: Thành công
+    BUS --> DetailGUI: Thành công
+    DetailGUI --> Actor: Thông báo thành công
+    DetailGUI -> MainGUI: refreshRow()
 end
 
 == Kịch bản 4: Xóa nhân viên ==
-Actor -> MainGUI: Nhấn icon "Xóa" trên dòng nhân viên
-activate MainGUI
-MainGUI -> Popup: Hiển thị Popup xác nhận xóa (Mở Popup)
-activate Popup
-Actor -> Popup: Nhấn "Xác nhận Xóa" (btnConfirm_Click)
+Actor -> MainGUI: Nhấn biểu tượng "Xóa"
+MainGUI -> Popup: showConfirm()
+Actor -> Popup: Nhấn "Xác nhận" (btnConfirmClick)
 
 Popup -> BUS: deleteEmployee(id)
-activate BUS
-BUS -> DAO: remove(id)
-activate DAO
-DAO --> BUS: Xóa dữ liệu thành công
-deactivate DAO
-BUS --> Popup: Trả kết quả thành công
-deactivate BUS
+BUS -> DB: remove(id)
+DB --> BUS: Thành công
+BUS --> Popup: Thành công
 
-Popup --> Actor: Thông báo "Đã xóa nhân viên"
-Popup -> MainGUI: Xóa dòng tương ứng khỏi bảng (dgvEmployee)
-destroy Popup
-deactivate MainGUI
+Popup --> Actor: Hiển thị thông báo thành công
+Popup -> MainGUI: removeRow()
 
 
 @enduml

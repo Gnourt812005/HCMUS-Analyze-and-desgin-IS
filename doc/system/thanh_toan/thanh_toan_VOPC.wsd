@@ -1,6 +1,6 @@
 @startuml
 skinparam style strictuml
-header VOPC - UC15: Thanh toán
+header VOPC - UC16: Thanh toán
 
 actor "Khách hàng" as Actor
 

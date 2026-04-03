@@ -1,41 +1,41 @@
-@startuml
+@startuml ThanhToan_ClassDiagram
 skinparam classAttributeIconSize 0
 skinparam style strictuml
-title Class Diagram - UC15: Thanh toán
+title Class Diagram - UC16: Thanh toán
 
 package "Presentation Layer" {
-    class "MH_ThanhToan" <<boundary>> {
-        + chonPhuongThuc()
-        + hienThiMaQR()
-        + thongBaoKetQua()
+    class "ScreenPayment" <<boundary>> {
+        + selectMethod()
+        + showQRCode()
+        + notifyResult()
     }
 }
 
 package "Business Logic Layer" {
-    class "XuLyThanhToan" <<control>> {
-        + taoMaThanhToan(method)
-        + xacMinhGiaoDich()
-        + capNhatTrangThaiPhong()
+    class "Payment" <<control>> {
+        + <<static>> createPaymentCode(method)
+        + <<static>> verifyTransaction()
+        + <<static>> updateRoomStatus()
     }
 }
 
 package "Data Access Layer" {
-    class "PhieuThanhToan" <<entity>> {
-        - ma_phieu: String
-        - phuong_thuc: String
-        - ngay_thanh_toan: Date
+    class "PaymentDB" <<entity>> {
+        - invoiceId: String
+        - method: String
+        - paymentDate: Date
         + saveInvoice()
     }
-    class "HopDong" <<entity>> {
-        - ma_hop_dong: String
-        - ngay_ky: Date
-        - trang_thai: String
-        + createNew()
+    class "ContractDB" <<entity>> {
+        - contractId: String
+        - signDate: Date
+        - status: String
+        + create()
     }
 }
 
-"MH_ThanhToan" ..> "XuLyThanhToan"
-"XuLyThanhToan" ..> "PhieuThanhToan"
-"XuLyThanhToan" ..> "HopDong"
+"ScreenPayment" ..> "Payment"
+"Payment" ..> "PaymentDB"
+"Payment" ..> "ContractDB"
 
 @enduml

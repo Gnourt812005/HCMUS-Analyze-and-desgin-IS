@@ -1,0 +1,56 @@
+@startuml CreateCheckoutRequest_ClassDiagram
+title Class Diagram - UC22: Tạo yêu cầu trả phòng
+
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+}
+
+class "ScreenCheckoutRequest" as CheckoutRequestScreen <<boundary>> {
+  - dtpCheckoutDate: DateTimePicker
+  - file: FileUploader
+  - btnSubmit: Button
+  - btnCancel: Button
+  + show(): void
+  + btnSubmitClick(): void
+  + btnCancelClick(): void
+}
+
+class "CheckoutRequest" as CheckoutRequest <<control>> {
+  - requestID: int
+  - expectedDate: DateTime
+  - documentUrl: string
+  - status: string
+  - createdAt: DateTime
+  + <<static>> createRequest(): bool
+  + <<static>> cancelRequest(): bool
+}
+
+class "CheckoutRequestDB" as CheckoutRequestDB <<entity>> {
+  + <<static>> insert(request: CheckoutRequest): bool
+  + <<static>> removeById(requestID: int): bool
+}
+
+class "Contract" as Contract <<control>> {
+  - contractID: int
+  - roomID: int
+  - status: string
+  - depositAmount: float
+  - stayDuration: int
+  + <<static>> getActiveContractByCustomer(): Contract
+}
+
+class "ContractDB" as ContractDB <<entity>> {
+  + <<static>> getActiveByCustomer(): Contract
+}
+
+CheckoutRequestScreen --> CheckoutRequest
+CheckoutRequest --> CheckoutRequestDB
+CheckoutRequestScreen --> Contract
+Contract --> ContractDB
+
+@enduml

@@ -1,5 +1,5 @@
 @startuml QuanLyPhong_ClassDiagram
-title Class Diagram: Quản lý phòng (UC18)
+title Class Diagram - UC19: Quản lý phòng
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -16,9 +16,9 @@ class "ScreenRoomManagement" as ScreenRM <<boundary>> {
     - dgvRoom: GridView
     - txtSearch: TextBox
     - btnAddNew: Button
-    + dgvRoom_Load(): void
-    + btnSearch_Click(): void
-    + btnAddNew_Click(): void
+    + dgvRoomLoad(): void
+    + btnSearchClick(): void
+    + btnAddNewClick(): void
 }
 
 class "ScreenRoomDetail" as ScreenRD <<boundary>> {
@@ -28,10 +28,10 @@ class "ScreenRoomDetail" as ScreenRD <<boundary>> {
     - btnUpdate: Button
     - btnDelete: Button
     - btnAddNewBed: Button
-    + ScreenRoomDetail_Load(): void
-    + btnUpdate_Click(): void
-    + btnDelete_Click(): void
-    + btnAddNewBed_Click(): void
+    + screenRoomDetailLoad(): void
+    + btnUpdateClick(): void
+    + btnDeleteClick(): void
+    + btnAddNewBedClick(): void
 }
 
 class "FormRoom" as FormRoom <<boundary>> {
@@ -41,7 +41,7 @@ class "FormRoom" as FormRoom <<boundary>> {
     - clbUtilities: CheckedListBox
     - btnSave: Button
     - btnCancel: Button
-    + btnSave_Click(): void
+    + btnSaveClick(): void
 }
 
 class "FormBed" as FormBed <<boundary>> {
@@ -49,37 +49,42 @@ class "FormBed" as FormBed <<boundary>> {
     - txtPrice: TextBox
     - btnSave: Button
     - btnCancel: Button
-    + btnSave_Click(): void
+    + btnSaveClick(): void
 }
 
 ' --- BUSINESS LAYER ---
 class "Room" as Room <<control>> {
-    - roomId: string
+    - id: string
     - dormId: string
-    - type: string
-    - facilities: List<string>
-    + getRooms(): List<Room>
-    + getRoomDetail(id: string): Room
-    + createRoom(data: Room): boolean
-    + updateRoom(id: string, data: Room): boolean
-    + deleteRoom(id: string): boolean
-    + addBed(roomId: string, bedData: any): boolean
-    + updateBed(bedId: string, bedData: any): boolean
-    + deleteBed(bedId: string): boolean
+    - roomNumber: string
+    - roomType: string
+    - price: double
+    - status: string
+    - capacity: int
+    - occupied: int
+    + <<static>> getRooms(dormId: string, keyword: string): List<Room>
+    + <<static>> getRoomDetail(id: string): Room
+    + <<static>> createRoom(data: Room): boolean
+    + <<static>> updateRoom(id: string, data: Room): boolean
+    + <<static>> deleteRoom(id: string): boolean
+    + <<static>> addBed(roomId: string, bedData: any): boolean
+    + <<static>> updateBed(bedId: string, bedData: any): boolean
+    + <<static>> deleteBed(bedId: string): boolean
 }
 
 ' --- DATABASE LAYER ---
 class "RoomDB" as RoomDB <<entity>> {
-    + fetchAll(): List
-    + fetchById(id: string): Room
-    + insert(data: Room): boolean
-    + update(id: string, data: Room): boolean
-    + remove(id: string): boolean
-    + insertBed(data: any): boolean
-    + updateBed(bedId: string, data: any): boolean
-    + removeBed(bedId: string): boolean
-    + checkRoomIdExists(dormId: string, roomId: string): boolean
-    + checkBedInEffect(bedId: string): boolean
+    + <<static>> fetchAllByDorm(dormId: string): List
+    + <<static>> fetchByKeyword(keyword: string): List
+    + <<static>> fetchById(id: string): Room
+    + <<static>> insert(data: Room): boolean
+    + <<static>> update(id: string, data: Room): boolean
+    + <<static>> delete(id: string): boolean
+    + <<static>> insertBed(data: any): boolean
+    + <<static>> updateBed(bedId: string, bedData: any): boolean
+    + <<static>> removeBed(bedId: string): boolean
+    + <<static>> checkRoomIdExists(dormId: string, roomId: string): boolean
+    + <<static>> checkBedInEffect(bedId: string): boolean
 }
 
 ' --- RELATIONSHIPS ---

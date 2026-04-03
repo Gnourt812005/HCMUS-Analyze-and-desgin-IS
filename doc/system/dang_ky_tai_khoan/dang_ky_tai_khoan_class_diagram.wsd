@@ -1,5 +1,5 @@
 @startuml DangKyTaiKhoan_ClassDiagram
-title Class Diagram: Đăng ký tài khoản
+title Class Diagram - UC11: Đăng ký tài khoản
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -17,20 +17,18 @@ class "ScreenRegister" as ScreenRegister <<boundary>> {
     - txtPassword: TextBox
     - txtConfirmPassword: TextBox
     - btnRegister: Button
-    + btnRegister_Click(): void
+    + btnRegisterClick(): void
 }
 
 ' --- BUSINESS LAYER ---
-class "User" as User <<control>> {
-    - email: string
+class "User" <<control>> {
+    - username: string
     - password: string
-    + register(email: string, password: string): boolean
+    + <<static>> register(data: User): boolean
 }
 
-' --- DATABASE LAYER ---
-class "UserDB" as UserDB <<entity>> {
-    + checkEmailExists(email: string): boolean
-    + insert(user: User): boolean
+class "UserDB" <<entity>> {
+    + <<static>> insert(data: User): boolean
 }
 
 ' --- RELATIONSHIPS ---

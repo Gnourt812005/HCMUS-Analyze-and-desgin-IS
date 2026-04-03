@@ -1,0 +1,64 @@
+@startuml
+title Class Diagram - UC26: Quản lý yêu cầu trả phòng
+skinparam classAttributeIconSize 0
+
+class ManageCheckoutRequestScreen {
+  dgvRequests: DataGridView
+  btnViewDetail: Button
+  btnCreateNew: Button
+  + Show()
+  + LoadRequests()
+  + btnViewDetail_Click()
+  + btnCreateNew_Click()
+}
+
+class CheckoutRequestDetailScreen {
+  txtRejectReason: Textbox
+  btnProcess: Button
+  btnReject: Button
+  btnCancel: Button
+  + Show()
+  + btnProcess_Click()
+  + btnReject_Click()
+  + btnCancel_Click()
+}
+
+class CreateCheckoutRequestScreen {
+  cbbCustomer: Combobox
+  dtpCheckoutDate: DateTimePicker
+  fileUploadDoc: FileUploader
+  btnSave: Button
+  btnBack: Button
+  + Show()
+  + LoadCustomers()
+  + btnSave_Click()
+  + btnBack_Click()
+}
+
+class CheckoutRequest {
+  RequestID: int
+  ContractID: int
+  ExpectedDate: datetime
+  Status: string
+  RejectReason: string
+  DocumentUrl: string
+  + <<static>> GetList(): List
+  + <<static>> GetById(): CheckoutRequest
+  + <<static>> UpdateStatus(): bool
+  + <<static>> Create(): bool
+}
+
+class CheckoutRequestDB {
+  + <<static>> GetList(): List
+  + <<static>> GetById(): CheckoutRequest
+  + <<static>> UpdateStatus(): bool
+  + <<static>> Insert(): bool
+}
+
+class Customer {
+  + CustomerID: int
+  + FullName: string
+  + <<static>> GetActiveCustomers(): List
+}
+
+@enduml

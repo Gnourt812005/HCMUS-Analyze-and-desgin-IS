@@ -1,0 +1,58 @@
+@startuml CalculateRefund_ClassDiagram
+title Class Diagram - UC24: Tính khoản hoàn cọc và khấu trừ
+
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+}
+
+class "ScreenRefundCalculation" as CalculateRefundScreen <<boundary>> {
+  - txtDamageNotes: Textbox
+  - txtExtraDeductions: Textbox
+  - btnCalculate: Button
+  - btnSave: Button
+  + show(): void
+  + btnCalculateClick(): void
+  + btnSaveClick(): void
+}
+
+class "RefundCalculation" as RefundCalculation <<control>> {
+  - calculationID: int
+  - requestID: int
+  - depositAmount: float
+  - damageFee: float
+  - extraDebt: float
+  - finalRefundAmount: float
+  - notes: string
+  + <<static>> calculateTotal(): float
+  + <<static>> saveCalculation(): bool
+}
+
+class "RefundCalculationDB" as RefundCalculationDB <<entity>> {
+  + <<static>> insert(calc: RefundCalculation): bool
+}
+
+class "Contract" as Contract <<control>> {
+  - contractID: int
+  - roomID: int
+  - status: string
+  - depositAmount: float
+  - stayDuration: int
+  - liquidationFileUrl: string
+  + <<static>> getContractInfo(contractID: int): Contract
+}
+
+class "ContractDB" as ContractDB <<entity>> {
+  + <<static>> getById(contractID: int): Contract
+}
+
+CalculateRefundScreen --> RefundCalculation
+RefundCalculation --> RefundCalculationDB
+CalculateRefundScreen --> Contract
+Contract --> ContractDB
+
+@enduml

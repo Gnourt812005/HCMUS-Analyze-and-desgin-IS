@@ -1,0 +1,62 @@
+@startuml ContractTermination_ClassDiagram
+title Class Diagram - UC25: Thanh lý hợp đồng
+
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+}
+
+class "ScreenContractTermination" as ContractLiquidationScreen <<boundary>> {
+  - fileLiquidation: FileUploader
+  - btnComplete: Button
+  + show(): void
+  + loadCalculation(): void
+  + btnCompleteClick(): void
+}
+
+class "Contract" as Contract <<control>> {
+  - contractID: int
+  - roomID: int
+  - status: string
+  - depositAmount: float
+  - stayDuration: int
+  - liquidationFileUrl: string
+  + <<static>> liquidateContract(): bool
+}
+
+class "ContractDB" as ContractDB <<entity>> {
+  + <<static>> updateStatus(contractID: int, status: string): bool
+  + <<static>> updateLiquidationFile(contractID: int, path: string): bool
+}
+
+class "Room" as Room <<control>> {
+  - roomID: int
+  - status: string
+  + <<static>> updateRoomStatus(roomID: int, status: string): bool
+}
+
+class "RoomDB" as RoomDB <<entity>> {
+  + <<static>> updateStatus(roomID: int, status: string): bool
+}
+
+class "RefundCalculation" as RefundCalculation <<control>> {
+  - calculationID: int
+  - requestID: int
+  - depositAmount: float
+  - damageFee: float
+  - extraDebt: float
+  - finalRefundAmount: float
+  + <<static>> getByRequestId(requestID: int): RefundCalculation
+}
+
+ContractLiquidationScreen --> Contract
+ContractLiquidationScreen --> RefundCalculation
+Contract --> ContractDB
+ContractLiquidationScreen --> Room
+Room --> RoomDB
+
+@enduml

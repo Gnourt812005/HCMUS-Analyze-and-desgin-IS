@@ -1,0 +1,108 @@
+@startuml QuanLyLichXemPhong_ClassDiagram
+title Class Diagram - UC4, 5: Quản lý lịch xem phòng
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+}
+
+' --- BOUNDARY LAYER ---
+class "ScreenViewingSchedule" as PreviewManagementScreen <<boundary>> {
+    - listPreviewSchedules: ListView
+
+    + showClientPreviewSchedules(userID: int): void
+    + listPreviewSchedulesItemClick(): int ' returns selected ViewingScheduleID
+}
+
+class "ScreenPreviewScheduleDetailsView" as PreviewScheduleDetailsView <<boundary>> {
+    - userID: int
+    - EmployeeID: int
+    - lblPreviewDate: Label
+
+    - lblRoomID: Label
+    - lblDormName: Label
+    - lblBlock: Label
+    - lblRoommateCount: Label
+    - lblAvailSlots: Label
+    - lblFavoriteCount: Label
+    - txtblockUltilities: TextBlock
+    - txtblockSpecialDescription: TextBlock
+
+    - btnCancelPreviewSchedule: Button
+    - btnBack: IconButton
+
+    + showPreviewScheduleDetails(viewingScheduleID: int): void
+    + btnBackClick(): void
+    + btnCancelPreviewScheduleClick(): void
+
+' --- BUSINESS LAYER ---
+class "ViewingSchedule" as PreviewForm <<control>> {
+    - roomID: int
+    - userID: int
+    - previewDate: DateTime
+    - employeeID: int
+
+    + <<static>> getViewingSchedulesByUserID(userID: int): List<ViewingSchedule>
+    + <<static>> getViewingScheduleDetails(viewingScheduleID: int): ViewingSchedule
+    + <<static>> cancelPreviewSchedule(viewingScheduleID: int): bool
+}
+
+class "Room" as Room <<control>> {
+    - roomImage: byte[]
+    - roomID: int
+    - dormID: int
+    - roomNumber: string
+    - eachBedPrice: decimal
+    - roommateCount: int
+    - availSlots: int
+    - roomUtilities: string
+    - specialDescription: string
+
+    + <<static>> getRoomsList(roomIDs: List<int>): List<Room>
+}
+
+' --- DATABASE LAYER ---
+class "PreviewFormDB" as PreviewDB <<entity>> {
+    + <<static>>getPreviewFormsByUserID(userID: int): List<PreviewForm>
+    + <<static>>cancelPreviewSchedule(previewFormID: int): bool
+}
+
+class "RoomDB" as RoomDB <<entity>> {
+    + <<static>>getRoomsList(roomIDs: List<int>): List<Room>
+}
+
+class "UtilitiesDB" as UtilitiesDB <<entity>> {
+    + <<static>>getUtilitiesByRoomID(roomID: int): string
+}
+
+class "BedDB" as BedDB <<entity>> {
+    + <<static>>getBedPrice(roomID: int): decimal
+}
+
+' --- RELATIONSHIPS ---
+' 1. Screen flows (Navigation)
+PreviewManagementScreen ..> PreviewScheduleDetailsView : "navigates on item click >"
+
+' 2. Boundary to Business connections
+PreviewManagementScreen "1" --> "1" PreviewForm : "bulk fetches forms"
+PreviewManagementScreen "1" --> "1" Room : "bulk fetches associated rooms"
+
+PreviewScheduleDetailsView "1" --> "1" PreviewForm : "fetches in-memory details"
+PreviewScheduleDetailsView "1" --> "1" Room : "fetches in-memory room info"
+' 3. Business Dependencies
+PreviewForm ..> Room : "extracts roomIDs to load"
+
+' 4. Business to Database connections
+PreviewForm "1" --> "1" PreviewDB : "queries/updates"
+Room "1" --> "1" RoomDB : "mass fetches by IDs"
+
+' 5. Entity / Database connections
+RoomDB "1" *-- "many" UtilitiesDB : "contains >"
+RoomDB "1" *-- "many" BedDB : "contains >"
+
+@enduml

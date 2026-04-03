@@ -1,0 +1,45 @@
+@startuml CreateCheckoutRequest_SequenceDiagram
+title Sequence Diagram - UC22: Tạo yêu cầu trả phòng (Khách hàng)
+
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    ParticipantPadding 20
+}
+
+actor "Customer" as Customer
+boundary "ScreenCheckoutRequest" as Screen <<boundary>>
+control "Contract" as Contract <<control>>
+control "CheckoutRequest" as Request <<control>>
+database "CheckoutRequestDB" as RequestDB <<database>>
+database "ContractDB" as ContractDB <<database>>
+
+autonumber
+
+== Khởi tạo màn hình ==
+Customer -> Screen: show()
+Screen -> Contract: getActiveContractByCustomer()
+Contract -> ContractDB: getActiveByCustomer()
+
+== Gửi yêu cầu ==
+Customer -> Screen: Chọn phòng/giường cần trả
+Customer -> Screen: Điền thông tin và tải giấy tờ
+Customer -> Screen: Nhấn "Gửi yêu cầu" (btnSubmitClick)
+
+alt Thông tin hợp lệ
+    Screen -> Request: createRequest()
+    Request -> RequestDB: insert()
+    Screen --> Customer: Thông báo thành công
+end
+
+== Hủy yêu cầu ==
+alt Yêu cầu đã được tạo
+    Customer -> Screen: Nhấn "Hủy yêu cầu" (btnCancelClick)
+    Screen -> Request: cancelRequest()
+    Request -> RequestDB: removeById()
+    Screen --> Customer: Xác nhận hủy thành công
+end
+
+@enduml

@@ -1,5 +1,5 @@
 @startuml QuanLyNhanVien_ClassDiagram
-title Class Diagram: Quản lý nhân viên (UC16)
+title Class Diagram - UC17: Quản lý nhân viên
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -18,11 +18,11 @@ class "ScreenEmployeeManagement" as ScreenEM <<boundary>> {
     - btnAddNew: Button
     - btnEdit: Button
     - btnDelete: Button
-    + dgvEmployee_Load(): void
-    + btnSearch_Click(): void
-    + btnAddNew_Click(): void
-    + btnEdit_Click(): void
-    + btnDelete_Click(): void
+    + dgvEmployeeLoad(): void
+    + btnSearchClick(): void
+    + btnAddNewClick(): void
+    + btnEditClick(): void
+    + btnDeleteClick(): void
 }
 
 class "ScreenEmployeeDetail" as ScreenED <<boundary>> {
@@ -33,38 +33,41 @@ class "ScreenEmployeeDetail" as ScreenED <<boundary>> {
     - txtPhone: TextBox
     - btnSave: Button
     - btnCancel: Button
-    + btnSave_Click(): void
-    + btnCancel_Click(): void
+    + btnSaveClick(): void
+    + btnCancelClick(): void
 }
 
 class "PopupConfirm" as Popup <<boundary>> {
     - lblMessage: Label
     - btnConfirm: Button
     - btnCancel: Button
-    + btnConfirm_Click(): void
+    + btnConfirmClick(): void
 }
 
 ' --- BUSINESS LAYER ---
 class "Employee" as Employee <<control>> {
-    - id: int
-    - email: string
-    - password: string
-    - name: string
-    - role: string
+    - id: string
+    - fullName: string
     - phone: string
-    + getEmployees(): List<Employee>
-    + createEmployee(data: Employee): boolean
-    + updateEmployee(id: int, data: Employee): boolean
-    + deleteEmployee(id: int): boolean
+    - role: string
+    - email: string
+    - status: string
+    + <<static>> getEmployees(keyword: string): List<Employee>
+    + <<static>> getEmployeeDetail(id: string): Employee
+    + <<static>> createEmployee(data: Employee): boolean
+    + <<static>> updateEmployee(id: string, data: Employee): boolean
+    + <<static>> deleteEmployee(id: string): boolean
 }
 
 ' --- DATABASE LAYER ---
 class "EmployeeDB" as EmployeeDB <<entity>> {
-    + fetchAll(): List
-    + insert(data: Employee): boolean
-    + update(id: int, data: Employee): boolean
-    + remove(id: int): boolean
-    + checkEmailExists(email: string): boolean
+    + <<static>> fetchAll(): List
+    + <<static>> fetchByKeyword(keyword: string): List
+    + <<static>> fetchById(id: string): Employee
+    + <<static>> insert(data: Employee): boolean
+    + <<static>> update(id: string, data: Employee): boolean
+    + <<static>> delete(id: string): boolean
+    + <<static>> checkEmailExists(email: string): boolean
 }
 
 ' --- RELATIONSHIPS ---
