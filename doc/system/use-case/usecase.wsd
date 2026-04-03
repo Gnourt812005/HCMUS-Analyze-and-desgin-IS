@@ -69,11 +69,6 @@ rectangle "Màn hình của nhân viên sale" {
 rectangle "Màn hình của khách hàng" {
   usecase "Đăng ký tài khoản" as UC_DangKy
   usecase "Đăng ký xem phòng" as UC_DangKyXemPhong
-
-  usecase "Đăng ký thuê" as UC_DangKyThue
-  usecase "Quản lý đơn đăng ký thuê" as UC_QuanLyDonDangKyThue
-  usecase "Xóa đơn đăng ký thuê" as UC_XoaDonDangKyThue
-
   usecase "Đặt cọc" as UC_DatCoc
   usecase "Kiểm tra điều kiện thuê" as UC_KiemTraDieuKienThue
 
@@ -81,14 +76,12 @@ rectangle "Màn hình của khách hàng" {
   usecase "Thanh toán" as UC_ThanhToan
 
   usecase "Thuê" as UC_Thue
+  usecase "Quản lý hợp đồng" as UC_QuanLyHopDong
+  usecase "Quản lý phòng đã quan tâm" as UC_QuanLyPhongDaQuanTam
+  usecase "Quản lý lịch xem phòng" as UC_QuanLyLichXemPhong
+  usecase "Quan tâm phòng" as UC_QuanTamPhong
 
   customer -- UC_DangKy
-
-  UC_XemChiTietPhong <.. UC_DangKyThue : <<extend>>
-  UC_DangNhap <.. UC_DangKyThue: <<extend>>
-  UC_DangKyXemPhong ..> UC_DangKyThue: <<extend>>
-  UC_DangNhap <.. UC_QuanLyDonDangKyThue: <<extend>>
-  UC_XoaDonDangKyThue ..> UC_QuanLyDonDangKyThue: <<extend>>
 
   UC_DangNhap <.. UC_DatCoc: <<extend>>
   UC_DatCoc <.. UC_KiemTraDieuKienThue: <<include>>
@@ -99,6 +92,12 @@ rectangle "Màn hình của khách hàng" {
   UC_Thue <.. UC_KiemTraDieuKienThue: <<include>>
 
   UC_DangNhap <.. UC_YeuCauTraPhong: <<extend>>
+  UC_DangNhap <.. UC_QuanLyHopDong: <<extend>>
+  UC_DangNhap <.. UC_QuanLyPhongDaQuanTam: <<extend>>
+  UC_DangNhap <.. UC_QuanLyLichXemPhong: <<extend>>
+  UC_DangNhap <.. UC_DangKyXemPhong: <<extend>>
+  UC_DangNhap <.. UC_QuanTamPhong: <<extend>>
+  UC_XemChiTietPhong <.. UC_QuanTamPhong: <<extend>>
 }
 
 ' usecase "Xử lý nhận phòng" as UC_XuLyNhanPhong
@@ -108,12 +107,10 @@ rectangle "Màn hình của khách hàng" {
 ' Actor - Main Use Cases Associations
 
 rectangle "Màn hình ADMIN quản lý" {
-  usecase "Tạo tài khoản nhân viên" as UC_TaoTaiKhoanNhanVien
   usecase "Quản lý ký túc xá" as UC_QuanLyKyTucXa
   usecase "Quản lý phòng" as UC_QuanLyPhong
   usecase "Quản lý nhân viên" as UC_QuanLyNhanVien
 
-  UC_DangNhap <.. UC_TaoTaiKhoanNhanVien: <<extend>>
   UC_DangNhap <.. UC_QuanLyKyTucXa: <<extend>>
   UC_DangNhap <.. UC_QuanLyPhong: <<extend>>
   UC_DangNhap <.. UC_QuanLyNhanVien: <<extend>>
