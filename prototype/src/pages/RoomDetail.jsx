@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -7,6 +7,16 @@ const RoomDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isLoggedIn } = useAuth();
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  const toggleFavorite = () => {
+    setIsFavorite(!isFavorite);
+    if (!isFavorite) {
+      toast.success('Đã thêm vào danh sách quan tâm!');
+    } else {
+      toast.success('Đã gỡ khỏi danh sách quan tâm');
+    }
+  };
 
   const handleBookingClick = () => {
     navigate('/booking/step1-register');
@@ -117,9 +127,20 @@ const RoomDetail = () => {
           </div>
 
           <div className="space-y-4 mt-8">
-            <button onClick={handleBookingClick} className="w-full py-5 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-              <span className="material-symbols-outlined">key</span> Thuê ngay
-            </button>
+            <div className="flex gap-4">
+              <button onClick={handleBookingClick} className="flex-grow py-5 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                <span className="material-symbols-outlined">key</span> Thuê ngay
+              </button>
+              <button
+                onClick={toggleFavorite}
+                className={`w-16 flex items-center justify-center rounded-xl border-2 transition-all active:scale-[0.85] ${isFavorite
+                    ? 'bg-rose-50 border-rose-200 text-rose-500'
+                    : 'bg-transparent border-outline-variant/20 text-on-surface-variant hover:border-primary/30 hover:text-primary'
+                  }`}
+              >
+                <span className="material-symbols-outlined" style={isFavorite ? { fontVariationSettings: "'FILL' 1" } : {}}>favorite</span>
+              </button>
+            </div>
             <button onClick={handleViewingClick} className="w-full py-5 bg-transparent border-2 border-primary text-primary font-bold rounded-xl hover:bg-primary/5 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
               <span className="material-symbols-outlined">calendar_today</span> Đăng ký xem phòng
             </button>
