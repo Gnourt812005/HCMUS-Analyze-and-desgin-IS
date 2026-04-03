@@ -1,5 +1,5 @@
 @startuml QuanLyPhongDaQuanTam_SequenceDiagram
-title Sequence Diagram: Quản lý phòng đã quan tâm
+title Sequence Diagram - UC7: Quản lý phòng đã quan tâm
 
 ' --- STYLE CONFIGURATION ---
 skinparam {

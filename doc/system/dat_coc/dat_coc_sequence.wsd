@@ -1,40 +1,39 @@
-@startuml
-
-title Sequence Diagram - Đặt cọc (UC13)
+@startuml DatCoc_SequenceDiagram
+title Sequence Diagram - UC14: Đặt cọc
 
 autonumber
 
-actor "Khách hàng" as ActorKH
-boundary "UI: Booking Page" as BookingUI
-control "Business: Booking Service" as BookingService
-database "Database: Room/Customer" as RoomDB
+actor "Customer" as Actor
+boundary "ScreenDeposit" as GUI <<boundary>>
+control "Deposit" as BUS <<control>>
+database "RoomDB" as DB <<database>>
 
-ActorKH -> BookingUI : Chọn phòng/giường muốn thuê
-BookingUI -> ActorKH : Hiển thị form điền thông tin khách hàng
-ActorKH -> BookingUI : Nhập CCCD, Họ tên, SĐT và xác nhận
+Actor -> GUI : Chọn phòng/giường
+GUI -> Actor : Hiển thị form thông tin khách hàng
+Actor -> GUI : Nhập thông tin cá nhân và xác nhận
 
-BookingUI -> BookingService : validateAndProcess(customerData, roomId)
+GUI -> BUS : validateAndProcess(customerData, roomId)
 
-alt Thông tin thiếu hoặc sai định dạng (A4)
-    BookingService --> BookingUI : Validation Error
-    BookingUI --> ActorKH : Thông báo lỗi và yêu cầu nhập lại
+alt Thông tin không hợp lệ
+    BUS --> GUI : Lỗi kiểm tra dữ liệu
+    GUI --> Actor : Hiển thị lỗi
 else Thông tin hợp lệ
-    BookingService -> BookingService : call UC14 (Kiểm tra điều kiện)
+    BUS -> BUS : Gọi UC14 (Kiểm tra điều kiện)
     
-    ActorKH -> BookingUI : Nhấn nút "Đặt cọc"
-    BookingService -> RoomDB : getRoomPrice(roomId)
-    RoomDB --> BookingService : don_gia_thue
+    Actor -> GUI : Nhấn "Đặt cọc"
+    BUS -> DB : getRoomPrice(roomId)
+    DB --> BUS : Đơn giá
     
-    BookingService -> BookingService : calculateDepositAmount(don_gia_thue)
-    BookingService --> BookingUI : showSummary(depositAmount)
+    BUS -> BUS : calculateDepositAmount(price)
+    BUS --> GUI : showSummary(depositAmount)
     
-    alt Khách hàng muốn thay đổi thông tin (A8)
-        ActorKH -> BookingUI : Nhấn nút "Thay đổi thông tin"
-        BookingUI --> ActorKH : Quay lại bước chọn phòng/nhập liệu
+    alt Thay đổi thông tin
+        Actor -> GUI : Nhấn "Thay đổi thông tin"
+        GUI --> Actor : Quay lại bước chọn
     else Xác nhận thanh toán
-        ActorKH -> BookingUI : Nhấn nút "Thanh toán"
-        BookingUI -> BookingService : call UC15 (Thanh toán)
-        BookingService --> BookingUI : Payment Redirect
+        Actor -> GUI : Nhấn "Thanh toán"
+        GUI -> BUS : Gọi UC15 (Thanh toán)
+        BUS --> GUI : Chuyển hướng thanh toán
     end
 end
 

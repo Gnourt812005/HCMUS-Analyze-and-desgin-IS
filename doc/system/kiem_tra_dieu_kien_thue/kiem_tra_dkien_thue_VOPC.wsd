@@ -1,6 +1,6 @@
 @startuml
 skinparam style strictuml
-header VOPC - UC14: Kiểm tra điều kiện thuê
+header VOPC - UC15: Kiểm tra điều kiện thuê
 
 actor "Khách hàng" as Actor
 

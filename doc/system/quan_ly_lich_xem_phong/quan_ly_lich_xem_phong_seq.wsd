@@ -1,5 +1,5 @@
 @startuml QuanLyLichXemPhong_SequenceDiagram
-title Sequence Diagram: Quản lý lịch xem phòng
+title Sequence Diagram - UC4, 5: Quản lý lịch xem phòng
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -11,83 +11,44 @@ skinparam {
     BoxPadding 10
 }
 
-actor "Khách hàng" as Actor
-boundary "ClientPreviewScheduleManagementScreen" as GUI_List <<boundary>>
-boundary "ScreenPreviewScheduleDetailsView" as GUI_Details <<boundary>>
+actor "Customer" as Actor
+boundary "ScreenViewingSchedule" as GUI_List <<boundary>>
+boundary "ScreenViewingScheduleDetail" as GUI_Details <<boundary>>
 
-control "PreviewForm" as BUS_Preview <<control>>
+control "ViewingSchedule" as BUS_Preview <<control>>
 control "Room" as BUS_Room <<control>>
 
-database "PreviewFormDB" as DAO_Preview <<database>>
-database "RoomDB" as DAO_Room <<database>>
-database "UtilitiesDB" as DAO_Utils <<database>>
-database "BedDB" as DAO_Bed <<database>>
+database "ViewingScheduleDB" as DB_Preview <<database>>
+database "RoomDB" as DB_Room <<database>>
+database "UtilitiesDB" as DB_Utils <<database>>
+database "BedDB" as DB_Bed <<database>>
 
 autonumber
 
-== Xem danh sách lịch xem phòng ==
+== Xem danh sách lịch hẹn xem phòng ==
 
 Actor -> GUI_List: showClientPreviewSchedules(userID)
-activate GUI_List
-
-GUI_List -> BUS_Preview: getPreviewFormsByUserID(userID)
-activate BUS_Preview
-
-BUS_Preview -> DAO_Preview: getPreviewFormsByUserID(userID)
-activate DAO_Preview
-deactivate DAO_Preview
-deactivate BUS_Preview
+GUI_List -> BUS_Preview: getViewingSchedulesByUserID(userID)
+BUS_Preview -> DB_Preview: getViewingSchedulesByUserID(userID)
 
 GUI_List -> BUS_Room: getRoomsList(roomIDs)
-activate BUS_Room
+BUS_Room -> DB_Room: getRoomsList(roomIDs)
 
-BUS_Room -> DAO_Room: getRoomsList(roomIDs)
-activate DAO_Room
-
-loop roomID in roomIDs
-    DAO_Room -> DAO_Utils: getUtilitiesByRoomID(roomID)
-    activate DAO_Utils
-    deactivate DAO_Utils
-
-    DAO_Room -> DAO_Bed: getBedPrice(roomID)
-    activate DAO_Bed
-    deactivate DAO_Bed
+loop cho từng roomID trong danh sách roomIDs
+    DB_Room -> DB_Utils: getUtilitiesByRoomID(roomID)
+    DB_Room -> DB_Bed: getBedPrice(roomID)
 end
 
-deactivate DAO_Room
-deactivate BUS_Room
-deactivate GUI_List
+== Xem chi tiết lịch hẹn ==
 
+Actor -> GUI_List: listPreviewSchedulesItemClick()
+GUI_List -> GUI_Details: showPreviewScheduleDetails(viewingScheduleID)
+GUI_Details -> BUS_Preview: getViewingScheduleDetails(viewingScheduleID)
 
-== Chọn xem chi tiết lịch ==
+== Hủy lịch hẹn xem phòng ==
 
-Actor -> GUI_List: listPreviewSchedules_ItemClick()
-activate GUI_List
-
-GUI_List -> GUI_Details: showPreviewScheduleDetails(previewFormID)
-activate GUI_Details
-deactivate GUI_List
-
-GUI_Details -> BUS_Preview: getPreviewFormDetails(previewFormID)
-activate BUS_Preview
-deactivate BUS_Preview
-
-deactivate GUI_Details
-
-
-== Hủy lịch xem phòng ==
-
-Actor -> GUI_Details: btnCancelPreviewSchedule_Click()
-activate GUI_Details
-
-GUI_Details -> BUS_Preview: cancelPreviewSchedule(previewFormID)
-activate BUS_Preview
-
-BUS_Preview -> DAO_Preview: cancelPreviewSchedule(previewFormID)
-activate DAO_Preview
-deactivate DAO_Preview
-
-deactivate BUS_Preview
-deactivate GUI_Details
+Actor -> GUI_Details: Nhấn nút Hủy lịch hẹn (btnCancelPreviewScheduleClick)
+GUI_Details -> BUS_Preview: cancelPreviewSchedule(viewingScheduleID)
+BUS_Preview -> DB_Preview: cancelPreviewSchedule(viewingScheduleID)
 
 @enduml

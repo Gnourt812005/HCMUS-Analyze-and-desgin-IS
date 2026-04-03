@@ -1,5 +1,5 @@
 @startuml XemDanhSach&ChiTietPhong_ClassDiagram
-title Class Diagram: Xem danh sách phòng và Chi tiết phòng
+title Class Diagram - UC1, 2, 3, 6
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -21,7 +21,7 @@ class "ScreenDormsView" as ScreenDormsView <<boundary>> {
     - gridDorms: GridView
 
     + showDormsList(): void
-    + gridDorms_CellClick(): int ' returns selected dorm ID
+    + gridDormsCellClick(): int ' returns selected dorm ID
 }
 
 class "ScreenRoomsView" as ScreenRoomsView <<boundary>> {
@@ -37,11 +37,11 @@ class "ScreenRoomsView" as ScreenRoomsView <<boundary>> {
     - btnPreviousPage: IconButton
 
     + showRoomsList(): void
-    + btnBack_Click(): void
-    + btnNextPage_Click(): void
-    + btnPreviousPage_Click(): void
-    + btnSearchRoom_Click(): void
-    + gridRooms_CellClick(): int ' returns selected room ID
+    + btnBackClick(): void
+    + btnNextPageClick(): void
+    + btnPreviousPageClick(): void
+    + btnSearchRoomClick(): void
+    + gridRoomsCellClick(): int ' returns selected room ID
 }
 note right of ScreenRoomsView
     May include more filters options in the future.
@@ -65,10 +65,10 @@ class "ScreenRoomDetailsView" as ScreenRoomDetailsView <<boundary>> {
     - btnBack: IconButton
 
     + showRoomDetails(roomID: int): void
-    + btnBack_Click(): void
+    + btnBackClick(): void
 
-    + btnPreviewRequest_Click(): void
-    + btnFavorite_Click(): void
+    + btnPreviewRequestClick(): void
+    + btnFavoriteClick(): void
 }
 
 class "ScreenPreviewRequestView" as ScreenPreviewRequestView <<boundary>> {
@@ -78,8 +78,8 @@ class "ScreenPreviewRequestView" as ScreenPreviewRequestView <<boundary>> {
     - btnBack: IconButton
 
     + showPreviewRequestScreen(): void
-    + btnBack_Click(): void
-    + btnConfirmPreviewDate_Click(): void
+    + btnBackClick(): void
+    + btnConfirmPreviewDateClick(): void
 }
 
 ' --- BUSINESS LAYER ---
@@ -91,7 +91,7 @@ class "Dorm" as Dorm <<control>> {
     - specialDescription: string
     - dormStatus: string
 
-    + getDormsList(): List<Dorm>
+    + <<static>> getDormsList(): List<Dorm>
 }
 
 class "RoomSearchCriteria" as RoomSearchCriteria <<control>> {
@@ -113,15 +113,15 @@ class "Room" as Room <<control>> {
     - roomUtilities: string
     - specialDescription: string
 
-    + getRoomsList(dormID: int, criteria: RoomSearchCriteria): List<Room>
+    + <<static>> getRoomsList(dormID: int, criteria: RoomSearchCriteria): List<Room>
 }
 
 class "FavoriteRequest" as FavoriteRequest <<control>> {
     - roomID: int
     - userID: int
 
-    + addFavoriteRoom(roomID: int, userID: int): void
-    + removeFavoriteRoom(roomID: int, userID: int): void
+    + <<static>> addFavoriteRoom(roomID: int, userID: int): void
+    + <<static>> removeFavoriteRoom(roomID: int, userID: int): void
 }
 
 class "PreviewForm" as PreviewForm <<control>> {
@@ -130,8 +130,8 @@ class "PreviewForm" as PreviewForm <<control>> {
     - previewDate: DateTime
     - employeeID: int
 
-    + addUserPreviewForm(roomID: int, userID: int, previewDate: DateTime): bool
-    + assignSalesEmployee(previewDate: DateTime): bool
+    + <<static>> addUserPreviewForm(roomID: int, userID: int, previewDate: DateTime): bool
+    + <<static>> assignSalesEmployee(previewDate: DateTime): bool
 }
 
 ' --- DATABASE LAYER ---

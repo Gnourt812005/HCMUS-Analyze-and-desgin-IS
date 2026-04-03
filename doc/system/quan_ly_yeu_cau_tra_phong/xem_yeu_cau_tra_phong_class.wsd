@@ -1,60 +1,77 @@
-@startuml
-skinparam classAttributeIconSize 0
+@startuml ViewCheckoutRequests_ClassDiagram
+title Class Diagram - UC23: Xem yêu cầu trả phòng
 
-class RequestListScreen {
-  dgvRequests: DataGridView
-  btnViewDetail: Button
-  + Show()
-  + LoadRequests()
-  + btnViewDetail_Click()
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
 }
 
-class RequestDetailScreen {
-  imgLiquidationFile: Image
-  btnBack: Button
-  + Show(requestID: int)
-  + LoadDetail()
+class "ScreenCheckoutRequestList" as RequestListScreen <<boundary>> {
+  - dgvRequests: DataGridView
+  - btnViewDetail: Button
+  + show(): void
+  + loadRequests(): void
+  + btnViewDetailClick(): void
 }
 
-class CheckoutRequest {
-  RequestID: int
-  CustomerID: int
-  ExpectedDate: datetime
-  Status: string
-  CreatedAt: datetime
-  DocumentUrl: string
-  + <<static>> GetListByCustomer(customerID: int): List
-  + <<static>> GetById(requestID: int): CheckoutRequest
+class "ScreenCheckoutRequestDetail" as RequestDetailScreen <<boundary>> {
+  - imgLiquidationFile: Image
+  - btnBack: Button
+  + show(requestID: int): void
+  + loadDetail(): void
 }
 
-class CheckoutRequestDB {
-  + <<static>> GetListByCustomer(customerID: int): List
-  + <<static>> GetById(requestID: int): CheckoutRequest
+class "CheckoutRequest" as CheckoutRequest <<control>> {
+  - requestID: int
+  - customerID: int
+  - expectedDate: DateTime
+  - status: string
+  - createdAt: DateTime
+  - documentUrl: string
+  + <<static>> getListByCustomer(customerID: int): List<CheckoutRequest>
+  + <<static>> getById(requestID: int): CheckoutRequest
 }
 
-class RefundCalculation {
-  CalculationID: int
-  RequestID: int
-  DepositAmount: float
-  DamageFee: float
-  ExtraDebt: float
-  FinalRefundAmount: float
-  + <<static>> GetByRequestId(requestID: int): RefundCalculation
+class "CheckoutRequestDB" as CheckoutRequestDB <<entity>> {
+  + <<static>> getListByCustomer(customerID: int): List<CheckoutRequest>
+  + <<static>> getById(requestID: int): CheckoutRequest
 }
 
-class RefundCalculationDB {
-  + <<static>> GetByRequestId(requestID: int): RefundCalculation
+class "RefundCalculation" as RefundCalculation <<control>> {
+  - calculationID: int
+  - requestID: int
+  - depositAmount: float
+  - damageFee: float
+  - extraDebt: float
+  - finalRefundAmount: float
+  + <<static>> getByRequestId(requestID: int): RefundCalculation
 }
 
-class Contract {
-  ContractID: int
-  DepositAmount: float
-  LiquidationDocUrl: string
-  + <<static>> GetById(contractID: int): Contract
+class "RefundCalculationDB" as RefundCalculationDB <<entity>> {
+  + <<static>> getByRequestId(requestID: int): RefundCalculation
 }
 
-class ContractDB {
-  + <<static>> GetById(contractID: int): Contract
+class "Contract" as Contract <<control>> {
+  - contractID: int
+  - depositAmount: float
+  - liquidationDocUrl: string
+  + <<static>> getById(contractID: int): Contract
 }
+
+class "ContractDB" as ContractDB <<entity>> {
+  + <<static>> getById(contractID: int): Contract
+}
+
+RequestListScreen --> CheckoutRequest
+RequestDetailScreen --> CheckoutRequest
+RequestDetailScreen --> RefundCalculation
+RequestDetailScreen --> Contract
+CheckoutRequest --> CheckoutRequestDB
+RefundCalculation --> RefundCalculationDB
+Contract --> ContractDB
 
 @enduml

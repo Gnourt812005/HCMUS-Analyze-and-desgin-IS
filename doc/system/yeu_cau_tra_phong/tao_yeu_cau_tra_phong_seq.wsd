@@ -1,51 +1,45 @@
-@startuml
-actor "Khách hàng" as KhachHang
-boundary ": CheckoutRequestScreen" as Screen
-entity ": Contract" as Contract
-entity ": CheckoutRequest" as Request
-database ": CheckoutRequestDB" as RequestDB
-database ": ContractDB" as ContractDB
+@startuml CreateCheckoutRequest_SequenceDiagram
+title Sequence Diagram - UC22: Tạo yêu cầu trả phòng (Khách hàng)
 
-KhachHang -> Screen: 1: Show()
-activate KhachHang
-activate Screen
-Screen -> Contract: 2: GetActiveContractByCustomer()
-activate Contract
-Contract -> ContractDB: 3: GetActiveContractByCustomer()
-activate ContractDB
-deactivate ContractDB
-deactivate Contract
-deactivate Screen
-deactivate KhachHang
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    ParticipantPadding 20
+}
 
-KhachHang -> Screen: 4: Chọn phòng/giường cần trả
-activate KhachHang
-activate Screen
-KhachHang -> Screen: 5: Nhập thông tin và tải giấy tờ
-KhachHang -> Screen: 6: btnSubmit_Click()
-alt Điền đầy đủ thông tin
-    Screen -> Request: 7: CreateRequest()
-    activate Request
-    deactivate Screen
-    Request -> RequestDB: 8: Insert()
-    activate RequestDB
-    deactivate RequestDB
-    deactivate Request
+actor "Customer" as Customer
+boundary "ScreenCheckoutRequest" as Screen <<boundary>>
+control "Contract" as Contract <<control>>
+control "CheckoutRequest" as Request <<control>>
+database "CheckoutRequestDB" as RequestDB <<database>>
+database "ContractDB" as ContractDB <<database>>
+
+autonumber
+
+== Khởi tạo màn hình ==
+Customer -> Screen: show()
+Screen -> Contract: getActiveContractByCustomer()
+Contract -> ContractDB: getActiveByCustomer()
+
+== Gửi yêu cầu ==
+Customer -> Screen: Chọn phòng/giường cần trả
+Customer -> Screen: Điền thông tin và tải giấy tờ
+Customer -> Screen: Nhấn "Gửi yêu cầu" (btnSubmitClick)
+
+alt Thông tin hợp lệ
+    Screen -> Request: createRequest()
+    Request -> RequestDB: insert()
+    Screen --> Customer: Thông báo thành công
 end
-deactivate KhachHang
 
-alt  Đã tạo yêu cầu trả phòng
-activate KhachHang
-    KhachHang -> Screen: 9: btnSubmit_Cancel()
-    activate KhachHang
-    activate Screen
-    Screen -> Request: 10: CancelRequest()
-    activate Request
-    deactivate Screen
-    Request -> RequestDB: 11: RemoveById()
-    activate RequestDB
-    deactivate RequestDB
-    deactivate Request
-    deactivate KhachHang
+== Hủy yêu cầu ==
+alt Yêu cầu đã được tạo
+    Customer -> Screen: Nhấn "Hủy yêu cầu" (btnCancelClick)
+    Screen -> Request: cancelRequest()
+    Request -> RequestDB: removeById()
+    Screen --> Customer: Xác nhận hủy thành công
 end
+
 @enduml

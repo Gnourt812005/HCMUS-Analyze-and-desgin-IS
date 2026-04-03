@@ -1,4 +1,5 @@
 @startuml
+title Class Diagram - UC26: Quản lý yêu cầu trả phòng
 skinparam classAttributeIconSize 0
 
 class ManageCheckoutRequestScreen {

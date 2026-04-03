@@ -1,47 +1,62 @@
-@startuml
-skinparam classAttributeIconSize 0
+@startuml ContractTermination_ClassDiagram
+title Class Diagram - UC25: Thanh lý hợp đồng
 
-class ContractLiquidationScreen {
-  fileLiquidation: FileUploader
-  btnComplete: Button
-  + Show()
-  + LoadCalculation()
-  + btnComplete_Click()
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
 }
 
-class Contract {
-  ContractID: int
-  RoomID: int
-  Status: string
-  DepositAmount: float
-  StayDuration: int
-  LiquidationFileUrl: string
-  + <<static>> LiquidateContract(): bool
+class "ScreenContractTermination" as ContractLiquidationScreen <<boundary>> {
+  - fileLiquidation: FileUploader
+  - btnComplete: Button
+  + show(): void
+  + loadCalculation(): void
+  + btnCompleteClick(): void
 }
 
-class ContractDB {
-  + <<static>> UpdateStatus(status: string): bool
-  + <<static>> UpdateLiquidationFile(path: string): bool
+class "Contract" as Contract <<control>> {
+  - contractID: int
+  - roomID: int
+  - status: string
+  - depositAmount: float
+  - stayDuration: int
+  - liquidationFileUrl: string
+  + <<static>> liquidateContract(): bool
 }
 
-class Room {
-  RoomID: int
-  Status: string
-  + <<static>> UpdateRoomStatus(): bool
+class "ContractDB" as ContractDB <<entity>> {
+  + <<static>> updateStatus(contractID: int, status: string): bool
+  + <<static>> updateLiquidationFile(contractID: int, path: string): bool
 }
 
-class RoomDB {
-  + <<static>> UpdateStatus(status: string): bool
+class "Room" as Room <<control>> {
+  - roomID: int
+  - status: string
+  + <<static>> updateRoomStatus(roomID: int, status: string): bool
 }
 
-class RefundCalculation {
-  CalculationID: int
-  RequestID: int
-  DepositAmount: float
-  DamageFee: float
-  ExtraDebt: float
-  FinalRefundAmount: float
-  + <<static>> GetByRequestId(): RefundCalculation
+class "RoomDB" as RoomDB <<entity>> {
+  + <<static>> updateStatus(roomID: int, status: string): bool
 }
+
+class "RefundCalculation" as RefundCalculation <<control>> {
+  - calculationID: int
+  - requestID: int
+  - depositAmount: float
+  - damageFee: float
+  - extraDebt: float
+  - finalRefundAmount: float
+  + <<static>> getByRequestId(requestID: int): RefundCalculation
+}
+
+ContractLiquidationScreen --> Contract
+ContractLiquidationScreen --> RefundCalculation
+Contract --> ContractDB
+ContractLiquidationScreen --> Room
+Room --> RoomDB
 
 @enduml

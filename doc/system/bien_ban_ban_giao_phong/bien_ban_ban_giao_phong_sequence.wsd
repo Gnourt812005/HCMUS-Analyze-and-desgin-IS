@@ -1,5 +1,5 @@
 @startuml QuanLyBienBan_SequenceDiagram_Updated
-title Sequence Diagram: Lập biên bản bàn giao phòng (UC21)
+title Sequence Diagram - UC21: Lập biên bản bàn giao phòng
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -15,78 +15,53 @@ actor "Nhân viên quản lý" as Actor
 boundary "ScreenContractDetail" as DetailGUI <<boundary>>
 boundary "ScreenReportList" as ListGUI <<boundary>>
 boundary "FormReport" as FormGUI <<boundary>>
-control "ReportBUS" as BUS <<control>>
-database "ReportDAO" as DAO <<database>>
+control "Report" as BUS <<control>>
+database "ReportDB" as DB <<database>>
 
 autonumber
 
 == Kịch bản 1: Xem danh sách biên bản bàn giao ==
-Actor -> DetailGUI: Nhấn nút "Biên bản bàn giao"
-activate DetailGUI
-DetailGUI -> ListGUI: Mở màn hình DS Biên bản
-activate ListGUI
-deactivate DetailGUI
-
+Actor -> DetailGUI: Nhấn "Biên bản bàn giao"
+DetailGUI -> ListGUI: showReportList()
 ListGUI -> BUS: getReportsByContract(contractId)
-activate BUS
-BUS -> DAO: fetchByContractId(contractId)
-activate DAO
-DAO --> BUS: Trả về dữ liệu biên bản
-deactivate DAO
+BUS -> DB: fetchByContractId(contractId)
+DB --> BUS: Dữ liệu biên bản
 BUS --> ListGUI: Danh sách biên bản
-deactivate BUS
+ListGUI --> Actor: Hiển thị danh sách
 
-ListGUI --> Actor: Hiển thị DS (Mã BB, Mã HĐ, Ngày lập, Người TH, Tình trạng)
+== Kịch bản 2: Lập biên bản bàn giao ==
+Actor -> ListGUI: Nhấn "Lập biên bản mới"
+ListGUI -> FormGUI: showReportForm()
 
-== Kịch bản 2: Thêm biên bản bàn giao phòng ==
-Actor -> ListGUI: Nhấn nút "Lập biên bản mới"
-ListGUI -> FormGUI: Mở Form Lập biên bản
-activate FormGUI
-
-' --- Truy xuất vật tư tự động ---
+' --- Tự động lấy danh sách thiết bị ---
 FormGUI -> BUS: getEquipmentsByBed(bedId)
-activate BUS
-BUS -> DAO: fetchEquipments(bedId)
-activate DAO
-DAO --> BUS: Danh mục vật tư (Giường, nệm, tủ, chìa khóa)
-deactivate DAO
-BUS --> FormGUI: Trả về danh mục vật tư
-deactivate BUS
+BUS -> DB: fetchEquipments(bedId)
+DB --> BUS: Danh sách thiết bị (Giường, nệm, tủ, chìa khóa)
+BUS --> FormGUI: Kết quả
+FormGUI --> Actor: Hiển thị checklist
 
-FormGUI --> Actor: Hiển thị bảng checklist vật dụng (Tên, Trạng thái)
+' --- Hành động của người dùng ---
+Actor -> FormGUI: Chọn trạng thái (Tốt/Hư hỏng/Mất)
+Actor -> FormGUI: Nhập ghi chú
 
-' --- Thao tác người dùng ---
-Actor -> FormGUI: Tích chọn trạng thái thực tế (Tốt/Hư/Thiếu)
-Actor -> FormGUI: Nhập ghi chú (Hướng dẫn an toàn/tiện ích)
-
-alt Chọn "Lưu & Ký xác nhận"
-    Actor -> FormGUI: Nhấn "Lưu & Ký xác nhận"
+alt Lưu & Ký
+    Actor -> FormGUI: Nhấn "Lưu & Ký"
     FormGUI -> BUS: createHandoverReport(data, bedId)
-    activate BUS
     
-    ' Transaction: Lưu BB và Cập nhật Giường
-    BUS -> DAO: insert(data)
-    activate DAO
-    DAO --> BUS: Lưu biên bản thành công
-    deactivate DAO
+    ' Transaction: Chèn biên bản và cập nhật trạng thái giường
+    BUS -> DB: insert(data)
+    DB --> BUS: Thành công
     
-    BUS -> DAO: updateBedStatus(bedId, "Đã thuê")
-    activate DAO
-    DAO --> BUS: Cập nhật thành công
-    deactivate DAO
+    BUS -> DB: updateBedStatus(bedId, "Occupied")
+    DB --> BUS: Thành công
     
-    BUS --> FormGUI: Trả kết quả hoàn tất
-    deactivate BUS
-    
-    FormGUI --> Actor: Thông báo "Bàn giao thành công"
-    FormGUI -> ListGUI: Tải lại danh sách (Làm mới KB1)
-    destroy FormGUI
-
-else Chọn "Hủy" hoặc Đóng Form
-    Actor -> FormGUI: Nhấn "Hủy" hoặc đóng Form
-    FormGUI -> FormGUI: Xóa các dữ liệu đang nhập dở
-    FormGUI --> Actor: Đóng Form, quay lại màn hình chi tiết hợp đồng
-    deactivate FormGUI
+    BUS --> FormGUI: Trả về kết quả (Thành công)
+    FormGUI --> Actor: Thông báo thành công
+    FormGUI -> ListGUI: refreshList()
+else Hủy
+    Actor -> FormGUI: Nhấn "Hủy"
+    FormGUI -> FormGUI: clearData()
+    FormGUI --> Actor: Đóng Form
 end
 
 @enduml

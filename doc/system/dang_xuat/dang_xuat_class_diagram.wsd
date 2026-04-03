@@ -1,5 +1,5 @@
 @startuml DangXuat_ClassDiagram
-title Class Diagram: Đăng xuất
+title Class Diagram - UC13: Đăng xuất
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -14,17 +14,17 @@ skinparam {
 ' --- BOUNDARY LAYER ---
 class "ScreenHome" as ScreenHome <<boundary>> {
     - btnLogout: Button
-    + btnLogout_Click(): void
+    + btnLogoutClick(): void
 }
 
 ' --- BUSINESS LAYER ---
-class "User" as User <<control>> {
-    + logout(): void
+class "User" <<control>> {
+    + <<static>> logout(): boolean
 }
 
 ' --- DATABASE LAYER ---
 class "UserDB" as UserDB <<entity>> {
-    + clearSession(): void
+    + <<static>> clearSession(): void
 }
 
 ' --- RELATIONSHIPS ---

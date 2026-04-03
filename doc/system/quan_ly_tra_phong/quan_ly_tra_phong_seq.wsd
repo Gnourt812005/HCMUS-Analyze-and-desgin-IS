@@ -1,4 +1,5 @@
 @startuml
+title Sequence Diagram - UC26: Quản lý yêu cầu trả phòng
 actor "Nhân viên" as NV
 boundary ": ManageCheckoutRequestScreen" as ListScreen
 boundary ": CreateCheckoutRequestScreen" as CreateScreen

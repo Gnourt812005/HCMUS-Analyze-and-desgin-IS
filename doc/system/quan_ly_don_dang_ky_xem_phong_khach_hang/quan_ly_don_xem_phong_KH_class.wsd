@@ -1,5 +1,5 @@
 @startuml QuanLyDonXemPhongKH_ClassDiagram
-title Class Diagram: Quản lý đơn đăng ký xem phòng khách hàng
+title Class Diagram - UC8, 9, 10: Quản lý đơn đăng ký xem phòng
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -72,12 +72,12 @@ class "PreviewForm" as PreviewForm <<control>> {
     - previewDate: DateTime
     - employeeID: int
 
-    + getPreviewFormsByEmployeeID(employeeID: int): List<PreviewForm>
+    + <<static>> getPreviewFormsByEmployeeID(employeeID: int): List<PreviewForm>
 
-    + getPreviewFormDetails(previewFormID: int): PreviewForm
+    + <<static>> getPreviewFormDetails(previewFormID: int): PreviewForm
 
-    + createEmployeePreviewForm(roomID: int, userID: int, employeeID: int, previewDate: DateTime): bool
-    + reschedulePreviewForm(previewFormID: int, newPreviewDate: DateTime): bool
+    + <<static>> createEmployeePreviewForm(roomID: int, userID: int, employeeID: int, previewDate: DateTime): bool
+    + <<static>> reschedulePreviewForm(previewFormID: int, newPreviewDate: DateTime): bool
 }
 
 class "Room" as Room <<control>> {
@@ -91,7 +91,7 @@ class "Room" as Room <<control>> {
     - roomUtilities: string
     - specialDescription: string
 
-    + getRoomsList(List<int>): List<Room>
+    + <<static>> getRoomsList(List<int>): List<Room>
 }
 
 ' --- DATABASE LAYER ---

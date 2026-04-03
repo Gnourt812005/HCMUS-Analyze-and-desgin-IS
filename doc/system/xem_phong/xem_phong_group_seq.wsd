@@ -1,5 +1,5 @@
 ﻿@startuml XemDanhSachPhong_SequenceDiagram
-title Sequence Diagram: Xem danh sách phòng
+title Sequence Diagram - UC1, 2, 3, 6
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -30,117 +30,61 @@ database "SalesEmployeeDB" as DAO_Sales <<database>>
 
 autonumber
 
-== Mở danh sách Ký túc xá ==
-Actor -> GUI_Dorms: Yêu cầu xem danh sách KTX
-activate GUI_Dorms
-
+== Mở danh sách ký túc xá ==
+Actor -> GUI_Dorms: Yêu cầu danh sách KTX
 GUI_Dorms -> BUS_Dorm: getDormsList()
-activate BUS_Dorm
 
-BUS_Dorm -> DAO_Dorm: getDormsList()
-activate DAO_Dorm
-deactivate DAO_Dorm
-
-deactivate BUS_Dorm
-deactivate GUI_Dorms
-
-== Chọn Ký túc xá ==
-Actor -> GUI_Dorms: Chọn 1 KTX cụ thể (gridDorms_CellClick)
-activate GUI_Dorms
-
-GUI_Dorms -> GUI_Rooms: Truyền dormID và mở giao diện danh sách phòng
-deactivate GUI_Dorms
-activate GUI_Rooms
+== Chọn ký túc xá ==
+Actor -> GUI_Dorms: Chọn KTX cụ thể (gridDormsCellClick)
+GUI_Dorms -> GUI_Rooms: Truyền dormID và mở màn hình Danh sách phòng
 
 == Lọc danh sách phòng ==
-Actor -> GUI_Rooms: Tùy chỉnh các bộ lọc (Criteria)
-Actor -> GUI_Rooms: Bấm nút "Tìm kiếm" (btnSearchRoom_Click)
+Actor -> GUI_Rooms: Tùy chỉnh bộ lọc (Criteria)
+Actor -> GUI_Rooms: Nhấn "Tìm kiếm" (btnSearchRoomClick)
 
 GUI_Rooms -> BUS_Room: getRoomsList(dormID, criteria)
-activate BUS_Room
-
 BUS_Room -> DAO_Room: getRoomsList(dormID, criteria)
-activate DAO_Room
 
 opt Lấy tiện ích phòng
     DAO_Room -> DAO_Utils: getUtilitiesByRoomID(roomID)
-    activate DAO_Utils
-    deactivate DAO_Utils
 end
 
 opt Lấy giá giường
     DAO_Room -> DAO_Bed: getBedPrice(roomID)
-    activate DAO_Bed
-    deactivate DAO_Bed
 end
 
-deactivate DAO_Room
-deactivate BUS_Room
+== Xem chi tiết phòng ==
+Actor -> GUI_Rooms: Chọn 1 phòng (gridRoomsCellClick)
+GUI_Rooms -> GUI_Details: Truyền roomID và mở màn hình Chi tiết phòng
 
+== Quan tâm phòng ==
+Actor -> GUI_Details: Nhấn "Quan tâm" (btnFavoriteClick)
 
-== Chọn xem Chi tiết 1 phòng ==
-Actor -> GUI_Rooms: Bấm vào 1 phòng (gridRooms_CellClick)
-GUI_Rooms -> GUI_Details: Truyền roomID và mở giao diện C.Tiết
-deactivate GUI_Rooms
-activate GUI_Details
-
-== Quan tâm phòng (Favorite) ==
-Actor -> GUI_Details: Bấm nút "Quan tâm" (btnFavorite_Click)
-
-alt Đã Quan tâm
+alt Đã nằm trong danh sách Quan tâm
     GUI_Details -> BUS_Fav: removeFavoriteRoom(roomID, userID)
-    activate BUS_Fav
-
     BUS_Fav -> DAO_Fav: removeFavoriteRoom(roomID, userID)
-    activate DAO_Fav
-    deactivate DAO_Fav
-
-    deactivate BUS_Fav
-else Chưa Quan tâm
+else Chưa nằm trong danh sách Quan tâm
     GUI_Details -> BUS_Fav: addFavoriteRoom(roomID, userID)
-    activate BUS_Fav
-
     BUS_Fav -> DAO_Fav: addFavoriteRoom(roomID, userID)
-    activate DAO_Fav
-    deactivate DAO_Fav
-
-    deactivate BUS_Fav
 end
 
-== Đăng ký xem phòng ==
-Actor -> GUI_Details: Bấm nút "Đăng ký xem phòng" (btnPreviewRequest_Click)
+== Đăng ký lịch xem phòng ==
+Actor -> GUI_Details: Nhấn "Đăng ký xem phòng" (btnPreviewRequestClick)
 GUI_Details -> GUI_Preview: showPreviewRequestScreen()
-deactivate GUI_Details
-activate GUI_Preview
 
-Actor -> GUI_Preview: Nhập ngày giờ (datepickerPreviewDate)
-Actor -> GUI_Preview: Bấm "Xác nhận" (btnConfirmPreviewDate_Click)
+Actor -> GUI_Preview: Chọn ngày/giờ (datepickerPreviewDate)
+Actor -> GUI_Preview: Nhấn "Xác nhận" (btnConfirmPreviewDateClick)
 
 GUI_Preview -> BUS_Preview: addUserPreviewForm(roomID, userID, previewDate)
-activate BUS_Preview
-
 BUS_Preview -> DAO_Preview: checkUsersDuplicatedPreviewDate(userID, previewDate)
-activate DAO_Preview
-deactivate DAO_Preview
-
 BUS_Preview -> DAO_Preview: checkRoomsDuplicatedPreviewDate(roomID, previewDate)
-activate DAO_Preview
-deactivate DAO_Preview
 
 alt Không trùng lịch
     BUS_Preview -> BUS_Preview: assignSalesEmployee(previewDate)
-    activate BUS_Preview
-    
     BUS_Preview -> DAO_Sales: getAvailableSalesEmployee(previewDate)
-    activate DAO_Sales
-    deactivate DAO_Sales
-    
-    deactivate BUS_Preview
 
-    alt Có nhân viên rảnh
+    alt Có nhân viên sẵn sàng
         BUS_Preview -> DAO_Preview: addUserPreviewForm(roomID, userID, previewDate, employeeID)
-        activate DAO_Preview
-        deactivate DAO_Preview
     end
 end
 

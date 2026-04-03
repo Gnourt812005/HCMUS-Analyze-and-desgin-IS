@@ -1,5 +1,5 @@
 @startuml QuanLyLichXemPhong_ClassDiagram
-title Class Diagram: Quản lý lịch xem phòng
+title Class Diagram - UC4, 5: Quản lý lịch xem phòng
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -12,11 +12,11 @@ skinparam {
 }
 
 ' --- BOUNDARY LAYER ---
-class "ClientPreviewScheduleManagementScreen" as PreviewManagementScreen <<boundary>> {
+class "ScreenViewingSchedule" as PreviewManagementScreen <<boundary>> {
     - listPreviewSchedules: ListView
 
     + showClientPreviewSchedules(userID: int): void
-    + listPreviewSchedules_ItemClick(): int ' returns selected  PreviewFormID
+    + listPreviewSchedulesItemClick(): int ' returns selected ViewingScheduleID
 }
 
 class "ScreenPreviewScheduleDetailsView" as PreviewScheduleDetailsView <<boundary>> {
@@ -36,23 +36,20 @@ class "ScreenPreviewScheduleDetailsView" as PreviewScheduleDetailsView <<boundar
     - btnCancelPreviewSchedule: Button
     - btnBack: IconButton
 
-    + showPreviewScheduleDetails(previewFormID: int): void
-    + btnBack_Click(): void
-    + btnCancelPreviewSchedule_Click(): void
-}
+    + showPreviewScheduleDetails(viewingScheduleID: int): void
+    + btnBackClick(): void
+    + btnCancelPreviewScheduleClick(): void
 
 ' --- BUSINESS LAYER ---
-class "PreviewForm" as PreviewForm <<control>> {
+class "ViewingSchedule" as PreviewForm <<control>> {
     - roomID: int
     - userID: int
     - previewDate: DateTime
     - employeeID: int
 
-    + getPreviewFormsByUserID(userID: int): List<PreviewForm>
-
-    + getPreviewFormDetails(previewFormID: int): PreviewForm
-
-    + cancelPreviewSchedule(previewFormID: int): bool
+    + <<static>> getViewingSchedulesByUserID(userID: int): List<ViewingSchedule>
+    + <<static>> getViewingScheduleDetails(viewingScheduleID: int): ViewingSchedule
+    + <<static>> cancelPreviewSchedule(viewingScheduleID: int): bool
 }
 
 class "Room" as Room <<control>> {
@@ -66,7 +63,7 @@ class "Room" as Room <<control>> {
     - roomUtilities: string
     - specialDescription: string
 
-    + getRoomsList(roomIDs: List<int>): List<Room>
+    + <<static>> getRoomsList(roomIDs: List<int>): List<Room>
 }
 
 ' --- DATABASE LAYER ---

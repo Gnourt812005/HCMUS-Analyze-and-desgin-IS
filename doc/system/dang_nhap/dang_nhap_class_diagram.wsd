@@ -1,5 +1,5 @@
 @startuml DangNhap_ClassDiagram
-title Class Diagram: Đăng nhập
+title Class Diagram - UC12: Đăng nhập
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -16,19 +16,19 @@ class "ScreenLogin" as ScreenLogin <<boundary>> {
     - txtEmail: TextBox
     - txtPassword: TextBox
     - btnLogin: Button
-    + btnLogin_Click(): void
+    + btnLoginClick(): void
 }
 
 ' --- BUSINESS LAYER ---
 class "User" as User <<control>> {
     - email: string
     - password: string
-    + login(email: string, password: string): boolean
+    + <<static>> login(email: string, password: string): boolean
 }
 
 ' --- DATABASE LAYER ---
 class "UserDB" as UserDB <<entity>> {
-    + checkCredentials(email: string, password: string): boolean
+    + <<static>> checkCredentials(email: string, password: string): boolean
 }
 
 ' --- RELATIONSHIPS ---

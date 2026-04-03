@@ -1,5 +1,5 @@
 @startuml DangXuat_SequenceDiagram
-title Sequence Diagram: Đăng xuất
+title Sequence Diagram - UC13: Đăng xuất
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -14,26 +14,16 @@ skinparam {
 actor "Khách hàng / Nhân viên" as Actor
 boundary "ScreenHome" as GUI <<boundary>>
 control "User" as BUS <<control>>
-database "UserDB" as DAO <<database>>
+database "UserDB" as DB <<database>>
 
 autonumber
 
-Actor -> GUI: Bấm nút "Đăng xuất"
-
-activate GUI
+Actor -> GUI: Click "Đăng xuất"
 GUI -> BUS: logout()
-activate BUS
-
-BUS -> DAO: clearSession()
-activate DAO
-DAO --> BUS: Trả kết quả (Done)
-deactivate DAO
-
-BUS --> GUI: Xác nhận đăng xuất thành công
-deactivate BUS
-
-GUI --> Actor: Thông báo đăng xuất thành công
-GUI -> GUI: Điều hướng về trang chủ
-deactivate GUI
+BUS -> DB: clearSession()
+DB --> BUS: Hoàn tất
+BUS --> GUI: Thành công
+GUI --> Actor: Đăng xuất thành công
+GUI -> GUI: Chuyển hướng đến trang Đăng nhập
 
 @enduml

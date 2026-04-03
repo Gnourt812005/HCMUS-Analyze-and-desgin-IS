@@ -1,0 +1,38 @@
+@startuml ChinhSuaThongTinCaNhan_ClassDiagram
+skinparam DefaultFontSize 24
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+
+title Class Diagram - UC27: Quản lý thông tin cá nhân
+
+class "ScreenProfile" <<boundary>> {
+    - txtFullName: TextBox
+    - txtBirthDate: DatePicker
+    - txtPhone: TextBox
+    - txtEmail: TextBox
+    - btnEdit: Button
+    - btnUpdate: Button
+    + showProfile(data: User): void
+    + btnEdit_Click(): void
+    + btnUpdate_Click(): void
+}
+
+class "User" <<control>> {
+    - id: string
+    - fullName: string
+    - birthDate: date
+    - phone: string
+    - email: string
+    + <<static>> getProfile(id: string): User
+    + <<static>> updateProfile(data: User): boolean
+}
+
+class "UserDB" <<entity>> {
+    + <<static>> fetchById(id: string): User
+    + <<static>> update(id: string, data: User): boolean
+}
+
+ScreenProfile "1" --> "1" User
+User "1" --> "1" UserDB
+
+@enduml

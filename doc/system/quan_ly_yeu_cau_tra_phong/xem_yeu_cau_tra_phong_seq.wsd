@@ -1,4 +1,5 @@
-@startuml
+@startuml XemYeuCauTraPhong_SequenceDiagram
+title Sequence Diagram - UC23: Xem yêu cầu trả phòng
 actor "Khách hàng" as KhachHang
 boundary ": RequestListScreen" as ListScreen
 boundary ": RequestDetailScreen" as DetailScreen

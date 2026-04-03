@@ -1,5 +1,5 @@
 @startuml QuanLyPhongDaQuanTam_ClassDiagram
-title Class Diagram: Quản lý phòng đã quan tâm
+title Class Diagram - UC7: Quản lý phòng đã quan tâm
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -12,11 +12,11 @@ skinparam {
 }
 
 ' --- BOUNDARY LAYER ---
-class "FavoriteManagementScreen" as FavoriteManagementScreen <<boundary>> {
+class "ScreenFavoriteRooms" as FavoriteManagementScreen <<boundary>> {
     - listFavoriteRooms: ListView
 
     + showFavoriteRooms(): void
-    + listFavoriteRooms_ItemClick(): int ' returns selected room ID
+    + listFavoriteRoomsItemClick(): int ' returns selected room ID
 }
 
 class "ScreenRoomDetailsView" as ScreenRoomDetailsView <<boundary>> {
@@ -37,10 +37,10 @@ class "ScreenRoomDetailsView" as ScreenRoomDetailsView <<boundary>> {
     - btnBack: IconButton
 
     + showRoomDetails(roomID: int): void
-    + btnBack_Click(): void
+    + btnBackClick(): void
 
-    + btnPreviewRequest_Click(): void
-    + btnFavorite_Click(): void
+    + btnPreviewRequestClick(): void
+    + btnFavoriteClick(): void
 }
 
 class "ScreenPreviewRequestView" as ScreenPreviewRequestView <<boundary>> {
@@ -50,8 +50,8 @@ class "ScreenPreviewRequestView" as ScreenPreviewRequestView <<boundary>> {
     - btnBack: IconButton
 
     + showPreviewRequestScreen(): void
-    + btnBack_Click(): void
-    + btnConfirmPreviewDate_Click(): void
+    + btnBackClick(): void
+    + btnConfirmPreviewDateClick(): void
 }
 
 ' --- BUSINESS LAYER ---
@@ -66,16 +66,16 @@ class "Room" as Room <<control>> {
     - roomUtilities: string
     - specialDescription: string
 
-    + getFavoriteRoomsByUserID(userID: int): List<Room>
-    + getFavoriteRoomDetails(roomID: int): Room
+    + <<static>> getFavoriteRoomsByUserID(userID: int): List<Room>
+    + <<static>> getFavoriteRoomDetails(roomID: int): Room
 }
 
 class "FavoriteRequest" as FavoriteRequest <<control>> {
     - roomID: int
     - userID: int
 
-    + addFavoriteRoom(roomID: int, userID: int): void
-    + removeFavoriteRoom(roomID: int, userID: int): void
+    + <<static>> addFavoriteRoom(roomID: int, userID: int): void
+    + <<static>> removeFavoriteRoom(roomID: int, userID: int): void
 }
 
 class "PreviewForm" as PreviewForm <<control>> {
@@ -84,8 +84,8 @@ class "PreviewForm" as PreviewForm <<control>> {
     - previewDate: DateTime
     - employeeID: int
 
-    + addUserPreviewForm(roomID: int, userID: int, previewDate: DateTime): bool
-    + assignSalesEmployee(previewDate: DateTime): bool
+    + <<static>> addUserPreviewForm(roomID: int, userID: int, previewDate: DateTime): bool
+    + <<static>> assignSalesEmployee(previewDate: DateTime): bool
 }
 
 ' --- DATABASE LAYER ---

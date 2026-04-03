@@ -1,5 +1,5 @@
 @startuml SystemUsecase
-title Đăng ký thuê phòng - Use Case Diagram
+title Đăng ký thuê phòng - Group Use Case Diagram
 
 skinparam packageStyle rectangle
 

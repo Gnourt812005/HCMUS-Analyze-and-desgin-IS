@@ -1,5 +1,5 @@
 @startuml QuanLyKyTucXa_ClassDiagram
-title Class Diagram: Quản lý ký túc xá (UC17)
+title Class Diagram - UC18: Quản lý ký túc xá
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -16,9 +16,9 @@ class "ScreenDormManagement" as ScreenDM <<boundary>> {
     - dgvDorm: GridView
     - txtSearch: TextBox
     - btnAddNew: Button
-    + dgvDorm_Load(): void
-    + btnSearch_Click(): void
-    + btnAddNew_Click(): void
+    + dgvDormLoad(): void
+    + btnSearchClick(): void
+    + btnAddNewClick(): void
 }
 
 class "ScreenDormDetail" as ScreenDD <<boundary>> {
@@ -28,10 +28,10 @@ class "ScreenDormDetail" as ScreenDD <<boundary>> {
     - btnUpdate: Button
     - btnHide: Button
     - btnAddNewRoom: Button
-    + ScreenDormDetail_Load(): void
-    + btnUpdate_Click(): void
-    + btnHide_Click(): void
-    + btnAddNewRoom_Click(): void
+    + screenDormDetailLoad(): void
+    + btnUpdateClick(): void
+    + btnHideClick(): void
+    + btnAddNewRoomClick(): void
 }
 
 class "FormDorm" as FormDorm <<boundary>> {
@@ -42,7 +42,7 @@ class "FormDorm" as FormDorm <<boundary>> {
     - clbUtilities: CheckedListBox
     - btnSave: Button
     - btnCancel: Button
-    + btnSave_Click(): void
+    + btnSaveClick(): void
 }
 
 ' --- BUSINESS LAYER ---
@@ -50,24 +50,24 @@ class "Dorm" as Dorm <<control>> {
     - id: string
     - name: string
     - address: string
-    - hotline: string
-    - facilities: List<string>
     - status: string
-    + getDorms(): List<Dorm>
-    + getDormDetail(id: string): Dorm
-    + createDorm(data: Dorm): boolean
-    + updateDorm(id: string, data: Dorm): boolean
-    + hideDorm(id: string): boolean
-    + addRoomToDorm(dormId: string, roomData: any): boolean
+    - managerId: string
+    - description: string
+    + <<static>> getDorms(keyword: string): List<Dorm>
+    + <<static>> getDormDetail(id: string): Dorm
+    + <<static>> createDorm(data: Dorm): boolean
+    + <<static>> updateDorm(id: string, data: Dorm): boolean
+    + <<static>> deleteDorm(id: string): boolean
 }
 
 ' --- DATABASE LAYER ---
 class "DormDB" as DormDB <<entity>> {
-    + fetchAll(): List
-    + fetchById(id: string): Dorm
-    + insert(data: Dorm): boolean
-    + update(id: string, data: Dorm): boolean
-    + insertRoom(dormId: string, roomData: any): boolean
+    + <<static>> fetchAll(): List
+    + <<static>> fetchByKeyword(keyword: string): List
+    + <<static>> fetchById(id: string): Dorm
+    + <<static>> insert(data: Dorm): boolean
+    + <<static>> update(id: string, data: Dorm): boolean
+    + <<static>> delete(id: string): boolean
     + updateStatus(id: string, status: string): boolean
     + checkIdExists(id: string): boolean
 }
