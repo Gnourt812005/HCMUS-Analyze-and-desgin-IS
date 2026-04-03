@@ -1,0 +1,60 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class RequestListScreen {
+  dgvRequests: DataGridView
+  btnViewDetail: Button
+  + Show()
+  + LoadRequests()
+  + btnViewDetail_Click()
+}
+
+class RequestDetailScreen {
+  imgLiquidationFile: Image
+  btnBack: Button
+  + Show(requestID: int)
+  + LoadDetail()
+}
+
+class CheckoutRequest {
+  RequestID: int
+  CustomerID: int
+  ExpectedDate: datetime
+  Status: string
+  CreatedAt: datetime
+  DocumentUrl: string
+  + <<static>> GetListByCustomer(customerID: int): List
+  + <<static>> GetById(requestID: int): CheckoutRequest
+}
+
+class CheckoutRequestDB {
+  + <<static>> GetListByCustomer(customerID: int): List
+  + <<static>> GetById(requestID: int): CheckoutRequest
+}
+
+class RefundCalculation {
+  CalculationID: int
+  RequestID: int
+  DepositAmount: float
+  DamageFee: float
+  ExtraDebt: float
+  FinalRefundAmount: float
+  + <<static>> GetByRequestId(requestID: int): RefundCalculation
+}
+
+class RefundCalculationDB {
+  + <<static>> GetByRequestId(requestID: int): RefundCalculation
+}
+
+class Contract {
+  ContractID: int
+  DepositAmount: float
+  LiquidationDocUrl: string
+  + <<static>> GetById(contractID: int): Contract
+}
+
+class ContractDB {
+  + <<static>> GetById(contractID: int): Contract
+}
+
+@enduml

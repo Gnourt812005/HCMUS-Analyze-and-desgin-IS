@@ -1,0 +1,43 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class CheckoutRequestScreen {
+  dtpCheckoutDate: DateTimePicker
+  file: FileUploader
+  btnSubmit: Button
+  btnCancel: Button
+  + Show()
+  + btnSubmit_Click()
+  + btnCancel_Click()
+}
+
+class CheckoutRequest {
+  RequestID: int
+  ExpectedDate: datetime
+  DocumentUrl: string
+  Status: string
+  CreatedAt: datetime
+  + <<static>> CreateRequest(): CheckoutRequest
+  + <<static>> CancelRequest(): bool
+}
+
+class CheckoutRequestDB {
+  + <<static>> Insert(): bool
+  + <<static>> RemoveById(): bool
+}
+
+class Contract {
+  ContractID: int
+  RoomID: int
+  Status: string
+  DepositAmount: float
+  StayDuration: int
+  LiquidationFileUrl: string
+  + <<static>> GetActiveContractByCustomer(): Contract
+}
+
+class ContractDB {
+  + <<static>> GetActiveByCustomer(): Contract
+}
+
+@enduml

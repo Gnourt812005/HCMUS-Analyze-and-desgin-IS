@@ -1,0 +1,43 @@
+@startuml
+actor "Nhân viên quản lý" as NV
+boundary ": ContractLiquidationScreen" as Screen
+entity ": RefundCalculation" as Calc
+entity ": Contract" as Contract
+entity ": Room" as Room
+database ": ContractDB" as ContractDB
+database ": RoomDB" as RoomDB
+
+NV -> Screen: 1: Show()
+activate Screen
+activate NV
+Screen -> Calc: 2: GetByRequestId()
+activate Calc
+deactivate Calc
+deactivate Screen
+deactivate NV
+
+NV -> Screen: 3: Xác nhận thanh toán và tải biên bản
+activate Screen
+activate NV
+NV -> Screen: 4: btnComplete_Click()
+alt Tải đầy đủ biên bản thanh lý
+    Screen -> Contract: 5: LiquidateContract()
+    activate Contract
+    Contract -> ContractDB: 6: UpdateStatus()
+    activate ContractDB
+    deactivate ContractDB
+    Contract -> ContractDB: 7: UpdateLiquidationFile()
+    activate ContractDB
+    deactivate ContractDB
+    deactivate Contract
+
+    Screen -> Room: 8: UpdateRoomStatus()
+    activate Room
+    Room -> RoomDB: 9: UpdateStatus()
+    activate RoomDB
+    deactivate RoomDB
+    deactivate Room
+    deactivate Screen
+deactivate NV
+end
+@enduml

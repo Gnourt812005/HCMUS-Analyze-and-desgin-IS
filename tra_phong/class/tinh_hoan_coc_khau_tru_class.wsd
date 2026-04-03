@@ -1,0 +1,44 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class CalculateRefundScreen {
+  txtDamageNotes: Textbox
+  txtExtraDeductions: Textbox
+  btnCalculate: Button
+  btnSave: Button
+  + Show()
+  + btnCalculate_Click()
+  + btnSave_Click()
+}
+
+class RefundCalculation {
+  CalculationID: int
+  RequestID: int
+  DepositAmount: float
+  DamageFee: float
+  ExtraDebt: float
+  FinalRefundAmount: float
+  Notes: string
+  + <<static>> CalculateTotal(): float
+  + <<static>> SaveCalculation(): bool
+}
+
+class RefundCalculationDB {
+  + <<static>> Insert(): bool
+}
+
+class Contract {
+  ContractID: int
+  RoomID: int
+  Status: string
+  DepositAmount: float
+  StayDuration: int
+  LiquidationFileUrl: string
+  + <<static>> GetContractInfo(): Contract
+}
+
+class ContractDB {
+  + <<static>> GetById(): Contract
+}
+
+@enduml
