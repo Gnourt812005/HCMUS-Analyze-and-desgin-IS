@@ -1,0 +1,45 @@
+@startuml
+
+title Sequence Diagram - Thanh toán (UC15)
+
+autonumber
+
+actor "Khách hàng" as ActorKH
+boundary "UI: Payment Page" as PaymentUI
+control "Business: Payment Service" as PaymentService
+database "Database: Invoice" as InvoiceDB
+
+ActorKH -> PaymentUI : Nhấn nút thanh toán
+PaymentUI -> PaymentService : getPaymentDetails()
+PaymentService --> PaymentUI : hiển thị số tiền cọc & tiền phòng
+
+ActorKH -> PaymentUI : Chọn phương thức thanh toán (Ngân hàng/Ví điện tử)
+PaymentUI -> PaymentService : createPaymentCode(method)
+
+alt Lỗi tạo mã thanh toán (A5)
+    PaymentService --> PaymentUI : System Error (Internal)
+    PaymentUI --> ActorKH : Báo lỗi và yêu cầu thử lại
+else Tạo mã thành công
+    PaymentService --> PaymentUI : hiển thị mã QR thanh toán
+    
+    alt Khách hàng không quét mã/hủy (A6)
+        ActorKH -> PaymentUI : Không thực hiện thanh toán
+        PaymentUI --> ActorKH : Hỏi "Bạn có muốn tạo lại mã không?"
+    else Thực hiện quét mã
+        ActorKH -> PaymentUI : Quét mã và hoàn tất tại App Ngân hàng
+        PaymentUI -> PaymentService : verifyWithBank()
+        
+        alt Không nhận được phản hồi từ ngân hàng (A7)
+            PaymentService --> PaymentUI : Bank Connection Timeout
+            PaymentUI --> ActorKH : Thông báo lỗi kết nối ngân hàng để hỗ trợ
+        else Thanh toán thành công
+            PaymentService -> InvoiceDB : saveTransaction(ma_phieu, ngay_thanh_toan)
+            InvoiceDB --> PaymentService : Success
+            PaymentService -> PaymentService : generateElectronicInvoice()
+            PaymentService --> PaymentUI : showSuccess(Invoice)
+            PaymentUI --> ActorKH : Hiển thị thông báo & Gửi hóa đơn điện tử
+        end
+    end
+end
+
+@enduml

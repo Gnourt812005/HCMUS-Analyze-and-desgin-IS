@@ -1,0 +1,41 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+title Class Diagram - UC15: Thanh toán
+
+package "Presentation Layer" {
+    class "MH_ThanhToan" <<boundary>> {
+        + chonPhuongThuc()
+        + hienThiMaQR()
+        + thongBaoKetQua()
+    }
+}
+
+package "Business Logic Layer" {
+    class "XuLyThanhToan" <<control>> {
+        + taoMaThanhToan(method)
+        + xacMinhGiaoDich()
+        + capNhatTrangThaiPhong()
+    }
+}
+
+package "Data Access Layer" {
+    class "PhieuThanhToan" <<entity>> {
+        - ma_phieu: String
+        - phuong_thuc: String
+        - ngay_thanh_toan: Date
+        + saveInvoice()
+    }
+    class "HopDong" <<entity>> {
+        - ma_hop_dong: String
+        - ngay_ky: Date
+        - trang_thai: String
+        + createNew()
+    }
+}
+
+"MH_ThanhToan" ..> "XuLyThanhToan"
+"XuLyThanhToan" ..> "PhieuThanhToan"
+"XuLyThanhToan" ..> "HopDong"
+
+@enduml
