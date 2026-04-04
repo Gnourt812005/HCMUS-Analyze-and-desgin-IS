@@ -3,35 +3,30 @@ skinparam classAttributeIconSize 0
 skinparam style strictuml
 title Class Diagram - UC16: Thanh toán
 
-package "Presentation Layer" {
-    class "ScreenPayment" <<boundary>> {
-        + selectMethod()
-        + showQRCode()
-        + notifyResult()
-    }
+class "ScreenPayment" <<boundary>> {
+    + selectMethod()
+    + showQRCode()
+    + notifyResult()
 }
 
-package "Business Logic Layer" {
-    class "Payment" <<control>> {
-        + <<static>> createPaymentCode(method)
-        + <<static>> verifyTransaction()
-        + <<static>> updateRoomStatus()
-    }
+class "Payment" <<control>> {
+    - invoiceId: String
+    - contractId: String
+    - method: String
+    - amount: Double
+    - paymentDate: Date
+    - signDate: Date
+    - status: String
+    + <<static>> createPaymentCode(method)
+    + <<static>> verifyTransaction()
+    + <<static>> updateRoomStatus()
 }
 
-package "Data Access Layer" {
-    class "PaymentDB" <<entity>> {
-        - invoiceId: String
-        - method: String
-        - paymentDate: Date
-        + saveInvoice()
-    }
-    class "ContractDB" <<entity>> {
-        - contractId: String
-        - signDate: Date
-        - status: String
-        + create()
-    }
+class "PaymentDB" <<entity>> {
+    + saveInvoice()
+}
+class "ContractDB" <<entity>> {
+    + create()
 }
 
 "ScreenPayment" ..> "Payment"
