@@ -1,0 +1,85 @@
+@startuml XemYeuCauTraPhong_ClassDiagram
+title Class Diagram - UC23: Xem yêu cầu trả phòng
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    BorderColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 20
+    ClassBackgroundColor #F5F7F9
+    ClassBorderThickness 2
+    StereotypeFontColor #2D3E50
+}
+
+' --- PRESENTATION LAYER ---
+class ScreenCheckoutRequestList <<boundary>> {
+    - dgvRequests: DataGridView
+    - btnViewDetail: Button
+    + <<static>> show()
+    + <<static>> loadRequests()
+    + btnViewDetail_Click()
+}
+
+class ScreenCheckoutRequestDetail <<boundary>> {
+    - imgLiquidationFile: Image
+    - btnBack: Button
+    + <<static>> show(requestID: int)
+    + <<static>> loadDetail()
+}
+
+' --- BUSINESS LAYER ---
+class CheckoutRequest <<control>> {
+    - requestID: int
+    - customerID: int
+    - expectedDate: datetime
+    - status: string
+    - createdAt: datetime
+    - documentUrl: string
+    + <<static>> getListByCustomer(customerID: int): List<CheckoutRequest>
+    + <<static>> getById(requestID: int): CheckoutRequest
+}
+
+class RefundCalculator <<control>> {
+    - calculationID: int
+    - requestID: int
+    - depositAmount: float
+    - damageFee: float
+    - extraDebt: float
+    - finalRefundAmount: float
+    + <<static>> getByRequestId(requestID: int): RefundCalculator
+}
+
+class Contract <<control>> {
+    - contractId: int
+    - depositAmount: float
+    - liquidationDocUrl: string
+    + <<static>> getById(contractId: int): Contract
+}
+
+' --- DATABASE LAYER ---
+class CheckoutRequestDB <<entity>> {
+    + <<static>> fetchByCustomer(customerID: int): DataTable
+    + <<static>> fetchById(requestID: int): DataRow
+}
+
+class RefundCalculationDB <<entity>> {
+    + <<static>> fetchByRequestId(requestID: int): DataRow
+}
+
+class ContractDB <<entity>> {
+    + <<static>> fetchById(contractId: int): DataRow
+}
+
+' --- RELATIONSHIPS ---
+ScreenCheckoutRequestList ..> CheckoutRequest : "<<use>>"
+ScreenCheckoutRequestDetail ..> CheckoutRequest : "<<use>>"
+ScreenCheckoutRequestDetail ..> Contract : "<<use>>"
+ScreenCheckoutRequestDetail ..> RefundCalculator : "<<use>>"
+
+CheckoutRequest ..> CheckoutRequestDB : "<<use>>"
+RefundCalculator ..> RefundCalculationDB : "<<use>>"
+Contract ..> ContractDB : "<<use>>"
+
+@enduml
