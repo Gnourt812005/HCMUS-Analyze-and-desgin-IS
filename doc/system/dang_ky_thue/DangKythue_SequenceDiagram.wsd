@@ -1,5 +1,9 @@
 @startuml DangKyThue_SequenceDiagram
 
+skinparam {
+    DefaultFontSize 24
+}
+
 title Sequence Diagram - UC28: Đăng ký thuê
 
 autonumber
