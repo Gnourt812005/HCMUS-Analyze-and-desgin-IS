@@ -1,0 +1,32 @@
+@startuml ChinhSuaThongTinCaNhan_SequenceDiagram
+skinparam DefaultFontSize 24
+
+actor "Khách hàng / Nhân viên" as UserActor
+boundary "ScreenProfile" as Screen
+control "User" as Control
+entity "UserDB" as DB
+
+UserActor -> Screen : Nhấp nút "Chỉnh sửa"
+activate Screen
+Screen -> Screen : Chuyển sang chế độ chỉnh sửa
+deactivate Screen
+
+UserActor -> Screen : Nhập thông tin mới (Họ tên, Ngày sinh, SĐT, Email)
+activate Screen
+UserActor -> Screen : Nhấp nút "Cập nhật"
+
+Screen -> Control : updateProfile(data)
+activate Control
+
+Control -> DB : update(id, data)
+activate DB
+DB --> Control : result
+deactivate DB
+
+Control --> Screen : result
+deactivate Control
+
+Screen -> Screen : Hiển thị thông báo thành công
+deactivate Screen
+
+@enduml

@@ -1,0 +1,67 @@
+@startuml QuanLyBienBan_SequenceDiagram
+title Sequence Diagram - UC21: Lập biên bản bàn giao phòng
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    ParticipantPadding 20
+    BoxPadding 10
+}
+
+actor "Nhân viên quản lý" as Actor
+boundary "ScreenContractDetail" as DetailGUI <<boundary>>
+boundary "ScreenReportList" as ListGUI <<boundary>>
+boundary "FormReport" as FormGUI <<boundary>>
+control "Report" as BUS <<control>>
+database "ReportDB" as DB <<database>>
+
+autonumber
+
+== Kịch bản 1: Xem danh sách biên bản bàn giao ==
+Actor -> DetailGUI: Nhấn "Biên bản bàn giao"
+DetailGUI -> ListGUI: showReportList()
+ListGUI -> BUS: getReportsByContract(contractId)
+BUS -> DB: fetchByContractId(contractId)
+DB --> BUS: Dữ liệu biên bản
+BUS --> ListGUI: Danh sách biên bản
+ListGUI --> Actor: Hiển thị danh sách
+
+== Kịch bản 2: Lập biên bản bàn giao ==
+Actor -> ListGUI: Nhấn "Lập biên bản mới"
+ListGUI -> FormGUI: showReportForm()
+
+' --- Tự động lấy danh sách thiết bị ---
+FormGUI -> BUS: getEquipmentsByBed(bedId)
+BUS -> DB: fetchEquipments(bedId)
+DB --> BUS: Danh sách thiết bị (Giường, nệm, tủ, chìa khóa)
+BUS --> FormGUI: Kết quả
+FormGUI --> Actor: Hiển thị checklist
+
+' --- Hành động của người dùng ---
+Actor -> FormGUI: Chọn trạng thái (Tốt/Hư hỏng/Mất)
+Actor -> FormGUI: Nhập ghi chú
+
+alt Lưu & Ký
+    Actor -> FormGUI: Nhấn "Lưu & Ký"
+    FormGUI -> BUS: createHandoverReport(data, bedId)
+    
+    ' Transaction: Chèn biên bản và cập nhật trạng thái giường
+    BUS -> DB: insert(data)
+    DB --> BUS: Thành công
+    
+    BUS -> DB: updateBedStatus(bedId, "Occupied")
+    DB --> BUS: Thành công
+    
+    BUS --> FormGUI: Trả về kết quả (Thành công)
+    FormGUI --> Actor: Thông báo thành công
+    FormGUI -> ListGUI: refreshList()
+else Hủy
+    Actor -> FormGUI: Nhấn "Hủy"
+    FormGUI -> FormGUI: clearData()
+    FormGUI --> Actor: Đóng Form
+end
+
+@enduml

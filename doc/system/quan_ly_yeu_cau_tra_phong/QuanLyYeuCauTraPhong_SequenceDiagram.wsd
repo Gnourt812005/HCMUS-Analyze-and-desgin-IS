@@ -1,0 +1,58 @@
+@startuml QuanLyYeuCauTraPhong_SequenceDiagram
+title Sequence Diagram - UC23: Xem yêu cầu trả phòng
+actor "Khách hàng" as KhachHang
+boundary ": RequestListScreen" as ListScreen
+boundary ": RequestDetailScreen" as DetailScreen
+entity ": CheckoutRequest" as Request
+database ": CheckoutRequestDB" as RequestDB
+entity ": Contract" as Contract
+database ": ContractDB" as ContractDB
+entity ": RefundCalculation" as Calc
+database ": RefundCalculationDB" as CalcDB
+
+KhachHang -> ListScreen: 1: Show()
+activate KhachHang
+activate ListScreen
+
+ListScreen -> Request: 2: GetListByCustomer()
+activate Request
+Request -> RequestDB: 3: GetListByCustomer()
+activate RequestDB
+deactivate RequestDB
+deactivate Request
+deactivate ListScreen
+deactivate KhachHang
+
+KhachHang -> ListScreen: 4: btnViewDetail_Click()
+activate ListScreen
+activate KhachHang
+ListScreen -> DetailScreen: 5: Show()
+activate DetailScreen
+
+DetailScreen -> Request: 6: GetById()
+activate Request
+Request -> RequestDB: 7: GetById()
+activate RequestDB
+deactivate RequestDB
+deactivate Request
+
+DetailScreen -> Contract: 8: GetById()
+activate Contract
+Contract -> ContractDB: 9: GetById()
+activate ContractDB
+deactivate ContractDB
+deactivate Contract
+
+alt Trạng thái là "Đang xử lý" hoặc "Đã thanh lý"
+    DetailScreen -> Calc: 10: GetByRequestId()
+    activate Calc
+    Calc -> CalcDB: 11: GetByRequestId()
+    activate CalcDB
+    deactivate CalcDB
+    deactivate Calc
+end
+
+deactivate DetailScreen
+deactivate ListScreen
+deactivate KhachHang
+@enduml
