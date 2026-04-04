@@ -12,9 +12,18 @@ skinparam class {
     HeaderBackgroundColor #DDDDDD
 }
 
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+}
+
 ' --- ENTITIES ---
 
-class "Customer (Khách hàng)" as Customer {
+entity "Customer (Khách hàng)" as Customer {
     * cccd: string <<PK>>
     --
     fullName: string
@@ -26,7 +35,7 @@ class "Customer (Khách hàng)" as Customer {
     password: string
 }
 
-class "Employee (Nhân viên)" as Employee {
+entity "Employee (Nhân viên)" as Employee {
     * employeeId: string <<PK>>
     --
     fullName: string
@@ -36,7 +45,7 @@ class "Employee (Nhân viên)" as Employee {
     password: string
 }
 
-class "Dorm (Ký túc xá)" as Dorm {
+entity "Dorm (Ký túc xá)" as Dorm {
     * dormId: string <<PK>>
     --
     name: string
@@ -44,14 +53,14 @@ class "Dorm (Ký túc xá)" as Dorm {
     hotline: string
 }
 
-class "Room (Phòng)" as Room {
+entity "Room (Phòng)" as Room {
     * roomId: string <<PK>>
     * dormId: string <<FK>>
     --
     type: string
 }
 
-class "Bed (Giường)" as Bed {
+entity "Bed (Giường)" as Bed {
     * bedId: string <<PK>>
     * roomId: string <<FK>>
     --
@@ -59,7 +68,7 @@ class "Bed (Giường)" as Bed {
     status: string
 }
 
-class "Contract (Hợp đồng)" as Contract {
+entity "Contract (Hợp đồng)" as Contract {
     * contractId: string <<PK>>
     * customerId: string <<FK>>
     * bedId: string <<FK>>
@@ -72,7 +81,7 @@ class "Contract (Hợp đồng)" as Contract {
     status: string
 }
 
-class "DepositReceipt (Giấy đặt cọc)" as DepositReceipt {
+entity "DepositReceipt (Giấy đặt cọc)" as DepositReceipt {
     * depositId: string <<PK>>
     * customerId: string <<FK>>
     * roomId: string <<FK>>
@@ -84,7 +93,7 @@ class "DepositReceipt (Giấy đặt cọc)" as DepositReceipt {
     status: string
 }
 
-class "PaymentReceipt (Phiếu thanh toán)" as PaymentReceipt {
+entity "PaymentReceipt (Phiếu thanh toán)" as PaymentReceipt {
     * receiptId: string <<PK>>
     contractId: string <<FK>>
     depositId: string <<FK>>
@@ -94,7 +103,7 @@ class "PaymentReceipt (Phiếu thanh toán)" as PaymentReceipt {
     paymentDate: datetime
 }
 
-class "HandoverReport (Biên bản)" as HandoverReport {
+entity "HandoverReport (Biên bản)" as HandoverReport {
     * reportId: string <<PK>>
     * contractId: string <<FK>>
     --
@@ -105,7 +114,7 @@ class "HandoverReport (Biên bản)" as HandoverReport {
     note: string
 }
 
-class "CheckoutRequest (Yêu cầu trả phòng)" as CheckoutRequest {
+entity "CheckoutRequest (Yêu cầu trả phòng)" as CheckoutRequest {
     * requestId: string <<PK>>
     * contractId: string <<FK>>
     --
@@ -115,7 +124,7 @@ class "CheckoutRequest (Yêu cầu trả phòng)" as CheckoutRequest {
     documentUrl: string
 }
 
-class "RefundCalculation (Hoàn cọc & Khấu trừ)" as RefundCalculation {
+entity "RefundCalculation (Hoàn cọc & Khấu trừ)" as RefundCalculation {
     * calculationId: string <<PK>>
     * requestId: string <<FK>>
     --
@@ -124,7 +133,7 @@ class "RefundCalculation (Hoàn cọc & Khấu trừ)" as RefundCalculation {
     totalAmount: decimal
 }
 
-class "ViewingSchedule (Lịch hẹn)" as ViewingSchedule {
+entity "ViewingSchedule (Lịch hẹn)" as ViewingSchedule {
     * scheduleId: string <<PK>>
     * customerId: string <<FK>>
     employeeId: string <<FK>>
@@ -135,52 +144,75 @@ class "ViewingSchedule (Lịch hẹn)" as ViewingSchedule {
     status: string
 }
 
-class "Policy (Nội quy)" as Policy {
+entity "Policy (Nội quy)" as Policy {
     * policyId: string <<PK>>
-    * dormId: string <<FK>>
     --
     title: string
     content: string
 }
 
-class "Utility (Tiện ích)" as Utility {
+entity "DormPolicy (Nội quy KTX)" as DormPolicy {
+    * dormId: string <<PK, FK>>
+    * policyId: string <<PK, FK>>
+}
+
+entity "Utility (Tiện ích)" as Utility {
     * utilityId: string <<PK>>
     --
     name: string
+    description: string
 }
 
-class "FavoriteRoom (Phòng quan tâm)" as FavoriteRoom {
+entity "DormUtility (Tiện ích KTX)" as DormUtility {
+    * dormId: string <<PK, FK>>
+    * utilityId: string <<PK, FK>>
+}
+
+entity "RoomUtility (Tiện ích Phòng)" as RoomUtility {
+    * roomId: string <<PK, FK>>
+    * utilityId: string <<PK, FK>>
+    --
+    quantity: int
+}
+
+entity "FavoriteRoom (Phòng quan tâm)" as FavoriteRoom {
     * cccd: string <<PK, FK>>
     * roomId: string <<PK, FK>>
 }
 
 ' --- RELATIONSHIPS ---
 
-Dorm ||--o{ Room : "quản lý"
-Room ||--o{ Bed : "chứa"
-Dorm ||--o{ Policy : "có"
+Dorm ||--o{ Room
+Room ||--o{ Bed
 
-Customer ||--o{ Contract : "ký"
-Bed ||--o{ Contract : "được thuê"
+Dorm ||--o{ DormPolicy
+Policy ||--o{ DormPolicy
 
-Customer ||--o{ DepositReceipt : "lập"
-Room ||--o{ DepositReceipt : "đặt giữ"
+Dorm ||--o{ DormUtility
+Utility ||--o{ DormUtility
 
-Contract ||--o{ PaymentReceipt : "thanh toán"
-DepositReceipt ||--o{ PaymentReceipt : "thanh toán"
+Room ||--o{ RoomUtility
+Utility ||--o{ RoomUtility
 
-Contract ||--o{ HandoverReport : "có"
-Contract ||--|{ CheckoutRequest : "kết thúc bằng"
-CheckoutRequest ||--|| RefundCalculation : "áp dụng cho"
+Customer ||--o{ Contract
+Bed ||--o{ Contract
 
-Customer ||--o{ ViewingSchedule : "đặt"
-Employee ||--o{ ViewingSchedule : "được phân công"
-Room ||--o{ ViewingSchedule : "được xem"
+Customer ||--o{ DepositReceipt
+Room ||--o{ DepositReceipt
 
-Customer ||--o{ FavoriteRoom : "quan tâm"
-Room ||--o{ FavoriteRoom : "được quan tâm"
+Contract ||--o{ PaymentReceipt
+DepositReceipt ||--o{ PaymentReceipt
 
-Utility }|--o{ Room : "trang bị cho"
-Utility }|--o{ Dorm : "có tại"
+Contract ||--o{ HandoverReport
+Contract ||--|{ CheckoutRequest
+CheckoutRequest ||--|| RefundCalculation
+
+Customer ||--o{ ViewingSchedule
+Employee ||--o{ ViewingSchedule
+Room ||--o{ ViewingSchedule
+
+Customer ||--o{ FavoriteRoom
+Room ||--o{ FavoriteRoom
+
 
 @enduml
