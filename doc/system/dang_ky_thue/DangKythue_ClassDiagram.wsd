@@ -1,12 +1,14 @@
-@startuml DatCoc_ClassDiagram
+@startuml DangKythue_ClassDiagram
+
 skinparam classAttributeIconSize 0
 skinparam style strictuml
-title Class Diagram - UC14: Đặt cọc
+title Class Diagram - UC28: Đăng ký thuê
 
 ' --- BOUNDARY LAYER ---
-class "ScreenDeposit" as ScreenDeposit <<boundary>> {
+class "ScreenRent" as ScreenDeposit <<boundary>> {
     + showRooms()
     + inputCustomerInfo()
+    + lockQuantityUI()
     + showTotalAmount(amount)
 }
 
@@ -29,12 +31,14 @@ class "Bed" as Bed <<control>> {
     - price: Double
 }
 
-class "Deposit" as Deposit <<control>> {
+class "Rent" as Rent <<control>> {
     - roomId: String
-    - depositAmount: Double
+    - isAlreadyDeposited: Boolean
+    - amount: Double
     + <<static>> validateInfo(data)
-    + <<static>> calculateDeposit()
+    + <<static>> calculateAmount(isAlreadyDeposited)
     + <<static>> createTempInvoice()
+    + <<static>> checkDepositHistory(roomId, idCard)
 }
 
 class "RoomDB" as RoomDB <<entity>> {
@@ -42,14 +46,14 @@ class "RoomDB" as RoomDB <<entity>> {
 }
 
 class "BedDB" as BedDB <<entity>> {
+    + <<static>> getPrice()
     + <<static>> checkAvailable()
-     + <<static>> getPrice()
 }
 
-"ScreenDeposit" ..> "Deposit"
-"Deposit" ..> "Customer"
-"Deposit" ..> "Room"
-"Deposit" ..> "Bed"
+"ScreenDeposit" ..> "Rent"
+"Rent" ..> "Customer"
+"Rent" ..> "Room"
+"Rent" ..> "Bed"
 "Customer" ..> "CustomerDB"
 "Room" ..> "RoomDB"
 "Bed" ..> "BedDB"

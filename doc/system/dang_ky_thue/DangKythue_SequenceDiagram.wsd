@@ -1,5 +1,6 @@
-@startuml DatCoc_SequenceDiagram
-title Sequence Diagram - UC14: Đặt cọc
+@startuml DangKyThue_SequenceDiagram
+
+title Sequence Diagram - UC28: Đăng ký thuê
 
 autonumber
 
@@ -9,24 +10,36 @@ control "Deposit" as BUS <<control>>
 database "RoomDB" as DB <<database>>
 
 Actor -> GUI : Chọn phòng/giường
+GUI -> BUS : checkDepositHistory(roomId, idCard)
+BUS -> DB : Truy vấn trạng thái cọc
+
+alt Nếu đã có lịch sử đặt cọc
+    DB --> BUS : Đã có cọc
+    BUS --> GUI : Yêu cầu khóa số lượng giường
+    GUI -> Actor : Hiển thị thông báo & Khóa UI số lượng
+end
+
 GUI -> Actor : Hiển thị form thông tin khách hàng
 Actor -> GUI : Nhập thông tin cá nhân và xác nhận
-
 GUI -> BUS : validateAndProcess(customerData, roomId)
 
 alt Thông tin không hợp lệ
     BUS --> GUI : Lỗi kiểm tra dữ liệu
     GUI --> Actor : Hiển thị lỗi
+
 else Thông tin hợp lệ
     BUS -> BUS : Gọi UC15 (Kiểm tra điều kiện)
-    
-    Actor -> GUI : Nhấn "Đặt cọc"
+    Actor -> GUI : Nhấn "Thanh toán"
     BUS -> DB : getRoomPriceFromBed(roomId, BedId)
     DB --> BUS : Đơn giá
-    
-    BUS -> BUS : calculateDepositAmount(price)
-    BUS --> GUI : showSummary(depositAmount)
-    
+
+    BUS -> BUS : calculateAmount(isAlreadyDeposited)
+    BUS --> GUI : showSummary(amount)
+
+    alt Đã đặt cọc trước đó
+        BUS --> GUI : Hiển thị summary đã trừ cọc
+    end
+
     alt Thay đổi thông tin
         Actor -> GUI : Nhấn "Thay đổi thông tin"
         GUI --> Actor : Quay lại bước chọn
@@ -35,6 +48,7 @@ else Thông tin hợp lệ
         GUI -> BUS : Gọi UC16 (Thanh toán)
         BUS --> GUI : Chuyển hướng thanh toán
     end
+
 end
 
 @enduml
