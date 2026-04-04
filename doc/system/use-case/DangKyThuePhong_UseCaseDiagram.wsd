@@ -1,0 +1,100 @@
+@startuml DangKyThuePhong_UseCaseDiagram
+title Đăng ký thuê phòng - Group Use Case Diagram
+
+skinparam packageStyle rectangle
+
+' Direction
+left to right direction
+
+' Define S.Actors
+actor "User" as user
+actor "Khách hàng" as customer #Lime
+' actor "Nhân viên quản lý chi nhánh" as manager #DarkOrange
+actor "Nhân viên sale" as sale #DeepSkyBlue
+' actor "Admin" as admin #Crimson
+
+customer -|> user
+' manager -|> user
+sale -|> user
+' admin -|> user
+
+
+rectangle "Màn hình chung"{
+    usecase "Đăng nhập" as UC_DangNhap
+    usecase "Đăng xuất" as UC_DangXuat
+    usecase "Quản lý tài khoản" as UC_QuanLyTaiKhoan
+    usecase "Xem danh sách phòng" as UC_XemDanhSachPhong
+    usecase "Xem chi tiết phòng" as UC_XemChiTietPhong
+
+    user -> UC_DangNhap
+    user -> UC_XemDanhSachPhong
+
+    UC_DangXuat ..> UC_DangNhap : <<extend>>
+    UC_QuanLyTaiKhoan ..> UC_DangNhap : <<extend>>
+    UC_XemChiTietPhong ..> UC_XemDanhSachPhong : <<extend>>
+}
+
+rectangle "Màn hình khách hàng"{
+    usecase "Đăng ký tài khoản" as UC_DangKyTaiKhoan
+
+    usecase "Đăng ký xem phòng" as UC_DangKyXemPhong
+    usecase "Quản lý lịch xem phòng" as UC_QuanLyDonXemPhong
+    usecase "Hủy lịch xem phòng" as UC_HuyLichXemPhong
+    usecase "Quan tâm phòng" as UC_QuanTamPhong
+    usecase "Quản lý phòng đã quan tâm" as UC_QuanLyPhongQuanTam
+
+    ' usecase "Quản lý đơn đăng ký thuê phòng" as UC_QuanLyDonDangKyThuePhong
+    ' usecase "Xóa đơn đăng ký thuê phòng" as UC_XoaDonDangKyThuePhong
+    ' usecase "Đăng ký thuê phòng" as UC_DangKyThuePhong
+    
+    customer -- UC_DangKyTaiKhoan
+
+    UC_DangKyXemPhong ..> UC_XemChiTietPhong : <<extend>>
+    UC_DangKyXemPhong ..> UC_DangNhap : <<extend>>
+    UC_HuyLichXemPhong ..> UC_QuanLyDonXemPhong : <<extend>>
+    UC_QuanTamPhong ..> UC_XemChiTietPhong : <<extend>>
+    UC_QuanLyDonXemPhong ..> UC_DangNhap : <<extend>>
+    UC_QuanLyPhongQuanTam ..> UC_DangNhap : <<extend>>
+    UC_DangKyXemPhong ..> UC_QuanLyPhongQuanTam : <<extend>>
+
+
+    ' UC_QuanLyDonDangKyThuePhong ..> UC_DangNhap : <<extend>>
+    ' UC_XoaDonDangKyThuePhong ..> UC_QuanLyDonDangKyThuePhong : <<extend>>
+    ' UC_DangKyXemPhong ..> UC_DangKyThuePhong : <<extend>>
+    ' UC_DangKyThuePhong ..> UC_XemChiTietPhong : <<extend>>
+    ' UC_DangKyThuePhong ..> UC_DangNhap : <<include>>
+}
+
+' rectangle "Màn hình nhân viên quản lý chi nhánh"{
+'     usecase "Quản lý phòng" as UC_QuanLyPhong
+'     usecase "Quản lý khách thuê" as UC_QuanLyKhachHang
+'     usecase "Quản lý hợp đồng thuê phòng" as UC_QuanLyHopDongThuePhong
+
+'     UC_QuanLyPhong ..> UC_DangNhap : <<extend>>
+'     UC_QuanLyKhachHang ..> UC_DangNhap : <<extend>>
+'     UC_QuanLyHopDongThuePhong ..> UC_DangNhap : <<extend>>
+' }
+
+rectangle "Màn hình nhân viên sale"{
+    usecase "Quản lý lịch xem phòng khách hàng" as UC_QuanLyLichXemPhongKH
+    usecase "Dời lịch xem phòng khách hàng" as UC_DoiLichXemPhongKH
+    usecase "Tạo lịch xem phòng khách hàng" as UC_TaoLichXemPhongKH
+
+    UC_QuanLyLichXemPhongKH ..> UC_DangNhap : <<extend>>
+    UC_DoiLichXemPhongKH ..> UC_QuanLyLichXemPhongKH : <<extend>>
+    UC_TaoLichXemPhongKH ..> UC_QuanLyLichXemPhongKH : <<extend>>
+}
+
+' rectangle "Màn hình Admin"{
+'     usecase "Quản lý ký túc xá" as UC_QuanLyKyTucXa
+'     usecase "Quản lý nhân viên" as UC_QuanLyNhanVien
+'     usecase "Tạo tài khoản nhân viên" as UC_TaoTaiKhoanNhanVien
+
+'     UC_QuanLyKyTucXa ..> UC_DangNhap : <<extend>>
+'     UC_QuanLyNhanVien ..> UC_DangNhap : <<extend>>
+'     UC_TaoTaiKhoanNhanVien ..> UC_QuanLyNhanVien : <<extend>>
+' }
+
+
+
+@enduml

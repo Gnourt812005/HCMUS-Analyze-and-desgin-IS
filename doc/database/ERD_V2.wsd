@@ -1,0 +1,186 @@
+@startuml ERD_V2
+title HomeStay Dorm - Entity Relationship Diagram (V2)
+
+' === CONFIGURATION ===
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 100
+skinparam shadowing false
+skinparam class {
+    BackgroundColor #F9F9F9
+    BorderColor #333333
+    HeaderBackgroundColor #DDDDDD
+}
+
+' --- ENTITIES ---
+
+class "Customer (Khách hàng)" as Customer {
+    * cccd: string <<PK>>
+    --
+    fullName: string
+    birthday: date
+    gender: string
+    phone: string
+    address: string
+    email: string
+    password: string
+}
+
+class "Employee (Nhân viên)" as Employee {
+    * employeeId: string <<PK>>
+    --
+    fullName: string
+    role: string
+    phone: string
+    email: string
+    password: string
+}
+
+class "Dorm (Ký túc xá)" as Dorm {
+    * dormId: string <<PK>>
+    --
+    name: string
+    address: string
+    hotline: string
+}
+
+class "Room (Phòng)" as Room {
+    * roomId: string <<PK>>
+    * dormId: string <<FK>>
+    --
+    type: string
+}
+
+class "Bed (Giường)" as Bed {
+    * bedId: string <<PK>>
+    * roomId: string <<FK>>
+    --
+    basePrice: decimal
+    status: string
+}
+
+class "Contract (Hợp đồng)" as Contract {
+    * contractId: string <<PK>>
+    * customerId: string <<FK>>
+    * bedId: string <<FK>>
+    --
+    signedDate: date
+    startDate: date
+    endDate: date
+    occupantCount: int
+    depositAmount: decimal
+    status: string
+}
+
+class "DepositReceipt (Giấy đặt cọc)" as DepositReceipt {
+    * depositId: string <<PK>>
+    * customerId: string <<FK>>
+    * roomId: string <<FK>>
+    --
+    createdDate: date
+    deadlineDate: date
+    occupantCount: int
+    totalAmount: decimal
+    status: string
+}
+
+class "PaymentReceipt (Phiếu thanh toán)" as PaymentReceipt {
+    * receiptId: string <<PK>>
+    contractId: string <<FK>>
+    depositId: string <<FK>>
+    --
+    method: string
+    amount: decimal
+    paymentDate: datetime
+}
+
+class "HandoverReport (Biên bản)" as HandoverReport {
+    * reportId: string <<PK>>
+    * contractId: string <<FK>>
+    --
+    type: string
+    createdDate: date
+    content: string
+    bedStatus: string
+    note: string
+}
+
+class "CheckoutRequest (Yêu cầu trả phòng)" as CheckoutRequest {
+    * requestId: string <<PK>>
+    * contractId: string <<FK>>
+    --
+    expectedDate: date
+    status: string
+    rejectReason: string
+    documentUrl: string
+}
+
+class "RefundCalculation (Hoàn cọc & Khấu trừ)" as RefundCalculation {
+    * calculationId: string <<PK>>
+    * requestId: string <<FK>>
+    --
+    damageNotes: string
+    extraDeductions: decimal
+    totalAmount: decimal
+}
+
+class "ViewingSchedule (Lịch hẹn)" as ViewingSchedule {
+    * scheduleId: string <<PK>>
+    * customerId: string <<FK>>
+    employeeId: string <<FK>>
+    * roomId: string <<FK>>
+    --
+    time: datetime
+    type: string
+    status: string
+}
+
+class "Policy (Nội quy)" as Policy {
+    * policyId: string <<PK>>
+    * dormId: string <<FK>>
+    --
+    title: string
+    content: string
+}
+
+class "Utility (Tiện ích)" as Utility {
+    * utilityId: string <<PK>>
+    --
+    name: string
+}
+
+class "FavoriteRoom (Phòng quan tâm)" as FavoriteRoom {
+    * cccd: string <<PK, FK>>
+    * roomId: string <<PK, FK>>
+}
+
+' --- RELATIONSHIPS ---
+
+Dorm ||--o{ Room : "quản lý"
+Room ||--o{ Bed : "chứa"
+Dorm ||--o{ Policy : "có"
+
+Customer ||--o{ Contract : "ký"
+Bed ||--o{ Contract : "được thuê"
+
+Customer ||--o{ DepositReceipt : "lập"
+Room ||--o{ DepositReceipt : "đặt giữ"
+
+Contract ||--o{ PaymentReceipt : "thanh toán"
+DepositReceipt ||--o{ PaymentReceipt : "thanh toán"
+
+Contract ||--o{ HandoverReport : "có"
+Contract ||--|{ CheckoutRequest : "kết thúc bằng"
+CheckoutRequest ||--|| RefundCalculation : "áp dụng cho"
+
+Customer ||--o{ ViewingSchedule : "đặt"
+Employee ||--o{ ViewingSchedule : "được phân công"
+Room ||--o{ ViewingSchedule : "được xem"
+
+Customer ||--o{ FavoriteRoom : "quan tâm"
+Room ||--o{ FavoriteRoom : "được quan tâm"
+
+Utility }|--o{ Room : "trang bị cho"
+Utility }|--o{ Dorm : "có tại"
+
+@enduml

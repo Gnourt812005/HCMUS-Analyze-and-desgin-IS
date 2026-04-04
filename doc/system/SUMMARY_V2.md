@@ -77,9 +77,9 @@ All classes follow the `*DB` postfix for Entity/Data Access.
   - Control: Business name (CamelCase). Methods use **<<static>>**. Properties are **non-static**.
   - Entity: `*DB` (CamelCase). Methods use **<<static>>**.
   - Methods/Properties: `camelCase` (English)
-- [Login](dang_nhap/dang_nhap_sequence_diagram.wsd)
-- [Logout](dang_xuat/dang_xuat_sequence_diagram.wsd)
-- [Edit Profile](chinh_sua_thong_tin_ca_nhan/chinh_sua_thong_tin_ca_nhan_class_diagram.wsd)
+- [Login](dang_nhap/DangNhap_SequenceDiagram.wsd)
+- [Logout](dang_xuat/DangXuat_SequenceDiagram.wsd)
+- [Edit Profile](chinh_sua_thong_tin_ca_nhan/ChinhSuaThongTinCaNhan_ClassDiagram.wsd)
 - **Language**:
   - Technical identifiers (Classes, Methods, Variables): **English**
   - Labels and Annotations (Arrows, Headers, Notes): **Vietnamese** (to map with specifications)

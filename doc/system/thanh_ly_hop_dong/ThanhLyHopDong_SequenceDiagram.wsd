@@ -1,0 +1,41 @@
+@startuml ThanhLyHopDong_SequenceDiagram
+title Sequence Diagram - UC25: Thanh lý hợp đồng
+
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    ParticipantPadding 20
+}
+
+actor "Staff" as NV
+boundary "ScreenContractTermination" as Screen <<boundary>>
+control "RefundCalculation" as Calc <<control>>
+control "Contract" as Contract <<control>>
+control "Room" as Room <<control>>
+database "ContractDB" as ContractDB <<database>>
+database "RoomDB" as RoomDB <<database>>
+
+autonumber
+
+== Khởi tạo màn hình ==
+NV -> Screen: show()
+Screen -> Calc: getByRequestId()
+
+== Hoàn tất thanh lý ==
+NV -> Screen: Xác nhận thanh toán và tải biên bản thanh lý
+NV -> Screen: Nhấn "Hoàn tất" (btnCompleteClick)
+
+alt Biên bản thanh lý hợp lệ
+    Screen -> Contract: liquidateContract()
+    Contract -> ContractDB: updateStatus()
+    Contract -> ContractDB: updateLiquidationFile()
+
+    Screen -> Room: updateRoomStatus()
+    Room -> RoomDB: updateStatus()
+    
+    Screen --> NV: Hiển thị trạng thái hoàn tất
+end
+
+@enduml

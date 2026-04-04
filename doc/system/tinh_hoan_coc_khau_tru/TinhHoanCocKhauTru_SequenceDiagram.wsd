@@ -1,0 +1,34 @@
+@startuml TinhHoanCocKhauTru_SequenceDiagram
+title Sequence Diagram - UC24: Tính khoản hoàn cọc và khấu trừ
+
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    ParticipantPadding 20
+}
+
+actor "BranchManager" as QuanLy
+boundary "ScreenRefundCalculation" as Screen <<boundary>>
+control "Contract" as Contract <<control>>
+control "RefundCalculation" as Calc <<control>>
+database "RefundCalculationDB" as DB <<database>>
+
+autonumber
+
+== Khởi tạo màn hình ==
+QuanLy -> Screen: show()
+Screen -> Contract: getContractInfo()
+
+== Tính toán khấu trừ ==
+QuanLy -> Screen: Nhập hư hỏng và phí phát sinh
+QuanLy -> Screen: Nhấn "Tính toán" (btnCalculateClick)
+Screen -> Calc: calculateTotal()
+
+== Lưu kết quả tính toán ==
+QuanLy -> Screen: Nhấn "Lưu" (btnSaveClick)
+Screen -> Calc: saveCalculation()
+Calc -> DB: insert()
+
+@enduml
