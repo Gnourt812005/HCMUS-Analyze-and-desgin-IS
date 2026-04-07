@@ -1,4 +1,4 @@
-import { UserDTO, SignInResponseDTO, SignInDTO, SignUpDTO } from '@dormarch/shared';
+import { UserDTO, SignInResponseDTO, SignInDTO, SignUpDTO, UserProfileDTO, ChangePasswordDTO } from '@dormarch/shared';
 import { UserDB } from '../database/UserDB';
 import { JwtUtils } from '../utils/jwt';
 
@@ -24,6 +24,18 @@ export class User {
   }
 
   toDTO(): UserDTO {
+    return {
+      email: this.email,
+      fullName: this.fullName,
+      cccd: this.cccd,
+      birthday: this.birthday,
+      gender: this.gender,
+      phone: this.phone,
+      address: this.address,
+    };
+  }
+
+  toUserProfileDTO(): UserProfileDTO {
     return {
       email: this.email,
       fullName: this.fullName,
@@ -61,17 +73,34 @@ export class User {
       throw new Error('Email đã tồn tại');
     }
 
-    const newUserModel = new User({
+    const newUser = new User({
       email: data.email,
       password: data.password,
       fullName: '',
-      cccd: undefined,
-      birthday: undefined,
       gender: 'female',
-      phone: undefined,
-      address: ''
     });
 
-    return await UserDB.insert(newUserModel);
+    return await UserDB.insert(newUser);
+  }
+
+  static async getProfile(email: string): Promise<UserProfileDTO | null> {
+    const userModel = await UserDB.fetchCredentialByEmail(email);
+    if (!userModel) return null;
+    return userModel.toUserProfileDTO();
+  }
+
+  static async updateProfile(email: string, data: UserProfileDTO): Promise<boolean> {
+    return await UserDB.update(email, data);
+  }
+
+  static async changePassword(email: string, data: ChangePasswordDTO): Promise<boolean> {
+    const userModel = await UserDB.fetchCredentialByEmail(email);
+    if (!userModel) throw new Error('Không tìm thấy người dùng');
+
+    if (userModel.password !== data.oldPassword) {
+      throw new Error('Mật khẩu cũ không chính xác');
+    }
+
+    return await UserDB.updatePassword(email, data.newPassword);
   }
 }

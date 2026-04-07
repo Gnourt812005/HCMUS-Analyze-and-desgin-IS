@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { User } from '../business/User';
 import { SignInDTO, SignUpDTO } from '@dormarch/shared';
+import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
 
 const router = Router();
 
@@ -37,6 +38,11 @@ router.post('/sign-up', async (req, res) => {
     // Return 400 for errors like email exists
     res.status(400).json({ message: error.message });
   }
+});
+
+// TEST ENDPOINT
+router.get('/test', authMiddleware, (req: AuthRequest, res) => {
+  res.json({ message: 'Truy cập thành công route bảo vệ!', user: req.user });
 });
 
 export default router;

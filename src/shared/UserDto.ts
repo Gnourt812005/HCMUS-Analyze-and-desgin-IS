@@ -22,3 +22,18 @@ export interface SignUpDTO {
 export interface SignInResponseDTO {
   token: string;
 }
+
+export interface UserProfileDTO {
+  email: string;
+  fullName: string;
+  cccd?: string;
+  birthday?: string;
+  gender?: string;
+  phone?: string;
+  address?: string;
+}
+
+export interface ChangePasswordDTO {
+  oldPassword: string;
+  newPassword: string;
+}

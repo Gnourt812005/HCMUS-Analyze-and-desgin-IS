@@ -1,12 +1,14 @@
-import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, LogOut, Bell } from 'lucide-react';
 
 export const Header = () => {
-  // Temporary mock state. TBD: connect with actual AuthContext.
-  const isLoggedIn = false;
-  const logout = () => { };
   const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+  const isLoggedIn = !!token;
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm font-manrope antialiased tracking-tight">
@@ -28,14 +30,11 @@ export const Header = () => {
                 <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
                 Admin Portal
               </button>
-              <button className="p-2 hover:bg-slate-100 rounded-lg transition-all">
-                <Bell className="w-5 h-5 text-slate-600" />
-              </button>
               <button
                 onClick={() => navigate('/profile')}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-all"
+                className="p-2 hover:bg-slate-100 rounded-lg transition-all flex items-center justify-center"
               >
-                <User className="w-5 h-5 text-slate-600" />
+                <span className="material-symbols-outlined text-slate-600 text-xl">person</span>
               </button>
               <button
                 onClick={logout}
@@ -48,7 +47,7 @@ export const Header = () => {
             <>
               <button
                 onClick={() => navigate('/login')}
-                className="px-5 py-2 rounded-xl text-blue-700 font-medium hover:bg-slate-50 transition-all duration-200"
+                className="bg-primary-container text-on-primary-container px-6 py-2 rounded-xl font-semibold shadow-md hover:brightness-110 transition-all"
               >
                 Đăng nhập
               </button>

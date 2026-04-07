@@ -24,6 +24,23 @@ export class UserDB {
     return this.MOCK_USERS.some(u => u.email === email);
   }
 
+  static async update(email: string, data: Partial<User>): Promise<boolean> {
+    const userIndex = this.MOCK_USERS.findIndex(u => u.email === email);
+    if (userIndex === -1) return false;
+
+    // Spread old data and overwrite with new data
+    this.MOCK_USERS[userIndex] = { ...this.MOCK_USERS[userIndex], ...data };
+    return true;
+  }
+
+  static async updatePassword(email: string, newPassword: string): Promise<boolean> {
+    const userIndex = this.MOCK_USERS.findIndex(u => u.email === email);
+    if (userIndex === -1) return false;
+
+    this.MOCK_USERS[userIndex].password = newPassword;
+    return true;
+  }
+
   static async insert(user: User): Promise<boolean> {
     this.MOCK_USERS.push({
       email: user.email,
