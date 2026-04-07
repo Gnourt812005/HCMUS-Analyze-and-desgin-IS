@@ -13,24 +13,28 @@ skinparam {
 
 actor "Khách hàng" as Actor
 boundary "ScreenRegister" as GUI <<boundary>>
+participant "SignUpDTO" as DTO <<dto>>
 control "User" as BUS <<control>>
 database "UserDB" as DB <<database>>
 
 autonumber
 
-Actor -> GUI: Nhập email, mật khẩu và xác nhận mật khẩu
-Actor -> GUI: Click "Đăng ký"
+Actor -> GUI: Nhập thông tin & Click "Đăng ký"
 GUI -> GUI: validate()
-GUI -> BUS: register(email, password)
-BUS -> DB: checkEmailExists(email)
+GUI -> DTO **: new SignUpDTO(email, password)
+GUI -> BUS: signUp(signUpDTO)
+BUS -> DB: checkEmailExists(signUpDTO.email)
 alt Email đã tồn tại
-    DB --> BUS: Trả về kết quả (true)
-    BUS --> GUI: Thông báo lỗi ("Email đã tồn tại")
+    DB --> BUS: true
+    BUS --> GUI: Error("Email đã tồn tại")
+    GUI --> Actor: Hiển thị lỗi
 else Email chưa tồn tại
-    DB --> BUS: Trả về kết quả (false)
-    BUS -> DB: insert(user)
-    DB --> BUS: Thành công
-    BUS --> GUI: Thành công
+    DB --> BUS: false
+    BUS -> BUS: userModel = new User(signUpDTO, defaultValues)
+    BUS -> DB: insert(userModel)
+    DB --> BUS: true
+    BUS --> GUI: true
+    GUI --> Actor: Thông báo đăng ký thành công
 end
 deactivate GUI
 
