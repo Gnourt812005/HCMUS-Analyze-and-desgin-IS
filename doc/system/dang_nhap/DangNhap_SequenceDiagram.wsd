@@ -13,22 +13,30 @@ skinparam {
 
 actor "Khách hàng / Nhân viên" as Actor
 boundary "ScreenLogin" as GUI <<boundary>>
+participant "SignInDTO" as DTO <<dto>>
 control "User" as BUS <<control>>
 database "UserDB" as DB <<database>>
+participant "SignInResponseDTO" as RES <<dto>>
 
 autonumber
 
-Actor -> GUI: Click "Đăng nhập"
+Actor -> GUI: Nhập thông tin & Click "Đăng nhập"
 GUI -> GUI: validate()
-GUI -> BUS: login(email, password)
-BUS -> DB: checkCredentials(email, password)
-DB --> BUS: Trả về kết quả
-BUS --> GUI: Trả về kết quả
-alt Đăng nhập thất bại
-    GUI --> Actor: Hiển thị thông báo lỗi
-else Đăng nhập thành công
+GUI -> DTO **: new SignInDTO(email, password)
+GUI -> BUS: signIn(signInDTO)
+BUS -> DB: fetchCredentialByEmail(signInDTO.email)
+DB --> BUS: User (Model)
+BUS -> BUS: verifyPassword()
+alt Mật khẩu hợp lệ
+    BUS -> BUS: generateJWT()
+    BUS -> RES **: new SignInResponseDTO(token)
+    BUS --> GUI: SignInResponseDTO
+    GUI -> GUI: Lưu Token vào LocalStorage
     GUI --> Actor: Thông báo thành công
     GUI -> GUI: Chuyển hướng đến trang chủ
+else Mật khẩu không hợp lệ
+    BUS --> GUI: null
+    GUI --> Actor: Hiển thị thông báo "Sai mật khẩu"
 end
 deactivate GUI
 

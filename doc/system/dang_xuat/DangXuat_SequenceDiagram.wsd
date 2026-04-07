@@ -14,16 +14,14 @@ skinparam {
 actor "Khách hàng / Nhân viên" as Actor
 boundary "ScreenHome" as GUI <<boundary>>
 control "User" as BUS <<control>>
-database "UserDB" as DB <<database>>
 
 autonumber
 
 Actor -> GUI: Click "Đăng xuất"
-GUI -> BUS: logout()
-BUS -> DB: clearSession()
-DB --> BUS: Hoàn tất
-BUS --> GUI: Thành công
+GUI -> GUI: Xóa Token tại Client
+' GUI -> BUS: logout() (Tùy chọn)
+' BUS --> GUI: 200 OK
 GUI --> Actor: Đăng xuất thành công
-GUI -> GUI: Chuyển hướng đến trang Đăng nhập
+GUI -> GUI: Chuyển hướng đến trang chủ
 
 @enduml

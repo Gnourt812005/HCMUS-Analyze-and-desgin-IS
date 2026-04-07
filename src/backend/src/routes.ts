@@ -1,9 +1,14 @@
 import { Router } from 'express';
+import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes';
 
 const router = Router();
 
-// Placeholder for future routes
-// e.g., router.use('/rooms', roomRoutes);
+// Mount authentication routes under /auth
+router.use('/auth', authRoutes);
+
+// Mount user routes under /users
+router.use('/users', userRoutes);
 
 router.get('/', (req, res) => {
   res.json({ message: 'Welcome to DormArch API' });

@@ -5,33 +5,64 @@ skinparam style strictuml
 
 title Class Diagram - UC27: Quản lý thông tin cá nhân
 
+' --- BOUNDARY LAYER ---
 class "ScreenProfile" <<boundary>> {
     - txtFullName: TextBox
     - txtBirthDate: DatePicker
     - txtPhone: TextBox
     - txtEmail: TextBox
-    - btnEdit: Button
+    - txtCCCD: TextBox
+    - txtAddress: TextBox
+    - cbGender: ComboBox
+    - txtOldPassword: PasswordBox
+    - txtNewPassword: PasswordBox
     - btnUpdate: Button
-    + showProfile(data: User): void
-    + btnEdit_Click(): void
+    - btnChangePassword: Button
+    + showProfile(data: UserProfileDTO): void
     + btnUpdate_Click(): void
+    + btnChangePassword_Click(): void
 }
 
+' --- DTO LAYER ---
+class "UserProfileDTO" <<dto>> {
+    + email: string
+    + fullName: string
+    + cccd: string
+    + birthday: string
+    + gender: string
+    + phone: string
+    + address: string
+}
+
+class "ChangePasswordDTO" <<dto>> {
+    + oldPassword: string
+    + newPassword: string
+}
+
+' --- BUSINESS LAYER ---
 class "User" <<control>> {
-    - id: string
-    - fullName: string
-    - birthDate: date
-    - phone: string
     - email: string
-    + <<static>> getProfile(id: string): User
-    + <<static>> updateProfile(data: User): boolean
+    - fullName: string
+    - password: string
+    - cccd: string
+    - birthday: string
+    - gender: string
+    - phone: string
+    - address: string
+    + <<static>> getProfile(email: string): UserProfileDTO
+    + <<static>> updateProfile(email: string, data: UserProfileDTO): boolean
+    + <<static>> changePassword(email: string, data: ChangePasswordDTO): boolean
 }
 
+' --- DATABASE LAYER ---
 class "UserDB" <<entity>> {
-    + <<static>> fetchById(id: string): User
-    + <<static>> update(id: string, data: User): boolean
+    + <<static>> fetchCredentialByEmail(email: string): User
+    + <<static>> update(email: string, data: UserProfileDTO): boolean
+    + <<static>> updatePassword(email: string, newPassword: string): boolean
 }
 
+ScreenProfile ..> UserProfileDTO : <<creates>>
+ScreenProfile ..> ChangePasswordDTO : <<creates>>
 ScreenProfile "1" --> "1" User
 User "1" --> "1" UserDB
 

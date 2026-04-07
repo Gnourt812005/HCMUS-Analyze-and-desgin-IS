@@ -19,20 +19,39 @@ class "ScreenLogin" as ScreenLogin <<boundary>> {
     + btnLoginClick(): void
 }
 
+' --- DTO LAYER ---
+class "SignInDTO" as SignInDTO <<dto>> {
+    + email: string
+    + password: string
+}
+
+class "SignInResponseDTO" as SignInResponseDTO <<dto>> {
+    + token: string
+}
+
 ' --- BUSINESS LAYER ---
 class "User" as User <<control>> {
     - email: string
+    - fullName: string
     - password: string
-    + <<static>> login(email: string, password: string): boolean
+    - cccd: string
+    - birthday: string
+    - gender: string
+    - phone: string
+    - address: string
+    + <<static>> signIn(data: SignInDTO): SignInResponseDTO
+    + toDTO(): UserDTO
 }
 
 ' --- DATABASE LAYER ---
 class "UserDB" as UserDB <<entity>> {
-    + <<static>> checkCredentials(email: string, password: string): boolean
+    + <<static>> fetchCredentialByEmail(email: string): User
 }
 
 ' --- RELATIONSHIPS ---
+ScreenLogin ..> SignInDTO : <<creates>>
 ScreenLogin "1" --> "1" User
+User ..> SignInResponseDTO : <<creates>>
 User "1" --> "1" UserDB
 
 @enduml

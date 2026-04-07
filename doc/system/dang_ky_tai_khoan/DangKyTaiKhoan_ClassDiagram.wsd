@@ -20,18 +20,33 @@ class "ScreenRegister" as ScreenRegister <<boundary>> {
     + btnRegisterClick(): void
 }
 
-' --- BUSINESS LAYER ---
-class "User" <<control>> {
-    - username: string
-    - password: string
-    + <<static>> register(data: User): boolean
+' --- DTO LAYER ---
+class "SignUpDTO" as SignUpDTO <<dto>> {
+    + email: string
+    + password: string
 }
 
-class "UserDB" <<entity>> {
+' --- BUSINESS LAYER ---
+class "User" as User <<control>> {
+    - email: string
+    - fullName: string
+    - password: string
+    - cccd: string
+    - birthday: string
+    - gender: string
+    - phone: string
+    - address: string
+    + <<static>> signUp(data: SignUpDTO): boolean
+}
+
+' --- DATABASE LAYER ---
+class "UserDB" as UserDB <<entity>> {
+    + <<static>> checkEmailExists(email: string): boolean
     + <<static>> insert(data: User): boolean
 }
 
 ' --- RELATIONSHIPS ---
+ScreenRegister ..> SignUpDTO : <<creates>>
 ScreenRegister "1" --> "1" User
 User "1" --> "1" UserDB
 
