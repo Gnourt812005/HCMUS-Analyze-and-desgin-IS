@@ -1,32 +1,77 @@
 @startuml ChinhSuaThongTinCaNhan_SequenceDiagram
 skinparam DefaultFontSize 24
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
 
-actor "Khách hàng / Nhân viên" as UserActor
-boundary "ScreenProfile" as Screen
-control "User" as Control
-entity "UserDB" as DB
+title Sequence Diagram - UC27: Quản lý thông tin cá nhân (Cập nhật)
 
-UserActor -> Screen : Nhấp nút "Chỉnh sửa"
-activate Screen
-Screen -> Screen : Chuyển sang chế độ chỉnh sửa
-deactivate Screen
+actor "Khách hàng" as Actor
+boundary "ScreenProfile" as GUI <<boundary>>
+participant "UserProfileDTO" as DTO <<dto>>
+participant "ChangePasswordDTO" as PWDTO <<dto>>
+control "User" as BUS <<control>>
+database "UserDB" as DB <<database>>
 
-UserActor -> Screen : Nhập thông tin mới (Họ tên, Ngày sinh, SĐT, Email)
-activate Screen
-UserActor -> Screen : Nhấp nút "Cập nhật"
+autonumber
 
-Screen -> Control : updateProfile(data)
-activate Control
+group Xem hồ sơ
+    Actor -> GUI: Mở trang Profile
+    activate GUI
+    GUI -> BUS: getProfile(email)
+    activate BUS
+    BUS -> DB: fetchCredentialByEmail(email)
+    activate DB
+    DB --> BUS: User (Model)
+    deactivate DB
+    BUS -> DTO **: new UserProfileDTO()
+    BUS --> GUI: UserProfileDTO
+    deactivate BUS
+    GUI --> Actor: Hiển thị thông tin
+    deactivate GUI
+end
 
-Control -> DB : update(id, data)
-activate DB
-DB --> Control : result
-deactivate DB
+group Cập nhật thông tin
+    Actor -> GUI: Sửa field & Nhấn "Cập nhật"
+    activate GUI
+    GUI -> GUI: validate()
+    GUI -> DTO **: new UserProfileDTO(...)
+    GUI -> BUS: updateProfile(email, userProfileDTO)
+    activate BUS
+    BUS -> DB: update(email, userProfileDTO)
+    activate DB
+    DB --> BUS: true
+    deactivate DB
+    BUS --> GUI: true
+    deactivate BUS
+    GUI --> Actor: Thông báo "Cập nhật thành công!"
+    deactivate GUI
+end
 
-Control --> Screen : result
-deactivate Control
-
-Screen -> Screen : Hiển thị thông báo thành công
-deactivate Screen
+group Đổi mật khẩu
+    Actor -> GUI: Điền MK cũ, MK mới & Nhấn "Đổi mật khẩu"
+    activate GUI
+    GUI -> GUI: validate()
+    GUI -> PWDTO **: new ChangePasswordDTO(...)
+    GUI -> BUS: changePassword(email, changePasswordDTO)
+    activate BUS
+    BUS -> DB: fetchCredentialByEmail(email)
+    activate DB
+    DB --> BUS: User (Model)
+    deactivate DB
+    BUS -> BUS: verifyPassword(oldPassword)
+    alt Sai mật khẩu cũ
+        BUS --> GUI: Error("Sai mật khẩu cũ")
+        GUI --> Actor: Báo lỗi MK cũ
+    else Đúng mật khẩu cũ
+        BUS -> DB: updatePassword(email, newPassword)
+        activate DB
+        DB --> BUS: true
+        deactivate DB
+        BUS --> GUI: true
+        GUI --> Actor: Báo "Đổi mật khẩu thành công"
+    end
+    deactivate BUS
+    deactivate GUI
+end
 
 @enduml
