@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ApiClient } from '../api/ApiClient';
 import { SignInResponseDTO } from '@dormarch/shared';
+import { AuthService } from '../api/AuthService';
 
 export const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -18,8 +19,8 @@ export const Login = () => {
         body: JSON.stringify({ email, password })
       });
 
-      // Save token globally to local storage
-      localStorage.setItem('token', result.token);
+      // Save token globally to local storage and trigger event
+      AuthService.setToken(result.token);
       alert('Đăng nhập thành công');
       navigate('/');
     } catch (err: any) {

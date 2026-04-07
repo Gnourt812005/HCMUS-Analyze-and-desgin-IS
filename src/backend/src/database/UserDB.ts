@@ -1,4 +1,5 @@
 import { User } from '../business/User';
+import { UserRole } from '@dormarch/shared';
 
 export class UserDB {
   private static MOCK_USERS: Partial<User>[] = [
@@ -10,7 +11,19 @@ export class UserDB {
       birthday: '1998-05-15',
       gender: 'Nam',
       phone: '0901234567',
-      address: 'Quận 1, TP.HCM'
+      address: 'Quận 1, TP.HCM',
+      role: UserRole.GUEST
+    },
+    {
+      email: 'staff@gmail.com',
+      password: 'staff@123',
+      fullName: 'Staff',
+      cccd: '079201012345',
+      birthday: '1998-05-15',
+      gender: 'Nam',
+      phone: '0901234567',
+      address: 'Quận 1, TP.HCM',
+      role: UserRole.STAFF
     }
   ];
 

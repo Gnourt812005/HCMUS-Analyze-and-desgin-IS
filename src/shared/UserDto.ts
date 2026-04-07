@@ -1,3 +1,8 @@
+export enum UserRole {
+  GUEST = 'GUEST',
+  STAFF = 'STAFF'
+}
+
 export interface UserDTO {
   email: string;       // Primary Key
   fullName: string;
@@ -26,6 +31,7 @@ export interface SignInResponseDTO {
 export interface UserProfileDTO {
   email: string;
   fullName: string;
+  role: UserRole;
   cccd?: string;
   birthday?: string;
   gender?: string;
