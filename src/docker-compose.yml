@@ -5,8 +5,12 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+    command: npm run dev -w backend
     ports:
       - "3001:3001"
+    volumes:
+      - .:/app
+      - /app/node_modules
     networks:
       - dormarch-network
 
@@ -14,10 +18,14 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+    command: npm run dev -w frontend
     ports:
       - "3000:3000"
     depends_on:
       - backend
+    volumes:
+      - .:/app
+      - /app/node_modules
     networks:
       - dormarch-network
 
