@@ -1,3 +1,9 @@
+export interface PreviewFormDTO {
+  roomName: string;
+  block: string;
+  wantedPreviewDate: string;
+  wantedPreviewTime: string;
+}
 
 export interface PreviewDetailDTO {
   id: string;
@@ -11,6 +17,6 @@ export interface PreviewDetailDTO {
   salesStaff: {
     name: string;
     phone: string;
-  };
+  } | null;
   createdAt: Date;
 }

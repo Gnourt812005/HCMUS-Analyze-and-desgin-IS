@@ -30,13 +30,10 @@ function App() {
           <Route path="dorms" element={<DormSelection />} />
           <Route path="dorm/:dormid/rooms" element={<RoomList />} />
 
-          <Route path="favoutites" element={<FavouriteManagement />} />
+          <Route path="favourites-management" element={<FavouriteManagement />} />
 
-          <Route path="preview" element={<PreviewFormManagement />} />
+          <Route path="preview-forms-management" element={<PreviewFormManagement />} />
 
-          <Route path="favourites" element={<FavouriteManagement />} />
-
-          <Route path="preview-management" element={<PreviewFormManagement />} />
           <Route path="test" element={<TestPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="login" element={<Login />} />
