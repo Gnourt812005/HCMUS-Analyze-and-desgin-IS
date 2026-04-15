@@ -12,6 +12,7 @@ import { AdminRooms } from './pages/admin/AdminRooms';
 import { AdminViewing } from './pages/admin/AdminViewing';
 import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminContracts } from './pages/admin/AdminContracts';
+import { AdminHandover } from './pages/admin/AdminHandover';
 import { AdminStaff } from './pages/admin/AdminStaff';
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
           <Route path="viewing" element={<AdminViewing />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="contracts" element={<AdminContracts />} />
+          <Route path="handover" element={<AdminHandover />} />
           <Route path="staff" element={<AdminStaff />} />
         </Route>
       </Routes>
