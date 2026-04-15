@@ -1,8 +1,15 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { TestPage } from './pages/TestPage';
 import { ProfilePage } from './pages/ProfilePage';
+
+import { DormSelection } from './pages/DormSelection';
+import {RoomList} from "./pages/RoomList";
+
+import {FavouriteManagement} from "./pages/FavouriteManagement";
+import {PreviewFormManagement} from "./pages/PreviewFormManagement";
 
 import { UserLayout } from './components/UserLayout';
 import { AdminLayout } from './components/AdminLayout';
@@ -18,12 +25,22 @@ function App() {
     <Router>
       <Routes>
         {/* User Portal Layout */}
-        <Route element={<UserLayout />}>
-          <Route path="/" element={<div className="flex items-center justify-center h-full"><h1 className="text-3xl font-bold text-slate-800">Trang Chủ (Coming Soon)</h1></div>} />
-          <Route path="/test" element={<TestPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+        <Route path="/" element={<UserLayout />}>
+          <Route index element={<Navigate to="/dorms" replace />} />
+          <Route path="dorms" element={<DormSelection />} />
+          <Route path="dorm/:dormid/rooms" element={<RoomList />} />
+
+          <Route path="favoutites" element={<FavouriteManagement />} />
+
+          <Route path="preview" element={<PreviewFormManagement />} />
+
+          <Route path="favourites" element={<FavouriteManagement />} />
+
+          <Route path="preview-management" element={<PreviewFormManagement />} />
+          <Route path="test" element={<TestPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
         </Route>
 
         {/* Admin Portal Layout */}

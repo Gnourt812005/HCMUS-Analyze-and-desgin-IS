@@ -31,9 +31,6 @@ export const Header = () => {
       <div className="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
         <div className="flex items-center gap-8">
           <Link to="/" className="text-2xl font-bold tracking-tighter text-blue-700">DormArch</Link>
-          <div className="hidden md:flex gap-6">
-            <Link to="/rooms" className="text-slate-600 hover:text-blue-600 transition-colors">Danh sách phòng</Link>
-          </div>
         </div>
         <div className="flex items-center gap-4">
           {authState.isLoggedIn ? (
