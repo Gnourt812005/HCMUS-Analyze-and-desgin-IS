@@ -16,6 +16,7 @@ export const AdminSidebar = () => {
     { path: '/admin/orders', icon: 'shopping_cart', label: 'Đơn hàng' },
     { path: '/admin/contracts', icon: 'description', label: 'Hợp đồng' },
     { path: '/admin/staff', icon: 'badge', label: 'Nhân viên' },
+    { path: '/admin/checkout', icon: 'logout', label: 'Trả phòng' },
   ];
 
   return (
