@@ -369,6 +369,9 @@ const ContractDetailModal = ({
 }) => {
   const [tab, setTab] = useState<DetailTab>('info');
   const [editing, setEditing] = useState(false);
+  const [customerName, setCustomerName] = useState(contract.customerName);
+  const [cccd, setCccd] = useState(contract.cccd);
+  const [phone, setPhone] = useState(contract.phone);
   const [startDate, setStartDate] = useState(contract.startDate);
   const [endDate, setEndDate] = useState(contract.endDate);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -377,7 +380,7 @@ const ContractDetailModal = ({
   const deposit = totalRent * 2;
 
   const handleSave = () => {
-    onUpdate({ ...contract, startDate, endDate });
+    onUpdate({ ...contract, customerName, cccd, phone, startDate, endDate });
     setEditing(false);
   };
 
@@ -436,17 +439,31 @@ const ContractDetailModal = ({
             <div>
               <SectionTitle number="I" title="Thông tin bên thuê" />
               <div className="grid grid-cols-2 gap-x-8 gap-y-3 pl-10">
-                {[
-                  ['Họ và tên', contract.customerName],
-                  ['Số CCCD/CMND', contract.cccd],
-                  ['Số điện thoại', contract.phone],
-                  ['Phiếu đặt cọc', contract.depositFormId],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex gap-2">
-                    <span className="text-sm text-slate-500 min-w-32">{label}:</span>
-                    <span className="text-sm font-semibold text-slate-800">{value}</span>
-                  </div>
-                ))}
+                <div className="flex gap-2 items-center">
+                  <span className="text-sm text-slate-500 min-w-32">Họ và tên:</span>
+                  {editing
+                    ? <input value={customerName} onChange={e => setCustomerName(e.target.value)}
+                        className="bg-slate-100 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 flex-1" />
+                    : <span className="text-sm font-semibold text-slate-800">{customerName}</span>}
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="text-sm text-slate-500 min-w-32">Số CCCD/CMND:</span>
+                  {editing
+                    ? <input value={cccd} onChange={e => setCccd(e.target.value)}
+                        className="bg-slate-100 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 flex-1" />
+                    : <span className="text-sm font-semibold text-slate-800">{cccd}</span>}
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="text-sm text-slate-500 min-w-32">Số điện thoại:</span>
+                  {editing
+                    ? <input value={phone} onChange={e => setPhone(e.target.value)}
+                        className="bg-slate-100 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 flex-1" />
+                    : <span className="text-sm font-semibold text-slate-800">{phone}</span>}
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="text-sm text-slate-500 min-w-32">Phiếu đặt cọc:</span>
+                  <span className="text-sm font-semibold text-slate-800">{contract.depositFormId}</span>
+                </div>
               </div>
             </div>
 
