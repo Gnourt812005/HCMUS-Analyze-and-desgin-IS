@@ -7,6 +7,9 @@ import { ProfilePage } from './pages/ProfilePage';
 
 import { DormSelection } from './pages/DormSelection';
 import {RoomList} from "./pages/RoomList";
+import { RentalCondition } from './pages/RentalCondition';
+import { RentalRegister } from './pages/RentalRegister';
+import { RentalPayment } from './pages/RentalPayment';
 
 import {FavouriteManagement} from "./pages/FavouriteManagement";
 import {PreviewFormManagement} from "./pages/PreviewFormManagement";
@@ -29,6 +32,9 @@ function App() {
           <Route index element={<Navigate to="/dorms" replace />} />
           <Route path="dorms" element={<DormSelection />} />
           <Route path="dorm/:dormid/rooms" element={<RoomList />} />
+          <Route path="rental/conditions" element={<RentalCondition />} />
+          <Route path="rental/register" element={<RentalRegister />} />
+          <Route path="rental/payment" element={<RentalPayment />} />
 
           <Route path="favoutites" element={<FavouriteManagement />} />
 

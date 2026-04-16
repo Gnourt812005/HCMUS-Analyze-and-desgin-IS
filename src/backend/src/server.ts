@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import routes from './routes';
 import { dormRoutes } from './routes/dormRoutes';
+import { rentalRoutes } from './routes/rentalRoutes';
+import { paymentRoutes } from './routes/paymentRoutes';
 
 dotenv.config();
 
@@ -15,6 +17,8 @@ app.use(express.json());
 // Main Routes
 app.use('/api', routes);
 app.use('/api/dorms', dormRoutes);
+app.use('/api/rentals', rentalRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
