@@ -13,6 +13,8 @@ import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminContracts } from './pages/admin/AdminContracts';
 import { AdminStaff } from './pages/admin/AdminStaff';
 import { AdminCheckout } from './pages/admin/AdminCheckout';
+import { CheckoutRequestsPage } from './pages/CheckoutRequestsPage';
+import CreateCheckoutRequestPage from './pages/CreateCheckoutRequestPage';
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
           <Route path="/" element={<div className="flex items-center justify-center h-full"><h1 className="text-3xl font-bold text-slate-800">Trang Chủ (Coming Soon)</h1></div>} />
           <Route path="/test" element={<TestPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/checkout-requests" element={<CheckoutRequestsPage />} />
+          <Route path="/create-checkout-request" element={<CreateCheckoutRequestPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Route>

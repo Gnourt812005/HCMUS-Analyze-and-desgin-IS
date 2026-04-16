@@ -37,7 +37,7 @@ export const AdminCheckout = () => {
     }
   };
 
-  // Kịch bản 2: Tạo yêu cầu trả phòng
+  // Tạo yêu cầu trả phòng
   const handleCreateRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -93,13 +93,13 @@ export const AdminCheckout = () => {
     }
   };
 
-  // Kịch bản 1: Xem chi tiết
+  // Xem chi tiết
   const handleViewDetail = (request: CheckoutRequestDTO) => {
     setSelectedRequest(request);
     setShowDetailModal(true);
   };
 
-  // Kịch bản 3: Tiếp nhận (chuyển từ PENDING -> PROCESSING)
+  // Tiếp nhận (chuyển từ PENDING -> PROCESSING)
   const handleAccept = async () => {
     if (!selectedRequest) return;
 
@@ -123,7 +123,7 @@ export const AdminCheckout = () => {
     }
   };
 
-  // Kịch bản 4: Hủy yêu cầu
+  // Hủy yêu cầu
   const handleCancelRequest = async () => {
     if (!selectedRequest) return;
 
@@ -153,6 +153,8 @@ export const AdminCheckout = () => {
         return 'bg-yellow-100 text-yellow-800';
       case CheckoutStatus.PROCESSING:
         return 'bg-blue-100 text-blue-800';
+      case CheckoutStatus.LIQUIDATED:
+        return 'bg-green-100 text-green-800';
       case CheckoutStatus.REJECTED:
         return 'bg-red-100 text-red-800';
       case CheckoutStatus.CANCELLED:
@@ -168,6 +170,8 @@ export const AdminCheckout = () => {
         return 'Chờ xử lý';
       case CheckoutStatus.PROCESSING:
         return 'Đang xử lý';
+      case CheckoutStatus.LIQUIDATED:
+        return 'Đã thanh lý';
       case CheckoutStatus.REJECTED:
         return 'Từ chối';
       case CheckoutStatus.CANCELLED:
@@ -214,7 +218,7 @@ export const AdminCheckout = () => {
                     Mã Yêu cầu
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">
-                    Mã Khách hàng
+                    CCCD Khách hàng
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">
                     Ngày Dự kiến

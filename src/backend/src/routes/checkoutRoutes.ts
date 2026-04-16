@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { CheckoutRequest } from '../business/CheckoutRequest';
+import { Contract } from '../business/Contract';
+import { RefundCalculation } from '../business/RefundCalculation';
 import { CheckoutStatus } from '@dormarch/shared';
 
 export const checkoutRouter = Router();
@@ -28,10 +30,35 @@ checkoutRouter.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
+// Lấy chi tiết mở rộng bao gồm hợp đồng và bảng tính hoàn trả
+checkoutRouter.get('/:id/details', async (req: Request, res: Response) => {
+  try {
+    const request = await CheckoutRequest.getById(req.params.id);
+    if (!request) {
+      res.status(404).json({ message: 'Không tìm thấy yêu cầu' });
+      return;
+    }
+
+    const contract = request.contractId ? await Contract.getByContractId(request.contractId) : null;
+    const refund = await RefundCalculation.getByRequestId(request.requestId);
+
+    res.status(200).json({ request, contract, refund });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error', error });
+  }
+});
+
 // Kịch bản 2: Tạo yêu cầu trả phòng mới
 checkoutRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const newRequest = await CheckoutRequest.create(req.body);
+    const { customerId, contractId, expectedDate, documentUrl } = req.body;
+
+    if (!customerId || !contractId || !expectedDate) {
+      res.status(400).json({ message: 'customerId, contractId và expectedDate là bắt buộc.' });
+      return;
+    }
+
+    const newRequest = await CheckoutRequest.create({ customerId, contractId, expectedDate, documentUrl });
     res.status(201).json(newRequest);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });

@@ -18,6 +18,7 @@ export const CustomerSidebar = () => {
     { path: '/viewing-history', icon: 'calendar_today', label: 'Lịch xem phòng' },
     { path: '/orders', icon: 'shopping_cart', label: 'Đơn hàng' },
     { path: '/contracts', icon: 'description', label: 'Hợp đồng' },
+    { path: '/checkout-requests', icon: 'inventory_2', label: 'Yêu cầu trả phòng' },
   ];
 
   return (

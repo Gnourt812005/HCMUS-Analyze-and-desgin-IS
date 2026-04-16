@@ -4,6 +4,7 @@ import { CheckoutRequestDB } from '../database/CheckoutRequestDB';
 export class CheckoutRequest {
   requestId: string; // PK
   userCCCD: string;
+  contractId?: string;
   expectedDate: string; // ISO Date String
   status: CheckoutStatus;
   createdAt: string; // ISO Date String
@@ -12,6 +13,7 @@ export class CheckoutRequest {
   constructor(data: Partial<CheckoutRequest>) {
     this.requestId = data.requestId || '';
     this.userCCCD = data.userCCCD || '';
+    this.contractId = data.contractId;
     this.expectedDate = data.expectedDate || new Date().toISOString();
     this.status = data.status || CheckoutStatus.PENDING;
     this.createdAt = data.createdAt || new Date().toISOString();
@@ -22,6 +24,7 @@ export class CheckoutRequest {
     return {
       requestId: this.requestId,
       customerId: this.userCCCD, // Map backend CCCD to frontend customerId
+      contractId: this.contractId,
       expectedDate: this.expectedDate,
       status: this.status,
       createdAt: this.createdAt,
@@ -35,8 +38,13 @@ export class CheckoutRequest {
   }
 
   static async create(requestData: Partial<CheckoutRequestDTO>): Promise<CheckoutRequestDTO> {
+    if (!requestData.customerId || !requestData.expectedDate || !requestData.contractId) {
+      throw new Error('customerId, contractId và expectedDate là bắt buộc.');
+    }
+
     const newRequest = new CheckoutRequest({
       userCCCD: requestData.customerId, // Map frontend DTO to backend Model
+      contractId: requestData.contractId,
       expectedDate: requestData.expectedDate,
       documentUrl: requestData.documentUrl,
       requestId: `req-${Date.now()}`,

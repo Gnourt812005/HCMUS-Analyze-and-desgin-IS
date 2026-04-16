@@ -6,6 +6,7 @@ export class CheckoutRequestDB {
     {
       requestId: 'req-001',
       userCCCD: '0123456789',
+      contractId: 'contract-001',
       expectedDate: '2005-06-30',
       status: CheckoutStatus.PENDING,
       createdAt: '2005-06-01'
@@ -13,10 +14,20 @@ export class CheckoutRequestDB {
     {
       requestId: 'req-002',
       userCCCD: '0987654321',
+      contractId: 'contract-002',
       expectedDate: '2005-07-15',
       status: CheckoutStatus.PROCESSING,
       createdAt: '2005-06-05',
       documentUrl: 'https://example.com/contract/req-002.pdf'
+    },
+    {
+      requestId: 'req-003',
+      userCCCD: '0123456789',
+      contractId: 'contract-001',
+      expectedDate: '2005-07-20',
+      status: CheckoutStatus.LIQUIDATED,
+      createdAt: '2005-06-10',
+      documentUrl: 'https://example.com/contract/req-003.pdf'
     }
   ];
 
