@@ -7,8 +7,9 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@dormarch/shared': path.resolve(__dirname, '../shared/index.ts'),
-    },
+      // Direct Vite straight to your shared TypeScript source!
+      '@dormarch/shared': path.resolve(__dirname, '../shared/index.ts')
+    }
   },
   server: {
     watch: {
