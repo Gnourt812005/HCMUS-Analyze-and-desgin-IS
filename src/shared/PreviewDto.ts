@@ -5,6 +5,16 @@ export interface PreviewFormDTO {
   wantedPreviewTime: string;
 }
 
+export interface PreviewBriefDTO {
+  id: string;
+  roomName: string;
+  dormName: string;
+  previewDate: string;
+  previewTime: string;
+  dormAddress: string;
+  status: string;
+}
+
 export interface PreviewDetailDTO {
   id: string;
   roomId: string;
