@@ -1,5 +1,5 @@
 import { ContractDB } from '../database/ContractDB';
-import { ContractDTO } from '@dormarch/shared';
+import { ContractDTO , ContractStatus } from '@dormarch/shared';
 
 export class Contract {
   contractId: string;
@@ -9,7 +9,7 @@ export class Contract {
   stayDuration?: number;
   depositAmount: number;
   liquidationUrl?: string;
-  status: string;
+  status: ContractStatus;
 
   constructor(data: Partial<Contract>) {
     this.contractId = data.contractId || '';
@@ -19,7 +19,7 @@ export class Contract {
     this.stayDuration = data.stayDuration || 0;
     this.depositAmount = data.depositAmount || 0;
     this.liquidationUrl = data.liquidationUrl;
-    this.status = data.status || 'ACTIVE';
+    this.status = data.status || ContractStatus.ACTIVE;
   }
   
   toDto(): ContractDTO {

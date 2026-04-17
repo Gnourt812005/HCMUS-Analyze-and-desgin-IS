@@ -51,7 +51,7 @@ const getStatusBadgeClass = (status: CheckoutStatus) => {
   }
 };
 
-export const CheckoutRequestsPage = () => {
+export const ViewCheckoutRequest = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfileDTO | null>(null);
   const [checkoutRequests, setCheckoutRequests] = useState<CheckoutRequestDTO[]>([]);

@@ -1,3 +1,9 @@
+export enum ContractStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  PENDING_CHECKOUT = 'PENDING_CHECKOUT'
+}
+
 export interface ContractDTO {
   contractId: string;
   userCCCD?: string;
@@ -5,6 +11,6 @@ export interface ContractDTO {
   startDate?: string;
   stayDuration?: number;
   depositAmount: number;
-  status?: string;
+  status?: ContractStatus;
   liquidationUrl?: string;
 }

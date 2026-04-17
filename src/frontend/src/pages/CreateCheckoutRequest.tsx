@@ -10,7 +10,7 @@ interface CheckoutForm {
   documentFile: File | null;
 }
 
-export const CreateCheckoutRequestPage = () => {
+export const CreateCheckoutRequest = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfileDTO | null>(null);
   const [activeContracts, setActiveContracts] = useState<ContractDTO[]>([]);
@@ -429,34 +429,7 @@ export const CreateCheckoutRequestPage = () => {
             </div>
           </form>
         )}
-
-        {/* Footer Help Text */}
-        {activeContracts.length > 0 && (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-            <h3 className="font-semibold text-slate-900 mb-3">Thông tin hữu ích</h3>
-            <ul className="space-y-2 text-sm text-slate-700">
-              <li className="flex gap-2">
-                <span className="text-blue-600 font-bold">•</span>
-                <span>Yêu cầu trả phòng sẽ được ghi nhận với trạng thái <strong>Chờ xử lý</strong></span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-blue-600 font-bold">•</span>
-                <span>Yêu cầu sẽ được tự động thông báo cho nhân viên quản lý</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-blue-600 font-bold">•</span>
-                <span>Bạn có thể hủy yêu cầu chỉ khi nó còn ở trạng thái <strong>Chờ xử lý</strong></span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-blue-600 font-bold">•</span>
-                <span>Hợp đồng hoặc phiếu đặt cọc là bắt buộc để hoàn thành yêu cầu</span>
-              </li>
-            </ul>
-          </div>
-        )}
       </section>
     </div>
   );
 };
-
-export default CreateCheckoutRequestPage;

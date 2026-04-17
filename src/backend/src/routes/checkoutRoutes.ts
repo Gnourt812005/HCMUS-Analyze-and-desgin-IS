@@ -4,7 +4,7 @@ import { CheckoutRequestDB } from '../database/CheckoutRequestDB';
 import { Contract } from '../business/Contract';
 import { ContractDB } from '../database/ContractDB';
 import { Room } from '../business/Room';
-import { RefundCalculation } from '../business/RefundCalculation';
+import { RefundCalculation } from '../business/RefundCalculation'; 
 import { CheckoutStatus } from '@dormarch/shared';
 
 export const checkoutRouter = Router();
@@ -86,6 +86,11 @@ checkoutRouter.post('/', async (req: Request, res: Response) => {
     }
 
     const newRequest = await CheckoutRequest.create({ userCCCD, contractId, expectedDate, documentUrl });
+    
+    // Update associated contract status to PENDING_CHECKOUT
+    if (contractId) {
+      await ContractDB.updateStatus(contractId, 'PENDING_CHECKOUT');
+    }
     res.status(201).json(newRequest);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });
@@ -95,14 +100,25 @@ checkoutRouter.post('/', async (req: Request, res: Response) => {
 checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
   try {
     const { status } = req.body;
-    const success = await CheckoutRequest.updateStatus(req.params.id, status as CheckoutStatus);
-    
-    if (!success) {
-      res.status(404).json({ message: 'Không tìm thấy yêu cầu để cập nhật' });
+    const requestId = req.params.id;
+    const newStatus = status as CheckoutStatus;
+
+    const currentRequest = await CheckoutRequest.getById(requestId);
+    if (!currentRequest) {
+      res.status(404).json({ message: 'Không tìm thấy yêu cầu' });
       return;
     }
 
-    const updated = await CheckoutRequest.getById(req.params.id);
+    const success = await CheckoutRequest.updateStatus(requestId, newStatus);
+
+    if (success && currentRequest.contractId) {
+      // If the checkout request is cancelled or rejected, revert contract status to ACTIVE
+      if ([CheckoutStatus.CANCELLED, CheckoutStatus.REJECTED].includes(newStatus)) {
+        await ContractDB.updateStatus(currentRequest.contractId, 'ACTIVE');
+      }
+    }
+
+    const updated = await CheckoutRequest.getById(requestId);
     res.status(200).json(updated);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';
