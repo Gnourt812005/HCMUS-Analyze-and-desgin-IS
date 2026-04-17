@@ -5,7 +5,7 @@ import { useState, useMemo } from 'react';
 type ContractStatus = 'Hiệu lực' | 'Hết hạn' | 'Đã huỷ';
 type PaymentPeriod = 'monthly' | 'quarterly' | 'yearly';
 
-interface DepositForm {
+interface RentalForm {
   id: string;
   customerName: string;
   phone: string;
@@ -99,7 +99,7 @@ const VIOLATION_TERMS = [
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
-const MOCK_DEPOSIT_FORMS: DepositForm[] = [
+const MOCK_RENTAL_FORMS: RentalForm[] = [
   { id: 'DC001', customerName: 'Nguyễn Văn An', phone: '0901234567', cccd: '079201012345', room: 'A101', beds: ['A101-1', 'A101-2'] },
   { id: 'DC002', customerName: 'Trần Thị Bình', phone: '0912345678', cccd: '079202023456', room: 'B203', beds: ['B203-1'] },
   { id: 'DC003', customerName: 'Lê Hoàng Cường', phone: '0923456789', cccd: '079203034567', room: 'C301', beds: ['C301-1', 'C301-2', 'C301-3'] },
@@ -167,25 +167,20 @@ const CreateContractModal = ({
   onClose: () => void;
   onCreate: (c: Contract) => void;
 }) => {
-  const [depositFormId, setDepositFormId] = useState('');
+  const [rentalFormId, setRentalFormId] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriod>('monthly');
-  const [selectedBeds, setSelectedBeds] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const selected = MOCK_DEPOSIT_FORMS.find(d => d.id === depositFormId);
-
-  const toggleBed = (bed: string) =>
-    setSelectedBeds(prev => prev.includes(bed) ? prev.filter(b => b !== bed) : [...prev, bed]);
+  const selected = MOCK_RENTAL_FORMS.find(d => d.id === rentalFormId);
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!depositFormId) e.deposit = 'Vui lòng chọn phiếu đặt cọc';
+    if (!rentalFormId) e.rentalForm = 'Vui lòng chọn phiếu đăng ký thuê';
     if (!startDate) e.startDate = 'Vui lòng chọn ngày bắt đầu';
     if (!endDate) e.endDate = 'Vui lòng chọn ngày kết thúc';
     if (startDate && endDate && endDate <= startDate) e.endDate = 'Ngày kết thúc phải sau ngày bắt đầu';
-    if (selectedBeds.length === 0) e.beds = 'Vui lòng chọn ít nhất 1 giường';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -194,12 +189,12 @@ const CreateContractModal = ({
     if (!validate() || !selected) return;
     onCreate({
       id: `HD${String(Date.now()).slice(-3)}`,
-      depositFormId,
+      depositFormId: rentalFormId,
       customerName: selected.customerName,
       phone: selected.phone,
       cccd: selected.cccd,
       room: selected.room,
-      beds: selectedBeds,
+      beds: selected.beds,
       startDate,
       endDate,
       paymentPeriod,
@@ -215,7 +210,7 @@ const CreateContractModal = ({
         <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Lập hợp đồng mới</h2>
-            <p className="text-slate-500 text-sm mt-0.5">Tạo hợp đồng từ phiếu đặt cọc đã có</p>
+            <p className="text-slate-500 text-sm mt-0.5">Tạo hợp đồng từ phiếu đăng ký thuê đã có</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
             <span className="material-symbols-outlined text-slate-500">close</span>
@@ -225,19 +220,19 @@ const CreateContractModal = ({
         <div className="flex-1 overflow-y-auto px-7 py-6 space-y-5">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-              Phiếu đặt cọc <span className="text-red-500">*</span>
+              Phiếu đăng ký thuê <span className="text-red-500">*</span>
             </label>
             <select
-              value={depositFormId}
-              onChange={e => { setDepositFormId(e.target.value); setSelectedBeds([]); setErrors({}); }}
+              value={rentalFormId}
+              onChange={e => { setRentalFormId(e.target.value); setErrors({}); }}
               className="w-full bg-slate-50 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             >
-              <option value="">-- Chọn phiếu đặt cọc --</option>
-              {MOCK_DEPOSIT_FORMS.map(d => (
+              <option value="">-- Chọn phiếu đăng ký thuê --</option>
+              {MOCK_RENTAL_FORMS.map(d => (
                 <option key={d.id} value={d.id}>{d.id} — {d.customerName} (Phòng {d.room})</option>
               ))}
             </select>
-            {errors.deposit && <p className="text-red-500 text-xs mt-1">{errors.deposit}</p>}
+            {errors.rentalForm && <p className="text-red-500 text-xs mt-1">{errors.rentalForm}</p>}
           </div>
 
           {selected && (
@@ -254,43 +249,23 @@ const CreateContractModal = ({
                 <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">CCCD</p>
                 <p className="font-bold text-slate-800">{selected.cccd}</p>
               </div>
-              <div className="col-span-3">
+              <div className="col-span-2">
                 <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">Phòng</p>
                 <p className="font-bold text-slate-800">Phòng {selected.room}</p>
               </div>
-            </div>
-          )}
-
-          {selected && (
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                Giường thuê <span className="text-red-500">*</span>
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {selected.beds.map(bed => (
-                  <button
-                    key={bed}
-                    type="button"
-                    onClick={() => toggleBed(bed)}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
-                      selectedBeds.includes(bed)
-                        ? 'bg-blue-50 border-blue-400 text-blue-700'
-                        : 'bg-white border-slate-200 text-slate-600 hover:border-blue-200'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-base">
-                      {selectedBeds.includes(bed) ? 'check_box' : 'check_box_outline_blank'}
-                    </span>
-                    {bed}
-                  </button>
-                ))}
+              <div>
+                <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">Giường thuê</p>
+                <div className="flex flex-wrap gap-1 mt-0.5">
+                  {selected.beds.map(b => (
+                    <span key={b} className="px-2 py-0.5 bg-white border border-blue-200 rounded-full text-xs font-bold text-blue-700">{b}</span>
+                  ))}
+                </div>
               </div>
-              {errors.beds && <p className="text-red-500 text-xs mt-1">{errors.beds}</p>}
-              {selectedBeds.length > 0 && (
-                <p className="text-xs text-slate-500 mt-2">
-                  Tiền thuê dự kiến: <span className="font-bold text-blue-700">{fmtMoney(BASE_RENT_PER_BED * selectedBeds.length)}/tháng</span>
+              <div className="col-span-3 pt-1 border-t border-blue-200">
+                <p className="text-xs text-blue-600 font-semibold">
+                  Tiền thuê dự kiến: <span className="font-bold text-slate-800">{fmtMoney(BASE_RENT_PER_BED * selected.beds.length)}/tháng</span>
                 </p>
-              )}
+              </div>
             </div>
           )}
 
@@ -400,7 +375,7 @@ const ContractDetailModal = ({
                   {contract.status}
                 </span>
               </div>
-              <p className="text-slate-500 text-sm">Lập ngày {contract.createdDate} · Phiếu cọc {contract.depositFormId}</p>
+              <p className="text-slate-500 text-sm">Lập ngày {contract.createdDate} · Phiếu đăng ký {contract.depositFormId}</p>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors mt-1">
               <span className="material-symbols-outlined text-slate-500">close</span>
@@ -461,7 +436,7 @@ const ContractDetailModal = ({
                     : <span className="text-sm font-semibold text-slate-800">{phone}</span>}
                 </div>
                 <div className="flex gap-2 items-center">
-                  <span className="text-sm text-slate-500 min-w-32">Phiếu đặt cọc:</span>
+                  <span className="text-sm text-slate-500 min-w-32">Phiếu đăng ký:</span>
                   <span className="text-sm font-semibold text-slate-800">{contract.depositFormId}</span>
                 </div>
               </div>
