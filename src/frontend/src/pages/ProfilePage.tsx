@@ -53,7 +53,7 @@ export const ProfilePage = () => {
   if (isLoading) return <div className="text-center p-24 text-slate-500 font-medium">Đang tải cấu hình...</div>;
   if (!profile) return <div className="text-center p-24 text-red-500 font-bold">Chưa đăng nhập!</div>;
 
-  const isStaff = profile.role === UserRole.STAFF;
+  const isStaff = profile.role === UserRole.SALES_STAFF;
 
   return (
     <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 px-6">

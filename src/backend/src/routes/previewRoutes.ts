@@ -3,7 +3,7 @@ import { PreviewFormDB } from '../database/PreviewFormDB';
 import { PreviewForm_UserDB } from '../database/PreviewForm_UserDB';
 import { RoomDB } from '../database/RoomDB';
 import { DormDB } from '../database/DormDB';
-import { StaffDB } from '../database/StaffDB';
+import { UserDB } from '../database/UserDB';
 import { PreviewForm } from '../business/PreviewForm';
 import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
 
@@ -118,10 +118,10 @@ previewRoutes.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
 
     let salesStaff = null;
     if (form.staffId) {
-      const staff = await StaffDB.getById(form.staffId);
+      const staff = await UserDB.fetchCredentialByEmail(form.staffId);
       if (staff) {
         salesStaff = {
-          name: staff.name,
+          name: staff.fullName,
           phone: staff.phone
         };
       }

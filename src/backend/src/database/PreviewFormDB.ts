@@ -9,7 +9,7 @@ export class PreviewFormDB {
       previewDatetime: new Date(Date.now() + 86400000).toISOString(),
       createdDatetime: new Date().toISOString(),
       status: "ongoing",
-      staffId: "staff-1"
+      staffId: "staff@gmail.com"
     }),
     new PreviewForm({
       formId: "prev-2",
@@ -18,7 +18,7 @@ export class PreviewFormDB {
       previewDatetime: new Date(Date.now() + 86400000 * 2).toISOString(),
       createdDatetime: new Date().toISOString(),
       status: "complete",
-      staffId: "staff-2"
+      staffId: "staff2@gmail.com"
     }),
     new PreviewForm({
       formId: "prev-3",
