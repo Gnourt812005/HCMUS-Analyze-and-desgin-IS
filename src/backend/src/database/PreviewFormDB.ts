@@ -50,4 +50,11 @@ export class PreviewFormDB {
     form.status = status as any;
     return true;
   }
+
+  static async updateDatetime(formId: string, previewDatetime: string): Promise<boolean> {
+    const form = this.MOCK_PREVIEWS.find(f => f.formId === formId);
+    if (!form) return false;
+    form.previewDatetime = previewDatetime;
+    return true;
+  }
 }

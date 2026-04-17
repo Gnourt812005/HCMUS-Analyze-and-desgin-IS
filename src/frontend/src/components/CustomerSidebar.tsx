@@ -23,8 +23,8 @@ export const CustomerSidebar = () => {
     { path: '/contracts', icon: 'description', label: 'Hợp đồng' },
   ];
 
-  if (userRole === UserRole.ADMIN) {
-    menuItems.push({ path: '/client-preview-form-managements', icon: 'visibility', label: 'Đơn xem phòng khách hàng' });
+  if (userRole === UserRole.SALES_STAFF) {
+    menuItems.splice(3, 0, { path: '/client-preview-form-managements', icon: 'calendar_clock', label: 'Đơn xem phòng khách hàng' });
   }
 
   return (

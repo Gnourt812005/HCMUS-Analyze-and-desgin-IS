@@ -80,6 +80,117 @@ previewRoutes.get('/', authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
+// Get staff's assigned preview forms
+previewRoutes.get('/staff', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const email = req.user?.email;
+    if (!email) return res.status(401).json({ message: 'Unauthorized' });
+
+    const allForms = await PreviewFormDB.getAll();
+    const staffForms = allForms.filter((f) => f.staffId === email);
+
+    const dorms = await DormDB.getAll();
+    
+    const data = await Promise.all(staffForms.map(async (f) => {
+      let roomName = '';
+      let dormName = '';
+      let dormAddress = '';
+
+      for (const dorm of dorms) {
+        const rooms = await RoomDB.getByDormId(dorm.id!);
+        const match = rooms.find((r) => r.id === f.roomId);
+        if (match) {
+          roomName = match.name || '';
+          dormName = dorm.name || '';
+          dormAddress = dorm.address || '';
+          break;
+        }
+      }
+
+      return {
+        id: f.formId,
+        roomName,
+        dormName,
+        dormAddress,
+        previewDate: f.previewDatetime.split('T')[0],
+        previewTime: f.previewDatetime.split('T')[1].substring(0, 5),
+        status: f.status
+      };
+    }));
+
+    res.json({ message: 'Success', status: 200, data });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get staff's assigned preview form details
+previewRoutes.get('/staff/:id', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const email = req.user?.email;
+
+    if (!email) {
+       return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const form = await PreviewFormDB.getById(id);
+    if (!form) return res.status(404).json({ message: 'Not found' });
+
+    if (form.staffId !== email) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    const dorms = await DormDB.getAll();
+    let roomName = '';
+    let dormId = '';
+    let dormName = '';
+    let dormAddress = '';
+
+    for (const dorm of dorms) {
+      const rooms = await RoomDB.getByDormId(dorm.id!);
+      const match = rooms.find((r) => r.id === form.roomId);
+      if (match) {
+        roomName = match.name || '';
+        dormId = dorm.id!;
+        dormName = dorm.name || '';
+        dormAddress = dorm.address || '';
+        break;
+      }
+    }
+
+    let customerInfo = null;
+    if (form.userId) {
+      const customer = await UserDB.fetchCredentialByEmail(form.userId);
+      if (customer) {
+        customerInfo = {
+          name: customer.fullName,
+          phone: customer.phone || 'Chưa cung cấp'
+        };
+      }
+    }
+
+    const data = {
+      id: form.formId,
+      roomId: form.roomId,
+      roomName,
+      dormId,
+      dormName,
+      dormAddress,
+      date: form.previewDatetime.split('T')[0],
+      time: form.previewDatetime.split('T')[1].substring(0, 5),
+      customerInfo,
+      createdAt: form.createdDatetime
+    };
+
+    res.json({ message: 'Success', status: 200, data });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Get preview form details
 previewRoutes.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
   try {
@@ -142,6 +253,41 @@ previewRoutes.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
     };
 
     res.json({ message: 'Success', status: 200, data });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Staff reschedules a preview form
+previewRoutes.put('/staff/:id/reschedule', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { wantedPreviewDate, wantedPreviewTime } = req.body;
+    const email = req.user?.email;
+
+    if (!email) {
+       return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const form = await PreviewFormDB.getById(id);
+    if (!form) return res.status(404).json({ message: 'Not found' });
+
+    if (form.staffId !== email) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    if (form.status !== 'ongoing') {
+      return res.status(400).json({ message: 'Chỉ có thể dời lịch đơn đang xử lý' });
+    }
+
+    const newDatetime = `${wantedPreviewDate}T${wantedPreviewTime}:00.000Z`;
+    const success = await PreviewFormDB.updateDatetime(id, newDatetime);
+    if (!success) {
+      return res.status(500).json({ message: 'Failed to update' });
+    }
+
+    res.json({ message: 'Dời lịch thành công', status: 200, data: null });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
