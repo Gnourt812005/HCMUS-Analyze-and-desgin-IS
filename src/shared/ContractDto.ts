@@ -1,6 +1,6 @@
 export interface ContractDTO {
   contractId: string;
-  customerId?: string;
+  userCCCD?: string;
   roomId?: string;
   startDate?: string;
   stayDuration?: number;

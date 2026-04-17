@@ -23,7 +23,7 @@ export class CheckoutRequest {
   toDto(): CheckoutRequestDTO {
     return {
       requestId: this.requestId,
-      customerId: this.userCCCD, // Map backend CCCD to frontend customerId
+      userCCCD: this.userCCCD,
       contractId: this.contractId,
       expectedDate: this.expectedDate,
       status: this.status,
@@ -38,12 +38,12 @@ export class CheckoutRequest {
   }
 
   static async create(requestData: Partial<CheckoutRequestDTO>): Promise<CheckoutRequestDTO> {
-    if (!requestData.customerId || !requestData.expectedDate || !requestData.contractId) {
-      throw new Error('customerId, contractId và expectedDate là bắt buộc.');
+    if (!requestData.userCCCD || !requestData.expectedDate || !requestData.contractId) {
+      throw new Error('userCCCD, contractId và expectedDate là bắt buộc.');
     }
 
     const newRequest = new CheckoutRequest({
-      userCCCD: requestData.customerId, // Map frontend DTO to backend Model
+      userCCCD: requestData.userCCCD,
       contractId: requestData.contractId,
       expectedDate: requestData.expectedDate,
       documentUrl: requestData.documentUrl,
@@ -61,6 +61,31 @@ export class CheckoutRequest {
   }
 
   static async updateStatus(requestId: string, newStatus: CheckoutStatus): Promise<boolean> {
+    const currentRequest = await CheckoutRequestDB.getById(requestId);
+    if (!currentRequest) {
+      return false;
+    }
+
+    const currentStatus = currentRequest.status;
+
+    // Define valid status transitions
+    const validTransitions: Record<CheckoutStatus, CheckoutStatus[]> = {
+      [CheckoutStatus.PENDING]: [CheckoutStatus.PROCESSING, CheckoutStatus.REJECTED, CheckoutStatus.CANCELLED],
+      [CheckoutStatus.PROCESSING]: [CheckoutStatus.PENDING_LIQUIDATION, CheckoutStatus.REJECTED, CheckoutStatus.CANCELLED],
+      [CheckoutStatus.PENDING_LIQUIDATION]: [CheckoutStatus.LIQUIDATED, CheckoutStatus.CANCELLED],
+      [CheckoutStatus.LIQUIDATED]: [], 
+      [CheckoutStatus.REJECTED]: [], 
+      [CheckoutStatus.CANCELLED]: [] 
+    };
+
+    // Check if the transition is valid
+    const allowedTransitions = validTransitions[currentStatus] || [];
+    if (!allowedTransitions.includes(newStatus)) {
+      throw new Error(
+        'Không thể cập nhật trạng thái yêu cầu trả phòng vào lúc này.'
+      );
+    }
+
     return await CheckoutRequestDB.updateStatus(requestId, newStatus);
   }
 }

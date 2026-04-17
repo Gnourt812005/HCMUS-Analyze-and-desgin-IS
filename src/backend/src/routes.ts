@@ -3,6 +3,7 @@ import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import { checkoutRouter } from './routes/checkoutRoutes';
 import { contractRouter } from './routes/contractRoutes';
+import { refundRouter } from './routes/refundRoutes';
 
 const router = Router();
 
@@ -17,6 +18,9 @@ router.use('/contracts', contractRouter);
 
 // Mount checkout routes under /checkout-requests
 router.use('/checkout-requests', checkoutRouter);
+
+// Mount refund calculation routes under /refund-calculations
+router.use('/refund-calculations', refundRouter);
 
 router.get('/', (req, res) => {
   res.json({ message: 'Welcome to DormArch API' });

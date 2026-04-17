@@ -10,7 +10,7 @@ interface CheckoutForm {
   documentFile: File | null;
 }
 
-const CreateCheckoutRequestPage = () => {
+export const CreateCheckoutRequestPage = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfileDTO | null>(null);
   const [activeContracts, setActiveContracts] = useState<ContractDTO[]>([]);
@@ -29,8 +29,55 @@ const CreateCheckoutRequestPage = () => {
 
   // Load profile and active contracts on mount
   useEffect(() => {
-    loadProfileAndContracts();
+    const abortController = new AbortController();
+    loadProfileAndContracts(abortController);
+    
+    return () => {
+      abortController.abort();
+    };
   }, []);
+
+  const loadProfileAndContracts = async (abortController: AbortController) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Load user profile
+      const profileData = await ApiClient.get<UserProfileDTO>('/users/profile');
+      
+      if (abortController.signal.aborted) return;
+      
+      setProfile(profileData);
+
+      // Load all contracts for the customer
+      const allContracts = await ApiClient.get<ContractDTO[]>('/contracts');
+      
+      if (abortController.signal.aborted) return;
+      
+      // Filter active contracts for this customer
+      if (profileData.cccd) {
+        const customerContracts = allContracts.filter(
+          (contract: ContractDTO) => 
+            contract.userCCCD === profileData.cccd && 
+            contract.status === 'ACTIVE'
+        );
+        setActiveContracts(customerContracts);
+      }
+    } catch (err) {
+      if (!abortController.signal.aborted) {
+        setError(
+          err instanceof Error 
+            ? err.message 
+            : 'Lỗi tải thông tin. Vui lòng thử lại sau.'
+        );
+        setActiveContracts([]);
+      }
+    } finally {
+      if (!abortController.signal.aborted) {
+        setLoading(false);
+      }
+    }
+  };
 
   // Load contract details when contract is selected
   useEffect(() => {
@@ -41,39 +88,6 @@ const CreateCheckoutRequestPage = () => {
       setSelectedContractDetails(null);
     }
   }, [form.contractId, activeContracts]);
-
-  const loadProfileAndContracts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Load user profile
-      const profileData = await ApiClient.get<UserProfileDTO>('/users/profile');
-      setProfile(profileData);
-
-      // Load all contracts for the customer
-      const allContracts = await ApiClient.get<ContractDTO[]>('/contracts');
-      
-      // Filter active contracts for this customer
-      if (profileData.cccd) {
-        const customerContracts = allContracts.filter(
-          (contract: ContractDTO) => 
-            contract.customerId === profileData.cccd && 
-            contract.status === 'ACTIVE'
-        );
-        setActiveContracts(customerContracts);
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error 
-          ? err.message 
-          : 'Lỗi tải thông tin. Vui lòng thử lại sau.'
-      );
-      setActiveContracts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
@@ -149,7 +163,7 @@ const CreateCheckoutRequestPage = () => {
       // Create checkout request
       const newRequest = await ApiClient.post<CheckoutRequestDTO>('/checkout-requests', {
         body: JSON.stringify({
-          customerId: profile.cccd,
+          userCCCD: profile.cccd,
           contractId: form.contractId,
           expectedDate: form.expectedDate,
           documentUrl,
@@ -203,7 +217,7 @@ const CreateCheckoutRequestPage = () => {
           <div className="flex items-start justify-between gap-4 mb-2">
             <div>
               <h1 className="text-2xl font-bold text-slate-900">Tạo yêu cầu trả phòng</h1>
-              <p className="text-sm text-slate-500 mt-1">UC22 - Điền đầy đủ thông tin và đính kèm giấy tờ cần thiết</p>
+              <p className="text-sm text-slate-500 mt-1">Điền đầy đủ thông tin và đính kèm giấy tờ cần thiết</p>
             </div>
           </div>
           <p className="text-sm text-slate-600 mt-4">

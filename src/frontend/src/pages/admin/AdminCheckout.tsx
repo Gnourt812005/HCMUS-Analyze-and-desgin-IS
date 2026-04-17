@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { CheckoutStatus, CheckoutRequestDTO } from '@dormarch/shared';
+import { useNavigate } from 'react-router-dom';
+import { CheckoutStatus, CheckoutRequestDTO, RefundCalculationDTO } from '@dormarch/shared';
 import { ApiClient } from '../../api/ApiClient';
 
 export const AdminCheckout = () => {
+  const navigate = useNavigate();
   const [checkoutRequests, setCheckoutRequests] = useState<CheckoutRequestDTO[]>([]);
+  const [refundMap, setRefundMap] = useState<Record<string, RefundCalculationDTO>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<CheckoutRequestDTO | null>(null);
@@ -12,7 +15,7 @@ export const AdminCheckout = () => {
 
   // Form create
   const [createForm, setCreateForm] = useState({
-    customerId: '',
+    userCCCD: '',
     expectedDate: '',
     documentFile: null as File | null
   });
@@ -20,20 +23,51 @@ export const AdminCheckout = () => {
 
   // Load checkout requests on mount
   useEffect(() => {
-    loadCheckoutRequests();
+    const abortController = new AbortController();
+    loadCheckoutRequests(abortController);
+    
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
-  const loadCheckoutRequests = async () => {
+  const loadCheckoutRequests = async (abortController: AbortController) => {
     try {
       setLoading(true);
       setError(null);
       const response = await ApiClient.get<CheckoutRequestDTO[]>('/checkout-requests');
+      
+      if (abortController.signal.aborted) return;
+      
       setCheckoutRequests(response || []);
+
+      // Load refund calculations for all requests in parallel
+      const refundPromises = (response || []).map(request =>
+        ApiClient.get<RefundCalculationDTO>(`/refund-calculations/by-request/${request.requestId}`)
+          .then(refund => ({ requestId: request.requestId, refund }))
+          .catch(() => ({ requestId: request.requestId, refund: null }))
+      );
+      
+      const refundResults = await Promise.all(refundPromises);
+      
+      if (abortController.signal.aborted) return;
+      
+      const refunds: Record<string, RefundCalculationDTO> = {};
+      refundResults.forEach(result => {
+        if (result.refund) {
+          refunds[result.requestId] = result.refund;
+        }
+      });
+      setRefundMap(refunds);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Lỗi tải dữ liệu');
-      setCheckoutRequests([]);
+      if (!abortController.signal.aborted) {
+        setError(err instanceof Error ? err.message : 'Lỗi tải dữ liệu');
+        setCheckoutRequests([]);
+      }
     } finally {
-      setLoading(false);
+      if (!abortController.signal.aborted) {
+        setLoading(false);
+      }
     }
   };
 
@@ -42,7 +76,7 @@ export const AdminCheckout = () => {
     e.preventDefault();
     
     // Validation
-    if (!createForm.customerId || !createForm.expectedDate) {
+    if (!createForm.userCCCD || !createForm.expectedDate) {
       setError('Trường này không được để trống');
       return;
     }
@@ -62,7 +96,7 @@ export const AdminCheckout = () => {
 
       const newRequest = await ApiClient.post<CheckoutRequestDTO>('/checkout-requests', {
         body: JSON.stringify({
-          customerId: createForm.customerId,
+          userCCCD: createForm.userCCCD,
           expectedDate: createForm.expectedDate,
           documentUrl: documentUrl
         })
@@ -72,7 +106,7 @@ export const AdminCheckout = () => {
       setCheckoutRequests([...checkoutRequests, newRequest]);
       
       setShowCreateModal(false);
-      setCreateForm({ customerId: '', expectedDate: '', documentFile: null });
+      setCreateForm({ userCCCD: '', expectedDate: '', documentFile: null });
       setDocumentFileName('');
       setError(null);
     } catch (err) {
@@ -100,49 +134,45 @@ export const AdminCheckout = () => {
   };
 
   // Tiếp nhận (chuyển từ PENDING -> PROCESSING)
-  const handleAccept = async () => {
-    if (!selectedRequest) return;
-
+  const handleAccept = async (requestId: string) => {
+    const originalRequests = checkoutRequests;
     try {
-      // Gọi API
-      await ApiClient.patch(`/checkout-requests/${selectedRequest.requestId}/status`, {
-        body: JSON.stringify({ status: CheckoutStatus.PROCESSING })
-      });
-
-      // Optimistic update - cập nhật ngay trong state
-      const updatedRequest = { ...selectedRequest, status: CheckoutStatus.PROCESSING };
+      // Optimistic update
       setCheckoutRequests(
-        checkoutRequests.map(r => r.requestId === selectedRequest.requestId ? updatedRequest : r)
+        checkoutRequests.map(r => r.requestId === requestId ? { ...r, status: CheckoutStatus.PROCESSING } : r)
       );
       
-      setShowDetailModal(false);
-      setSelectedRequest(null);
+      // Gọi API
+      await ApiClient.patch(`/checkout-requests/${requestId}/status`, {
+        body: JSON.stringify({ status: CheckoutStatus.PROCESSING })
+      });
+      
       setError(null);
     } catch (err) {
+      // Rollback optimistic update on error
+      setCheckoutRequests(originalRequests);
       setError(err instanceof Error ? err.message : 'Lỗi cập nhật trạng thái');
     }
   };
 
   // Hủy yêu cầu
-  const handleCancelRequest = async () => {
-    if (!selectedRequest) return;
-
+  const handleCancelRequest = async (requestId: string) => {
+    const originalRequests = checkoutRequests;
     try {
-      // Gọi API
-      await ApiClient.patch(`/checkout-requests/${selectedRequest.requestId}/status`, {
-        body: JSON.stringify({ status: CheckoutStatus.CANCELLED })
-      });
-
-      // Optimistic update - cập nhật ngay trong state
-      const updatedRequest = { ...selectedRequest, status: CheckoutStatus.CANCELLED };
+      // Optimistic update
       setCheckoutRequests(
-        checkoutRequests.map(r => r.requestId === selectedRequest.requestId ? updatedRequest : r)
+        checkoutRequests.map(r => r.requestId === requestId ? { ...r, status: CheckoutStatus.CANCELLED } : r)
       );
       
-      setShowDetailModal(false);
-      setSelectedRequest(null);
+      // Gọi API
+      await ApiClient.patch(`/checkout-requests/${requestId}/status`, {
+        body: JSON.stringify({ status: CheckoutStatus.CANCELLED })
+      });
+      
       setError(null);
     } catch (err) {
+      // Rollback optimistic update on error
+      setCheckoutRequests(originalRequests);
       setError(err instanceof Error ? err.message : 'Lỗi hủy yêu cầu');
     }
   };
@@ -153,6 +183,8 @@ export const AdminCheckout = () => {
         return 'bg-yellow-100 text-yellow-800';
       case CheckoutStatus.PROCESSING:
         return 'bg-blue-100 text-blue-800';
+      case CheckoutStatus.PENDING_LIQUIDATION:
+        return 'bg-purple-100 text-purple-800';
       case CheckoutStatus.LIQUIDATED:
         return 'bg-green-100 text-green-800';
       case CheckoutStatus.REJECTED:
@@ -170,6 +202,8 @@ export const AdminCheckout = () => {
         return 'Chờ xử lý';
       case CheckoutStatus.PROCESSING:
         return 'Đang xử lý';
+      case CheckoutStatus.PENDING_LIQUIDATION:
+        return 'Chờ thanh lý';
       case CheckoutStatus.LIQUIDATED:
         return 'Đã thanh lý';
       case CheckoutStatus.REJECTED:
@@ -181,10 +215,13 @@ export const AdminCheckout = () => {
     }
   };
 
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Quản lý Yêu cầu Trả phòng</h1>
+        <h1 className="text-2xl font-bold">Quản lý yêu cầu trả phòng</h1>
         <button
           onClick={() => setShowCreateModal(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
@@ -211,23 +248,26 @@ export const AdminCheckout = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full" style={{tableLayout: 'fixed'}}>
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
                   <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">
-                    Mã Yêu cầu
+                    Mã yêu cầu
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">
-                    CCCD Khách hàng
+                    CCCD khách hàng
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">
-                    Ngày Dự kiến
+                    Ngày dự kiến
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">
                     Trạng thái
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">
-                    Ngày Tạo
+                    Khoản hoàn / Cần thanh toán
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">
+                    Ngày tạo
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">
                     Hành động
@@ -244,7 +284,7 @@ export const AdminCheckout = () => {
                       {request.requestId}
                     </td>
                     <td className="px-6 py-3 text-sm text-slate-900">
-                      {request.customerId}
+                      {request.userCCCD}
                     </td>
                     <td className="px-6 py-3 text-sm text-slate-900">
                       {new Date(request.expectedDate).toLocaleDateString('vi-VN')}
@@ -258,16 +298,75 @@ export const AdminCheckout = () => {
                         {getStatusLabel(request.status)}
                       </span>
                     </td>
+                    <td className="px-6 py-3 text-sm text-slate-900 font-semibold">
+                      {refundMap[request.requestId]
+                        ? formatCurrency(refundMap[request.requestId].finalRefundAmount)
+                        : '-'}
+                    </td>
                     <td className="px-6 py-3 text-sm text-slate-900">
                       {new Date(request.createdAt).toLocaleDateString('vi-VN')}
                     </td>
-                    <td className="px-6 py-3 text-sm">
-                      <button
-                        onClick={() => handleViewDetail(request)}
-                        className="text-blue-600 hover:text-blue-800 font-medium"
-                      >
-                        Xem chi tiết
-                      </button>
+                    <td className="px-6 py-3 text-sm max-w-none w-48">
+                      <div className="flex flex-col items-center gap-2 overflow-hidden">
+                        <button
+                          onClick={() => handleViewDetail(request)}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors text-xs truncate"
+                        >
+                          Xem chi tiết
+                        </button>
+                        {request.status === CheckoutStatus.PENDING && (
+                          <div className="flex flex-col gap-2 w-full">
+                            <button
+                              onClick={() => handleAccept(request.requestId)}
+                              className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-1 px-3 rounded-lg transition-colors text-xs truncate"
+                            >
+                              Tiếp nhận
+                            </button>
+                            <button
+                              onClick={() => handleCancelRequest(request.requestId)}
+                              className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded-lg transition-colors text-xs truncate"
+                            >
+                              Hủy yêu cầu
+                            </button>
+                          </div>
+                        )}
+                        {request.status === CheckoutStatus.PROCESSING && (
+                          <div className="flex flex-col gap-2 w-full">
+                            <button
+                              onClick={() => {
+                                navigate(`/admin/checkout/${request.requestId}/refund-calculation`);
+                              }}
+                              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-1 px-3 rounded-lg transition-colors text-xs truncate"
+                            >
+                              Tính hoàn cọc
+                            </button>
+                            <button
+                              onClick={() => handleCancelRequest(request.requestId)}
+                              className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded-lg transition-colors text-xs truncate"
+                            >
+                              Hủy yêu cầu
+                            </button>
+                          </div>
+                        )}
+                        {request.status === CheckoutStatus.PENDING_LIQUIDATION && (
+                          <div className="flex flex-col gap-2 w-full">
+                            <button
+                              onClick={() => {
+                                navigate(`/admin/checkout/${request.requestId}/liquidation`);
+                              }}
+                              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-1 px-3 rounded-lg transition-colors text-xs truncate"
+                            >
+                              Hoàn tất thanh lý
+                            </button>
+                            <button
+                              onClick={() => handleCancelRequest(request.requestId)}
+                              className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded-lg transition-colors text-xs truncate"
+                            >
+                              Hủy yêu cầu
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -279,20 +378,20 @@ export const AdminCheckout = () => {
 
       {/* Modal: Tạo yêu cầu mới (Kịch bản 2) */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold mb-4">Tạo Yêu cầu Trả phòng</h2>
+        <div className="fixed inset-0 bg-slate-900/10 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 border border-slate-200/70">
+            <h2 className="text-xl font-bold mb-4">Tạo yêu cầu trả phòng</h2>
 
             <form onSubmit={handleCreateRequest} className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  CCCD Khách hàng *
+                  CCCD khách hàng *
                 </label>
                 <input
                   type="text"
                   required
-                  value={createForm.customerId}
-                  onChange={(e) => setCreateForm({ ...createForm, customerId: e.target.value })}
+                  value={createForm.userCCCD}
+                  onChange={(e) => setCreateForm({ ...createForm, userCCCD: e.target.value })}
                   placeholder="Nhập mã khách hàng"
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -300,7 +399,7 @@ export const AdminCheckout = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Ngày dự kiến Trả *
+                  Ngày dự kiến trả *
                 </label>
                 <input
                   type="date"
@@ -313,7 +412,7 @@ export const AdminCheckout = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Đính kèm Tài liệu
+                  Đính kèm tài liệu
                 </label>
                 <div className="w-full border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-blue-50 transition-all cursor-pointer group relative">
                   <input
@@ -352,7 +451,7 @@ export const AdminCheckout = () => {
                   type="button"
                   onClick={() => {
                     setShowCreateModal(false);
-                    setCreateForm({ customerId: '', expectedDate: '', documentUrl: '' });
+                    setCreateForm({ userCCCD: '', expectedDate: '', documentUrl: '' });
                   }}
                   className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium py-2 px-4 rounded-lg transition-colors"
                 >
@@ -366,107 +465,80 @@ export const AdminCheckout = () => {
 
       {/* Modal: Chi tiết Yêu cầu (Kịch bản 1, 3, 4) */}
       {showDetailModal && selectedRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">Chi tiết Yêu cầu Trả phòng</h2>
+        <div className="fixed inset-0 bg-slate-900/10 flex items-center justify-center z-50">
+          <div className="w-full max-w-md mx-4">
+            <div className="bg-white rounded-xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto border border-slate-200/70">
+              <h2 className="text-xl font-bold mb-4">Chi tiết yêu cầu trả phòng</h2>
 
-            <div className="space-y-3 mb-6">
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Mã Yêu cầu
-                </label>
-                <p className="text-slate-900">{selectedRequest.requestId}</p>
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  CCCD Khách hàng
-                </label>
-                <p className="text-slate-900">{selectedRequest.customerId}</p>
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Ngày Dự kiến Trả
-                </label>
-                <p className="text-slate-900">
-                  {new Date(selectedRequest.expectedDate).toLocaleDateString('vi-VN')}
-                </p>
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Trạng thái
-                </label>
-                <p className="text-slate-900">
-                  <span
-                    className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                      selectedRequest.status
-                    )}`}
-                  >
-                    {getStatusLabel(selectedRequest.status)}
-                  </span>
-                </p>
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Ngày Tạo
-                </label>
-                <p className="text-slate-900">
-                  {new Date(selectedRequest.createdAt).toLocaleDateString('vi-VN')}
-                </p>
-              </div>
-
-              {selectedRequest.documentUrl && (
+              <div className="space-y-3 mb-6">
                 <div>
-                  <a
-                    href={selectedRequest.documentUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 underline"
-                  >
-                    Xem tài liệu
-                  </a>
+                  <label className="text-sm font-semibold text-slate-700">Mã yêu cầu</label>
+                  <p className="text-slate-900">{selectedRequest.requestId}</p>
                 </div>
-              )}
-            </div>
 
-            {/* Action Buttons - Kịch bản 3 & 4 */}
-            <div className="flex flex-col gap-2">
-              {selectedRequest.status === CheckoutStatus.PENDING && (
-                <>
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">CCCD khách hàng</label>
+                  <p className="text-slate-900">{selectedRequest.userCCCD}</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">Ngày dự kiến trả</label>
+                  <p className="text-slate-900">{new Date(selectedRequest.expectedDate).toLocaleDateString('vi-VN')}</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">Trạng thái</label>
+                  <p className="text-slate-900">
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedRequest.status)}`}>
+                      {getStatusLabel(selectedRequest.status)}
+                    </span>
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">Ngày Tạo</label>
+                  <p className="text-slate-900">{new Date(selectedRequest.createdAt).toLocaleDateString('vi-VN')}</p>
+                </div>
+
+                {selectedRequest.documentUrl && (
+                  <div>
+                    <a
+                      href={selectedRequest.documentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 underline"
+                    >
+                      Xem hợp đồng / phiếu đặt cọc đính kèm
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-slate-200 flex flex-wrap justify-center gap-3">
+                {(selectedRequest.status === CheckoutStatus.PENDING ||
+                  selectedRequest.status === CheckoutStatus.PROCESSING ||
+                  selectedRequest.status === CheckoutStatus.PENDING_LIQUIDATION) && (
                   <button
-                    onClick={handleAccept}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                  >
-                    Tiếp nhận
-                  </button>
-                  <button
-                    onClick={handleCancelRequest}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                    onClick={() => {
+                      handleCancelRequest(selectedRequest.requestId);
+                      setShowDetailModal(false);
+                      setSelectedRequest(null);
+                    }}
+                    className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                   >
                     Hủy yêu cầu
                   </button>
-                </>
-              )}
-              {selectedRequest.status === CheckoutStatus.PROCESSING && (
+                )}
                 <button
-                  onClick={handleCancelRequest}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setSelectedRequest(null);
+                  }}
+                  className="bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium py-2 px-4 rounded-lg transition-colors"
                 >
-                  Hủy yêu cầu
+                  Đóng
                 </button>
-              )}
-              <button
-                onClick={() => {
-                  setShowDetailModal(false);
-                  setSelectedRequest(null);
-                }}
-                className="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                Đóng
-              </button>
+              </div>
             </div>
           </div>
         </div>

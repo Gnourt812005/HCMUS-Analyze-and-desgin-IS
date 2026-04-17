@@ -1,14 +1,15 @@
 export enum CheckoutStatus {
-  PENDING = 'PENDING',           // Chờ xử lý
-  PROCESSING = 'PROCESSING',     // Đang xử lý
-  LIQUIDATED = 'LIQUIDATED',     // Đã thanh lý
-  REJECTED = 'REJECTED',         // Từ chối
-  CANCELLED = 'CANCELLED'        // Đã hủy
+  PENDING = 'PENDING',                           
+  PROCESSING = 'PROCESSING',                     
+  PENDING_LIQUIDATION = 'PENDING_LIQUIDATION',   
+  LIQUIDATED = 'LIQUIDATED',                     
+  REJECTED = 'REJECTED',                         
+  CANCELLED = 'CANCELLED'                        
 }
 
 export interface CheckoutRequestDTO {
   requestId: string;
-  customerId: string;
+  userCCCD: string;
   contractId?: string;
   expectedDate: string; // ISO Date String
   status: CheckoutStatus;

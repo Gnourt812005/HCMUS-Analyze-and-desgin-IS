@@ -4,7 +4,6 @@ import { ContractDTO } from '@dormarch/shared';
 export class Contract {
   contractId: string;
   userCCCD: string;
-  customerId?: string;
   roomId?: string;
   startDate?: string;
   stayDuration?: number;
@@ -15,13 +14,25 @@ export class Contract {
   constructor(data: Partial<Contract>) {
     this.contractId = data.contractId || '';
     this.userCCCD = data.userCCCD || '';
-    this.customerId = data.customerId || data.userCCCD;
     this.roomId = data.roomId;
     this.startDate = data.startDate;
     this.stayDuration = data.stayDuration || 0;
     this.depositAmount = data.depositAmount || 0;
     this.liquidationUrl = data.liquidationUrl;
     this.status = data.status || 'ACTIVE';
+  }
+  
+  toDto(): ContractDTO {
+    return {
+      contractId: this.contractId,
+      userCCCD: this.userCCCD,
+      roomId: this.roomId,
+      startDate: this.startDate,
+      stayDuration: this.stayDuration,
+      depositAmount: this.depositAmount,
+      status: this.status,
+      liquidationUrl: this.liquidationUrl
+    };
   }
 
   static async getByUserCCCD(userCCCD: string): Promise<ContractDTO | null> {
@@ -37,18 +48,5 @@ export class Contract {
   static async getActiveByUserCCCD(userCCCD: string): Promise<ContractDTO[]> {
     const contractModels = await ContractDB.getActiveByUserCCCD(userCCCD);
     return contractModels.map(model => new Contract(model).toDto());
-  }
-
-  toDto(): ContractDTO {
-    return {
-      contractId: this.contractId,
-      customerId: this.customerId,
-      roomId: this.roomId,
-      startDate: this.startDate,
-      stayDuration: this.stayDuration,
-      depositAmount: this.depositAmount,
-      status: this.status,
-      liquidationUrl: this.liquidationUrl
-    };
   }
 }

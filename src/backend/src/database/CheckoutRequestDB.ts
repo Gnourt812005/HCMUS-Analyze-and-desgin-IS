@@ -49,7 +49,16 @@ export class CheckoutRequestDB {
     const requestIndex = this.MOCK_CHECKOUT_REQUESTS.findIndex(r => r.requestId === requestId);
     if (requestIndex === -1)
       return false;
+
     this.MOCK_CHECKOUT_REQUESTS[requestIndex].status = newStatus;
+    return true;
+  }
+
+  static async updateDocuments(requestId: string, documentUrl: string): Promise<boolean> {
+    const requestIndex = this.MOCK_CHECKOUT_REQUESTS.findIndex(r => r.requestId === requestId);
+    if (requestIndex === -1)
+      return false;
+    this.MOCK_CHECKOUT_REQUESTS[requestIndex].documentUrl = documentUrl;
     
     return true;
   }

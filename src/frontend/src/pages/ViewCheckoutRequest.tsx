@@ -1,4 +1,4 @@
-import { useEffect, useState, ChangeEvent } from 'react';
+import { useEffect, useState, ChangeEvent, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CustomerSidebar } from '../components/CustomerSidebar';
 import { ApiClient } from '../api/ApiClient';
@@ -19,6 +19,8 @@ const getStatusLabel = (status: CheckoutStatus) => {
       return 'Chờ xử lý';
     case CheckoutStatus.PROCESSING:
       return 'Đang xử lý';
+    case CheckoutStatus.PENDING_LIQUIDATION:
+      return 'Chờ thanh lý';
     case CheckoutStatus.LIQUIDATED:
       return 'Đã thanh lý';
     case CheckoutStatus.CANCELLED:
@@ -36,6 +38,8 @@ const getStatusBadgeClass = (status: CheckoutStatus) => {
       return 'bg-yellow-100 text-yellow-800';
     case CheckoutStatus.PROCESSING:
       return 'bg-blue-100 text-blue-800';
+    case CheckoutStatus.PENDING_LIQUIDATION:
+      return 'bg-purple-100 text-purple-800';
     case CheckoutStatus.LIQUIDATED:
       return 'bg-green-100 text-green-800';
     case CheckoutStatus.CANCELLED:
@@ -56,34 +60,61 @@ export const CheckoutRequestsPage = () => {
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const detailAbortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    loadRequests();
+    const abortController = new AbortController();
+    loadRequests(abortController);
+    
+    return () => {
+      abortController.abort();
+      if (detailAbortControllerRef.current) {
+        detailAbortControllerRef.current.abort();
+      }
+    };
   }, []);
 
-  const loadRequests = async () => {
+  const loadRequests = async (abortController: AbortController) => {
     try {
       setLoading(true);
       setError(null);
 
       const profileData = await ApiClient.get<UserProfileDTO>('/users/profile');
+      
+      if (abortController.signal.aborted) return;
+      
       setProfile(profileData);
 
       const allRequests = await ApiClient.get<CheckoutRequestDTO[]>('/checkout-requests');
+      
+      if (abortController.signal.aborted) return;
+      
       const filteredRequests = profileData.cccd
-        ? allRequests.filter((request) => request.customerId === profileData.cccd)
+        ? allRequests.filter((request) => request.userCCCD === profileData.cccd)
         : [];
 
       setCheckoutRequests(filteredRequests);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Lỗi tải yêu cầu trả phòng');
-      setCheckoutRequests([]);
+      if (!abortController.signal.aborted) {
+        setError(err instanceof Error ? err.message : 'Lỗi tải yêu cầu trả phòng');
+        setCheckoutRequests([]);
+      }
     } finally {
-      setLoading(false);
+      if (!abortController.signal.aborted) {
+        setLoading(false);
+      }
     }
   };
 
   const loadDetail = async (request: CheckoutRequestDTO) => {
+    // Cancel previous request if any
+    if (detailAbortControllerRef.current) {
+      detailAbortControllerRef.current.abort();
+    }
+    
+    const abortController = new AbortController();
+    detailAbortControllerRef.current = abortController;
+    
     setSelectedRequest(request);
     setRequestDetail(null);
     setDetailLoading(true);
@@ -91,11 +122,18 @@ export const CheckoutRequestsPage = () => {
 
     try {
       const detail = await ApiClient.get<CheckoutRequestDetailResponse>(`/checkout-requests/${request.requestId}/details`);
-      setRequestDetail(detail);
+      
+      if (!abortController.signal.aborted) {
+        setRequestDetail(detail);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Lỗi tải chi tiết yêu cầu');
+      if (!abortController.signal.aborted) {
+        setError(err instanceof Error ? err.message : 'Lỗi tải chi tiết yêu cầu');
+      }
     } finally {
-      setDetailLoading(false);
+      if (!abortController.signal.aborted) {
+        setDetailLoading(false);
+      }
     }
   };
 
@@ -105,18 +143,21 @@ export const CheckoutRequestsPage = () => {
     setDetailLoading(false);
   };
 
-  const handleCancelRequest = async () => {
-    if (!selectedRequest) return;
-
+  const handleCancelRequest = async (requestId: string) => {
     try {
-      await ApiClient.patch(`/checkout-requests/${selectedRequest.requestId}/status`, {
+      await ApiClient.patch(`/checkout-requests/${requestId}/status`, {
         body: JSON.stringify({ status: CheckoutStatus.CANCELLED })
       });
 
-      const updatedRequest = { ...selectedRequest, status: CheckoutStatus.CANCELLED };
-      setCheckoutRequests(checkoutRequests.map((request: CheckoutRequestDTO) => request.requestId === selectedRequest.requestId ? updatedRequest : request));
-      setSelectedRequest(updatedRequest);
-      setRequestDetail((prev: CheckoutRequestDetailResponse | null) => prev ? { ...prev, request: updatedRequest } : prev);
+      const updatedRequest = checkoutRequests.find(r => r.requestId === requestId);
+      if (updatedRequest) {
+        const cancelledRequest = { ...updatedRequest, status: CheckoutStatus.CANCELLED };
+        setCheckoutRequests(checkoutRequests.map((request: CheckoutRequestDTO) => request.requestId === requestId ? cancelledRequest : request));
+        if (selectedRequest?.requestId === requestId) {
+          setSelectedRequest(cancelledRequest);
+          setRequestDetail((prev: CheckoutRequestDetailResponse | null) => prev ? { ...prev, request: cancelledRequest } : prev);
+        }
+      }
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Lỗi hủy yêu cầu');
@@ -142,7 +183,7 @@ export const CheckoutRequestsPage = () => {
       );
     }
 
-    if (status === CheckoutStatus.PROCESSING || status === CheckoutStatus.LIQUIDATED) {
+    if (status === CheckoutStatus.PROCESSING || status === CheckoutStatus.PENDING_LIQUIDATION || status === CheckoutStatus.LIQUIDATED) {
       return (
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-4">
           <div>
@@ -207,7 +248,7 @@ export const CheckoutRequestsPage = () => {
     return null;
   };
 
-  return (
+ return (
     <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 px-6">
       <CustomerSidebar />
 
@@ -270,7 +311,7 @@ export const CheckoutRequestsPage = () => {
                       <td className="px-4 py-3">
                         <button
                           onClick={() => loadDetail(request)}
-                          className="text-blue-600 hover:text-blue-800 font-semibold"
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors text-xs"
                         >
                           Xem chi tiết
                         </button>
@@ -284,72 +325,75 @@ export const CheckoutRequestsPage = () => {
         </div>
 
         {selectedRequest && (
-          <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 px-4 py-8">
-            <div className="mx-auto max-w-3xl rounded-3xl bg-white p-6 shadow-2xl border border-slate-200">
-              <div className="flex items-start justify-between gap-4 mb-6">
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900">Chi tiết yêu cầu trả phòng</h2>
-                  <p className="text-sm text-slate-500">Mã yêu cầu: {selectedRequest.requestId}</p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 px-4 py-8">
+            <div className="mx-auto w-full max-w-3xl">
+              <div className="rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
+                <div className="flex items-start gap-4 mb-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900">Chi tiết yêu cầu trả phòng</h2>
+                    <p className="text-sm text-slate-500">Mã yêu cầu: {selectedRequest.requestId}</p>
+                  </div>
                 </div>
-                <button
-                  onClick={closeDetail}
-                  className="rounded-full bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"
-                >
-                  ✕
-                </button>
-              </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm text-slate-500">Ngày tạo</p>
-                  <p className="mt-2 text-slate-900 font-medium">{new Date(selectedRequest.createdAt).toLocaleDateString('vi-VN')}</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm text-slate-500">Ngày tạo</p>
+                    <p className="mt-2 text-slate-900 font-medium">{new Date(selectedRequest.createdAt).toLocaleDateString('vi-VN')}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm text-slate-500">Ngày dự kiến trả</p>
+                    <p className="mt-2 text-slate-900 font-medium">{new Date(selectedRequest.expectedDate).toLocaleDateString('vi-VN')}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
+                    <p className="text-sm text-slate-500">Trạng thái</p>
+                    <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-sm font-semibold ${getStatusBadgeClass(selectedRequest.status)}`}>
+                      {getStatusLabel(selectedRequest.status)}
+                    </span>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
+                    <p className="text-sm text-slate-500">Hợp đồng / Phòng đang thuê</p>
+                    <p className="mt-2 text-slate-900 font-medium">
+                      {requestDetail?.contract ? `Hợp đồng ${requestDetail.contract.contractId}` : 'Không có dữ liệu hợp đồng'}
+                    </p>
+                  </div>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm text-slate-500">Ngày dự kiến trả</p>
-                  <p className="mt-2 text-slate-900 font-medium">{new Date(selectedRequest.expectedDate).toLocaleDateString('vi-VN')}</p>
+
+                <div className="mt-6 space-y-4">
+                  {requestDetail && renderStatusSpecific()}
+
+                  {!requestDetail && detailLoading && (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-500">Đang tải chi tiết...</div>
+                  )}
+
+                  {!requestDetail && !detailLoading && (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-500">Không có dữ liệu chi tiết.</div>
+                  )}
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
-                  <p className="text-sm text-slate-500">Trạng thái</p>
-                  <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-sm font-semibold ${getStatusBadgeClass(selectedRequest.status)}`}>
-                    {getStatusLabel(selectedRequest.status)}
-                  </span>
+
+                <div className="mt-6 border-t border-slate-200 pt-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-center gap-3">
+                    {(selectedRequest.status === CheckoutStatus.PENDING ||
+                      selectedRequest.status === CheckoutStatus.PROCESSING ||
+                      selectedRequest.status === CheckoutStatus.PENDING_LIQUIDATION) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleCancelRequest(selectedRequest.requestId);
+                          closeDetail();
+                        }}
+                        className="rounded-full border border-red-300 bg-red-50 px-5 py-3 text-sm font-semibold text-red-700 hover:bg-red-100"
+                      >
+                        Hủy yêu cầu
+                      </button>
+                    )}
+                    <button
+                      onClick={closeDetail}
+                      className="rounded-full bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+                    >
+                      Đóng
+                    </button>
+                  </div>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
-                  <p className="text-sm text-slate-500">Hợp đồng / Phòng đang thuê</p>
-                  <p className="mt-2 text-slate-900 font-medium">
-                    {requestDetail?.contract ? `Hợp đồng ${requestDetail.contract.contractId}` : 'Không có dữ liệu hợp đồng'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-4">
-                {requestDetail && renderStatusSpecific()}
-
-                {!requestDetail && detailLoading && (
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-500">Đang tải chi tiết...</div>
-                )}
-
-                {!requestDetail && !detailLoading && (
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-500">Không có dữ liệu chi tiết.</div>
-                )}
-              </div>
-
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
-                {selectedRequest.status === CheckoutStatus.PENDING && (
-                  <button
-                    type="button"
-                    onClick={handleCancelRequest}
-                    className="rounded-full border border-red-300 bg-red-50 px-5 py-3 text-sm font-semibold text-red-700 hover:bg-red-100"
-                  >
-                    Hủy yêu cầu
-                  </button>
-                )}
-                <button
-                  onClick={closeDetail}
-                  className="rounded-full bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200"
-                >
-                  Đóng
-                </button>
               </div>
             </div>
           </div>

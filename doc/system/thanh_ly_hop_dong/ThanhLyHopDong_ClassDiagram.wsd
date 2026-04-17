@@ -24,13 +24,13 @@ class "Contract" as Contract <<control>> {
   - status: string
   - depositAmount: float
   - stayDuration: int
-  - liquidationFileUrl: string
+  - liquidationUrl: string
   + <<static>> liquidateContract(): bool
 }
 
 class "ContractDB" as ContractDB <<entity>> {
   + <<static>> updateStatus(contractID: int, status: string): bool
-  + <<static>> updateLiquidationFile(contractID: int, path: string): bool
+  + <<static>> updateLiquidationUrl(contractID: int, path: string): bool
 }
 
 class "Room" as Room <<control>> {
@@ -48,7 +48,7 @@ class "RefundCalculation" as RefundCalculation <<control>> {
   - requestID: int
   - depositAmount: float
   - damageFee: float
-  - extraDebt: float
+  - extraFee: float
   - finalRefundAmount: float
   + <<static>> getByRequestId(requestID: int): RefundCalculation
 }

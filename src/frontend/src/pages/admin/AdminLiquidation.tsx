@@ -1,0 +1,392 @@
+import { useState, useEffect, ChangeEvent } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ApiClient } from '../../api/ApiClient';
+import { CheckoutRequestDTO, ContractDTO, RefundCalculationDTO, CheckoutStatus } from '@dormarch/shared';
+
+export const AdminLiquidation = () => {
+  const { requestId } = useParams<{ requestId: string }>();
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+  const [finalizing, setFinalizing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const [checkoutRequest, setCheckoutRequest] = useState<CheckoutRequestDTO | null>(null);
+  const [contract, setContract] = useState<ContractDTO | null>(null);
+  const [calculation, setCalculation] = useState<RefundCalculationDTO | null>(null);
+
+  // Document upload states
+  const [checkoutDocumentFile, setCheckoutDocumentFile] = useState<File | null>(null);
+  const [liquidationDocumentFile, setLiquidationDocumentFile] = useState<File | null>(null);
+  const [checkoutDocumentName, setCheckoutDocumentName] = useState('');
+  const [liquidationDocumentName, setLiquidationDocumentName] = useState('');
+
+  // Load data on mount
+  useEffect(() => {
+    const abortController = new AbortController();
+    loadData(abortController);
+    
+    return () => {
+      abortController.abort();
+    };
+  }, [requestId]);
+
+  const loadData = async (abortController: AbortController) => {
+    if (!requestId) {
+      setError('Không tìm thấy mã yêu cầu');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Load checkout request with contract details
+      interface DetailResponse {
+        request: CheckoutRequestDTO;
+        contract?: ContractDTO | null;
+      }
+      const detailData = await ApiClient.get<DetailResponse>(`/checkout-requests/${requestId}/details`);
+      
+      if (abortController.signal.aborted) return;
+      
+      setCheckoutRequest(detailData.request);
+      if (detailData.contract) {
+        setContract(detailData.contract);
+      }
+
+      // Load refund calculation
+      try {
+        const calcData = await ApiClient.get<RefundCalculationDTO>(`/refund-calculations/by-request/${requestId}`);
+        if (!abortController.signal.aborted) {
+          setCalculation(calcData);
+        }
+      } catch (err) {
+        if (!abortController.signal.aborted) {
+          setError('Không tìm thấy bảng đối soát. Vui lòng hoàn thành tính toán hoàn cọc trước.');
+        }
+      }
+    } catch (err) {
+      if (!abortController.signal.aborted) {
+        setError(err instanceof Error ? err.message : 'Lỗi tải dữ liệu');
+      }
+    } finally {
+      if (!abortController.signal.aborted) {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleFileChange = (setter: (file: File | null) => void, nameSetter: (name: string) => void) =>
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0] ?? null;
+      if (file) {
+        // Validate file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          setError('Tệp quá lớn (tối đa 10MB). Vui lòng chọn tệp khác.');
+          return;
+        }
+
+        // Validate file type
+        const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        if (!validTypes.includes(file.type)) {
+          setError('Loại tệp không được hỗ trợ. Vui lòng chọn PDF, JPG, PNG, DOC hoặc DOCX.');
+          return;
+        }
+
+        setter(file);
+        nameSetter(file.name);
+        setError(null);
+      }
+    };
+
+  const handleFinalizeLiquidation = async () => {
+    if (!checkoutRequest) return;
+
+    // Validation
+    if (!checkoutDocumentFile) {
+      setError('Vui lòng tải lên biên bản trả phòng.');
+      return;
+    }
+
+    if (!liquidationDocumentFile) {
+      setError('Vui lòng tải lên biên bản thanh lý hợp đồng.');
+      return;
+    }
+
+    try {
+      setFinalizing(true);
+      setError(null);
+
+      // Convert files to base64
+      const checkoutDocumentUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(checkoutDocumentFile!);
+      });
+
+      const liquidationDocumentUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(liquidationDocumentFile!);
+      });
+
+      // Complete liquidation with documents
+      await ApiClient.patch(`/checkout-requests/${checkoutRequest.requestId}/complete-liquidation`, {
+        body: JSON.stringify({
+          checkoutDocumentUrl,
+          liquidationDocumentUrl,
+          status: CheckoutStatus.LIQUIDATED
+        })
+      });
+
+      setSuccess(true);
+
+      // Redirect after 2 seconds
+      setTimeout(() => {
+        navigate('/admin/checkout');
+      }, 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Lỗi hoàn tất thanh lý');
+    } finally {
+      setFinalizing(false);
+    }
+  };
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Math.abs(value));
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="text-center text-slate-500">Đang tải thông tin...</div>
+      </div>
+    );
+  }
+
+  if (!checkoutRequest || !contract || !calculation) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Hoàn tất thanh lý</h1>
+            <p className="text-sm text-slate-500 mt-1">Xác nhận và hoàn tất quá trình thanh lý hợp đồng</p>
+          </div>
+          <button
+            onClick={() => navigate('/admin/checkout')}
+            className="inline-flex items-center justify-center rounded-full bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+          <div className="flex items-start gap-3">
+            <span className="material-symbols-outlined text-red-600 mt-0.5">error</span>
+            <div>
+              <p className="font-semibold text-red-900">Không tìm thấy dữ liệu</p>
+              <p className="text-sm text-red-700 mt-1">
+                {error || 'Không tìm thấy yêu cầu, hợp đồng hoặc bảng đối soát'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Hoàn tất thanh lý</h1>
+          <p className="text-sm text-slate-500 mt-1">Xác nhận và hoàn tất quá trình thanh lý hợp đồng</p>
+        </div>
+        <button
+          onClick={() => navigate('/admin/checkout')}
+          className="inline-flex items-center justify-center rounded-full bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Success Message */}
+      {success && (
+        <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
+          <div className="flex items-start gap-3">
+            <span className="material-symbols-outlined text-green-600 mt-0.5">check_circle</span>
+            <div>
+              <p className="font-semibold text-green-900">Hoàn tất thanh lý thành công!</p>
+              <p className="text-sm text-green-700 mt-1">
+                Yêu cầu trả phòng đã được hoàn tất. Bạn sẽ được quay lại danh sách yêu cầu...
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && !success && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
+          <div className="flex items-start gap-3">
+            <span className="material-symbols-outlined text-red-600 mt-0.5">error</span>
+            <div>
+              <p className="font-semibold text-red-900">Có lỗi xảy ra</p>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Contract Information */}
+      <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200 space-y-4">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">Thông tin hợp đồng</h2>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs text-slate-500 uppercase">Mã hợp đồng</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{contract.contractId}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs text-slate-500 uppercase">Phòng / Giường</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{contract.roomId}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs text-slate-500 uppercase">Số tiền cọc</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">
+              {formatCurrency(contract.depositAmount || 0)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs text-slate-500 uppercase">Thời hạn</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{contract.stayDuration} tháng</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Refund Calculation Summary */}
+      <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200 space-y-4">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">Bảng tính hoàn trả</h2>
+        </div>
+
+        <div className="grid gap-3 text-sm">
+          <div className="flex justify-between gap-4">
+            <span className="text-slate-700">Tiền cọc</span>
+            <span className="font-semibold text-slate-900">{formatCurrency(calculation.depositAmount)}</span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-slate-700">Phí hư hỏng</span>
+            <span className="font-semibold text-slate-900">{formatCurrency(calculation.damageFee)}</span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-slate-700">Phí phát sinh</span>
+            <span className="font-semibold text-slate-900">{formatCurrency(calculation.extraFee)}</span>
+          </div>
+          <div className="border-t border-slate-200 pt-3 flex justify-between gap-4 font-semibold text-slate-900">
+            <span>Tổng hoàn trả / cần đóng</span>
+            <span>{formatCurrency(calculation.finalRefundAmount)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Document Upload */}
+      <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200 space-y-4">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">Tải lên tài liệu thanh lý</h2>
+          <p className="text-sm text-slate-500 mt-1">Vui lòng tải lên biên bản trả phòng và biên bản thanh lý hợp đồng</p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Checkout Document */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-3">
+              Biên bản trả phòng *
+            </label>
+            <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-blue-400 hover:bg-blue-50 transition-all">
+              <input
+                id="checkout-document-upload"
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                onChange={handleFileChange(setCheckoutDocumentFile, setCheckoutDocumentName)}
+                className="hidden"
+                required
+              />
+              <label htmlFor="checkout-document-upload" className="cursor-pointer">
+                <span className="material-symbols-outlined text-3xl text-blue-500 mb-2">cloud_upload</span>
+                <div className="text-sm font-semibold text-slate-700 mb-1">
+                  {checkoutDocumentName || 'Chọn tệp biên bản trả phòng'}
+                </div>
+                <div className="text-xs text-slate-500">
+                  PDF, JPG, PNG, DOC, DOCX (tối đa 10MB)
+                </div>
+              </label>
+            </div>
+            {checkoutDocumentName && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
+                <span className="material-symbols-outlined text-base">check_circle</span>
+                <span>{checkoutDocumentName}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Liquidation Document */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-3">
+              Biên bản thanh lý hợp đồng *
+            </label>
+            <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-blue-400 hover:bg-blue-50 transition-all">
+              <input
+                id="liquidation-document-upload"
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                onChange={handleFileChange(setLiquidationDocumentFile, setLiquidationDocumentName)}
+                className="hidden"
+                required
+              />
+              <label htmlFor="liquidation-document-upload" className="cursor-pointer">
+                <span className="material-symbols-outlined text-3xl text-blue-500 mb-2">cloud_upload</span>
+                <div className="text-sm font-semibold text-slate-700 mb-1">
+                  {liquidationDocumentName || 'Chọn tệp biên bản thanh lý'}
+                </div>
+                <div className="text-xs text-slate-500">
+                  PDF, JPG, PNG, DOC, DOCX (tối đa 10MB)
+                </div>
+              </label>
+            </div>
+            {liquidationDocumentName && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
+                <span className="material-symbols-outlined text-base">check_circle</span>
+                <span>{liquidationDocumentName}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-3">
+        <button
+          onClick={() => navigate('/admin/checkout')}
+          className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium py-3 px-4 rounded-lg transition-colors"
+        >
+          Hủy
+        </button>
+        <button
+          onClick={handleFinalizeLiquidation}
+          disabled={finalizing}
+          className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
+        >
+          {finalizing ? 'Đang hoàn tất...' : 'Hoàn tất thanh lý'}
+        </button>
+      </div>
+    </div>
+  );
+};

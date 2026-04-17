@@ -12,8 +12,10 @@ skinparam {
 actor "BranchManager" as QuanLy
 boundary "ScreenRefundCalculation" as Screen <<boundary>>
 control "Contract" as Contract <<control>>
+control "CheckoutRequest" as Request <<control>>
 control "RefundCalculation" as Calc <<control>>
 database "RefundCalculationDB" as DB <<database>>
+database "CheckoutRequestDB" as RequestDB <<database>>
 
 autonumber
 
@@ -27,8 +29,10 @@ QuanLy -> Screen: Nhấn "Tính toán" (btnCalculateClick)
 Screen -> Calc: calculateTotal()
 
 == Lưu kết quả tính toán ==
-QuanLy -> Screen: Nhấn "Lưu" (btnSaveClick)
+QuanLy -> Screen: Nhấn "Lưu bảng đối soát" (btnSaveClick)
 Screen -> Calc: saveCalculation()
 Calc -> DB: insert()
+Screen -> Request: updateStatus(PENDING_LIQUIDATION)
+Request -> RequestDB: update()
 
 @enduml

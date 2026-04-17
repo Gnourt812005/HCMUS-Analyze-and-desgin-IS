@@ -3,9 +3,9 @@ import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
 import { User } from '../business/User';
 import { Contract } from '../business/Contract';
 
-const router = Router();
+export const contractRouter = Router();
 
-router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
+contractRouter.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const email = req.user?.email;
     if (!email) {
@@ -23,5 +23,3 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: 'Internal server error', error });
   }
 });
-
-export { router as contractRouter };
