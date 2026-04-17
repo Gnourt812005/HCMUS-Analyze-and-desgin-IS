@@ -10,6 +10,7 @@ import {RoomList} from "./pages/RoomList";
 
 import {FavouriteManagement} from "./pages/FavouriteManagement";
 import {PreviewFormManagement} from "./pages/PreviewFormManagement";
+import {ClientPreviewFormManagement} from "./pages/ClientPreviewFormManagement";
 
 import { UserLayout } from './components/UserLayout';
 import { AdminLayout } from './components/AdminLayout';
@@ -33,6 +34,7 @@ function App() {
           <Route path="favourites-management" element={<FavouriteManagement />} />
 
           <Route path="preview-forms-management" element={<PreviewFormManagement />} />
+          <Route path="client-preview-form-managements" element={<ClientPreviewFormManagement  />} />
 
           <Route path="test" element={<TestPage />} />
           <Route path="profile" element={<ProfilePage />} />

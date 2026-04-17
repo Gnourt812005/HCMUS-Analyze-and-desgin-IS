@@ -15,6 +15,17 @@ export class UserDB {
       role: UserRole.GUEST
     },
     {
+      email: 'admin@gmail.com',
+      password: 'admin',
+      fullName: 'System Admin',
+      cccd: '000000000000',
+      birthday: '1990-01-01',
+      gender: 'Nam',
+      phone: '1111111111',
+      address: 'Admin address',
+      role: UserRole.ADMIN
+    },
+    {
       email: 'staff@gmail.com',
       password: 'staff@123',
       fullName: 'Sales Staff 1',

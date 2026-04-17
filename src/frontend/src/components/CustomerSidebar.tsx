@@ -1,9 +1,12 @@
 import React from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { AuthService } from '../api/AuthService';
+import { UserRole } from '@dormarch/shared';
 
 export const CustomerSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const userRole = AuthService.getRole();
 
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -19,6 +22,10 @@ export const CustomerSidebar = () => {
     { path: '/orders', icon: 'shopping_cart', label: 'Đơn hàng' },
     { path: '/contracts', icon: 'description', label: 'Hợp đồng' },
   ];
+
+  if (userRole === UserRole.ADMIN) {
+    menuItems.push({ path: '/client-preview-form-managements', icon: 'visibility', label: 'Đơn xem phòng khách hàng' });
+  }
 
   return (
     <aside className="md:col-span-3 space-y-4">
