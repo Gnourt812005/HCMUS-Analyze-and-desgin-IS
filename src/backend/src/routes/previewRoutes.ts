@@ -166,6 +166,11 @@ previewRoutes.put('/:id/cancel', authMiddleware, async (req: AuthRequest, res) =
     const form = await PreviewFormDB.getById(id);
     if (!form) return res.status(404).json({ message: 'Not found' });
 
+    // Only allow canceling if status is ongoing
+    if (form.status !== 'ongoing') {
+      return res.status(400).json({ message: 'Only ongoing previews can be canceled' });
+    }
+
     const success = await PreviewFormDB.updateStatus(id, 'canceled');
     if (!success) {
       return res.status(500).json({ message: 'Failed to update' });

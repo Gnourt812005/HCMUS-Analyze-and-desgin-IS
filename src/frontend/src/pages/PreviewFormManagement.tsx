@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ApiClient } from '../api/ApiClient';
-import { PreviewBriefDTO, PreviewDetailDTO } from '@archdorm/shared';
+import { PreviewBriefDTO, PreviewDetailDTO } from '@dormarch/shared';
 
 // Modal component to view details of a preview form
 const PreviewDetailModal = ({ 
