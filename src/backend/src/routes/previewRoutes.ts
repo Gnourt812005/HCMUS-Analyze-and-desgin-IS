@@ -7,6 +7,25 @@ import { UserDB } from '../database/UserDB';
 import { PreviewForm } from '../business/PreviewForm';
 import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
 
+// Helper function to extract Room and Dorm details
+async function getRoomAndDormInfo(roomId: string) {
+  const dorms = await DormDB.getAll();
+  for (const dorm of dorms) {
+    if (!dorm.id) continue;
+    const rooms = await RoomDB.getByDormId(dorm.id);
+    const match = rooms.find((r) => r.id === roomId);
+    if (match) {
+      return {
+        roomName: match.name || '',
+        dormId: dorm.id,
+        dormName: dorm.name || '',
+        dormAddress: dorm.address || ''
+      };
+    }
+  }
+  return { roomName: '', dormId: '', dormName: '', dormAddress: '' };
+}
+
 export const previewRoutes = Router();
 
 previewRoutes.post('/', async (req, res) => {
@@ -42,25 +61,9 @@ previewRoutes.get('/', authMiddleware, async (req: AuthRequest, res) => {
     const allForms = await PreviewFormDB.getAll();
     const userForms = allForms.filter(f => formIds.includes(f.formId));
 
-    const dorms = await DormDB.getAll();
-    
     // Map to PreviewBriefDTO
     const data = await Promise.all(userForms.map(async (f) => {
-      // Find room in all rooms
-      let roomName = '';
-      let dormName = '';
-      let dormAddress = '';
-
-      for (const dorm of dorms) {
-        const rooms = await RoomDB.getByDormId(dorm.id!);
-        const match = rooms.find(r => r.id === f.roomId);
-        if (match) {
-          roomName = match.name || '';
-          dormName = dorm.name || '';
-          dormAddress = dorm.address || '';
-          break;
-        }
-      }
+      const { roomName, dormName, dormAddress } = await getRoomAndDormInfo(f.roomId);
 
       return {
         id: f.formId,
@@ -89,23 +92,8 @@ previewRoutes.get('/staff', authMiddleware, async (req: AuthRequest, res) => {
     const allForms = await PreviewFormDB.getAll();
     const staffForms = allForms.filter((f) => f.staffId === email);
 
-    const dorms = await DormDB.getAll();
-    
     const data = await Promise.all(staffForms.map(async (f) => {
-      let roomName = '';
-      let dormName = '';
-      let dormAddress = '';
-
-      for (const dorm of dorms) {
-        const rooms = await RoomDB.getByDormId(dorm.id!);
-        const match = rooms.find((r) => r.id === f.roomId);
-        if (match) {
-          roomName = match.name || '';
-          dormName = dorm.name || '';
-          dormAddress = dorm.address || '';
-          break;
-        }
-      }
+      const { roomName, dormName, dormAddress } = await getRoomAndDormInfo(f.roomId);
 
       return {
         id: f.formId,
@@ -142,23 +130,7 @@ previewRoutes.get('/staff/:id', authMiddleware, async (req: AuthRequest, res) =>
       return res.status(403).json({ message: 'Forbidden' });
     }
 
-    const dorms = await DormDB.getAll();
-    let roomName = '';
-    let dormId = '';
-    let dormName = '';
-    let dormAddress = '';
-
-    for (const dorm of dorms) {
-      const rooms = await RoomDB.getByDormId(dorm.id!);
-      const match = rooms.find((r) => r.id === form.roomId);
-      if (match) {
-        roomName = match.name || '';
-        dormId = dorm.id!;
-        dormName = dorm.name || '';
-        dormAddress = dorm.address || '';
-        break;
-      }
-    }
+    const { roomName, dormId, dormName, dormAddress } = await getRoomAndDormInfo(form.roomId);
 
     let customerInfo = null;
     if (form.userId) {
@@ -209,23 +181,7 @@ previewRoutes.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
     const form = await PreviewFormDB.getById(id);
     if (!form) return res.status(404).json({ message: 'Not found' });
 
-    const dorms = await DormDB.getAll();
-    let roomName = '';
-    let dormId = '';
-    let dormName = '';
-    let dormAddress = '';
-
-    for (const dorm of dorms) {
-      const rooms = await RoomDB.getByDormId(dorm.id!);
-      const match = rooms.find(r => r.id === form.roomId);
-      if (match) {
-        roomName = match.name || '';
-        dormId = dorm.id!;
-        dormName = dorm.name || '';
-        dormAddress = dorm.address || '';
-        break;
-      }
-    }
+    const { roomName, dormId, dormName, dormAddress } = await getRoomAndDormInfo(form.roomId);
 
     let salesStaff = null;
     if (form.staffId) {
