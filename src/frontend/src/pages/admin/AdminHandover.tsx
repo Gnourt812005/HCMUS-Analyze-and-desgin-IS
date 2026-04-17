@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { ApiClient } from '../../api/ApiClient';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -24,39 +25,14 @@ interface HandoverReport {
   type: 'check-in' | 'check-out';
 }
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+// ─── Active Contract (for dropdown) ──────────────────────────────────────────
 
-const MOCK_CONTRACTS = [
-  { id: 'HD001', customerName: 'Nguyễn Văn An', room: 'A101', beds: ['A101-1', 'A101-2'] },
-  { id: 'HD002', customerName: 'Trần Thị Bình', room: 'B203', beds: ['B203-1'] },
-  { id: 'HD003', customerName: 'Lê Hoàng Cường', room: 'C301', beds: ['C301-1', 'C301-2', 'C301-3'] },
-];
-
-const MOCK_REPORTS: HandoverReport[] = [
-  {
-    id: 'BB001', contractId: 'HD001', customerName: 'Nguyễn Văn An', room: 'A101',
-    beds: [
-      { bedName: 'A101-1', bedStatus: 'Tốt', mattressStatus: 'Tốt', cabinetStatus: 'Tốt', keyStatus: 'Tốt' },
-      { bedName: 'A101-2', bedStatus: 'Tốt', mattressStatus: 'Hư hỏng', cabinetStatus: 'Tốt', keyStatus: 'Tốt' },
-    ],
-    note: 'Nệm giường A101-2 bị rách nhẹ.', createdDate: '2025-01-01', createdBy: 'Staff', type: 'check-in',
-  },
-  {
-    id: 'BB002', contractId: 'HD002', customerName: 'Trần Thị Bình', room: 'B203',
-    beds: [
-      { bedName: 'B203-1', bedStatus: 'Tốt', mattressStatus: 'Tốt', cabinetStatus: 'Tốt', keyStatus: 'Tốt' },
-    ],
-    note: '', createdDate: '2025-02-01', createdBy: 'Staff', type: 'check-in',
-  },
-  {
-    id: 'BB003', contractId: 'HD003', customerName: 'Lê Hoàng Cường', room: 'C301',
-    beds: [
-      { bedName: 'C301-1', bedStatus: 'Tốt', mattressStatus: 'Tốt', cabinetStatus: 'Tốt', keyStatus: 'Tốt' },
-      { bedName: 'C301-2', bedStatus: 'Hư hỏng', mattressStatus: 'Tốt', cabinetStatus: 'Mất', keyStatus: 'Tốt' },
-    ],
-    note: 'Khung giường C301-2 bị gãy. Tủ C301-2 mất chìa khoá ngăn.', createdDate: '2025-03-01', createdBy: 'Staff', type: 'check-out',
-  },
-];
+interface ActiveContract {
+  id: string;
+  customerName: string;
+  room: string;
+  beds: string[];
+}
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -177,24 +153,27 @@ const BedChecklist = ({
 const CreateReportModal = ({
   onClose,
   onCreate,
+  activeContracts,
 }: {
   onClose: () => void;
-  onCreate: (r: HandoverReport) => void;
+  onCreate: (data: { contractId: string; type: 'check-in' | 'check-out'; note: string; beds: BedHandover[] }) => Promise<void>;
+  activeContracts: ActiveContract[];
 }) => {
   const [contractId, setContractId] = useState('');
   const [reportType, setReportType] = useState<'check-in' | 'check-out'>('check-in');
   const [beds, setBeds] = useState<BedHandover[]>([]);
   const [note, setNote] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
-  const selectedContract = MOCK_CONTRACTS.find(c => c.id === contractId);
+  const selectedContract = activeContracts.find((c: ActiveContract) => c.id === contractId);
 
   const handleSelectContract = (id: string) => {
-    const contract = MOCK_CONTRACTS.find(c => c.id === id);
+    const contract = activeContracts.find((c: ActiveContract) => c.id === id);
     setContractId(id);
     setErrors({});
     if (contract) {
-      setBeds(contract.beds.map(b => ({
+      setBeds(contract.beds.map((b: string) => ({
         bedName: b,
         bedStatus: 'Tốt', mattressStatus: 'Tốt', cabinetStatus: 'Tốt', keyStatus: 'Tốt',
       })));
@@ -216,20 +195,14 @@ const CreateReportModal = ({
     return Object.keys(e).length === 0;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validate() || !selectedContract) return;
-    const report: HandoverReport = {
-      id: `BB${String(Date.now()).slice(-3)}`,
-      contractId,
-      customerName: selectedContract.customerName,
-      room: selectedContract.room,
-      beds,
-      note,
-      createdDate: new Date().toISOString().split('T')[0],
-      createdBy: 'Staff',
-      type: reportType,
-    };
-    onCreate(report);
+    setSaving(true);
+    try {
+      await onCreate({ contractId, type: reportType, note, beds });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -281,7 +254,7 @@ const CreateReportModal = ({
               className="w-full bg-slate-50 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             >
               <option value="">-- Chọn hợp đồng --</option>
-              {MOCK_CONTRACTS.map(c => (
+              {activeContracts.map((c: ActiveContract) => (
                 <option key={c.id} value={c.id}>{c.id} — {c.customerName} (Phòng {c.room})</option>
               ))}
             </select>
@@ -350,9 +323,10 @@ const CreateReportModal = ({
           </button>
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-all active:scale-95"
+            disabled={saving}
+            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold rounded-lg transition-all active:scale-95"
           >
-            <span className="material-symbols-outlined text-base">draw</span>
+            <span className="material-symbols-outlined text-base">{saving ? 'hourglass_empty' : 'draw'}</span>
             Lưu &amp; Ký
           </button>
         </div>
@@ -454,7 +428,9 @@ const ReportDetailModal = ({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export const AdminHandover = () => {
-  const [reports, setReports] = useState<HandoverReport[]>(MOCK_REPORTS);
+  const [reports, setReports] = useState<HandoverReport[]>([]);
+  const [activeContracts, setActiveContracts] = useState<ActiveContract[]>([]);
+  const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'check-in' | 'check-out'>('all');
   const [showCreate, setShowCreate] = useState(false);
@@ -465,6 +441,23 @@ export const AdminHandover = () => {
     setSuccessMsg(msg);
     setTimeout(() => setSuccessMsg(''), 3000);
   };
+
+  const fetchAll = async () => {
+    try {
+      const [rRes, cRes] = await Promise.all([
+        ApiClient.get<{ data: HandoverReport[] }>('/handover'),
+        ApiClient.get<{ data: ActiveContract[] }>('/handover/contracts'),
+      ]);
+      setReports(rRes.data);
+      setActiveContracts(cRes.data);
+    } catch (err) {
+      console.error('Lỗi tải dữ liệu biên bản:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchAll(); }, []);
 
   const filtered = useMemo(() => reports.filter(r => {
     const kw = keyword.toLowerCase();
@@ -484,10 +477,13 @@ export const AdminHandover = () => {
     hasDamage: reports.filter(r => !isReportGood(r)).length,
   }), [reports]);
 
-  const handleCreate = (report: HandoverReport) => {
-    setReports(prev => [report, ...prev]);
+  const handleCreate = async (data: { contractId: string; type: 'check-in' | 'check-out'; note: string; beds: BedHandover[] }) => {
+    const res = await ApiClient.post<{ data: { id: string } }>('/handover', {
+      body: JSON.stringify(data),
+    });
     setShowCreate(false);
-    showSuccess(`Đã lập biên bản ${report.id} thành công!`);
+    showSuccess(`Đã lập biên bản ${res.data.id} thành công!`);
+    fetchAll();
   };
 
   return (
@@ -565,7 +561,12 @@ export const AdminHandover = () => {
 
       {/* Table */}
       <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+            <span className="material-symbols-outlined text-5xl mb-3 animate-spin">progress_activity</span>
+            <p className="font-medium">Đang tải dữ liệu...</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-400">
             <span className="material-symbols-outlined text-5xl mb-3">folder_open</span>
             <p className="font-medium">Không tìm thấy biên bản phù hợp</p>
@@ -637,14 +638,14 @@ export const AdminHandover = () => {
             </tbody>
           </table>
         )}
-        {filtered.length > 0 && (
+        {!loading && filtered.length > 0 && (
           <div className="px-5 py-3 border-t border-slate-100 text-xs text-slate-400">
             Hiển thị {filtered.length} / {reports.length} biên bản
           </div>
         )}
       </div>
 
-      {showCreate && <CreateReportModal onClose={() => setShowCreate(false)} onCreate={handleCreate} />}
+      {showCreate && <CreateReportModal onClose={() => setShowCreate(false)} onCreate={handleCreate} activeContracts={activeContracts} />}
       {selected && <ReportDetailModal report={selected} onClose={() => setSelected(null)} />}
     </div>
   );

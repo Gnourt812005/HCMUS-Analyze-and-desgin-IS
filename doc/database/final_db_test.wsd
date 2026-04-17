@@ -1,0 +1,254 @@
+@startuml ERD_V3
+title HomeStay Dorm - Entity Relationship Diagram (V3)
+
+' === CONFIGURATION ===
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 100
+skinparam shadowing false
+skinparam class {
+    BackgroundColor #F9F9F9
+    BorderColor #333333
+    HeaderBackgroundColor #DDDDDD
+}
+
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+}
+
+' --- ENTITIES ---
+
+entity "Customer (Khách hàng)" as Customer {
+    * customerId: string <<PK>>
+    --
+    email: string <<UNIQUE>>
+    password: string
+    fullName: string
+    cccd: string <<UNIQUE>>
+    birthday: date
+    gender: string
+    phone: string
+    address: string
+}
+
+entity "Employee (Nhân viên)" as Employee {
+    * employeeId: string <<PK>>
+    --
+    fullName: string
+    role: string
+    phone: string
+    email: string <<UNIQUE>>
+    password: string
+}
+
+entity "Dorm (Ký túc xá)" as Dorm {
+    * dormId: string <<PK>>
+    --
+    name: string
+    address: string
+    hotline: string
+    status: string
+    description: string
+}
+
+entity "Room (Phòng)" as Room {
+    * roomId: string <<PK>>
+    * dormId: string <<FK>>
+    --
+    name: string
+    type: string
+    floor: int
+    block: string
+    tower: string
+    specialNotes: string
+    imageUrl: string
+    favoriteCount: int
+}
+
+entity "Bed (Giường)" as Bed {
+    * bedId: string <<PK>>
+    * roomId: string <<FK>>
+    --
+    basePrice: decimal
+    status: string
+}
+
+entity "DepositReceipt (Giấy đặt cọc)" as DepositReceipt {
+    * depositId: string <<PK>>
+    * customerId: string <<FK>>
+    * roomId: string <<FK>>
+    --
+    createdDate: date
+    deadlineDate: date
+    occupantCount: int
+    depositAmount: decimal
+    totalAmount: decimal
+    status: string
+}
+
+entity "Contract (Hợp đồng)" as Contract {
+    * contractId: string <<PK>>
+    * depositId: string <<FK>>
+    * customerId: string <<FK>>
+    --
+    signedDate: date
+    startDate: date
+    endDate: date
+    paymentPeriod: string
+    depositAmount: decimal
+    status: string
+}
+
+entity "ContractBed (HĐ - Giường)" as ContractBed {
+    * contractId: string <<PK, FK>>
+    * bedId: string <<PK, FK>>
+}
+
+entity "PaymentReceipt (Phiếu thanh toán)" as PaymentReceipt {
+    * receiptId: string <<PK>>
+    contractId: string <<FK>>
+    depositId: string <<FK>>
+    --
+    method: string
+    amount: decimal
+    paymentDate: datetime
+    note: string
+}
+
+entity "HandoverReport (Biên bản)" as HandoverReport {
+    * reportId: string <<PK>>
+    * contractId: string <<FK>>
+    employeeId: string <<FK>>
+    --
+    type: string
+    createdDate: date
+    note: string
+}
+
+entity "HandoverBedDetail (Chi tiết biên bản)" as HandoverBedDetail {
+    * reportId: string <<PK, FK>>
+    * bedId: string <<PK, FK>>
+    --
+    bedStatus: string
+    mattressStatus: string
+    cabinetStatus: string
+    keyStatus: string
+}
+
+entity "CheckoutRequest (Yêu cầu trả phòng)" as CheckoutRequest {
+    * requestId: string <<PK>>
+    * contractId: string <<FK>>
+    --
+    expectedDate: date
+    status: string
+    rejectReason: string
+    documentUrl: string
+}
+
+entity "RefundCalculation (Hoàn cọc & Khấu trừ)" as RefundCalculation {
+    * calculationId: string <<PK>>
+    * requestId: string <<FK, UNIQUE>>
+    --
+    damageNotes: string
+    extraDeductions: decimal
+    totalAmount: decimal
+}
+
+entity "ViewingSchedule (Lịch hẹn)" as ViewingSchedule {
+    * scheduleId: string <<PK>>
+    * customerId: string <<FK>>
+    employeeId: string <<FK>>
+    * roomId: string <<FK>>
+    --
+    scheduledTime: datetime
+    type: string
+    status: string
+}
+
+entity "Policy (Nội quy)" as Policy {
+    * policyId: string <<PK>>
+    --
+    title: string
+    content: string
+}
+
+entity "DormPolicy (Nội quy KTX)" as DormPolicy {
+    * dormId: string <<PK, FK>>
+    * policyId: string <<PK, FK>>
+}
+
+entity "Utility (Tiện ích)" as Utility {
+    * utilityId: string <<PK>>
+    --
+    name: string
+    description: string
+}
+
+entity "DormUtility (Tiện ích KTX)" as DormUtility {
+    * dormId: string <<PK, FK>>
+    * utilityId: string <<PK, FK>>
+}
+
+entity "RoomUtility (Tiện ích Phòng)" as RoomUtility {
+    * roomId: string <<PK, FK>>
+    * utilityId: string <<PK, FK>>
+    --
+    quantity: int
+}
+
+entity "FavoriteRoom (Phòng quan tâm)" as FavoriteRoom {
+    * customerId: string <<PK, FK>>
+    * roomId: string <<PK, FK>>
+    --
+    createdAt: datetime
+}
+
+' --- RELATIONSHIPS ---
+
+Dorm ||--o{ Room
+Room ||--o{ Bed
+
+Dorm ||--o{ DormPolicy
+Policy ||--o{ DormPolicy
+
+Dorm ||--o{ DormUtility
+Utility ||--o{ DormUtility
+
+Room ||--o{ RoomUtility
+Utility ||--o{ RoomUtility
+
+Customer ||--o{ DepositReceipt
+Room ||--o{ DepositReceipt
+
+DepositReceipt ||--o{ Contract
+Customer ||--o{ Contract
+
+Contract ||--o{ ContractBed
+Bed ||--o{ ContractBed
+
+Contract ||--o{ PaymentReceipt
+DepositReceipt ||--o{ PaymentReceipt
+
+Contract ||--o{ HandoverReport
+Employee ||--o{ HandoverReport
+
+HandoverReport ||--o{ HandoverBedDetail
+Bed ||--o{ HandoverBedDetail
+
+Contract ||--|{ CheckoutRequest
+CheckoutRequest ||--|| RefundCalculation
+
+Customer ||--o{ ViewingSchedule
+Employee ||--o{ ViewingSchedule
+Room ||--o{ ViewingSchedule
+
+Customer ||--o{ FavoriteRoom
+Room ||--o{ FavoriteRoom
+
+
+@enduml

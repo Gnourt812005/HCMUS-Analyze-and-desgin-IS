@@ -1,6 +1,22 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB:       dormarch
+      POSTGRES_USER:     dormarch
+      POSTGRES_PASSWORD: dormarch123
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../doc/database/schema_test.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ../doc/database/seed_test.sql:/docker-entrypoint-initdb.d/02_seed.sql
+    networks:
+      - dormarch-network
+
   backend:
     build:
       context: .
@@ -8,6 +24,10 @@ services:
     command: npm run dev -w backend
     ports:
       - "3001:3001"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://dormarch:dormarch123@db:5432/dormarch
     volumes:
       - .:/app
       - /app/node_modules
@@ -23,11 +43,16 @@ services:
       - "3000:3000"
     depends_on:
       - backend
+    environment:
+      - VITE_API_BASE_URL=http://localhost:3001/api
     volumes:
       - .:/app
       - /app/node_modules
     networks:
       - dormarch-network
+
+volumes:
+  pgdata:
 
 networks:
   dormarch-network:

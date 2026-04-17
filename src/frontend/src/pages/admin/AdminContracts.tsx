@@ -1,22 +1,24 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { ApiClient } from '../../api/ApiClient';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type ContractStatus = 'Hiệu lực' | 'Hết hạn' | 'Đã huỷ';
 type PaymentPeriod = 'monthly' | 'quarterly' | 'yearly';
 
-interface DepositForm {
+interface RentalOrder {
   id: string;
-  customerName: string;
+  customerName: string;     
   phone: string;
   cccd: string;
   room: string;
   beds: string[];
+  depositAmount: number; // tiền cọc đã đóng
 }
 
 interface Contract {
   id: string;
-  depositFormId: string;
+  orderId: string; // đơn đăng ký thuê
   customerName: string;
   phone: string;
   cccd: string;
@@ -27,6 +29,7 @@ interface Contract {
   paymentPeriod: PaymentPeriod;
   status: ContractStatus;
   createdDate: string;
+  depositAmount: number;
 }
 
 // ─── Hardcoded Contract Terms ─────────────────────────────────────────────────
@@ -97,44 +100,6 @@ const VIOLATION_TERMS = [
   },
 ];
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const MOCK_DEPOSIT_FORMS: DepositForm[] = [
-  { id: 'DC001', customerName: 'Nguyễn Văn An', phone: '0901234567', cccd: '079201012345', room: 'A101', beds: ['A101-1', 'A101-2'] },
-  { id: 'DC002', customerName: 'Trần Thị Bình', phone: '0912345678', cccd: '079202023456', room: 'B203', beds: ['B203-1'] },
-  { id: 'DC003', customerName: 'Lê Hoàng Cường', phone: '0923456789', cccd: '079203034567', room: 'C301', beds: ['C301-1', 'C301-2', 'C301-3'] },
-];
-
-const MOCK_CONTRACTS: Contract[] = [
-  {
-    id: 'HD001', depositFormId: 'DC001',
-    customerName: 'Nguyễn Văn An', phone: '0901234567', cccd: '079201012345',
-    room: 'A101', beds: ['A101-1', 'A101-2'],
-    startDate: '2025-01-01', endDate: '2025-12-31',
-    paymentPeriod: 'monthly', status: 'Hiệu lực', createdDate: '2024-12-28',
-  },
-  {
-    id: 'HD002', depositFormId: 'DC002',
-    customerName: 'Trần Thị Bình', phone: '0912345678', cccd: '079202023456',
-    room: 'B203', beds: ['B203-1'],
-    startDate: '2024-06-01', endDate: '2024-12-31',
-    paymentPeriod: 'quarterly', status: 'Hết hạn', createdDate: '2024-05-25',
-  },
-  {
-    id: 'HD003', depositFormId: 'DC003',
-    customerName: 'Lê Hoàng Cường', phone: '0923456789', cccd: '079203034567',
-    room: 'C301', beds: ['C301-1', 'C301-2'],
-    startDate: '2025-03-01', endDate: '2026-02-28',
-    paymentPeriod: 'yearly', status: 'Hiệu lực', createdDate: '2025-02-20',
-  },
-  {
-    id: 'HD004', depositFormId: 'DC001',
-    customerName: 'Phạm Thị Dung', phone: '0934567890', cccd: '079204045678',
-    room: 'D102', beds: ['D102-1'],
-    startDate: '2024-09-01', endDate: '2025-01-31',
-    paymentPeriod: 'monthly', status: 'Đã huỷ', createdDate: '2024-08-28',
-  },
-];
 
 const PAYMENT_PERIOD_LABEL: Record<PaymentPeriod, string> = {
   monthly: 'Hàng tháng',
@@ -163,25 +128,28 @@ function fmtMoney(n: number) {
 const CreateContractModal = ({
   onClose,
   onCreate,
+  orders,
 }: {
   onClose: () => void;
-  onCreate: (c: Contract) => void;
+  onCreate: (data: { orderId: string; startDate: string; endDate: string; paymentPeriod: PaymentPeriod; beds: string[] }) => Promise<void>;
+  orders: RentalOrder[];
 }) => {
-  const [depositFormId, setDepositFormId] = useState('');
+  const [orderId, setOrderId] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriod>('monthly');
   const [selectedBeds, setSelectedBeds] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
-  const selected = MOCK_DEPOSIT_FORMS.find(d => d.id === depositFormId);
+  const selected = orders.find(o => o.id === orderId);
 
   const toggleBed = (bed: string) =>
     setSelectedBeds(prev => prev.includes(bed) ? prev.filter(b => b !== bed) : [...prev, bed]);
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!depositFormId) e.deposit = 'Vui lòng chọn phiếu đặt cọc';
+    if (!orderId) e.order = 'Vui lòng chọn đơn đăng ký thuê';
     if (!startDate) e.startDate = 'Vui lòng chọn ngày bắt đầu';
     if (!endDate) e.endDate = 'Vui lòng chọn ngày kết thúc';
     if (startDate && endDate && endDate <= startDate) e.endDate = 'Ngày kết thúc phải sau ngày bắt đầu';
@@ -190,22 +158,14 @@ const CreateContractModal = ({
     return Object.keys(e).length === 0;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validate() || !selected) return;
-    onCreate({
-      id: `HD${String(Date.now()).slice(-3)}`,
-      depositFormId,
-      customerName: selected.customerName,
-      phone: selected.phone,
-      cccd: selected.cccd,
-      room: selected.room,
-      beds: selectedBeds,
-      startDate,
-      endDate,
-      paymentPeriod,
-      status: 'Hiệu lực',
-      createdDate: new Date().toISOString().split('T')[0],
-    });
+    setSaving(true);
+    try {
+      await onCreate({ orderId, startDate, endDate, paymentPeriod, beds: selectedBeds });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -215,7 +175,7 @@ const CreateContractModal = ({
         <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Lập hợp đồng mới</h2>
-            <p className="text-slate-500 text-sm mt-0.5">Tạo hợp đồng từ phiếu đặt cọc đã có</p>
+            <p className="text-slate-500 text-sm mt-0.5">Tạo hợp đồng từ đơn đăng ký thuê đã được duyệt</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
             <span className="material-symbols-outlined text-slate-500">close</span>
@@ -225,19 +185,19 @@ const CreateContractModal = ({
         <div className="flex-1 overflow-y-auto px-7 py-6 space-y-5">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-              Phiếu đặt cọc <span className="text-red-500">*</span>
+              Đơn đăng ký thuê <span className="text-red-500">*</span>
             </label>
             <select
-              value={depositFormId}
-              onChange={e => { setDepositFormId(e.target.value); setSelectedBeds([]); setErrors({}); }}
+              value={orderId}
+              onChange={e => { setOrderId(e.target.value); setSelectedBeds([]); setErrors({}); }}
               className="w-full bg-slate-50 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             >
-              <option value="">-- Chọn phiếu đặt cọc --</option>
-              {MOCK_DEPOSIT_FORMS.map(d => (
-                <option key={d.id} value={d.id}>{d.id} — {d.customerName} (Phòng {d.room})</option>
+              <option value="">-- Chọn đơn đăng ký thuê --</option>
+              {orders.map((o: RentalOrder) => (
+                <option key={o.id} value={o.id}>{o.id} — {o.customerName} (Phòng {o.room})</option>
               ))}
             </select>
-            {errors.deposit && <p className="text-red-500 text-xs mt-1">{errors.deposit}</p>}
+            {errors.order && <p className="text-red-500 text-xs mt-1">{errors.order}</p>}
           </div>
 
           {selected && (
@@ -254,9 +214,13 @@ const CreateContractModal = ({
                 <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">CCCD</p>
                 <p className="font-bold text-slate-800">{selected.cccd}</p>
               </div>
-              <div className="col-span-3">
+              <div>
                 <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">Phòng</p>
                 <p className="font-bold text-slate-800">Phòng {selected.room}</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">Tiền đặt cọc đã thu</p>
+                <p className="font-extrabold text-emerald-700">{fmtMoney(selected.depositAmount)}</p>
               </div>
             </div>
           )}
@@ -287,9 +251,20 @@ const CreateContractModal = ({
               </div>
               {errors.beds && <p className="text-red-500 text-xs mt-1">{errors.beds}</p>}
               {selectedBeds.length > 0 && (
-                <p className="text-xs text-slate-500 mt-2">
-                  Tiền thuê dự kiến: <span className="font-bold text-blue-700">{fmtMoney(BASE_RENT_PER_BED * selectedBeds.length)}/tháng</span>
-                </p>
+                <div className="mt-3 bg-slate-50 rounded-xl px-4 py-3 space-y-1.5 text-xs text-slate-600">
+                  <div className="flex justify-between">
+                    <span>Tiền thuê / tháng</span>
+                    <span className="font-bold text-blue-700">{fmtMoney(BASE_RENT_PER_BED * selectedBeds.length)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Ngày thanh toán</span>
+                    <span className="font-semibold text-slate-600">
+                      {paymentPeriod === 'monthly'   ? 'Ngày 01 hàng tháng' :
+                       paymentPeriod === 'quarterly' ? 'Ngày 01 tháng đầu mỗi quý' :
+                                                       'Ngày 01 tháng 01 hàng năm'}
+                    </span>
+                  </div>
+                </div>
               )}
             </div>
           )}
@@ -333,9 +308,9 @@ const CreateContractModal = ({
         </div>
 
         <div className="flex items-center justify-end gap-3 px-7 py-5 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
-          <button onClick={onClose} className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition-all">Huỷ</button>
-          <button onClick={handleSave} className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-all active:scale-95">
-            <span className="material-symbols-outlined text-base">save</span>
+          <button onClick={onClose} disabled={saving} className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition-all">Huỷ</button>
+          <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold rounded-lg transition-all active:scale-95">
+            <span className="material-symbols-outlined text-base">{saving ? 'hourglass_empty' : 'save'}</span>
             Lưu hợp đồng
           </button>
         </div>
@@ -377,7 +352,14 @@ const ContractDetailModal = ({
   const [confirmCancel, setConfirmCancel] = useState(false);
 
   const totalRent = BASE_RENT_PER_BED * contract.beds.length;
-  const deposit = totalRent * 2;
+  const depositAmount = contract.depositAmount ?? totalRent * 2;
+
+  const PAYMENT_SCHEDULE: Record<PaymentPeriod, { label: string; amount: number; note: string }> = {
+    monthly:   { label: 'Hàng tháng',  amount: totalRent,      note: 'Thanh toán vào ngày 01 hàng tháng' },
+    quarterly: { label: 'Hàng quý',    amount: totalRent * 3,  note: 'Thanh toán vào ngày 01 tháng đầu mỗi quý (tháng 1, 4, 7, 10)' },
+    yearly:    { label: 'Hàng năm',    amount: totalRent * 12, note: 'Thanh toán vào ngày 01 tháng 01 hàng năm' },
+  };
+  const schedule = PAYMENT_SCHEDULE[contract.paymentPeriod];
 
   const handleSave = () => {
     onUpdate({ ...contract, customerName, cccd, phone, startDate, endDate });
@@ -400,7 +382,7 @@ const ContractDetailModal = ({
                   {contract.status}
                 </span>
               </div>
-              <p className="text-slate-500 text-sm">Lập ngày {contract.createdDate} · Phiếu cọc {contract.depositFormId}</p>
+              <p className="text-slate-500 text-sm">Lập ngày {contract.createdDate} · Đơn đăng ký {contract.orderId}</p>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors mt-1">
               <span className="material-symbols-outlined text-slate-500">close</span>
@@ -461,8 +443,8 @@ const ContractDetailModal = ({
                     : <span className="text-sm font-semibold text-slate-800">{phone}</span>}
                 </div>
                 <div className="flex gap-2 items-center">
-                  <span className="text-sm text-slate-500 min-w-32">Phiếu đặt cọc:</span>
-                  <span className="text-sm font-semibold text-slate-800">{contract.depositFormId}</span>
+                  <span className="text-sm text-slate-500 min-w-32">Đơn đăng ký:</span>
+                  <span className="text-sm font-semibold text-slate-800">{contract.orderId}</span>
                 </div>
               </div>
             </div>
@@ -514,21 +496,46 @@ const ContractDetailModal = ({
             {/* Tài chính */}
             <div>
               <SectionTitle number="IV" title="Tài chính" />
-              <div className="pl-10 space-y-2">
-                <div className="flex items-center justify-between py-2.5 border-b border-dashed border-slate-200">
+              <div className="pl-10 space-y-0 overflow-hidden rounded-xl border border-slate-200">
+                {/* Giá thuê theo kỳ */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-blue-50">
                   <div>
-                    <span className="text-sm text-slate-600">Giá thuê cơ bản</span>
-                    <span className="text-xs text-slate-400 ml-2">({contract.beds.length} giường × {fmtMoney(BASE_RENT_PER_BED)})</span>
+                    <span className="text-sm font-semibold text-blue-800">Tiền thuê / kỳ</span>
+                    <span className="text-xs text-blue-500 ml-2">
+                      ({contract.beds.length} giường × {fmtMoney(BASE_RENT_PER_BED)} × {
+                        contract.paymentPeriod === 'monthly' ? '1 tháng' :
+                        contract.paymentPeriod === 'quarterly' ? '3 tháng' : '12 tháng'
+                      })
+                    </span>
                   </div>
-                  <span className="text-sm font-bold text-slate-800">{fmtMoney(totalRent)}/tháng</span>
+                  <span className="text-sm font-extrabold text-blue-700">{fmtMoney(schedule.amount)}/{schedule.label.toLowerCase()}</span>
                 </div>
-                <div className="flex items-center justify-between py-2.5 border-b border-dashed border-slate-200">
-                  <span className="text-sm text-slate-600">Tiền đặt cọc</span>
-                  <span className="text-sm font-bold text-slate-800">{fmtMoney(deposit)}</span>
+                {/* Ngày thanh toán */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-slate-400 text-base">calendar_month</span>
+                    <span className="text-sm text-slate-600">Ngày thanh toán</span>
+                  </div>
+                  <span className="text-sm font-semibold text-slate-800">{schedule.note}</span>
                 </div>
-                <div className="flex items-center justify-between py-2.5">
-                  <span className="text-sm text-slate-600">Phí dịch vụ</span>
-                  <span className="text-sm font-medium text-slate-500">Tính thêm theo thực tế</span>
+                {/* Tiền cọc */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-slate-400 text-base">savings</span>
+                    <div>
+                      <span className="text-sm text-slate-600">Tiền đặt cọc</span>
+                      <span className="text-xs text-slate-400 ml-2">(đã thu khi đăng ký thuê)</span>
+                    </div>
+                  </div>
+                  <span className="text-sm font-extrabold text-emerald-700">{fmtMoney(depositAmount)}</span>
+                </div>
+                {/* Phí dịch vụ */}
+                <div className="flex items-center justify-between px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-slate-400 text-base">receipt_long</span>
+                    <span className="text-sm text-slate-600">Phí dịch vụ</span>
+                  </div>
+                  <span className="text-sm text-slate-400 italic">Tính thêm theo thực tế</span>
                 </div>
               </div>
             </div>
@@ -689,7 +696,9 @@ const ContractDetailModal = ({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export const AdminContracts = () => {
-  const [contracts, setContracts] = useState<Contract[]>(MOCK_CONTRACTS);
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [orders, setOrders] = useState<RentalOrder[]>([]);
+  const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState<ContractStatus | 'all'>('all');
   const [showCreate, setShowCreate] = useState(false);
@@ -700,6 +709,23 @@ export const AdminContracts = () => {
     setSuccessMsg(msg);
     setTimeout(() => setSuccessMsg(''), 3000);
   };
+
+  const fetchAll = async () => {
+    try {
+      const [cRes, oRes] = await Promise.all([
+        ApiClient.get<{ data: Contract[] }>('/contracts'),
+        ApiClient.get<{ data: RentalOrder[] }>('/contracts/orders'),
+      ]);
+      setContracts(cRes.data);
+      setOrders(oRes.data);
+    } catch (err) {
+      console.error('Lỗi tải dữ liệu hợp đồng:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchAll(); }, []);
 
   const filtered = useMemo(() => contracts.filter(c => {
     const kw = keyword.toLowerCase();
@@ -716,19 +742,33 @@ export const AdminContracts = () => {
     cancelled: contracts.filter(c => c.status === 'Đã huỷ').length,
   }), [contracts]);
 
-  const handleCreate = (c: Contract) => {
-    setContracts(prev => [c, ...prev]);
+  const handleCreate = async (data: { orderId: string; startDate: string; endDate: string; paymentPeriod: PaymentPeriod; beds: string[] }) => {
+    const order = orders.find(o => o.id === data.orderId);
+    await ApiClient.post('/contracts', {
+      body: JSON.stringify({ ...data, depositAmount: order?.depositAmount ?? 0 }),
+    });
     setShowCreate(false);
-    showSuccess(`Đã lập hợp đồng ${c.id} thành công!`);
+    showSuccess('Đã lập hợp đồng thành công!');
+    fetchAll();
   };
 
-  const handleUpdate = (updated: Contract) => {
-    setContracts(prev => prev.map(c => c.id === updated.id ? updated : c));
+  const handleUpdate = async (updated: Contract) => {
+    await ApiClient.put(`/contracts/${updated.id}`, {
+      body: JSON.stringify({
+        customerName: updated.customerName,
+        phone: updated.phone,
+        cccd: updated.cccd,
+        startDate: updated.startDate,
+        endDate: updated.endDate,
+      }),
+    });
     setSelected(updated);
+    setContracts(prev => prev.map(c => c.id === updated.id ? updated : c));
     showSuccess(`Đã cập nhật hợp đồng ${updated.id}!`);
   };
 
-  const handleCancel = (id: string) => {
+  const handleCancel = async (id: string) => {
+    await ApiClient.patch(`/contracts/${id}/cancel`);
     setContracts(prev => prev.map(c => c.id === id ? { ...c, status: 'Đã huỷ' } : c));
     showSuccess(`Đã huỷ hợp đồng ${id}.`);
   };
@@ -803,7 +843,12 @@ export const AdminContracts = () => {
       </div>
 
       <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+            <span className="material-symbols-outlined text-5xl mb-3 animate-spin">progress_activity</span>
+            <p className="font-medium">Đang tải dữ liệu...</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-400">
             <span className="material-symbols-outlined text-5xl mb-3">folder_open</span>
             <p className="font-medium">Không tìm thấy hợp đồng phù hợp</p>
@@ -857,14 +902,14 @@ export const AdminContracts = () => {
             </tbody>
           </table>
         )}
-        {filtered.length > 0 && (
+        {!loading && filtered.length > 0 && (
           <div className="px-5 py-3 border-t border-slate-100 text-xs text-slate-400">
             Hiển thị {filtered.length} / {contracts.length} hợp đồng
           </div>
         )}
       </div>
 
-      {showCreate && <CreateContractModal onClose={() => setShowCreate(false)} onCreate={handleCreate} />}
+      {showCreate && <CreateContractModal onClose={() => setShowCreate(false)} onCreate={handleCreate} orders={orders} />}
       {selected && (
         <ContractDetailModal
           contract={selected}
