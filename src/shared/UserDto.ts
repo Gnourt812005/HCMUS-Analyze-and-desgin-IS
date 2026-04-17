@@ -1,6 +1,6 @@
 export enum UserRole {
   GUEST = 'GUEST',
-  STAFF = 'STAFF'
+  SALES_STAFF = 'SALES_STAFF'
 }
 
 export interface UserDTO {

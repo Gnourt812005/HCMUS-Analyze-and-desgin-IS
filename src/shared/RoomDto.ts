@@ -1,4 +1,4 @@
-export interface RoomViewDTO {
+export interface RoomBriefDTO {
   id: string;
   name: string;
   block: string;

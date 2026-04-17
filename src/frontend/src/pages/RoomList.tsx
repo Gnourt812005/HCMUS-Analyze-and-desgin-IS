@@ -2,11 +2,11 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, SlidersHorizontal, DollarSign, Bed, Users, Building2, MapPin, CheckCircle2, AlertCircle, Heart, X } from "lucide-react";
-import { RoomViewDTO, RoomDetailDTO } from "@dormarch/shared";
+import { RoomBriefDTO, RoomDetailDTO } from "@dormarch/shared";
 import { ApiClient } from "../api/ApiClient";
 import { AuthService } from "../api/AuthService";
 
-interface Room {
+export interface Room {
   id: string;
   dormId: string;
   name: string;
@@ -98,8 +98,8 @@ export const RoomList = () => {
         });
     }, [originalRooms, filters]);
 
-    // Use RoomViewDTO to display to the screen list of rooms
-    const displayRooms: RoomViewDTO[] = filteredRooms.map(room => ({
+    // Use RoomBriefDTO to display to the screen list of rooms
+    const displayRooms: RoomBriefDTO[] = filteredRooms.map(room => ({
         id: room.id,
         name: room.name,
         block: room.block,
@@ -447,7 +447,7 @@ export const RoomList = () => {
                                             </div>
 
                                             <div className="mt-3 flex flex-wrap gap-1">
-                                                {room.amenities.slice(0, 3).map((amenity) => (
+                                                {room.amenities.slice(0, 3).map((amenity: string) => (
                                                     <span
                                                         key={amenity}
                                                         className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700"
