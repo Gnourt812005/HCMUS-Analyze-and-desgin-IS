@@ -10,6 +10,7 @@ import {RoomList} from "./pages/RoomList";
 
 import {FavouriteManagement} from "./pages/FavouriteManagement";
 import {PreviewFormManagement} from "./pages/PreviewFormManagement";
+import {ClientPreviewFormManagement} from "./pages/ClientPreviewFormManagement";
 
 import { UserLayout } from './components/UserLayout';
 import { AdminLayout } from './components/AdminLayout';
@@ -30,13 +31,11 @@ function App() {
           <Route path="dorms" element={<DormSelection />} />
           <Route path="dorm/:dormid/rooms" element={<RoomList />} />
 
-          <Route path="favoutites" element={<FavouriteManagement />} />
+          <Route path="favourites-management" element={<FavouriteManagement />} />
 
-          <Route path="preview" element={<PreviewFormManagement />} />
+          <Route path="preview-forms-management" element={<PreviewFormManagement />} />
+          <Route path="client-preview-form-managements" element={<ClientPreviewFormManagement  />} />
 
-          <Route path="favourites" element={<FavouriteManagement />} />
-
-          <Route path="preview-management" element={<PreviewFormManagement />} />
           <Route path="test" element={<TestPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="login" element={<Login />} />
