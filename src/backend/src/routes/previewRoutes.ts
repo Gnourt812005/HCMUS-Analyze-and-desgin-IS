@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { PreviewFormDB } from '../database/PreviewFormDB';
-import { PreviewForm_UserDB } from '../database/PreviewForm_UserDB';
 import { RoomDB } from '../database/RoomDB';
 import { DormDB } from '../database/DormDB';
 import { UserDB } from '../database/UserDB';
@@ -42,7 +41,6 @@ previewRoutes.post('/', async (req, res) => {
     });
 
     await PreviewFormDB.insert(newForm);
-    await PreviewForm_UserDB.insert(userId, newForm.formId);
 
     res.json({ message: 'Success', status: 200, data: newForm });
   } catch (error) {
@@ -56,10 +54,9 @@ previewRoutes.get('/', authMiddleware, async (req: AuthRequest, res) => {
     const email = req.user?.email;
     if (!email) return res.status(401).json({ message: 'Unauthorized' });
 
-    // Find preview forms for this user
-    const formIds = await PreviewForm_UserDB.getFormsByUserId(email);
+    // Find preview forms for this user directly from PreviewFormDB
     const allForms = await PreviewFormDB.getAll();
-    const userForms = allForms.filter(f => formIds.includes(f.formId));
+    const userForms = allForms.filter(f => f.userId === email);
 
     // Map to PreviewBriefDTO
     const data = await Promise.all(userForms.map(async (f) => {
@@ -173,13 +170,12 @@ previewRoutes.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
        return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const formIds = await PreviewForm_UserDB.getFormsByUserId(email);
-    if (!formIds.includes(id)) {
-      return res.status(403).json({ message: 'Forbidden' });
-    }
-
     const form = await PreviewFormDB.getById(id);
     if (!form) return res.status(404).json({ message: 'Not found' });
+
+    if (form.userId !== email) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
 
     const { roomName, dormId, dormName, dormAddress } = await getRoomAndDormInfo(form.roomId);
 
@@ -260,13 +256,12 @@ previewRoutes.put('/:id/cancel', authMiddleware, async (req: AuthRequest, res) =
        return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const formIds = await PreviewForm_UserDB.getFormsByUserId(email);
-    if (!formIds.includes(id)) {
-      return res.status(403).json({ message: 'Forbidden' });
-    }
-
     const form = await PreviewFormDB.getById(id);
     if (!form) return res.status(404).json({ message: 'Not found' });
+
+    if (form.userId !== email) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
 
     // Only allow canceling if status is ongoing
     if (form.status !== 'ongoing') {
