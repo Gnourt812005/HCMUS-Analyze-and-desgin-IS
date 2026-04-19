@@ -337,7 +337,7 @@ export const AdminRefundCalculation = () => {
         <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200 space-y-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900">
-              Thông tin hợp đồng (tự động trích xuất từ hệ thống)
+              Thông tin hợp đồng
             </h2>
           </div>
 
@@ -635,7 +635,7 @@ export const AdminRefundCalculation = () => {
             disabled={submitting || !hasCalculated}
             className="rounded-full bg-green-600 px-6 py-3 text-sm font-semibold text-white hover:bg-green-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
           >
-            {submitting ? 'Đang lưu bảng đối soát...' : 'Lưu bảng đối soát'}
+            {submitting ? 'Đang lưu...' : 'Lưu'}
           </button>
         </div>
       </form>

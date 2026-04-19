@@ -189,7 +189,6 @@ export const AdminLiquidation = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Hoàn tất thanh lý</h1>
-          <p className="text-sm text-slate-500 mt-1">Xác nhận và hoàn tất quá trình thanh lý hợp đồng</p>
         </div>
         <button
           onClick={() => navigate('/admin/checkout')}
