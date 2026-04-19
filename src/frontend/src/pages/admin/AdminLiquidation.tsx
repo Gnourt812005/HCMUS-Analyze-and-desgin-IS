@@ -15,12 +15,8 @@ export const AdminLiquidation = () => {
   const [checkoutRequest, setCheckoutRequest] = useState<CheckoutRequestDTO | null>(null);
   const [contract, setContract] = useState<ContractDTO | null>(null);
   const [calculation, setCalculation] = useState<RefundCalculationDTO | null>(null);
-
-  // Document upload states
   const [checkoutDocumentFile, setCheckoutDocumentFile] = useState<File | null>(null);
-  const [liquidationDocumentFile, setLiquidationDocumentFile] = useState<File | null>(null);
   const [checkoutDocumentName, setCheckoutDocumentName] = useState('');
-  const [liquidationDocumentName, setLiquidationDocumentName] = useState('');
 
   // Load data on mount
   useEffect(() => {
@@ -79,40 +75,35 @@ export const AdminLiquidation = () => {
     }
   };
 
-  const handleFileChange = (setter: (file: File | null) => void, nameSetter: (name: string) => void) =>
-    (e: ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0] ?? null;
-      if (file) {
-        // Validate file size (max 10MB)
-        if (file.size > 10 * 1024 * 1024) {
-          setError('Tệp quá lớn (tối đa 10MB). Vui lòng chọn tệp khác.');
-          return;
-        }
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    if (!file) {
+      setCheckoutDocumentFile(null);
+      setCheckoutDocumentName('');
+      return;
+    }
 
-        // Validate file type
-        const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-        if (!validTypes.includes(file.type)) {
-          setError('Loại tệp không được hỗ trợ. Vui lòng chọn PDF, JPG, PNG, DOC hoặc DOCX.');
-          return;
-        }
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Tệp quá lớn (tối đa 10MB). Vui lòng chọn tệp khác.');
+      return;
+    }
 
-        setter(file);
-        nameSetter(file.name);
-        setError(null);
-      }
-    };
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!validTypes.includes(file.type)) {
+      setError('Loại tệp không được hỗ trợ. Vui lòng chọn PDF, JPG, PNG, DOC hoặc DOCX.');
+      return;
+    }
+
+    setCheckoutDocumentFile(file);
+    setCheckoutDocumentName(file.name);
+    setError(null);
+  };
 
   const handleFinalizeLiquidation = async () => {
     if (!checkoutRequest) return;
 
-    // Validation
     if (!checkoutDocumentFile) {
       setError('Vui lòng tải lên biên bản trả phòng.');
-      return;
-    }
-
-    if (!liquidationDocumentFile) {
-      setError('Vui lòng tải lên biên bản thanh lý hợp đồng.');
       return;
     }
 
@@ -120,7 +111,6 @@ export const AdminLiquidation = () => {
       setFinalizing(true);
       setError(null);
 
-      // Convert files to base64
       const checkoutDocumentUrl = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
@@ -128,19 +118,11 @@ export const AdminLiquidation = () => {
         reader.readAsDataURL(checkoutDocumentFile!);
       });
 
-      const liquidationDocumentUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(liquidationDocumentFile!);
-      });
-
-      // Complete liquidation with documents
       await ApiClient.patch(`/checkout-requests/${checkoutRequest.requestId}/complete-liquidation`, {
         body: JSON.stringify({
           checkoutDocumentUrl,
-          liquidationDocumentUrl,
-          status: CheckoutStatus.LIQUIDATED
+          status: CheckoutStatus.LIQUIDATED,
+          expectedStatus: checkoutRequest.status
         })
       });
 
@@ -157,8 +139,10 @@ export const AdminLiquidation = () => {
     }
   };
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Math.abs(value));
+  const formatCurrency = (value?: number | null) => {
+    const safeValue = Number(value ?? 0);
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number.isNaN(safeValue) ? 0 : Math.abs(safeValue));
+  };
 
   if (loading) {
     return (
@@ -280,98 +264,63 @@ export const AdminLiquidation = () => {
         <div className="grid gap-3 text-sm">
           <div className="flex justify-between gap-4">
             <span className="text-slate-700">Tiền cọc</span>
-            <span className="font-semibold text-slate-900">{formatCurrency(calculation.depositAmount)}</span>
+            <span className="font-semibold text-slate-900">{formatCurrency(calculation.depositAmount || 0)}</span>
           </div>
           <div className="flex justify-between gap-4">
             <span className="text-slate-700">Phí hư hỏng</span>
-            <span className="font-semibold text-slate-900">{formatCurrency(calculation.damageFee)}</span>
+            <span className="font-semibold text-slate-900">{formatCurrency(calculation.damageFee || 0)}</span>
           </div>
           <div className="flex justify-between gap-4">
             <span className="text-slate-700">Phí phát sinh</span>
-            <span className="font-semibold text-slate-900">{formatCurrency(calculation.extraFee)}</span>
+            <span className="font-semibold text-slate-900">{formatCurrency(calculation.extraFee || 0)}</span>
           </div>
           <div className="border-t border-slate-200 pt-3 flex justify-between gap-4 font-semibold text-slate-900">
             <span>Tổng hoàn trả / cần đóng</span>
-            <span>{formatCurrency(calculation.finalRefundAmount)}</span>
+            <span>{formatCurrency(calculation.finalRefundAmount || 0)}</span>
           </div>
+        </div>
+
+        <div className="border-t border-slate-200 pt-3">
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">Ghi chú từ bảng đối soát</h3>
+          <p className="text-sm text-slate-600 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
+            {calculation.notes || 'Không có ghi chú.'}
+          </p>
         </div>
       </div>
 
-      {/* Document Upload */}
       <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200 space-y-4">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Tải lên tài liệu thanh lý</h2>
-          <p className="text-sm text-slate-500 mt-1">Vui lòng tải lên biên bản trả phòng và biên bản thanh lý hợp đồng</p>
+          <h2 className="text-lg font-bold text-slate-900">Tải lên biên bản trả phòng</h2>
+          <p className="text-sm text-slate-500 mt-1">Vui lòng tải lên biên bản trả phòng để hoàn tất thanh lý.</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Checkout Document */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-3">
-              Biên bản trả phòng *
-            </label>
-            <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-blue-400 hover:bg-blue-50 transition-all">
-              <input
-                id="checkout-document-upload"
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                onChange={handleFileChange(setCheckoutDocumentFile, setCheckoutDocumentName)}
-                className="hidden"
-                required
-              />
-              <label htmlFor="checkout-document-upload" className="cursor-pointer">
-                <span className="material-symbols-outlined text-3xl text-blue-500 mb-2">cloud_upload</span>
-                <div className="text-sm font-semibold text-slate-700 mb-1">
-                  {checkoutDocumentName || 'Chọn tệp biên bản trả phòng'}
-                </div>
-                <div className="text-xs text-slate-500">
-                  PDF, JPG, PNG, DOC, DOCX (tối đa 10MB)
-                </div>
-              </label>
+        <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-blue-400 hover:bg-blue-50 transition-all">
+          <input
+            id="checkout-document-upload"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <label htmlFor="checkout-document-upload" className="cursor-pointer block">
+            <span className="material-symbols-outlined text-3xl text-blue-500 mb-2">cloud_upload</span>
+            <div className="text-sm font-semibold text-slate-700 mb-1">
+              {checkoutDocumentName || 'Chọn tệp biên bản trả phòng'}
             </div>
-            {checkoutDocumentName && (
-              <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
-                <span className="material-symbols-outlined text-base">check_circle</span>
-                <span>{checkoutDocumentName}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Liquidation Document */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-3">
-              Biên bản thanh lý hợp đồng *
-            </label>
-            <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-blue-400 hover:bg-blue-50 transition-all">
-              <input
-                id="liquidation-document-upload"
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                onChange={handleFileChange(setLiquidationDocumentFile, setLiquidationDocumentName)}
-                className="hidden"
-                required
-              />
-              <label htmlFor="liquidation-document-upload" className="cursor-pointer">
-                <span className="material-symbols-outlined text-3xl text-blue-500 mb-2">cloud_upload</span>
-                <div className="text-sm font-semibold text-slate-700 mb-1">
-                  {liquidationDocumentName || 'Chọn tệp biên bản thanh lý'}
-                </div>
-                <div className="text-xs text-slate-500">
-                  PDF, JPG, PNG, DOC, DOCX (tối đa 10MB)
-                </div>
-              </label>
+            <div className="text-xs text-slate-500">
+              PDF, JPG, PNG, DOC, DOCX (tối đa 10MB)
             </div>
-            {liquidationDocumentName && (
-              <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
-                <span className="material-symbols-outlined text-base">check_circle</span>
-                <span>{liquidationDocumentName}</span>
-              </div>
-            )}
-          </div>
+          </label>
         </div>
+
+        {checkoutDocumentName && (
+          <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
+            <span className="material-symbols-outlined text-base">check_circle</span>
+            <span>{checkoutDocumentName}</span>
+          </div>
+        )}
       </div>
 
-      {/* Action Buttons */}
       <div className="flex gap-3">
         <button
           onClick={() => navigate('/admin/checkout')}

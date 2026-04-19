@@ -24,5 +24,6 @@ export interface RefundCalculationDTO {
   damageFee: number;
   extraFee: number;
   finalRefundAmount: number;
+  notes?: string;
 }
 

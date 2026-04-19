@@ -18,9 +18,11 @@ interface AdditionalDeductions {
 }
 
 interface CalculationResult {
-  depositAmount: number;
+  initialDeposit: number;
+  baseRefundableDeposit: number;
+  refundRule: string;
   damageFee: number;
-  deductionsTotal: number;
+  otherDeductionsTotal: number;
   finalRefundAmount: number;
   customerOwes: boolean;
 }
@@ -115,37 +117,76 @@ export const AdminRefundCalculation = () => {
   };
 
   const calculateRefund = () => {
-    if (!contract) {
-      setError('Không tìm thấy thông tin hợp đồng');
+    if (!contract || !checkoutRequest) {
+      setError('Không tìm thấy thông tin hợp đồng hoặc yêu cầu trả phòng.');
       return;
     }
 
     setError(null);
 
     // Base deposit amount from contract
-    const depositAmount = contract.depositAmount || 0;
+    const initialDeposit = contract.depositAmount; // depositAmount is not optional in ContractDTO
+    let baseRefundableDeposit = 0;
+    let refundRule = '';
 
-    // Total deductions
+    const contractStartDate = new Date(contract.startDate);
+    const checkoutDate = new Date(checkoutRequest.expectedDate);
+
+    // Calculate the contract's official end date based on startDate and stayDuration
+    const contractOfficialEndDate = new Date(contractStartDate);
+    contractOfficialEndDate.setMonth(contractOfficialEndDate.getMonth() + contract.stayDuration);
+    // Set to the end of the day to ensure comparison `checkoutDate >= contractOfficialEndDate` works correctly for same-day checkout
+    contractOfficialEndDate.setHours(23, 59, 59, 999);
+
+    // Contract expired (or checkout is on the expiry date or later)
+    if (checkoutDate >= contractOfficialEndDate) {
+      baseRefundableDeposit = initialDeposit; // 100%
+      refundRule = 'Hoàn 100% cọc (Hợp đồng hết hạn đúng ngày hoặc sau ngày hết hạn).';
+    } else {
+      // Early termination
+      // To accurately determine if the stay is less than 6 months, we calculate the date 6 months after the start date.
+      // This handles month-end cases correctly (e.g., Jan 31 + 6 months = July 31).
+      const sixMonthsAfterStart = new Date(contractStartDate);
+      const targetMonth = (sixMonthsAfterStart.getMonth() + 6) % 12;
+      sixMonthsAfterStart.setMonth(sixMonthsAfterStart.getMonth() + 6);
+
+      // If setMonth() rolled over to the next month (e.g., from Jan 31 to Mar 2),
+      // it means the target month was shorter. We correct this by setting the date to 0,
+      // which results in the last day of the previous (target) month.
+      if (sixMonthsAfterStart.getMonth() !== targetMonth) {
+        sixMonthsAfterStart.setDate(0);
+      }
+
+      if (checkoutDate < sixMonthsAfterStart) {
+        // Stayed < 6 months
+        baseRefundableDeposit = initialDeposit * 0.5; // 50%
+        refundRule = 'Hoàn 50% cọc (Chấm dứt hợp đồng trước hạn, lưu trú < 6 tháng).';
+      }
+      else {
+        // Stayed >= 6 months
+        baseRefundableDeposit = initialDeposit * 0.7; // 70%
+        refundRule = 'Hoàn 70% cọc (Chấm dứt hợp đồng trước hạn, lưu trú từ 6 tháng trở lên).';
+      }
+    }
+
     const damageFee = damageInspection.damageAmount;
-    const deductionsTotal =
+    const otherDeductionsTotal =
       additionalDeductions.unpaidRent +
       additionalDeductions.unpaidUtilities +
       additionalDeductions.compensationFee +
       additionalDeductions.otherDeductions;
 
-    const totalDeductions = damageFee + deductionsTotal;
-
-    // Final refund amount (negative means customer owes money)
-    const finalRefundAmount = depositAmount - totalDeductions;
+    const finalRefundAmount = baseRefundableDeposit - (damageFee + otherDeductionsTotal);
 
     setCalculationResult({
-      depositAmount,
+      initialDeposit,
+      baseRefundableDeposit,
+      refundRule,
       damageFee,
-      deductionsTotal,
+      otherDeductionsTotal,
       finalRefundAmount,
       customerOwes: finalRefundAmount < 0,
     });
-
     setHasCalculated(true);
   };
 
@@ -157,8 +198,8 @@ export const AdminRefundCalculation = () => {
       return;
     }
 
-    if (calculationResult.damageAmount < 0 || calculationResult.deductionsTotal < 0) {
-      setError('Các khoản chi phí không được âm');
+    if (calculationResult.damageFee < 0 || calculationResult.otherDeductionsTotal < 0) {
+      setError('Các khoản chi phí không được âm.');
       return;
     }
 
@@ -170,7 +211,7 @@ export const AdminRefundCalculation = () => {
       const refundData = {
         requestId: checkoutRequest.requestId,
         contractId: contract.contractId,
-        depositAmount: calculationResult.depositAmount,
+        depositAmount: calculationResult.initialDeposit,
         damageFee: calculationResult.damageFee,
         extraDebt:
           additionalDeductions.unpaidRent +
@@ -178,7 +219,9 @@ export const AdminRefundCalculation = () => {
           additionalDeductions.compensationFee +
           additionalDeductions.otherDeductions,
         finalRefundAmount: calculationResult.finalRefundAmount,
-        notes: damageInspection.damageSummary,
+        notes: `${calculationResult.refundRule}. Ghi chú thiệt hại: ${
+          damageInspection.damageSummary || 'Không'
+        }. Ghi chú khoản khác: ${additionalDeductions.otherDeductionsNotes || 'Không'}.`,
       };
 
       let savedCalculation: RefundCalculationDTO;
@@ -201,7 +244,10 @@ export const AdminRefundCalculation = () => {
       // Update checkout request status to PENDING_LIQUIDATION only after calculation succeeds
       try {
         await ApiClient.patch(`/checkout-requests/${checkoutRequest.requestId}/status`, {
-          body: JSON.stringify({ status: CheckoutStatus.PENDING_LIQUIDATION }),
+          body: JSON.stringify({
+            status: CheckoutStatus.PENDING_LIQUIDATION,
+            expectedStatus: checkoutRequest.status
+          }),
         });
       } catch (statusErr) {
         // Log the error but don't fail - calculation was saved successfully
@@ -495,9 +541,19 @@ export const AdminRefundCalculation = () => {
             </h2>
 
             <div className="space-y-3">
+              <div className="flex justify-between items-center rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <span className="text-sm font-semibold text-slate-700">Tiền cọc ban đầu từ hợp đồng</span>
+                <span className="text-lg font-bold text-slate-900">{formatCurrency(calculationResult.initialDeposit)}</span>
+              </div>
+
               <div className="flex justify-between items-center rounded-2xl border border-slate-200 bg-blue-50 p-4">
-                <span className="text-sm font-semibold text-slate-700">Tiền cọc ban đầu</span>
-                <span className="text-lg font-bold text-blue-700">{formatCurrency(calculationResult.depositAmount)}</span>
+                <div>
+                  <span className="text-sm font-semibold text-slate-700">Tiền cọc được xét hoàn</span>
+                  <p className="text-xs text-slate-500">{calculationResult.refundRule}</p>
+                </div>
+                <span className="text-lg font-bold text-blue-700">
+                  {formatCurrency(calculationResult.baseRefundableDeposit)}
+                </span>
               </div>
 
               <div className="flex justify-between items-center rounded-2xl border border-slate-200 bg-red-50 p-4">
@@ -508,7 +564,7 @@ export const AdminRefundCalculation = () => {
               <div className="flex justify-between items-center rounded-2xl border border-slate-200 bg-orange-50 p-4">
                 <span className="text-sm font-semibold text-slate-700">Tổng khoản khác cần khấu trừ</span>
                 <span className="text-lg font-bold text-orange-700">
-                  - {formatCurrency(calculationResult.deductionsTotal)}
+                  - {formatCurrency(calculationResult.otherDeductionsTotal)}
                 </span>
               </div>
 

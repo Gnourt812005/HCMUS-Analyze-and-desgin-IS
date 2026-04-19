@@ -60,13 +60,16 @@ export class CheckoutRequest {
     return requestModel ? new CheckoutRequest(requestModel).toDto() : null;
   }
 
-  static async updateStatus(requestId: string, newStatus: CheckoutStatus): Promise<boolean> {
+  static async updateStatus(requestId: string, newStatus: CheckoutStatus, expectedCurrentStatus?: CheckoutStatus): Promise<boolean> {
     const currentRequest = await CheckoutRequestDB.getById(requestId);
     if (!currentRequest) {
       return false;
     }
 
     const currentStatus = currentRequest.status;
+    if (expectedCurrentStatus !== undefined && currentStatus !== expectedCurrentStatus) {
+      throw new Error('Yêu cầu đã được cập nhật bởi quản trị viên khác. Vui lòng làm mới và thử lại.');
+    }
 
     // Define valid status transitions
     const validTransitions: Record<CheckoutStatus, CheckoutStatus[]> = {
@@ -86,6 +89,6 @@ export class CheckoutRequest {
       );
     }
 
-    return await CheckoutRequestDB.updateStatus(requestId, newStatus);
+    return await CheckoutRequestDB.updateStatus(requestId, newStatus, expectedCurrentStatus);
   }
 }

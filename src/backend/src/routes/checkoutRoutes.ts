@@ -99,9 +99,10 @@ checkoutRouter.post('/', async (req: Request, res: Response) => {
 
 checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
   try {
-    const { status } = req.body;
+    const { status, expectedStatus } = req.body;
     const requestId = req.params.id;
     const newStatus = status as CheckoutStatus;
+    const expectedCurrentStatus = expectedStatus as CheckoutStatus | undefined;
 
     const currentRequest = await CheckoutRequest.getById(requestId);
     if (!currentRequest) {
@@ -109,9 +110,12 @@ checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
       return;
     }
 
-    const success = await CheckoutRequest.updateStatus(requestId, newStatus);
+    const success = await CheckoutRequest.updateStatus(requestId, newStatus, expectedCurrentStatus);
+    if (!success) {
+      throw new Error('Yêu cầu đã được cập nhật bởi quản trị viên khác. Vui lòng làm mới và thử lại.');
+    }
 
-    if (success && currentRequest.contractId) {
+    if (currentRequest.contractId) {
       // If the checkout request is cancelled or rejected, revert contract status to ACTIVE
       if ([CheckoutStatus.CANCELLED, CheckoutStatus.REJECTED].includes(newStatus)) {
         await ContractDB.updateStatus(currentRequest.contractId, 'ACTIVE');
@@ -122,19 +126,18 @@ checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
     res.status(200).json(updated);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';
-    const statusCode = message.includes('Không thể chuyển trạng thái') ? 400 : 500;
+    const statusCode = message.includes('Yêu cầu đã được cập nhật bởi quản trị viên khác')
+      ? 409
+      : message.includes('Không thể chuyển trạng thái')
+      ? 400
+      : 500;
     res.status(statusCode).json({ message });
   }
 });
 
 checkoutRouter.patch('/:id/complete-liquidation', async (req: Request, res: Response) => {
   try {
-    const { checkoutDocumentUrl, liquidationDocumentUrl, status } = req.body;
-
-    if (!checkoutDocumentUrl || !liquidationDocumentUrl) {
-      res.status(400).json({ message: 'checkoutDocumentUrl và liquidationDocumentUrl là bắt buộc.' });
-      return;
-    }
+    const { checkoutDocumentUrl, liquidationDocumentUrl, status, expectedStatus } = req.body;
 
     const request = await CheckoutRequest.getById(req.params.id);
     if (!request) {
@@ -142,10 +145,20 @@ checkoutRouter.patch('/:id/complete-liquidation', async (req: Request, res: Resp
       return;
     }
 
-    await CheckoutRequestDB.updateDocuments(req.params.id, checkoutDocumentUrl);
+    const targetStatus = (status as CheckoutStatus) || CheckoutStatus.LIQUIDATED;
+    const success = await CheckoutRequest.updateStatus(req.params.id, targetStatus, expectedStatus as CheckoutStatus | undefined);
+    if (!success) {
+      throw new Error('Yêu cầu đã được cập nhật bởi quản trị viên khác. Vui lòng làm mới và thử lại.');
+    }
+
+    if (checkoutDocumentUrl) {
+      await CheckoutRequestDB.updateDocuments(req.params.id, checkoutDocumentUrl);
+    }
 
     if (request.contractId) {
-      await ContractDB.updateLiquidationUrl(request.contractId, liquidationDocumentUrl);
+      if (liquidationDocumentUrl) {
+        await ContractDB.updateLiquidationUrl(request.contractId, liquidationDocumentUrl);
+      }
       await ContractDB.updateStatus(request.contractId, 'LIQUIDATED');
       const contract = await Contract.getByContractId(request.contractId);
       if (contract?.roomId) {
@@ -153,13 +166,15 @@ checkoutRouter.patch('/:id/complete-liquidation', async (req: Request, res: Resp
       }
     }
 
-    await CheckoutRequest.updateStatus(req.params.id, status || CheckoutStatus.LIQUIDATED);
-
     const finalRequest = await CheckoutRequest.getById(req.params.id);
     res.status(200).json(finalRequest);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';
-    const statusCode = message.includes('Không thể chuyển trạng thái') ? 400 : 500;
+    const statusCode = message.includes('Yêu cầu đã được cập nhật bởi quản trị viên khác')
+      ? 409
+      : message.includes('Không thể chuyển trạng thái')
+      ? 400
+      : 500;
     res.status(statusCode).json({ message });
   }
 });

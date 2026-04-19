@@ -10,8 +10,10 @@ type CheckoutRequestDetailResponse = {
   refund?: RefundCalculationDTO | null;
 };
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+const formatCurrency = (value?: number | null) => {
+  const safeValue = Number(value ?? 0);
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number.isNaN(safeValue) ? 0 : safeValue);
+};
 
 const getStatusLabel = (status: CheckoutStatus) => {
   switch (status) {
@@ -144,22 +146,30 @@ export const ViewCheckoutRequest = () => {
   };
 
   const handleCancelRequest = async (requestId: string) => {
-    try {
-      await ApiClient.patch(`/checkout-requests/${requestId}/status`, {
-        body: JSON.stringify({ status: CheckoutStatus.CANCELLED })
-      });
+    const originalRequests = [...checkoutRequests];
+    const originalSelectedRequest = selectedRequest ? { ...selectedRequest } : null;
+    const originalRequestDetail = requestDetail ? { ...requestDetail } : null;
 
-      const updatedRequest = checkoutRequests.find(r => r.requestId === requestId);
-      if (updatedRequest) {
-        const cancelledRequest = { ...updatedRequest, status: CheckoutStatus.CANCELLED };
-        setCheckoutRequests(checkoutRequests.map((request: CheckoutRequestDTO) => request.requestId === requestId ? cancelledRequest : request));
-        if (selectedRequest?.requestId === requestId) {
-          setSelectedRequest(cancelledRequest);
-          setRequestDetail((prev: CheckoutRequestDetailResponse | null) => prev ? { ...prev, request: cancelledRequest } : prev);
-        }
-      }
+    const cancelledRequest = { ...checkoutRequests.find(r => r.requestId === requestId)!, status: CheckoutStatus.CANCELLED };
+    setCheckoutRequests(checkoutRequests.map(r => r.requestId === requestId ? cancelledRequest : r));
+    if (selectedRequest?.requestId === requestId) {
+      setSelectedRequest(cancelledRequest);
+      setRequestDetail(prev => prev ? { ...prev, request: cancelledRequest } : prev);
+    }
+
+    try {
       setError(null);
+      const request = checkoutRequests.find(r => r.requestId === requestId);
+      await ApiClient.patch(`/checkout-requests/${requestId}/status`, {
+        body: JSON.stringify({
+          status: CheckoutStatus.CANCELLED,
+          expectedStatus: request?.status
+        })
+      });
     } catch (err) {
+      setCheckoutRequests(originalRequests);
+      setSelectedRequest(originalSelectedRequest);
+      setRequestDetail(originalRequestDetail);
       setError(err instanceof Error ? err.message : 'Lỗi hủy yêu cầu');
     }
   };
@@ -172,14 +182,29 @@ export const ViewCheckoutRequest = () => {
 
     if (status === CheckoutStatus.PENDING) {
       return (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <p className="font-semibold text-slate-800 mb-2">Số tiền cọc theo hợp đồng</p>
-          {contract ? (
-            <p className="text-slate-900 text-lg font-bold">{formatCurrency(contract.depositAmount)}</p>
-          ) : (
-            <p className="text-slate-600">Không tìm thấy thông tin hợp đồng. Vui lòng liên hệ quản lý.</p>
+        <>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="font-semibold text-slate-800 mb-2">Số tiền cọc theo hợp đồng</p>
+            {contract ? (
+              <p className="text-slate-900 text-lg font-bold">{formatCurrency(contract.depositAmount)}</p>
+            ) : (
+              <p className="text-slate-600">Không tìm thấy thông tin hợp đồng. Vui lòng liên hệ quản lý.</p>
+            )}
+          </div>
+          {selectedRequest.documentUrl && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="font-semibold text-slate-800 mb-3">Tài liệu đính kèm</p>
+              <a
+                href={selectedRequest.documentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-blue-600 hover:text-blue-800 underline"
+              >
+                Xem tài liệu đính kèm ban đầu
+              </a>
+            </div>
           )}
-        </div>
+        </>
       );
     }
 
@@ -191,30 +216,38 @@ export const ViewCheckoutRequest = () => {
             {detailLoading ? (
               <p className="text-slate-500">Đang tải chi tiết...</p>
             ) : refund ? (
-              <div className="grid gap-3 text-sm text-slate-700">
-                <div className="flex justify-between gap-4">
-                  <span>Tiền cọc</span>
-                  <span>{formatCurrency(refund.depositAmount)}</span>
+              <>
+                <div className="grid gap-3 text-sm text-slate-700">
+                  <div className="flex justify-between gap-4">
+                    <span>Tiền cọc</span>
+                    <span>{formatCurrency(refund.depositAmount)}</span>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <span>Phí hư hỏng</span>
+                    <span>{formatCurrency(refund.damageFee)}</span>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <span>Phí phát sinh</span>
+                    <span>{formatCurrency(refund.extraFee)}</span>
+                  </div>
+                  <div className="border-t border-slate-200 pt-3 flex justify-between gap-4 font-semibold text-slate-900">
+                    <span>Tổng hoàn trả / cần đóng</span>
+                    <span>{formatCurrency(refund.finalRefundAmount)}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between gap-4">
-                  <span>Phí hư hỏng</span>
-                  <span>{formatCurrency(refund.damageFee)}</span>
+                <div className="border-t border-slate-200 pt-3 mt-4">
+                  <p className="font-semibold text-slate-800 mb-2">Ghi chú chi tiết từ quản lý</p>
+                  <div className="text-sm text-slate-600 whitespace-pre-wrap bg-white p-3 rounded-lg border border-slate-200">
+                    {refund.notes || 'Không có ghi chú.'}
+                  </div>
                 </div>
-                <div className="flex justify-between gap-4">
-                  <span>Phí phát sinh</span>
-                  <span>{formatCurrency(refund.extraFee)}</span>
-                </div>
-                <div className="border-t border-slate-200 pt-3 flex justify-between gap-4 font-semibold text-slate-900">
-                  <span>Tổng hoàn trả / cần đóng</span>
-                  <span>{formatCurrency(refund.finalRefundAmount)}</span>
-                </div>
-              </div>
+              </>
             ) : (
               <p className="text-slate-600">Không có bảng tính chi phí.</p>
             )}
           </div>
 
-          {status === CheckoutStatus.LIQUIDATED && (
+          {(selectedRequest.documentUrl || status === CheckoutStatus.LIQUIDATED) && (
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
               <p className="font-semibold text-slate-800 mb-3">Tài liệu đính kèm</p>
               {selectedRequest.documentUrl && (
@@ -222,22 +255,26 @@ export const ViewCheckoutRequest = () => {
                   href={selectedRequest.documentUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block text-blue-600 hover:text-blue-800 underline mb-2"
-                >
-                  Xem biên bản trả phòng
-                </a>
-              )}
-              {contract?.liquidationUrl ? (
-                <a
-                  href={contract.liquidationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="block text-blue-600 hover:text-blue-800 underline"
                 >
-                  Xem biên bản thanh lý hợp đồng
+                  Xem tài liệu đính kèm ban đầu
                 </a>
-              ) : (
-                <p className="text-slate-600">Không tìm thấy biên bản thanh lý hợp đồng.</p>
+              )}
+              {status === CheckoutStatus.LIQUIDATED && (
+                <div className={selectedRequest.documentUrl ? 'mt-2' : ''}>
+                  {contract?.liquidationUrl ? (
+                    <a
+                      href={contract.liquidationUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-blue-600 hover:text-blue-800 underline"
+                    >
+                      Xem biên bản trả phòng
+                    </a>
+                  ) : (
+                    <p className="text-slate-600">Không tìm thấy biên bản trả phòng.</p>
+                  )}
+                </div>
               )}
             </div>
           )}

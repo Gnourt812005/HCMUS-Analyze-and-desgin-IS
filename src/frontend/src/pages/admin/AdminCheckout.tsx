@@ -142,9 +142,12 @@ export const AdminCheckout = () => {
         checkoutRequests.map(r => r.requestId === requestId ? { ...r, status: CheckoutStatus.PROCESSING } : r)
       );
       
-      // Gọi API
+      const request = checkoutRequests.find(r => r.requestId === requestId);
       await ApiClient.patch(`/checkout-requests/${requestId}/status`, {
-        body: JSON.stringify({ status: CheckoutStatus.PROCESSING })
+        body: JSON.stringify({
+          status: CheckoutStatus.PROCESSING,
+          expectedStatus: request?.status
+        })
       });
       
       setError(null);
@@ -165,8 +168,12 @@ export const AdminCheckout = () => {
       );
       
       // Gọi API
+      const request = checkoutRequests.find(r => r.requestId === requestId);
       await ApiClient.patch(`/checkout-requests/${requestId}/status`, {
-        body: JSON.stringify({ status: CheckoutStatus.CANCELLED })
+        body: JSON.stringify({
+          status: CheckoutStatus.CANCELLED,
+          expectedStatus: request?.status
+        })
       });
       
       setError(null);
@@ -512,6 +519,13 @@ export const AdminCheckout = () => {
                     </a>
                   </div>
                 )}
+
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">Ghi chú thanh lý / đối soát</label>
+                  <p className="text-slate-900 whitespace-pre-wrap">
+                    {refundMap[selectedRequest.requestId]?.notes || 'Không có ghi chú.'}
+                  </p>
+                </div>
               </div>
 
               <div className="mt-4 pt-4 border-t border-slate-200 flex flex-wrap justify-center gap-3">

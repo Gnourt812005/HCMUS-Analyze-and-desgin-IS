@@ -45,10 +45,15 @@ export class CheckoutRequestDB {
     return request || null;
   }
 
-  static async updateStatus(requestId: string, newStatus: CheckoutStatus): Promise<boolean> {
+  static async updateStatus(requestId: string, newStatus: CheckoutStatus, expectedStatus?: CheckoutStatus): Promise<boolean> {
     const requestIndex = this.MOCK_CHECKOUT_REQUESTS.findIndex(r => r.requestId === requestId);
     if (requestIndex === -1)
       return false;
+
+    const existingRequest = this.MOCK_CHECKOUT_REQUESTS[requestIndex];
+    if (expectedStatus !== undefined && existingRequest.status !== expectedStatus) {
+      return false;
+    }
 
     this.MOCK_CHECKOUT_REQUESTS[requestIndex].status = newStatus;
     return true;
