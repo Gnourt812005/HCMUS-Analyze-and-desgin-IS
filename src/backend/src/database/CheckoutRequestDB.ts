@@ -40,6 +40,22 @@ export class CheckoutRequestDB {
     return true;
   }
 
+  static async insertIfNoActiveRequest(request: CheckoutRequest, contractId: string, userCCCD: string): Promise<{ success: boolean; error?: string }> {
+    // Atomic check-and-insert: check for active request, return error if exists
+    const existingActive = this.MOCK_CHECKOUT_REQUESTS.find(r =>
+      r.contractId === contractId &&
+      r.userCCCD === userCCCD &&
+      [CheckoutStatus.PENDING, CheckoutStatus.PROCESSING, CheckoutStatus.PENDING_LIQUIDATION].includes(r.status as CheckoutStatus)
+    );
+
+    if (existingActive) {
+      return { success: false, error: 'Đã có yêu cầu trả phòng đang xử lý cho hợp đồng này.' };
+    }
+
+    this.MOCK_CHECKOUT_REQUESTS.push(request);
+    return { success: true };
+  }
+
   static async getById(requestId: string): Promise<Partial<CheckoutRequest> | null> {
     const request = this.MOCK_CHECKOUT_REQUESTS.find(r => r.requestId === requestId);
     return request || null;

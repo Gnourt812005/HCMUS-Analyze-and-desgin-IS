@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckoutStatus, CheckoutRequestDTO, RefundCalculationDTO } from '@dormarch/shared';
+import { CheckoutStatus, CheckoutRequestDTO, RefundCalculationDTO, ContractDTO, UserProfileDTO } from '@dormarch/shared';
 import { ApiClient } from '../../api/ApiClient';
 
 export const AdminCheckout = () => {
@@ -16,10 +16,15 @@ export const AdminCheckout = () => {
   // Form create
   const [createForm, setCreateForm] = useState({
     userCCCD: '',
+    contractId: '',
     expectedDate: '',
     documentFile: null as File | null
   });
   const [documentFileName, setDocumentFileName] = useState('');
+  const [searchingUser, setSearchingUser] = useState(false);
+  const [userSearchError, setUserSearchError] = useState<string | null>(null);
+  const [searchedUser, setSearchedUser] = useState<UserProfileDTO | null>(null);
+  const [availableContracts, setAvailableContracts] = useState<ContractDTO[]>([]);
 
   // Load checkout requests on mount
   useEffect(() => {
@@ -76,8 +81,8 @@ export const AdminCheckout = () => {
     e.preventDefault();
     
     // Validation
-    if (!createForm.userCCCD || !createForm.expectedDate) {
-      setError('Trường này không được để trống');
+    if (!createForm.userCCCD || !createForm.contractId || !createForm.expectedDate) {
+      setError('Vui lòng điền đầy đủ thông tin và chọn hợp đồng.');
       return;
     }
 
@@ -97,6 +102,7 @@ export const AdminCheckout = () => {
       const newRequest = await ApiClient.post<CheckoutRequestDTO>('/checkout-requests', {
         body: JSON.stringify({
           userCCCD: createForm.userCCCD,
+          contractId: createForm.contractId,
           expectedDate: createForm.expectedDate,
           documentUrl: documentUrl
         })
@@ -106,8 +112,12 @@ export const AdminCheckout = () => {
       setCheckoutRequests([...checkoutRequests, newRequest]);
       
       setShowCreateModal(false);
-      setCreateForm({ userCCCD: '', expectedDate: '', documentFile: null });
+      setCreateForm({ userCCCD: '', contractId: '', expectedDate: '', documentFile: null });
       setDocumentFileName('');
+      setSearchingUser(false);
+      setUserSearchError(null);
+      setSearchedUser(null);
+      setAvailableContracts([]);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Lỗi tạo yêu cầu');
@@ -124,6 +134,43 @@ export const AdminCheckout = () => {
       setCreateForm({ ...createForm, documentFile: file });
       setDocumentFileName(file.name);
       setError(null);
+    }
+  };
+
+  const handleSearchUser = async () => {
+    if (!createForm.userCCCD) {
+      setUserSearchError('Vui lòng nhập CCCD khách hàng để tìm kiếm.');
+      return;
+    }
+
+    setSearchingUser(true);
+    setUserSearchError(null);
+    setSearchedUser(null);
+    setAvailableContracts([]);
+    setCreateForm(prev => ({ ...prev, contractId: '' }));
+
+    try {
+      const response = await ApiClient.get<{ user: UserProfileDTO | null; contracts: ContractDTO[] }>(
+        `/contracts/active-by-user/${encodeURIComponent(createForm.userCCCD)}`
+      );
+
+      if (!response.user) {
+        setUserSearchError('Không tìm thấy khách hàng.');
+        setSearchingUser(false);
+        return;
+      }
+
+      setSearchedUser(response.user);
+      setAvailableContracts(response.contracts || []);
+      if (!response.contracts || response.contracts.length === 0) {
+        setUserSearchError('Khách hàng hiện không có hợp đồng hoạt động nào.');
+      }
+    } catch (err) {
+      setUserSearchError(err instanceof Error ? err.message : 'Lỗi tìm kiếm khách hàng');
+      setSearchedUser(null);
+      setAvailableContracts([]);
+    } finally {
+      setSearchingUser(false);
     }
   };
 
@@ -383,10 +430,9 @@ export const AdminCheckout = () => {
         )}
       </div>
 
-      {/* Modal: Tạo yêu cầu mới (Kịch bản 2) */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-slate-900/10 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 border border-slate-200/70">
+          <div className="bg-white rounded-xl shadow-2xl p-6 mx-auto w-full max-w-3xl border border-slate-200/70">
             <h2 className="text-xl font-bold mb-4">Tạo yêu cầu trả phòng</h2>
 
             <form onSubmit={handleCreateRequest} className="space-y-4 mb-6">
@@ -394,15 +440,74 @@ export const AdminCheckout = () => {
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                   CCCD khách hàng *
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={createForm.userCCCD}
-                  onChange={(e) => setCreateForm({ ...createForm, userCCCD: e.target.value })}
-                  placeholder="Nhập mã khách hàng"
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    required
+                    value={createForm.userCCCD}
+                    onChange={(e) => {
+                      setCreateForm({ ...createForm, userCCCD: e.target.value, contractId: '' });
+                      setSearchedUser(null);
+                      setAvailableContracts([]);
+                      setUserSearchError(null);
+                    }}
+                    placeholder="Nhập cccd khách hàng"
+                    className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    disabled={!createForm.userCCCD || searchingUser}
+                    onClick={handleSearchUser}
+                    className="inline-flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:bg-slate-300"
+                  >
+                    {searchingUser ? 'Đang tìm...' : 'Tìm khách hàng'}
+                  </button>
+                </div>
+                {userSearchError && (
+                  <p className="mt-2 text-sm text-red-600">{userSearchError}</p>
+                )}
               </div>
+
+              {searchedUser && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-700">Khách hàng tìm được</p>
+                  <p className="text-slate-900 mt-1">{searchedUser.fullName || 'Không có tên'}</p>
+                  <p className="text-slate-600 text-sm">CCCD: {searchedUser.cccd}</p>
+                </div>
+              )}
+
+              {availableContracts.length > 0 && (
+                <div className="space-y-3">
+                  <label className="block text-sm font-semibold text-slate-700">Chọn hợp đồng hoạt động *</label>
+                  <div className="grid gap-3">
+                    {availableContracts.map((contract) => (
+                      <label
+                        key={contract.contractId}
+                        className={`flex items-start gap-4 p-4 rounded-2xl border-2 transition-all ${
+                          createForm.contractId === contract.contractId
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="contractId"
+                          value={contract.contractId}
+                          checked={createForm.contractId === contract.contractId}
+                          onChange={(e) => setCreateForm({ ...createForm, contractId: e.target.value })}
+                          className="mt-1"
+                        />
+                        <div className="flex-1 text-sm text-slate-700">
+                          <p className="font-semibold text-slate-900">Hợp đồng {contract.contractId}</p>
+                          <p>Phòng: {contract.roomId}</p>
+                          <p>Ngày bắt đầu: {new Date(contract.startDate).toLocaleDateString('vi-VN')}</p>
+                          <p>Trạng thái: {contract.status}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -458,7 +563,12 @@ export const AdminCheckout = () => {
                   type="button"
                   onClick={() => {
                     setShowCreateModal(false);
-                    setCreateForm({ userCCCD: '', expectedDate: '', documentUrl: '' });
+                    setCreateForm({ userCCCD: '', contractId: '', expectedDate: '', documentFile: null });
+                    setDocumentFileName('');
+                    setSearchingUser(false);
+                    setUserSearchError(null);
+                    setSearchedUser(null);
+                    setAvailableContracts([]);
                   }}
                   className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium py-2 px-4 rounded-lg transition-colors"
                 >

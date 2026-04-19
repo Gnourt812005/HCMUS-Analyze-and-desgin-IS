@@ -23,3 +23,22 @@ contractRouter.get('/', authMiddleware, async (req: AuthRequest, res: Response) 
     res.status(500).json({ message: 'Internal server error', error });
   }
 });
+
+contractRouter.get('/active-by-user/:cccd', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const cccd = req.params.cccd;
+    if (!cccd) {
+      return res.status(400).json({ message: 'CCCD là bắt buộc.' });
+    }
+
+    const user = await User.getProfileByCCCD(cccd);
+    if (!user) {
+      return res.status(404).json({ message: 'Không tìm thấy khách hàng' });
+    }
+
+    const contracts = await Contract.getActiveByUserCCCD(cccd);
+    res.status(200).json({ user, contracts });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error', error });
+  }
+});

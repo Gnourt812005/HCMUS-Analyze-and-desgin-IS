@@ -47,12 +47,40 @@ export class CheckoutRequest {
       contractId: requestData.contractId,
       expectedDate: requestData.expectedDate,
       documentUrl: requestData.documentUrl,
-      requestId: `req-${Date.now()}`,
+      requestId: `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       createdAt: new Date().toISOString(),
       status: CheckoutStatus.PENDING
     });
     await CheckoutRequestDB.insert(newRequest);
     return newRequest.toDto();
+  }
+
+  static async createWithDuplicateCheck(requestData: Partial<CheckoutRequestDTO>): Promise<{ success: boolean; request?: CheckoutRequestDTO; error?: string }> {
+    if (!requestData.userCCCD || !requestData.expectedDate || !requestData.contractId) {
+      throw new Error('userCCCD, contractId và expectedDate là bắt buộc.');
+    }
+
+    const newRequest = new CheckoutRequest({
+      userCCCD: requestData.userCCCD,
+      contractId: requestData.contractId,
+      expectedDate: requestData.expectedDate,
+      documentUrl: requestData.documentUrl,
+      requestId: `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date().toISOString(),
+      status: CheckoutStatus.PENDING
+    });
+    
+    const result = await CheckoutRequestDB.insertIfNoActiveRequest(
+      newRequest,
+      requestData.contractId,
+      requestData.userCCCD
+    );
+
+    if (result.success) {
+      return { success: true, request: newRequest.toDto() };
+    } else {
+      return { success: false, error: result.error };
+    }
   }
 
   static async getById(requestId: string): Promise<CheckoutRequestDTO | null> {

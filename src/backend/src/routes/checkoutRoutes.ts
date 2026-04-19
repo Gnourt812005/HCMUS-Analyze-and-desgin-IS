@@ -4,7 +4,7 @@ import { CheckoutRequestDB } from '../database/CheckoutRequestDB';
 import { Contract } from '../business/Contract';
 import { ContractDB } from '../database/ContractDB';
 import { Room } from '../business/Room';
-import { RefundCalculation } from '../business/RefundCalculation'; 
+import { RefundCalculation } from '../business/RefundCalculation';
 import { CheckoutStatus } from '@dormarch/shared';
 
 export const checkoutRouter = Router();
@@ -73,25 +73,25 @@ checkoutRouter.post('/', async (req: Request, res: Response) => {
       return;
     }
 
-    const existingRequests = await CheckoutRequest.getList();
-    const activeRequest = existingRequests.find(r =>
-      r.contractId === contractId &&
-      r.userCCCD === userCCCD &&
-      [CheckoutStatus.PENDING, CheckoutStatus.PROCESSING, CheckoutStatus.PENDING_LIQUIDATION].includes(r.status)
-    );
+    // Use atomic insert-with-check to prevent race condition with concurrent requests
+    const createResult = await CheckoutRequest.createWithDuplicateCheck({
+      userCCCD,
+      contractId,
+      expectedDate,
+      documentUrl
+    });
 
-    if (activeRequest) {
-      res.status(400).json({ message: 'Đã có yêu cầu trả phòng đang xử lý cho hợp đồng này.' });
+    if (!createResult.success) {
+      res.status(400).json({ message: createResult.error || 'Không thể tạo yêu cầu' });
       return;
     }
 
-    const newRequest = await CheckoutRequest.create({ userCCCD, contractId, expectedDate, documentUrl });
-    
-    // Update associated contract status to PENDING_CHECKOUT
-    if (contractId) {
+    // Update associated contract status to PENDING_CHECKOUT only after successful request creation
+    if (contractId && createResult.request) {
       await ContractDB.updateStatus(contractId, 'PENDING_CHECKOUT');
     }
-    res.status(201).json(newRequest);
+
+    res.status(201).json(createResult.request);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });
   }

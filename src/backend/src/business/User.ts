@@ -93,6 +93,12 @@ export class User {
     return userModel.toUserProfileDTO();
   }
 
+  static async getProfileByCCCD(cccd: string): Promise<UserProfileDTO | null> {
+    const userModel = await UserDB.fetchByCCCD(cccd);
+    if (!userModel) return null;
+    return userModel.toUserProfileDTO();
+  }
+
   static async updateProfile(email: string, data: UserProfileDTO): Promise<boolean> {
     return await UserDB.update(email, data);
   }

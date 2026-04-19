@@ -33,6 +33,12 @@ export class UserDB {
     return new User(row);
   }
 
+  static async fetchByCCCD(cccd: string): Promise<User | null> {
+    const row = this.MOCK_USERS.find(u => u.cccd === cccd);
+    if (!row) return null;
+    return new User(row);
+  }
+
   static async checkEmailExists(email: string): Promise<boolean> {
     return this.MOCK_USERS.some(u => u.email === email);
   }
