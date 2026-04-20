@@ -12,37 +12,32 @@ skinparam {
 }
 
 ' --- BOUNDARY LAYER ---
-class "ScreenDormManagement" as ScreenDM <<boundary>> {
-    - dgvDorm: GridView
-    - txtSearch: TextBox
-    - btnAddNew: Button
-    + dgvDormLoad(): void
-    + btnSearchClick(): void
-    + btnAddNewClick(): void
+class "AdminDorm" as ScreenDM <<boundary>> {
+    ' --- React States ---
+    - dorms: DormDTO[]
+    - loading: boolean
+    - searchQuery: string
+    ' --- State Setters ---
+    + setDorms(data: DormDTO[]): void
+    + setLoading(status: boolean): void
+    + setSearchQuery(query: string): void
+    ' --- Methods ---
+    + fetchDorms(): Promise<void>
+    + handleDelete(id: string): Promise<void>
 }
 
-class "ScreenDormDetail" as ScreenDD <<boundary>> {
-    - lblName: Label
-    - lblAddress: Label
-    - dgvRoom: GridView
-    - btnUpdate: Button
-    - btnHide: Button
-    - btnAddNewRoom: Button
-    + screenDormDetailLoad(): void
-    + btnUpdateClick(): void
-    + btnHideClick(): void
-    + btnAddNewRoomClick(): void
-}
-
-class "FormDorm" as FormDorm <<boundary>> {
-    - txtId: TextBox
-    - txtName: TextBox
-    - txtAddress: TextBox
-    - txtHotline: TextBox
-    - clbUtilities: CheckedListBox
-    - btnSave: Button
-    - btnCancel: Button
-    + btnSaveClick(): void
+class "AdminDormDetail" as ScreenDD <<boundary>> {
+    - dorm: DormDTO | null
+    - rooms: RoomDTO[]
+    - loading: boolean
+    - isEditing: boolean
+    - formData: CreateDormDTO | UpdateDormDTO
+    + setDorm(data: DormDTO): void
+    + setRooms(data: RoomDTO[]): void
+    + setIsEditing(edit: boolean): void
+    + setFormData(data: any): void
+    + screenDormDetailLoad(): Promise<void>
+    + handleSave(): Promise<void>
 }
 
 ' --- BUSINESS LAYER ---
@@ -50,35 +45,34 @@ class "Dorm" as Dorm <<control>> {
     - id: string
     - name: string
     - address: string
+    - phone: string
     - status: string
+    - totalRooms: number
+    - availableRooms: number
     - managerId: string
-    - description: string
-    + <<static>> getDorms(keyword: string): List<Dorm>
-    + <<static>> getDormDetail(id: string): Dorm
-    + <<static>> createDorm(data: Dorm): boolean
-    + <<static>> updateDorm(id: string, data: Dorm): boolean
-    + <<static>> deleteDorm(id: string): boolean
+    + <<static>> getAll(keyword?: string): Promise<DormDTO[]>
+    + <<static>> getById(id: string): Promise<DormDTO>
+    + <<static>> create(data: CreateDormDTO): Promise<boolean>
+    + <<static>> update(id: string, data: UpdateDormDTO): Promise<boolean>
+    + <<static>> delete(id: string): Promise<boolean>
 }
 
 ' --- DATABASE LAYER ---
 class "DormDB" as DormDB <<entity>> {
-    + <<static>> fetchAll(): List
-    + <<static>> fetchByKeyword(keyword: string): List
-    + <<static>> fetchById(id: string): Dorm
-    + <<static>> insert(data: Dorm): boolean
-    + <<static>> update(id: string, data: Dorm): boolean
-    + <<static>> delete(id: string): boolean
-    + updateStatus(id: string, status: string): boolean
-    + checkIdExists(id: string): boolean
+    + <<static>> fetchAll(): Promise<Dorm[]>
+    + <<static>> fetchByKeyword(keyword: string): Promise<Dorm[]>
+    + <<static>> fetchById(id: string): Promise<Dorm | null>
+    + <<static>> insert(data: Dorm): Promise<boolean>
+    + <<static>> update(id: string, data: any): Promise<boolean>
+    + <<static>> delete(id: string): Promise<boolean>
+    + <<static>> updateStatus(id: string, status: string): Promise<boolean>
+    + <<static>> checkIdExists(id: string): Promise<boolean>
 }
 
 ' --- RELATIONSHIPS ---
-ScreenDM "1" --> "1" Dorm
-ScreenDD "1" --> "1" Dorm
-FormDorm "1" --> "1" Dorm
-Dorm "1" --> "1" DormDB
-ScreenDM ..> ScreenDD : Mở Chi tiết 
-ScreenDM ..> FormDorm : Mở Form Thêm 
-ScreenDD ..> FormDorm : Mở Form Sửa 
+ScreenDM "1" --> "1" Dorm : Gọi xử lý
+ScreenDD "1" --> "1" Dorm : Gọi xử lý
+Dorm "1" --> "1" DormDB : Truy cập dữ liệu
+ScreenDM ..> ScreenDD : Điều hướng (Chi tiết/Thêm mới)
 
 @enduml

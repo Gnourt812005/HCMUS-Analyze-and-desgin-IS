@@ -172,7 +172,7 @@ export const PreviewFormManagement = () => {
     };
 
     return (
-        <div className="min-h-[80vh] flex flex-col p-6 max-w-4xl mx-auto w-full">
+        <div className="min-h-[80vh] flex flex-col p-6 w-full">
             <div className="flex items-center gap-3 mb-8">
                 <span className="material-symbols-outlined text-primary text-3xl">calendar_today</span>
                 <h1 className="text-2xl font-bold text-on-surface">Quản lý lịch xem phòng</h1>

@@ -4,7 +4,7 @@ import { AuthService } from '../api/AuthService';
 
 export const AdminLayout = () => {
   const isLoggedIn = AuthService.isLoggedIn();
-  const isAdmin = AuthService.isAdmin();
+  const canAccessAdmin = AuthService.canAccessAdmin();
 
   // Basic security guard
   if (!isLoggedIn) {
@@ -12,8 +12,8 @@ export const AdminLayout = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Strict role check (optional but recommended)
-  if (!isAdmin) {
+  // Strict role check
+  if (!canAccessAdmin) {
     alert('Bạn không có quyền truy cập khu vực này');
     return <Navigate to="/" replace />;
   }

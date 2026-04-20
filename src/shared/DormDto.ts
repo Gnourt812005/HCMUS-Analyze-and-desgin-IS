@@ -7,3 +7,36 @@ export interface DormSelectionDTO {
   totalRooms: number;
   availableRooms: number;
 }
+
+export interface DormDTO {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  status: "Còn phòng" | "Hết phòng" | "Sắp đầy" | "Đã ẩn";
+  totalRooms: number;
+  availableRooms: number;
+  managerId: string;
+}
+
+export interface CreateDormDTO {
+  name: string;
+  address: string;
+  phone: string;
+  totalRooms: number;
+  managerId: string;
+}
+
+export interface UpdateDormDTO {
+  name?: string;
+  address?: string;
+  phone?: string;
+  status?: "Còn phòng" | "Hết phòng" | "Sắp đầy" | "Đã ẩn";
+  totalRooms?: number;
+  availableRooms?: number;
+  managerId?: string;
+}
+
+export interface GetAllDormDto {
+  keyword?: string;
+}

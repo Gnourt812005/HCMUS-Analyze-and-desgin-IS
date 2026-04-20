@@ -7,6 +7,8 @@ import { refundRouter } from './routes/refundRoutes';
 import { previewRoutes } from './routes/previewRoutes';
 import { favouriteRoutes } from './routes/favouriteRoutes';
 
+import { dormRoutes } from './routes/dormRoutes';
+
 const router = Router();
 
 // Mount authentication routes under /auth
@@ -14,6 +16,9 @@ router.use('/auth', authRoutes);
 
 // Mount user routes under /users
 router.use('/users', userRoutes);
+
+// Mount dorm routes under /dorms
+router.use('/dorms', dormRoutes);
 
 // Mount contract routes under /contracts
 router.use('/contracts', contractRouter);

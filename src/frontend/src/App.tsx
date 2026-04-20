@@ -16,8 +16,10 @@ import {PreviewFormManagement} from "./pages/PreviewFormManagement";
 import {ClientPreviewFormManagement} from "./pages/ClientPreviewFormManagement";
 
 import { UserLayout } from './components/UserLayout';
+import { AccountLayout } from './components/AccountLayout';
 import { AdminLayout } from './components/AdminLayout';
-import { AdminFacilities } from './pages/admin/AdminFacilities';
+import { AdminDorm } from './pages/admin/AdminDorm';
+import { AdminDormDetail } from './pages/admin/AdminDormDetail';
 import { AdminRooms } from './pages/admin/AdminRooms';
 import { AdminViewing } from './pages/admin/AdminViewing';
 import { AdminOrders } from './pages/admin/AdminOrders';
@@ -40,22 +42,28 @@ function App() {
           <Route path="rental/conditions" element={<RentalCondition />} />
           <Route path="rental/register" element={<RentalRegister />} />
           <Route path="rental/payment" element={<RentalPayment />} />
-
-          <Route path="favourites-management" element={<FavouriteManagement />} />
-
-          <Route path="preview-forms-management" element={<PreviewFormManagement />} />
-          <Route path="client-preview-form-managements" element={<ClientPreviewFormManagement  />} />
-
           <Route path="test" element={<TestPage />} />
-          <Route path="profile" element={<ProfilePage />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+
+          {/* Customer Account Management Group */}
+          <Route element={<AccountLayout />}>
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="favourites-management" element={<FavouriteManagement />} />
+            <Route path="preview-forms-management" element={<PreviewFormManagement />} />
+            <Route path="client-preview-form-managements" element={<ClientPreviewFormManagement />} />
+            <Route path="orders" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Đơn hàng sẽ sớm ra mắt</div>} />
+            <Route path="contracts" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Hợp đồng sẽ sớm ra mắt</div>} />
+            <Route path="checkout-requests" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Yêu cầu trả phòng sẽ sớm ra mắt</div>} />
+          </Route>
         </Route>
 
         {/* Admin Portal Layout */}
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Navigate to="/admin/facilities" replace />} />
-          <Route path="facilities" element={<AdminFacilities />} />
+          <Route index element={<Navigate to="/admin/dorms" replace />} />
+          <Route path="dorms" element={<AdminDorm />} />
+          <Route path="dorms/new" element={<AdminDormDetail />} />
+          <Route path="dorms/:id" element={<AdminDormDetail />} />
           <Route path="rooms" element={<AdminRooms />} />
           <Route path="viewing" element={<AdminViewing />} />
           <Route path="orders" element={<AdminOrders />} />

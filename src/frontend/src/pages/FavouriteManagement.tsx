@@ -151,27 +151,23 @@ export const FavouriteManagement = () => {
     };
 
     return (
-        <div className="relative bg-slate-50 flex-grow -mt-24">
-            <div className="sticky top-16 z-10 border-b border-slate-200 bg-white">
-                <div className="mx-auto max-w-7xl px-6 py-4">
-                    <div className="flex items-center justify-between">
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="flex items-center gap-2 text-slate-600 transition-colors hover:text-slate-900"
-                        >
-                            <ChevronLeft className="h-5 w-5" />
-                            <span>Quay lại</span>
-                        </button>
-                        <div className="text-center">
-                            <h2 className="text-lg font-semibold text-slate-800">Danh sách phòng yêu thích</h2>
-                        </div>
-                        {/* Placeholder to keep header layout balanced instead of the map button */}
-                        <div className="w-24"></div>
-                    </div>
+        <div className="space-y-6">
+            <div className="border-b border-slate-200 bg-white p-4 rounded-xl shadow-sm mb-6">
+                <div className="flex items-center justify-between">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-2 text-slate-600 transition-colors hover:text-slate-900"
+                    >
+                        <ChevronLeft className="h-5 w-5" />
+                        <span>Quay lại</span>
+                    </button>
+                    <h2 className="text-lg font-semibold text-slate-800">Danh sách phòng yêu thích</h2>
+                    <div className="w-24"></div>
                 </div>
             </div>
 
-            <div className="mx-auto max-w-7xl px-6 py-8">
+            <div className="px-2">
+
                 <div className="mb-4 text-slate-600 font-medium">
                     Tìm thấy {displayRooms.length} phòng
                 </div>
@@ -522,6 +518,7 @@ export const FavouriteManagement = () => {
                     )
                 )}
             </AnimatePresence>
-        </div>
+            </div>
+        // </div>
     );
 };
