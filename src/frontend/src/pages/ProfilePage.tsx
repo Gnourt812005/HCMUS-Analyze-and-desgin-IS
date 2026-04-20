@@ -56,13 +56,8 @@ export const ProfilePage = () => {
   const isAdmin = profile.role === UserRole.ADMIN;
 
   return (
-    <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 px-6">
-
-      {!isAdmin && <CustomerSidebar />}
-
-      {/* Profile Form Section */}
-      <section className={`${isAdmin ? 'md:col-span-12 max-w-4xl mx-auto w-full' : 'md:col-span-9'} space-y-8`}>
-        <div className="bg-surface-container-lowest rounded-xl p-8 md:p-10 shadow-sm border border-outline-variant/10">
+    <section className="space-y-8">
+      <div className="bg-surface-container-lowest rounded-xl p-8 md:p-10 shadow-sm border border-outline-variant/10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
             <div className="flex items-center space-x-8">
               {/* Large Avatar */}
@@ -147,8 +142,6 @@ export const ProfilePage = () => {
             </div>
           </form>
         </div>
-      </section>
-
-    </div>
+    </section>
   );
 };

@@ -48,4 +48,9 @@ export class AuthService {
   static isAdmin(): boolean {
     return this.getRole() === UserRole.ADMIN;
   }
+
+  static canAccessAdmin(): boolean {
+    const role = this.getRole();
+    return role === UserRole.ADMIN || role === UserRole.SALES_STAFF;
+  }
 }

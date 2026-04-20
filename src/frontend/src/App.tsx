@@ -16,6 +16,7 @@ import {PreviewFormManagement} from "./pages/PreviewFormManagement";
 import {ClientPreviewFormManagement} from "./pages/ClientPreviewFormManagement";
 
 import { UserLayout } from './components/UserLayout';
+import { AccountLayout } from './components/AccountLayout';
 import { AdminLayout } from './components/AdminLayout';
 import { AdminFacilities } from './pages/admin/AdminFacilities';
 import { AdminRooms } from './pages/admin/AdminRooms';
@@ -40,16 +41,20 @@ function App() {
           <Route path="rental/conditions" element={<RentalCondition />} />
           <Route path="rental/register" element={<RentalRegister />} />
           <Route path="rental/payment" element={<RentalPayment />} />
-
-          <Route path="favourites-management" element={<FavouriteManagement />} />
-
-          <Route path="preview-forms-management" element={<PreviewFormManagement />} />
-          <Route path="client-preview-form-managements" element={<ClientPreviewFormManagement  />} />
-
           <Route path="test" element={<TestPage />} />
-          <Route path="profile" element={<ProfilePage />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+
+          {/* Customer Account Management Group */}
+          <Route element={<AccountLayout />}>
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="favourites-management" element={<FavouriteManagement />} />
+            <Route path="preview-forms-management" element={<PreviewFormManagement />} />
+            <Route path="client-preview-form-managements" element={<ClientPreviewFormManagement />} />
+            <Route path="orders" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Đơn hàng sẽ sớm ra mắt</div>} />
+            <Route path="contracts" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Hợp đồng sẽ sớm ra mắt</div>} />
+            <Route path="checkout-requests" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Yêu cầu trả phòng sẽ sớm ra mắt</div>} />
+          </Route>
         </Route>
 
         {/* Admin Portal Layout */}
