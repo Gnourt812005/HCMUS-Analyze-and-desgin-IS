@@ -30,12 +30,11 @@ NV -> Screen: Nhấn "Hoàn tất" (btnCompleteClick)
 alt Biên bản thanh lý hợp lệ
     Screen -> Contract: liquidateContract()
     Contract -> ContractDB: updateStatus()
-    Contract -> ContractDB: updateLiquidationFile()
+    Contract -> ContractDB: updateLiquidationUrl()
 
     Screen -> Room: updateRoomStatus()
     Room -> RoomDB: updateStatus()
     
-    Screen --> NV: Hiển thị trạng thái hoàn tất
 end
 
 @enduml

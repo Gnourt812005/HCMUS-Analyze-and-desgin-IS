@@ -15,20 +15,35 @@ class "ScreenRefundCalculation" as CalculateRefundScreen <<boundary>> {
   - txtExtraDeductions: Textbox
   - btnCalculate: Button
   - btnSave: Button
+  - btnFinalizeLiquidation: Button
   + show(): void
   + btnCalculateClick(): void
   + btnSaveClick(): void
+  + btnFinalizeLiquidationClick(): void
+}
+
+class "CheckoutRequest" as CheckoutRequest <<control>> {
+  - requestID: string
+  - expectedDate: DateTime
+  - documentUrl: string
+  - status: CheckoutStatus
+  - createdAt: DateTime
+  + <<static>> updateStatus(status: CheckoutStatus): void
+}
+
+class "CheckoutRequestDB" as CheckoutRequestDB <<entity>> {
+  + <<static>> update(request: CheckoutRequest): bool
 }
 
 class "RefundCalculation" as RefundCalculation <<control>> {
-  - calculationID: int
-  - requestID: int
-  - depositAmount: float
-  - damageFee: float
-  - extraDebt: float
-  - finalRefundAmount: float
+  - calculationID: string
+  - requestID: string
+  - depositAmount: number
+  - damageFee: number
+  - extraDebt: number
+  - finalRefundAmount: number
   - notes: string
-  + <<static>> calculateTotal(): float
+  + <<static>> calculateTotal(): number
   + <<static>> saveCalculation(): bool
 }
 
@@ -37,22 +52,25 @@ class "RefundCalculationDB" as RefundCalculationDB <<entity>> {
 }
 
 class "Contract" as Contract <<control>> {
-  - contractID: int
-  - roomID: int
+  - contractID: string
+  - roomID: string
   - status: string
-  - depositAmount: float
-  - stayDuration: int
+  - depositAmount: number
+  - stayDuration: number
   - liquidationFileUrl: string
-  + <<static>> getContractInfo(contractID: int): Contract
+  + <<static>> getContractInfo(contractID: string): Contract
 }
 
 class "ContractDB" as ContractDB <<entity>> {
-  + <<static>> getById(contractID: int): Contract
+  + <<static>> getById(contractID: string): Contract
 }
 
 CalculateRefundScreen --> RefundCalculation
 RefundCalculation --> RefundCalculationDB
 CalculateRefundScreen --> Contract
 Contract --> ContractDB
+CalculateRefundScreen --> CheckoutRequest
+CheckoutRequest --> CheckoutRequestDB
+CheckoutRequest --> CheckoutStatus
 
 @enduml

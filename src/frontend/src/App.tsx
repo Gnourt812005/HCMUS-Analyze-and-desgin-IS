@@ -24,6 +24,11 @@ import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminContracts } from './pages/admin/AdminContracts';
 import { AdminHandover } from './pages/admin/AdminHandover';
 import { AdminStaff } from './pages/admin/AdminStaff';
+import { AdminCheckout } from './pages/admin/AdminCheckout';
+import { AdminRefundCalculation } from './pages/admin/AdminRefundCalculation';
+import { AdminLiquidation } from './pages/admin/AdminLiquidation';
+import { ViewCheckoutRequest } from './pages/ViewCheckoutRequest';
+import { CreateCheckoutRequest } from './pages/CreateCheckoutRequest';
 
 function App() {
   return (
@@ -59,6 +64,9 @@ function App() {
           <Route path="contracts" element={<AdminContracts />} />
           <Route path="handover" element={<AdminHandover />} />
           <Route path="staff" element={<AdminStaff />} />
+          <Route path="checkout" element={<AdminCheckout />} />
+          <Route path="checkout/:requestId/refund-calculation" element={<AdminRefundCalculation />} />
+          <Route path="checkout/:requestId/liquidation" element={<AdminLiquidation />} />
         </Route>
       </Routes>
     </Router>

@@ -1,77 +1,105 @@
-@startuml QuanLyYeuCauTraPhong_ClassDiagram
-title Class Diagram - UC23: Xem yêu cầu trả phòng
+@startuml
+title Class Diagram - UC26: Quản lý yêu cầu trả phòng
 
 skinparam {
     ClassBackgroundColor White
     ClassBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
-    Padding 5
+    DefaultFontSize 14
 }
 
-class "ScreenCheckoutRequestList" as RequestListScreen <<boundary>> {
+class "ManageCheckoutRequestScreen" <<boundary>> {
   - dgvRequests: DataGridView
-  - btnViewDetail: Button
   + show(): void
   + loadRequests(): void
-  + btnViewDetailClick(): void
 }
 
-class "ScreenCheckoutRequestDetail" as RequestDetailScreen <<boundary>> {
-  - imgLiquidationFile: Image
-  - btnBack: Button
+class "CreateCheckoutRequestScreen" <<boundary>> {
+  - cbUsers: ComboBox
+  - dtpExpectedDate: DateTimePicker
+  - btnSave: Button
+  + show(): void
+  + btnSaveClick(): void
+}
+
+class "CheckoutRequestDetailScreen" <<boundary>> {
+  - lblContractInfo: Label
+  - lblRefundInfo: Label
+  - btnProcess: Button
+  - btnReject: Button
   + show(requestID: int): void
-  + loadDetail(): void
+  + displayDetail(): void
 }
 
-class "CheckoutRequest" as CheckoutRequest <<control>> {
+class "CheckoutRequest" <<control>> {
   - requestID: int
-  - customerID: int
+  - userCCCD: string
   - expectedDate: DateTime
   - status: string
   - createdAt: DateTime
   - documentUrl: string
-  + <<static>> getListByCustomer(customerID: int): List<CheckoutRequest>
-  + <<static>> getById(requestID: int): CheckoutRequest
+  - reason: string
+  + <<static>> getList(): CheckoutRequest[]
+  + <<static>> getById(id: int): CheckoutRequest
+  + <<static>> create(data: CheckoutRequest): bool
+  + <<static>> updateStatus(id: int, status: string, reason: string = ""): bool
 }
 
-class "CheckoutRequestDB" as CheckoutRequestDB <<entity>> {
-  + <<static>> getListByCustomer(customerID: int): List<CheckoutRequest>
-  + <<static>> getById(requestID: int): CheckoutRequest
+class "User" <<control>> {
+  - userCCCD: string
+  - fullName: string
+  + <<static>> getUsersWithActiveContract(): User[]
 }
 
-class "RefundCalculation" as RefundCalculation <<control>> {
+class "Contract" <<control>> {
+  - contractID: int
+  - userCCCD: string
+  - depositAmount: float
+  - liquidationDocUrl: string
+  - status: string
+  + <<static>> getByUserId(userId: int): Contract
+}
+
+class "RefundCalculation" <<control>> {
   - calculationID: int
   - requestID: int
   - depositAmount: float
   - damageFee: float
   - extraDebt: float
   - finalRefundAmount: float
-  + <<static>> getByRequestId(requestID: int): RefundCalculation
+  + <<static>> getByRequestId(requestId: int): RefundCalculation
 }
 
-class "RefundCalculationDB" as RefundCalculationDB <<entity>> {
-  + <<static>> getByRequestId(requestID: int): RefundCalculation
+class "CheckoutRequestDB" <<entity>> {
+  + <<static>> getAll(): CheckoutRequest[]
+  + <<static>> getById(id: int): CheckoutRequest
+  + <<static>> insert(data: CheckoutRequest): bool
+  + <<static>> updateStatus(id: int, status: string): bool
 }
 
-class "Contract" as Contract <<control>> {
-  - contractID: int
-  - depositAmount: float
-  - liquidationDocUrl: string
-  + <<static>> getById(contractID: int): Contract
+class "UserDB" <<entity>> {
+  + <<static>> getByActiveContract(): User[]
 }
 
-class "ContractDB" as ContractDB <<entity>> {
-  + <<static>> getById(contractID: int): Contract
+class "ContractDB" <<entity>> {
+  + <<static>> getByUserId(id: int): Contract
 }
 
-RequestListScreen --> CheckoutRequest
-RequestDetailScreen --> CheckoutRequest
-RequestDetailScreen --> RefundCalculation
-RequestDetailScreen --> Contract
+class "RefundDB" <<entity>> {
+  + <<static>> getByRequestId(id: int): RefundCalculation
+}
+
+ManageCheckoutRequestScreen --> CheckoutRequest
+CreateCheckoutRequestScreen --> CheckoutRequest
+CreateCheckoutRequestScreen --> User
+CheckoutRequestDetailScreen --> CheckoutRequest
+CheckoutRequestDetailScreen --> Contract
+CheckoutRequestDetailScreen --> RefundCalculation
+
 CheckoutRequest --> CheckoutRequestDB
-RefundCalculation --> RefundCalculationDB
+User --> UserDB
 Contract --> ContractDB
+RefundCalculation --> RefundDB
 
 @enduml

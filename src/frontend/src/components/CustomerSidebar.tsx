@@ -21,6 +21,7 @@ export const CustomerSidebar = () => {
     { path: '/preview-forms-management', icon: 'calendar_today', label: 'Lịch xem phòng' },
     { path: '/orders', icon: 'shopping_cart', label: 'Đơn hàng' },
     { path: '/contracts', icon: 'description', label: 'Hợp đồng' },
+    { path: '/checkout-requests', icon: 'inventory_2', label: 'Yêu cầu trả phòng' },
   ];
 
   if (userRole === UserRole.SALES_STAFF) {

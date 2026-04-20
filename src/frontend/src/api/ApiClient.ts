@@ -28,10 +28,20 @@ export class ApiClient {
     };
 
     const response = await fetch(url, config);
-    const data = await response.json();
+    const text = await response.text();
+
+    let data: any;
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch (parseError) {
+      if (!response.ok) {
+        throw new Error(text || 'Lỗi kết nối API');
+      }
+      return {} as T;
+    }
 
     if (!response.ok) {
-      throw new Error(data.message || 'Lỗi kết nối API');
+      throw new Error(data?.message || text || 'Lỗi kết nối API');
     }
 
     return data as T;
