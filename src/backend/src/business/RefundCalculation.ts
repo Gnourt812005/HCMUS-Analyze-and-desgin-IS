@@ -26,7 +26,7 @@ export class RefundCalculation {
     return {
       calculationId: this.calculationId,
       requestId: this.requestId,
-      contractId: this.contractId,
+      // contractId: this.contractId,
       depositAmount: this.depositAmount,
       damageFee: this.damageFee,
       extraFee: this.extraFee,

@@ -11,7 +11,7 @@ export class ContractDB {
       stayDuration: 6,
       depositAmount: 1000000,
       liquidationUrl: 'https://example.com/contract/contract-001.pdf',
-      status: 'ACTIVE'
+      status: ContractStatus.ACTIVE
     },
     {
       contractId: 'contract-002',
@@ -21,7 +21,7 @@ export class ContractDB {
       stayDuration: 12,
       depositAmount: 1500000,
       liquidationUrl: 'https://example.com/contract/contract-002.pdf',
-      status: 'ACTIVE'
+      status: ContractStatus.ACTIVE
     },
     {
       contractId: 'contract-003',
@@ -31,7 +31,7 @@ export class ContractDB {
       stayDuration: 3,
       depositAmount: 800000,
       liquidationUrl: 'https://example.com/contract/contract-003.pdf',
-      status: 'PENDING_CHECKOUT'
+      status: ContractStatus.PENDING_CHECKOUT
     }
   ];
 

@@ -500,7 +500,7 @@ export const AdminCheckout = () => {
                         <div className="flex-1 text-sm text-slate-700">
                           <p className="font-semibold text-slate-900">Hợp đồng {contract.contractId}</p>
                           <p>Phòng: {contract.roomId}</p>
-                          <p>Ngày bắt đầu: {new Date(contract.startDate).toLocaleDateString('vi-VN')}</p>
+                          <p>Ngày bắt đầu: {new Date(contract.startDate!).toLocaleDateString('vi-VN')}</p>
                           <p>Trạng thái: {contract.status}</p>
                         </div>
                       </label>
