@@ -110,7 +110,7 @@ export class CheckoutRequest {
     };
 
     // Check if the transition is valid
-    const allowedTransitions = validTransitions[currentStatus] || [];
+    const allowedTransitions = validTransitions[currentStatus!] || [];
     if (!allowedTransitions.includes(newStatus)) {
       throw new Error(
         'Không thể cập nhật trạng thái yêu cầu trả phòng vào lúc này.'

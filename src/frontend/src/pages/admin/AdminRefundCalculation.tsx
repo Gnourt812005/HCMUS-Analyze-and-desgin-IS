@@ -129,12 +129,12 @@ export const AdminRefundCalculation = () => {
     let baseRefundableDeposit = 0;
     let refundRule = '';
 
-    const contractStartDate = new Date(contract.startDate);
+    const contractStartDate = new Date(contract.startDate!);
     const checkoutDate = new Date(checkoutRequest.expectedDate);
 
     // Calculate the contract's official end date based on startDate and stayDuration
     const contractOfficialEndDate = new Date(contractStartDate);
-    contractOfficialEndDate.setMonth(contractOfficialEndDate.getMonth() + contract.stayDuration);
+    contractOfficialEndDate.setMonth(contractOfficialEndDate.getMonth() + contract.stayDuration!);
     // Set to the end of the day to ensure comparison `checkoutDate >= contractOfficialEndDate` works correctly for same-day checkout
     contractOfficialEndDate.setHours(23, 59, 59, 999);
 

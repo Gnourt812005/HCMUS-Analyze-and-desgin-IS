@@ -5,7 +5,7 @@ import { Contract } from '../business/Contract';
 import { ContractDB } from '../database/ContractDB';
 import { Room } from '../business/Room';
 import { RefundCalculation } from '../business/RefundCalculation';
-import { CheckoutStatus } from '@dormarch/shared';
+import { CheckoutStatus, ContractStatus } from '@dormarch/shared';
 
 export const checkoutRouter = Router();
 
@@ -88,7 +88,7 @@ checkoutRouter.post('/', async (req: Request, res: Response) => {
 
     // Update associated contract status to PENDING_CHECKOUT only after successful request creation
     if (contractId && createResult.request) {
-      await ContractDB.updateStatus(contractId, 'PENDING_CHECKOUT');
+      await ContractDB.updateStatus(contractId, ContractStatus.PENDING_CHECKOUT);
     }
 
     res.status(201).json(createResult.request);
@@ -118,7 +118,7 @@ checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
     if (currentRequest.contractId) {
       // If the checkout request is cancelled or rejected, revert contract status to ACTIVE
       if ([CheckoutStatus.CANCELLED, CheckoutStatus.REJECTED].includes(newStatus)) {
-        await ContractDB.updateStatus(currentRequest.contractId, 'ACTIVE');
+        await ContractDB.updateStatus(currentRequest.contractId, ContractStatus.ACTIVE);
       }
     }
 
@@ -159,11 +159,11 @@ checkoutRouter.patch('/:id/complete-liquidation', async (req: Request, res: Resp
       if (liquidationDocumentUrl) {
         await ContractDB.updateLiquidationUrl(request.contractId, liquidationDocumentUrl);
       }
-      await ContractDB.updateStatus(request.contractId, 'LIQUIDATED');
+      await ContractDB.updateStatus(request.contractId, ContractStatus.LIQUIDATED);
       const contract = await Contract.getByContractId(request.contractId);
-      if (contract?.roomId) {
-        await Room.updateStatus(contract.roomId, 'AVAILABLE');
-      }
+      // if (contract?.roomId) {
+      //   await Room.updateStatus(contract.roomId, RoomStatus.AVAILABLE);
+      // }
     }
 
     const finalRequest = await CheckoutRequest.getById(req.params.id);

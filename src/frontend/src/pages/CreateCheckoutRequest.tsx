@@ -161,7 +161,7 @@ export const CreateCheckoutRequest = () => {
       }
 
       // Create checkout request
-      const newRequest = await ApiClient.post<CheckoutRequestDTO>('/checkout-requests', {
+      await ApiClient.post<CheckoutRequestDTO>('/checkout-requests', {
         body: JSON.stringify({
           userCCCD: profile.cccd,
           contractId: form.contractId,
@@ -303,7 +303,7 @@ export const CreateCheckoutRequest = () => {
                         Hợp đồng {contract.contractId} - Phòng {contract.roomId}
                       </p>
                       <p className="text-sm text-slate-600 mt-1">
-                        Ngày bắt đầu: {new Date(contract.startDate).toLocaleDateString('vi-VN')}
+                        Ngày bắt đầu: {new Date(contract.startDate!).toLocaleDateString('vi-VN')}
                       </p>
                       <p className="text-sm text-slate-600">
                         Thời hạn thuê: {contract.stayDuration} tháng

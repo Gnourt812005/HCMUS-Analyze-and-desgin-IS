@@ -27,8 +27,6 @@ import { AdminStaff } from './pages/admin/AdminStaff';
 import { AdminCheckout } from './pages/admin/AdminCheckout';
 import { AdminRefundCalculation } from './pages/admin/AdminRefundCalculation';
 import { AdminLiquidation } from './pages/admin/AdminLiquidation';
-import { ViewCheckoutRequest } from './pages/ViewCheckoutRequest';
-import { CreateCheckoutRequest } from './pages/CreateCheckoutRequest';
 
 function App() {
   return (

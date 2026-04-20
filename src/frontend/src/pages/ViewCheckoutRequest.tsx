@@ -1,4 +1,4 @@
-import { useEffect, useState, ChangeEvent, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CustomerSidebar } from '../components/CustomerSidebar';
 import { ApiClient } from '../api/ApiClient';
@@ -55,7 +55,7 @@ const getStatusBadgeClass = (status: CheckoutStatus) => {
 
 export const ViewCheckoutRequest = () => {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<UserProfileDTO | null>(null);
+  // const [profile, setProfile] = useState<UserProfileDTO | null>(null);
   const [checkoutRequests, setCheckoutRequests] = useState<CheckoutRequestDTO[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<CheckoutRequestDTO | null>(null);
   const [requestDetail, setRequestDetail] = useState<CheckoutRequestDetailResponse | null>(null);
@@ -85,7 +85,7 @@ export const ViewCheckoutRequest = () => {
       
       if (abortController.signal.aborted) return;
       
-      setProfile(profileData);
+      // setProfile(profileData);
 
       const allRequests = await ApiClient.get<CheckoutRequestDTO[]>('/checkout-requests');
       
