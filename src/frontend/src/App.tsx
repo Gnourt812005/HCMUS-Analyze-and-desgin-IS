@@ -18,7 +18,8 @@ import {ClientPreviewFormManagement} from "./pages/ClientPreviewFormManagement";
 import { UserLayout } from './components/UserLayout';
 import { AccountLayout } from './components/AccountLayout';
 import { AdminLayout } from './components/AdminLayout';
-import { AdminFacilities } from './pages/admin/AdminFacilities';
+import { AdminDorm } from './pages/admin/AdminDorm';
+import { AdminDormDetail } from './pages/admin/AdminDormDetail';
 import { AdminRooms } from './pages/admin/AdminRooms';
 import { AdminViewing } from './pages/admin/AdminViewing';
 import { AdminOrders } from './pages/admin/AdminOrders';
@@ -59,8 +60,10 @@ function App() {
 
         {/* Admin Portal Layout */}
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Navigate to="/admin/facilities" replace />} />
-          <Route path="facilities" element={<AdminFacilities />} />
+          <Route index element={<Navigate to="/admin/dorms" replace />} />
+          <Route path="dorms" element={<AdminDorm />} />
+          <Route path="dorms/new" element={<AdminDormDetail />} />
+          <Route path="dorms/:id" element={<AdminDormDetail />} />
           <Route path="rooms" element={<AdminRooms />} />
           <Route path="viewing" element={<AdminViewing />} />
           <Route path="orders" element={<AdminOrders />} />

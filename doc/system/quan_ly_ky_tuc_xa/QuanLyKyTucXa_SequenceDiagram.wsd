@@ -12,89 +12,46 @@ skinparam {
 }
 
 actor "Nhân viên quản lý" as Actor
-boundary "ScreenDormManagement" as MainGUI <<boundary>>
-boundary "ScreenDormDetail" as DetailGUI <<boundary>>
-boundary "FormDorm" as FormGUI <<boundary>>
-control "Dorm" as BUS <<control>>
-database "DormDB" as DB <<database>>
+participant "AdminDorm" as MainGUI
+participant "AdminDormDetail" as DetailGUI
+participant "Dorm" as BUS <<control>>
+participant "DormDB" as DB <<entity>>
 
-autonumber
-
-== Kịch bản 1 & 2: Xem danh sách và chi tiết KTX ==
-Actor -> MainGUI: Chọn tab "Ký túc xá"
-MainGUI -> BUS: getDorms()
+== Kịch bản 1: Xem danh sách KTX ==
+Actor -> MainGUI: Mở trang Quản lý KTX
+MainGUI -> BUS: getAll()
 BUS -> DB: fetchAll()
-DB --> BUS: Kết quả
-BUS --> MainGUI: Kết quả
-MainGUI --> Actor: Hiển thị danh sách
 
-Actor -> MainGUI: Nhấn chọn 1 KTX
-MainGUI -> DetailGUI: showDetails(id)
-DetailGUI -> BUS: getDormDetail(id)
+== Kịch bản 2: Tìm kiếm KTX ==
+Actor -> MainGUI: Nhập từ khóa & Tìm kiếm
+MainGUI -> BUS: getAll(keyword)
+BUS -> DB: fetchByKeyword(keyword)
+
+== Kịch bản 3: Xem chi tiết KTX ==
+Actor -> MainGUI: Chọn 1 KTX
+MainGUI -> DetailGUI: Hiển thị chi tiết (id)
+DetailGUI -> BUS: getById(id)
 BUS -> DB: fetchById(id)
-DB --> BUS: Chi tiết và danh sách phòng
-BUS --> DetailGUI: Kết quả
-DetailGUI --> Actor: Hiển thị thông tin
 
-== Kịch bản 3: Thêm mới KTX ==
-Actor -> MainGUI: Nhấn "Thêm mới"
-MainGUI -> FormGUI: showForm("Thêm mới")
+== Kịch bản 4: Thêm mới KTX ==
+Actor -> MainGUI: Nhấn "Thêm cơ sở mới"
+MainGUI -> DetailGUI: Mở trang thêm mới (/new)
+Actor -> DetailGUI: Nhập thông tin & Nhấn Lưu
+DetailGUI -> BUS: create(formData)
+BUS -> DB: insert(newDorm)
 
-Actor -> FormGUI: Nhập dữ liệu và Lưu
-FormGUI -> FormGUI: validate()
-alt Hợp lệ
-    FormGUI -> BUS: createDorm(data)
-    BUS -> DB: checkIdExists(id)
-    alt ID đã tồn tại
-        DB --> BUS: Trả về true
-        BUS --> FormGUI: Thông báo lỗi ("ID đã tồn tại")
-    else Hợp lệ
-        DB --> BUS: Trả về false
-        BUS -> DB: insert(data)
-        DB --> BUS: Thành công
-        BUS --> FormGUI: Trả về kết quả (Thành công)
-        FormGUI --> Actor: Thông báo thành công
-        FormGUI -> MainGUI: refreshList()
-    end
-end
+== Kịch bản 5: Cập nhật KTX ==
+Actor -> MainGUI: Nhấn "Sửa" trên Card (hoặc vào chi tiết rồi nhấn Sửa)
+MainGUI -> DetailGUI: Mở trang chi tiết ở chế độ Edit
+Actor -> DetailGUI: Chỉnh sửa thông tin & Nhấn Lưu
+DetailGUI -> BUS: update(id, formData)
+BUS -> DB: update(id, data)
 
-== Kịch bản 4: Cập nhật thông tin cơ bản ==
-Actor -> DetailGUI: Nhấn "Cập nhật"
-DetailGUI -> DetailGUI: unlockFields()
-
-Actor -> DetailGUI: Chỉnh sửa và Nhấn "Lưu thay đổi"
-DetailGUI -> DetailGUI: validate()
-
-alt Hợp lệ
-    DetailGUI -> BUS: updateDorm(id, data)
-    BUS -> DB: update(id, data)
-    DB --> BUS: Thành công
-    BUS --> DetailGUI: Thành công
-    DetailGUI --> Actor: Thông báo thành công
-    DetailGUI -> DetailGUI: lockFields()
-end
-
-== Kịch bản 5: Thêm phòng (Gắn với KTX hiện tại) ==
-Actor -> DetailGUI: Nhấn "Thêm phòng"
-DetailGUI -> FormGUI: showPopup("Thêm phòng mới")
-
-Actor -> FormGUI: Nhập dữ liệu phòng và Lưu
-FormGUI -> BUS: addRoomToDorm(dormId, roomData)
-BUS -> DB: updateRoom(dormId, roomData)
-DB --> BUS: Thành công
-BUS --> FormGUI: Trả về kết quả
-FormGUI --> Actor: Thông báo thành công
-FormGUI -> DetailGUI: refreshRoomList()
-
-== Kịch bản 6: Ẩn KTX (Xóa mềm) ==
-Actor -> DetailGUI: Nhấn "Ẩn KTX"
-DetailGUI -> DetailGUI: showConfirmPopup()
-Actor -> DetailGUI: Xác nhận
-DetailGUI -> BUS: hideDorm(id)
-BUS -> DB: updateStatus(id, "Hidden")
-DB --> BUS: Thành công
-BUS --> DetailGUI: Thành công
-DetailGUI --> Actor: Thông báo thành công
-DetailGUI -> DetailGUI: updateStatusBadge()
+== Kịch bản 6: Xóa KTX (Hard Delete) ==
+Actor -> MainGUI: Nhấn nút Xóa
+MainGUI -> Actor: Hiển thị xác nhận xóa?
+Actor -> MainGUI: Xác nhận
+MainGUI -> BUS: delete(id)
+BUS -> DB: delete(id)
 
 @enduml

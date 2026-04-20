@@ -10,6 +10,7 @@ export class DormDB {
       status: "Còn phòng",
       totalRooms: 120,
       availableRooms: 45,
+      managerId: "staff@gmail.com"
     },
     {
       id: "2",
@@ -19,6 +20,7 @@ export class DormDB {
       status: "Sắp đầy",
       totalRooms: 100,
       availableRooms: 15,
+      managerId: "staff2@gmail.com"
     },
     {
       id: "3",
@@ -28,6 +30,7 @@ export class DormDB {
       status: "Còn phòng",
       totalRooms: 150,
       availableRooms: 80,
+      managerId: "staff@gmail.com"
     },
     {
       id: "4",
@@ -37,10 +40,60 @@ export class DormDB {
       status: "Hết phòng",
       totalRooms: 80,
       availableRooms: 0,
+      managerId: "staff2@gmail.com"
     },
   ];
 
-  static async getAll(): Promise<Partial<Dorm>[]> {
-    return this.MOCK_DORMS;
+  static async fetchAll(): Promise<Dorm[]> {
+    return this.MOCK_DORMS.map(d => new Dorm(d));
+  }
+
+  static async fetchByKeyword(keyword: string): Promise<Dorm[]> {
+    const k = keyword.toLowerCase();
+    return this.MOCK_DORMS
+      .filter(d =>
+        d.name?.toLowerCase().includes(k) ||
+        d.address?.toLowerCase().includes(k)
+      )
+      .map(d => new Dorm(d));
+  }
+
+  static async fetchById(id: string): Promise<Dorm | null> {
+    const row = this.MOCK_DORMS.find(d => d.id === id);
+    return row ? new Dorm(row) : null;
+  }
+
+  static async insert(dorm: Dorm): Promise<boolean> {
+    const newId = (this.MOCK_DORMS.length + 1).toString();
+    this.MOCK_DORMS.push({
+      ...dorm,
+      id: newId
+    });
+    return true;
+  }
+
+  static async update(id: string, data: Partial<Dorm>): Promise<boolean> {
+    const index = this.MOCK_DORMS.findIndex(d => d.id === id);
+    if (index === -1) return false;
+    this.MOCK_DORMS[index] = { ...this.MOCK_DORMS[index], ...data };
+    return true;
+  }
+
+  static async updateStatus(id: string, status: string): Promise<boolean> {
+    const dorm = this.MOCK_DORMS.find(d => d.id === id);
+    if (!dorm) return false;
+    dorm.status = status as any;
+    return true;
+  }
+
+  static async delete(id: string): Promise<boolean> {
+    const index = this.MOCK_DORMS.findIndex(d => d.id === id);
+    if (index === -1) return false;
+    this.MOCK_DORMS.splice(index, 1);
+    return true;
+  }
+
+  static async checkIdExists(id: string): Promise<boolean> {
+    return this.MOCK_DORMS.some(d => d.id === id);
   }
 }
