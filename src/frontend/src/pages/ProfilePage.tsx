@@ -53,15 +53,15 @@ export const ProfilePage = () => {
   if (isLoading) return <div className="text-center p-24 text-slate-500 font-medium">Đang tải cấu hình...</div>;
   if (!profile) return <div className="text-center p-24 text-red-500 font-bold">Chưa đăng nhập!</div>;
 
-  const isStaff = profile.role === UserRole.STAFF;
+  const isAdmin = profile.role === UserRole.ADMIN;
 
   return (
     <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 px-6">
 
-      {!isStaff && <CustomerSidebar />}
+      {!isAdmin && <CustomerSidebar />}
 
       {/* Profile Form Section */}
-      <section className={`${isStaff ? 'md:col-span-12 max-w-4xl mx-auto w-full' : 'md:col-span-9'} space-y-8`}>
+      <section className={`${isAdmin ? 'md:col-span-12 max-w-4xl mx-auto w-full' : 'md:col-span-9'} space-y-8`}>
         <div className="bg-surface-container-lowest rounded-xl p-8 md:p-10 shadow-sm border border-outline-variant/10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
             <div className="flex items-center space-x-8">
@@ -78,7 +78,7 @@ export const ProfilePage = () => {
                 <h1 className="text-3xl font-extrabold text-on-surface tracking-tight mb-1">Thông tin cá nhân</h1>
                 <p className="text-on-surface-variant text-sm flex items-center">
                   <span className="material-symbols-outlined text-xs mr-1 text-primary">verified</span>
-                  {isStaff ? 'Quản trị viên / Nhân viên' : 'Khách hàng hiện tại'}
+                  {isAdmin ? 'Quản trị viên / Ban quản lý' : 'Khách hàng hiện tại'}
                 </p>
               </div>
             </div>

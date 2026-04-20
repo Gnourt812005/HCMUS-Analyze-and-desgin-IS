@@ -13,6 +13,7 @@ import { RentalPayment } from './pages/RentalPayment';
 
 import {FavouriteManagement} from "./pages/FavouriteManagement";
 import {PreviewFormManagement} from "./pages/PreviewFormManagement";
+import {ClientPreviewFormManagement} from "./pages/ClientPreviewFormManagement";
 
 import { UserLayout } from './components/UserLayout';
 import { AdminLayout } from './components/AdminLayout';
@@ -21,6 +22,7 @@ import { AdminRooms } from './pages/admin/AdminRooms';
 import { AdminViewing } from './pages/admin/AdminViewing';
 import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminContracts } from './pages/admin/AdminContracts';
+import { AdminHandover } from './pages/admin/AdminHandover';
 import { AdminStaff } from './pages/admin/AdminStaff';
 
 function App() {
@@ -36,13 +38,11 @@ function App() {
           <Route path="rental/register" element={<RentalRegister />} />
           <Route path="rental/payment" element={<RentalPayment />} />
 
-          <Route path="favoutites" element={<FavouriteManagement />} />
+          <Route path="favourites-management" element={<FavouriteManagement />} />
 
-          <Route path="preview" element={<PreviewFormManagement />} />
+          <Route path="preview-forms-management" element={<PreviewFormManagement />} />
+          <Route path="client-preview-form-managements" element={<ClientPreviewFormManagement  />} />
 
-          <Route path="favourites" element={<FavouriteManagement />} />
-
-          <Route path="preview-management" element={<PreviewFormManagement />} />
           <Route path="test" element={<TestPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="login" element={<Login />} />
@@ -57,6 +57,7 @@ function App() {
           <Route path="viewing" element={<AdminViewing />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="contracts" element={<AdminContracts />} />
+          <Route path="handover" element={<AdminHandover />} />
           <Route path="staff" element={<AdminStaff />} />
         </Route>
       </Routes>

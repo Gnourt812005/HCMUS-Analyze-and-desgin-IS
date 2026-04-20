@@ -45,7 +45,7 @@ export class AuthService {
     return !!this.getToken();
   }
 
-  static isStaff(): boolean {
-    return this.getRole() === UserRole.STAFF;
+  static isAdmin(): boolean {
+    return this.getRole() === UserRole.ADMIN;
   }
 }
