@@ -12,92 +12,130 @@ skinparam {
 }
 
 ' --- BOUNDARY LAYER ---
-class "ScreenRoomManagement" as ScreenRM <<boundary>> {
-    - dgvRoom: GridView
-    - txtSearch: TextBox
-    - btnAddNew: Button
-    + dgvRoomLoad(): void
-    + btnSearchClick(): void
-    + btnAddNewClick(): void
+class "AdminRooms" as ScreenRM <<boundary>> {
+    - rooms: RoomDTO[]
+    - loading: boolean
+    - searchQuery: string
+    + fetchRooms(): Promise<void>
+    + handleDelete(id: string): Promise<void>
 }
 
-class "ScreenRoomDetail" as ScreenRD <<boundary>> {
-    - lblRoomId: Label
-    - lblDormName: Label
-    - dgvBed: GridView
-    - btnUpdate: Button
-    - btnDelete: Button
-    - btnAddNewBed: Button
-    + screenRoomDetailLoad(): void
-    + btnUpdateClick(): void
-    + btnDeleteClick(): void
-    + btnAddNewBedClick(): void
+class "AdminRoomDetail" as ScreenRD <<boundary>> {
+    - room: RoomDTO | null
+    - beds: BedDTO[]
+    - loading: boolean
+    - isEditing: boolean
+    - editingBed: BedDTO | null
+    - formData: any
+    + setRoom(data: RoomDTO): void
+    + setBeds(data: BedDTO[]): void
+    + setIsEditing(edit: boolean): void
+    + handleSaveRoom(): Promise<void>
+    + handleAddBed(): Promise<void>
+    + handleUpdateBed(bedId: string): Promise<void>
+    + handleDeleteBed(bedId: string): Promise<void>
 }
 
-class "FormRoom" as FormRoom <<boundary>> {
-    - cbDorm: ComboBox
-    - txtRoomId: TextBox
-    - cbRoomType: ComboBox
-    - clbUtilities: CheckedListBox
-    - btnSave: Button
-    - btnCancel: Button
-    + btnSaveClick(): void
+' --- DTO LAYER ---
+interface "RoomDTO" {
+    + id: string
+    + dormId: string
+    + name: string
+    + block: string
+    + tower: string
+    + floor: number
+    + price: number
+    + totalBeds: number
+    + availableBeds: number
+    + amenities: string[]
+    + status: string
+    + beds: BedDTO[]
 }
 
-class "FormBed" as FormBed <<boundary>> {
-    - txtBedId: TextBox
-    - txtPrice: TextBox
-    - btnSave: Button
-    - btnCancel: Button
-    + btnSaveClick(): void
+interface "CreateRoomDTO" {
+    + dormId: string
+    + name: string
+    + block: string
+    + tower: string
+    + floor: number
+    + price: number
+    + totalBeds: number
+}
+
+interface "UpdateRoomDTO" {
+    + name?: string
+    + block?: string
+    + tower?: string
+    + floor?: number
+    + price?: number
+    + status?: string
+}
+
+interface "BedDTO" {
+    + id: string
+    + roomId: string
+    + bedNumber: string
+    + status: string
+    + price: number
 }
 
 ' --- BUSINESS LAYER ---
 class "Room" as Room <<control>> {
     - id: string
     - dormId: string
-    - roomNumber: string
-    - roomType: string
-    - price: double
+    - name: string
+    - block: string
+    - tower: string
+    - floor: number
+    - price: number
     - status: string
-    - capacity: int
-    - occupied: int
-    + <<static>> getRooms(dormId: string, keyword: string): List<Room>
-    + <<static>> getRoomDetail(id: string): Room
-    + <<static>> createRoom(data: Room): boolean
-    + <<static>> updateRoom(id: string, data: Room): boolean
-    + <<static>> deleteRoom(id: string): boolean
-    + <<static>> addBed(roomId: string, bedData: any): boolean
-    + <<static>> updateBed(bedId: string, bedData: any): boolean
-    + <<static>> deleteBed(bedId: string): boolean
+    - totalBeds: number
+    - availableBeds: number
+    + <<static>> getAll(dormId?: string, keyword?: string): Promise<RoomDTO[]>
+    + <<static>> getById(id: string): Promise<RoomDTO>
+    + <<static>> create(data: CreateRoomDTO): Promise<boolean>
+    + <<static>> update(id: string, data: UpdateRoomDTO): Promise<boolean>
+    + <<static>> delete(id: string): Promise<boolean>
+}
+
+class "Bed" as Bed <<control>> {
+    - id: string
+    - roomId: string
+    - bedNumber: string
+    - status: string
+    - price: number
+    + <<static>> addBed(roomId: string, data: BedDTO): Promise<boolean>
+    + <<static>> updateBed(bedId: string, data: BedDTO): Promise<boolean>
+    + <<static>> deleteBed(bedId: string): Promise<boolean>
 }
 
 ' --- DATABASE LAYER ---
 class "RoomDB" as RoomDB <<entity>> {
-    + <<static>> fetchAllByDorm(dormId: string): List
-    + <<static>> fetchByKeyword(keyword: string): List
-    + <<static>> fetchById(id: string): Room
-    + <<static>> insert(data: Room): boolean
-    + <<static>> update(id: string, data: Room): boolean
-    + <<static>> delete(id: string): boolean
-    + <<static>> insertBed(data: any): boolean
-    + <<static>> updateBed(bedId: string, bedData: any): boolean
-    + <<static>> removeBed(bedId: string): boolean
-    + <<static>> checkRoomIdExists(dormId: string, roomId: string): boolean
-    + <<static>> checkBedInEffect(bedId: string): boolean
+    + <<static>> fetchAll(dormId?: string): Promise<Room[]>
+    + <<static>> fetchByKeyword(keyword: string): Promise<Room[]>
+    + <<static>> fetchById(id: string): Promise<Room | null>
+    + <<static>> insert(data: any): Promise<boolean>
+    + <<static>> update(id: string, data: any): Promise<boolean>
+    + <<static>> delete(id: string): Promise<boolean>
+    + <<static>> insertBed(data: any): Promise<boolean>
+    + <<static>> updateBed(bedId: string, data: any): Promise<boolean>
+    + <<static>> removeBed(bedId: string): Promise<boolean>
+    + <<static>> checkRoomIdExists(dormId: string, name: string): Promise<boolean>
 }
 
 ' --- RELATIONSHIPS ---
-ScreenRM "1" --> "1" Room
-ScreenRD "1" --> "1" Room
-FormRoom "1" --> "1" Room
-FormBed "1" --> "1" Room
+ScreenRM "1" --> "1" Room : Gọi xử lý
+ScreenRD "1" --> "1" Room : Gọi xử lý
+ScreenRD "1" --> "1" Bed : Quản lý giường
 
-Room "1" --> "1" RoomDB
+Room "1" --> "1" RoomDB : Truy cập dữ liệu
+Bed "1" --> "1" RoomDB : Truy cập dữ liệu
 
-ScreenRM ..> ScreenRD : Mở Chi tiết
-ScreenRM ..> FormRoom : Mở Form Thêm Phòng
-ScreenRD ..> FormRoom : Mở Form Sửa Phòng
-ScreenRD ..> FormBed : Mở Form Giường
+Room ..> RoomDTO : Trả về
+Room ..> CreateRoomDTO : Nhận
+Room ..> UpdateRoomDTO : Nhận
+Bed ..> BedDTO : Trả về/Nhận
+
+ScreenRM ..> ScreenRD : Điều hướng (Chi tiết/Thêm mới)
 
 @enduml

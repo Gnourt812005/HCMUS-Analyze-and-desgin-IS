@@ -1,166 +1,202 @@
--- HomeStay Dorm Business Database Schema
--- Target Database: PostgreSQL
+-- =========================================================
+-- DORM ARCH SYSTEM - DATABASE SCHEMA (PostgreSQL)
+-- Standardized to snake_case, relational integrity, and UUIDs
+-- =========================================================
 
--- 1. Bảng Ký túc xá (Dorm)
-CREATE TABLE Dorm (
-    dormId VARCHAR(50) PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    address VARCHAR(500),
-    hotline VARCHAR(20)
-);
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 2. Bảng Khách hàng (Customer)
-CREATE TABLE Customer (
-    cccd VARCHAR(20),
-    fullName VARCHAR(255) NOT NULL,
+-- 1. USERS & ROLES
+CREATE TABLE users (
+    email VARCHAR(255) PRIMARY KEY,
+    full_name VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    cccd VARCHAR(15) UNIQUE,
     birthday DATE,
     gender VARCHAR(10),
-    phone VARCHAR(20),
-    address VARCHAR(500),
-    email VARCHAR(255) PRIMARY KEY,
-    password VARCHAR(255) NOT NULL
+    phone VARCHAR(15),
+    address TEXT,
+    role VARCHAR(20) DEFAULT 'GUEST', -- GUEST, MANAGER, SALE_STAFF, ADMIN
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Bảng Nhân viên (Employee)
-CREATE TABLE Employee (
-    employeeId VARCHAR(50) PRIMARY KEY,
-    fullName VARCHAR(255) NOT NULL,
-    role VARCHAR(50), -- VD: 'Sale', 'Manager', 'Admin'
-    phone VARCHAR(20),
-    email VARCHAR(255),
-    password VARCHAR(255) NOT NULL
-);
-
--- 4. Bảng Nội quy (Policy)
-CREATE TABLE Policy (
-    policyId VARCHAR(50) PRIMARY KEY,
+-- 2. POLICIES
+CREATE TABLE policies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title VARCHAR(255) NOT NULL,
-    content TEXT
+    content TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- 5. Bảng Tiện ích (Utility)
-CREATE TABLE Utility (
-    utilityId VARCHAR(50) PRIMARY KEY,
+-- 3. DORMS
+CREATE TABLE dorms (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
-    description TEXT
+    address TEXT NOT NULL,
+    phone VARCHAR(15),
+    status VARCHAR(20) DEFAULT 'AVAILABLE', -- AVAILABLE, FULL, NEARLY_FULL 
+    total_rooms INTEGER DEFAULT 0,
+    available_rooms INTEGER DEFAULT 0,
+    manager_id VARCHAR(255) REFERENCES users(email),
+    image_url TEXT,
+    policy_id UUID REFERENCES policies(id),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- 6. Bảng Phòng (Room)
-CREATE TABLE Room (
-    roomId VARCHAR(50) PRIMARY KEY,
-    dormId VARCHAR(50) REFERENCES Dorm(dormId) ON DELETE CASCADE,
-    type VARCHAR(100) -- VD: 'Phòng 4 người', 'Phòng VIP'
+CREATE TABLE dorm_fees (
+    dorm_id UUID PRIMARY KEY REFERENCES dorms(id) ON DELETE CASCADE,
+    water_fee NUMERIC(12, 2) DEFAULT 0,
+    electricity_fee NUMERIC(12, 2) DEFAULT 0,
+    wifi_fee NUMERIC(12, 2) DEFAULT 0,
+    cleaning_fee NUMERIC(12, 2) DEFAULT 0
 );
 
--- 7. Bảng Giường (Bed)
-CREATE TABLE Bed (
-    bedId VARCHAR(50) PRIMARY KEY,
-    roomId VARCHAR(50) REFERENCES Room(roomId) ON DELETE CASCADE,
-    basePrice DECIMAL(15, 2) DEFAULT 0,
-    status VARCHAR(50) -- VD: 'Available', 'Occupied', 'Maintenance'
+-- 4. UTILITIES
+CREATE TABLE utilities (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(255) NOT NULL,
+    type VARCHAR(20), -- ROOM, DORM, BED
+    is_liable BOOLEAN DEFAULT FALSE,
+    incurred_price NUMERIC(12, 2) DEFAULT 0
 );
 
--- 8. Bảng Nội quy KTX (DormPolicy) - Quan hệ N-N
-CREATE TABLE DormPolicy (
-    dormId VARCHAR(50) REFERENCES Dorm(dormId) ON DELETE CASCADE,
-    policyId VARCHAR(50) REFERENCES Policy(policyId) ON DELETE CASCADE,
-    PRIMARY KEY (dormId, policyId)
+CREATE TABLE dorm_utilities (
+    dorm_id UUID REFERENCES dorms(id) ON DELETE CASCADE,
+    utility_id UUID REFERENCES utilities(id) ON DELETE CASCADE,
+    status VARCHAR(20) DEFAULT 'GOOD', -- GOOD, BROKEN, MAINTAINED
+    PRIMARY KEY (dorm_id, utility_id)
 );
 
--- 9. Bảng Tiện ích KTX (DormUtility) - Quan hệ N-N
-CREATE TABLE DormUtility (
-    dormId VARCHAR(50) REFERENCES Dorm(dormId) ON DELETE CASCADE,
-    utilityId VARCHAR(50) REFERENCES Utility(utilityId) ON DELETE CASCADE,
-    PRIMARY KEY (dormId, utilityId)
+-- 5. ROOMS
+CREATE TABLE rooms (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    dorm_id UUID REFERENCES dorms(id) ON DELETE CASCADE,
+    name VARCHAR(50) NOT NULL, -- Room number/name (e.g., A101)
+    block VARCHAR(50),
+    floor INTEGER,
+    status VARCHAR(20) DEFAULT 'AVAILABLE', -- AVAILABLE, FULL, NEARLY_FULL 
+    total_beds INTEGER DEFAULT 0,
+    available_beds INTEGER DEFAULT 0,
+    image_url TEXT,
+    policy_id UUID REFERENCES policies(id),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- 10. Bảng Tiện ích Phòng (RoomUtility) - Quan hệ N-N có thuộc tính
-CREATE TABLE RoomUtility (
-    roomId VARCHAR(50) REFERENCES Room(roomId) ON DELETE CASCADE,
-    utilityId VARCHAR(50) REFERENCES Utility(utilityId) ON DELETE CASCADE,
-    quantity INTEGER DEFAULT 1,
-    PRIMARY KEY (roomId, utilityId)
+CREATE TABLE room_utilities (
+    room_id UUID REFERENCES rooms(id) ON DELETE CASCADE,
+    utility_id UUID REFERENCES utilities(id) ON DELETE CASCADE,
+    PRIMARY KEY (room_id, utility_id)
 );
 
--- 11. Bảng Phòng quan tâm (FavoriteRoom) - Quan hệ N-N
-CREATE TABLE FavoriteRoom (
-    cccd VARCHAR(20) REFERENCES Customer(cccd) ON DELETE CASCADE,
-    roomId VARCHAR(50) REFERENCES Room(roomId) ON DELETE CASCADE,
-    PRIMARY KEY (cccd, roomId)
+-- 6. BEDS
+CREATE TABLE beds (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    room_id UUID REFERENCES rooms(id) ON DELETE CASCADE,
+    bed_number VARCHAR(10) NOT NULL,
+    status VARCHAR(20) DEFAULT 'AVAILABLE', -- AVAILABLE, DEPOSITED, BOOKED
+    price NUMERIC(12, 2) DEFAULT 0
 );
 
--- 12. Bảng Hợp đồng (Contract)
-CREATE TABLE Contract (
-    contractId VARCHAR(50) PRIMARY KEY,
-    customerId VARCHAR(20) REFERENCES Customer(cccd),
-    bedId VARCHAR(50) REFERENCES Bed(bedId),
-    signedDate DATE,
-    startDate DATE,
-    endDate DATE,
-    occupantCount INTEGER DEFAULT 1,
-    depositAmount DECIMAL(15, 2),
-    status VARCHAR(50) -- VD: 'Active', 'Terminated', 'Expired'
+-- 7. USER FAVORITES
+CREATE TABLE user_favorite_rooms (
+    user_email VARCHAR(255) REFERENCES users(email) ON DELETE CASCADE,
+    room_id UUID REFERENCES rooms(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_email, room_id)
 );
 
--- 13. Bảng Giấy đặt cọc (DepositReceipt)
-CREATE TABLE DepositReceipt (
-    depositId VARCHAR(50) PRIMARY KEY,
-    customerId VARCHAR(20) REFERENCES Customer(cccd),
-    roomId VARCHAR(50) REFERENCES Room(roomId),
-    createdDate DATE DEFAULT CURRENT_DATE,
-    deadlineDate DATE,
-    occupantCount INTEGER DEFAULT 1,
-    totalAmount DECIMAL(15, 2),
-    status VARCHAR(50) -- VD: 'Pending', 'Paid', 'Expired'
+-- 8. PREVIEW/VIEWING REQUESTS
+CREATE TABLE preview_forms (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_email VARCHAR(255) REFERENCES users(email),
+    room_id UUID REFERENCES rooms(id),
+    preview_date TIMESTAMPTZ NOT NULL,
+    status VARCHAR(20) DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED, CANCELLED
+    staff_email VARCHAR(255) REFERENCES users(email),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- 14. Bảng Lịch hẹn xem phòng (ViewingSchedule)
-CREATE TABLE ViewingSchedule (
-    scheduleId VARCHAR(50) PRIMARY KEY,
-    customerId VARCHAR(20) REFERENCES Customer(cccd),
-    employeeId VARCHAR(50) REFERENCES Employee(employeeId),
-    roomId VARCHAR(50) REFERENCES Room(roomId),
-    time TIMESTAMP NOT NULL,
-    type VARCHAR(50), -- VD: 'Trực tiếp', 'Online'
-    status VARCHAR(50)
+-- 9. RENT / DEPOSIT FORMS
+CREATE TABLE rental_forms (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_email VARCHAR(255) REFERENCES users(email),
+    deadline TIMESTAMPTZ,
+    total_amount NUMERIC(12, 2) DEFAULT 0,
+    deposit_form_id UUID REFERENCES rental_forms(id),
+    type VARCHAR(20), -- DEPOSIT, FULL
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- 15. Bảng Phiếu thanh toán (PaymentReceipt)
-CREATE TABLE PaymentReceipt (
-    receiptId VARCHAR(50) PRIMARY KEY,
-    contractId VARCHAR(50) REFERENCES Contract(contractId),
-    depositId VARCHAR(50) REFERENCES DepositReceipt(depositId),
-    method VARCHAR(50), -- VD: 'Chuyển khoản', 'Tiền mặt'
-    amount DECIMAL(15, 2) NOT NULL,
-    paymentDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE rental_form_beds (
+    rental_form_id UUID REFERENCES rental_forms(id) ON DELETE CASCADE,
+    bed_id UUID REFERENCES beds(id),
+    PRIMARY KEY (rental_form_id, bed_id)
 );
 
--- 16. Bảng Biên bản bàn giao (HandoverReport)
-CREATE TABLE HandoverReport (
-    reportId VARCHAR(50) PRIMARY KEY,
-    contractId VARCHAR(50) REFERENCES Contract(contractId),
-    type VARCHAR(50), -- VD: 'Nhận phòng', 'Trả phòng'
-    createdDate DATE DEFAULT CURRENT_DATE,
-    content TEXT,
-    bedStatus TEXT,
-    note TEXT
+-- 10. PAYMENTS
+CREATE TABLE payments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    rental_form_id UUID REFERENCES rental_forms(id),
+    method VARCHAR(20), -- QR, TRANSFER
+    amount NUMERIC(12, 2) NOT NULL,
+    status VARCHAR(20) DEFAULT 'PENDING', -- PENDING, SUCCESS, FAILED, TIMEOUT
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- 17. Bảng Yêu cầu trả phòng (CheckoutRequest)
-CREATE TABLE CheckoutRequest (
-    requestId VARCHAR(50) PRIMARY KEY,
-    contractId VARCHAR(50) REFERENCES Contract(contractId),
-    expectedDate DATE,
-    status VARCHAR(50), -- VD: 'Pending', 'Approved', 'Rejected'
-    rejectReason TEXT,
-    documentUrl VARCHAR(500)
+-- 11. CONTRACTS
+CREATE TABLE contracts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_email VARCHAR(255) REFERENCES users(email),
+    start_date DATE NOT NULL,
+    stay_duration INTEGER, -- In months
+    rental_form_id UUID REFERENCES rental_forms(id),
+    status VARCHAR(20) DEFAULT 'ACTIVE', -- ACTIVE, TERMINATED, LIQUIDATED
+    signature_url TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- 18. Bảng Hoàn cọc & Khấu trừ (RefundCalculation)
-CREATE TABLE RefundCalculation (
-    calculationId VARCHAR(50) PRIMARY KEY,
-    requestId VARCHAR(50) UNIQUE REFERENCES CheckoutRequest(requestId) ON DELETE CASCADE,
-    damageNotes TEXT,
-    extraDeductions DECIMAL(15, 2) DEFAULT 0,
-    totalAmount DECIMAL(15, 2) -- Số tiền hoàn trả cuối cùng
+CREATE TABLE contract_beds (
+    contract_id UUID REFERENCES contracts(id) ON DELETE CASCADE,
+    bed_id UUID REFERENCES beds(id),
+    PRIMARY KEY (contract_id, bed_id)
+);
+
+-- 12. HANDOVERS
+CREATE TABLE handovers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    contract_id UUID REFERENCES contracts(id) ON DELETE CASCADE,
+    type VARCHAR(10), -- IN, OUT
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE handover_beds (
+    handover_id UUID REFERENCES handovers(id) ON DELETE CASCADE,
+    bed_id UUID REFERENCES beds(id),
+    -- utility_status JSONB,
+    note TEXT,
+    PRIMARY KEY (handover_id, bed_id)
+);
+
+-- 13. CHECKOUT REQUESTS
+CREATE TABLE checkout_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_email VARCHAR(255) REFERENCES users(email),
+    contract_id UUID REFERENCES contracts(id),
+    expected_date DATE NOT NULL,
+    status VARCHAR(30) DEFAULT 'PENDING', -- PENDING, PROCESSING, LIQUIDATED, CANCELLED
+    handover_id UUID REFERENCES handovers(id),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 14. REFUND CALCULATIONS
+CREATE TABLE refund_calculations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    request_id UUID REFERENCES checkout_requests(id) ON DELETE CASCADE,
+    contract_id UUID REFERENCES contracts(id),
+    deposit_amount NUMERIC(12, 2) DEFAULT 0,
+    damage_fee NUMERIC(12, 2) DEFAULT 0,
+    extra_fee NUMERIC(12, 2) DEFAULT 0,
+    final_refund_amount NUMERIC(12, 2) DEFAULT 0,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
