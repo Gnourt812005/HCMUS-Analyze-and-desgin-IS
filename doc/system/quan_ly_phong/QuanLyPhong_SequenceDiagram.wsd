@@ -12,115 +12,60 @@ skinparam {
 }
 
 actor "Nhân viên quản lý" as Actor
-boundary "ScreenRoomManagement" as MainGUI <<boundary>>
-boundary "ScreenRoomDetail" as DetailGUI <<boundary>>
-boundary "FormRoom" as FormGUI <<boundary>>
-boundary "FormBed" as BedGUI <<boundary>>
-control "Room" as BUS <<control>>
-database "RoomDB" as DB <<database>>
+participant "AdminRooms" as MainGUI <<boundary>>
+participant "AdminRoomDetail" as DetailGUI <<boundary>>
+participant "Room" as BUS_Room <<control>>
+participant "Bed" as BUS_Bed <<control>>
+participant "RoomDB" as DB <<entity>>
 
 autonumber
 
-== Kịch bản 1 & 2: Xem danh sách và chi tiết phòng ==
-Actor -> MainGUI: Chọn tab "Phòng"
-MainGUI -> BUS: getRooms()
-BUS -> DB: fetchAll()
-DB --> BUS: Danh sách phòng
-BUS --> MainGUI: Dữ liệu
-MainGUI --> Actor: Hiển thị danh sách
+== Kịch bản 1: Xem danh sách phòng ==
+Actor -> MainGUI: Mở trang Quản lý Phòng
+MainGUI -> BUS_Room: getAll()
+BUS_Room -> DB: fetchAll()
 
-Actor -> MainGUI: Nhấn vào 1 phòng cụ thể
-MainGUI -> DetailGUI: showDetails(id)
-DetailGUI -> BUS: getRoomDetail(id)
-BUS -> DB: fetchById(id)
-DB --> BUS: Chi tiết và danh sách giường
-BUS --> DetailGUI: Trả về kết quả
-DetailGUI --> Actor: Hiển thị thông tin
+== Kịch bản 2: Xem chi tiết phòng ==
+Actor -> MainGUI: Chọn 1 phòng cụ thể
+MainGUI -> DetailGUI: Điều hướng (id)
+DetailGUI -> BUS_Room: getById(id)
+BUS_Room -> DB: fetchById(id)
 
 == Kịch bản 3: Thêm phòng mới ==
 Actor -> MainGUI: Nhấn "Thêm phòng mới"
-MainGUI -> FormGUI: showForm("Thêm phòng")
-
-Actor -> FormGUI: Chọn KTX, nhập dữ liệu và Lưu
-FormGUI -> FormGUI: validate()
+MainGUI -> DetailGUI: Mở trang thêm mới (/new)
+Actor -> DetailGUI: Chọn KTX, nhập dữ liệu & Lưu
+DetailGUI -> BUS_Room: create(formData)
+BUS_Room -> DB: checkRoomIdExists(dormId, name)
 alt Hợp lệ
-    FormGUI -> BUS: createRoom(data)
-    BUS -> DB: checkRoomIdExists(dormId, roomId)
-    alt Mã phòng đã tồn tại
-        DB --> BUS: Trả về true
-        BUS --> FormGUI: Thông báo lỗi ("Mã phòng đã tồn tại")
-    else Hợp lệ
-        DB --> BUS: Trả về false
-        BUS -> DB: insert(data)
-        DB --> BUS: Thành công
-        BUS --> FormGUI: Trả về kết quả (Thành công)
-        FormGUI --> Actor: Thông báo thành công
-        FormGUI -> MainGUI: refreshList()
-    end
+    BUS_Room -> DB: insert(data)
 end
 
-== Kịch bản 4: Cập nhật thông tin phòng cơ bản ==
-Actor -> DetailGUI: Nhấn "Cập nhật"
-DetailGUI -> DetailGUI: unlockFields()
+== Kịch bản 4: Cập nhật thông tin phòng ==
+Actor -> DetailGUI: Chỉnh sửa thông tin & Nhấn Lưu
+DetailGUI -> BUS_Room: update(id, formData)
+BUS_Room -> DB: update(id, data)
 
-Actor -> DetailGUI: Chỉnh sửa dữ liệu và Lưu thay đổi
-DetailGUI -> BUS: updateRoom(id, data)
-BUS -> DB: update(id, data)
-DB --> BUS: Thành công
-BUS --> DetailGUI: Thành công
-DetailGUI --> Actor: Thông báo thành công
-DetailGUI -> DetailGUI: lockFields()
-
-== Kịch bản 5: Ẩn phòng ==
+== Kịch bản 5: Xóa phòng (Hard Delete) ==
 Actor -> DetailGUI: Nhấn "Xóa phòng"
-DetailGUI -> DetailGUI: showConfirmPopup()
+DetailGUI -> Actor: Xác nhận xóa?
 Actor -> DetailGUI: Xác nhận
-DetailGUI -> BUS: deleteRoom(id)
-BUS -> DB: remove(id)
-DB --> BUS: Thành công
-BUS --> DetailGUI: Thành công
-DetailGUI --> Actor: Thông báo thành công
-DetailGUI -> MainGUI: backToList()
+DetailGUI -> BUS_Room: delete(id)
+BUS_Room -> DB: delete(id)
 
-== Kịch bản 6: Thêm giường ==
-Actor -> DetailGUI: Nhấn "Thêm giường"
-DetailGUI -> BedGUI: showPopup("Thêm giường")
-
-Actor -> BedGUI: Nhập dữ liệu và Lưu
-BedGUI -> BUS: addBed(roomId, bedData)
-BUS -> DB: insertBed(bedData)
-DB --> BUS: Thành công
-BUS --> BedGUI: Trả về kết quả
-BedGUI --> Actor: Thông báo thành công
-BedGUI -> DetailGUI: refreshBedList()
-
-== Kịch bản 7: Cập nhật thông tin giường ==
-Actor -> DetailGUI: Nhấn biểu tượng "Sửa" trên dòng giường
-BedGUI -> BUS: updateBed(bedId, bedData)
-BUS -> DB: updateBed(bedId, bedData)
-DB --> BUS: Thành công
-BUS --> BedGUI: Trả về kết quả
-BedGUI --> Actor: Thông báo thành công
-BedGUI -> DetailGUI: refreshBedList()
+== Kịch bản 6 & 7: Quản lý Giường (Thêm/Sửa) ==
+Actor -> DetailGUI: Nhấn Thêm giường (hoặc Sửa giường)
+DetailGUI -> DetailGUI: Hiển thị form giường (Inline/Modal)
+Actor -> DetailGUI: Nhập thông tin giường & Lưu
+DetailGUI -> BUS_Bed: addBed() / updateBed()
+BUS_Bed -> DB: insertBed() / updateBed()
 
 == Kịch bản 8: Xóa giường (Có ràng buộc) ==
-Actor -> DetailGUI: Nhấn biểu tượng "Xóa" trên dòng giường
-DetailGUI -> DetailGUI: showConfirmPopup()
-Actor -> DetailGUI: Xác nhận
-
-DetailGUI -> BUS: deleteBed(id)
-BUS -> DB: checkBedInEffect(id)
-DB --> BUS: Trả về kết quả (Đang dùng / Trống)
-
-alt Giường đang được sử dụng
-    BUS --> DetailGUI: Lỗi ràng buộc
-    DetailGUI --> Actor: Thông báo lỗi ("Giường đang có người ở")
-else Hợp lệ
-    BUS -> DB: removeBed(id)
-    DB --> BUS: Thành công
-    BUS --> DetailGUI: Thành công
-    DetailGUI --> Actor: Thông báo thành công
-    DetailGUI -> DetailGUI: refreshBedList()
+Actor -> DetailGUI: Nhấn "Xóa" giường
+DetailGUI -> BUS_Bed: deleteBed(id)
+BUS_Bed -> DB: checkBedInEffect(id)
+alt Hợp lệ
+    BUS_Bed -> DB: removeBed(id)
 end
 
 @enduml
