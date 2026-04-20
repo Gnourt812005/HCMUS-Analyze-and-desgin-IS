@@ -6,14 +6,14 @@ export const Header = () => {
   const navigate = useNavigate();
   const [authState, setAuthState] = useState({
     isLoggedIn: AuthService.isLoggedIn(),
-    isStaff: AuthService.isStaff()
+    isAdmin: AuthService.isAdmin()
   });
 
   useEffect(() => {
     const handleAuthChange = () => {
       setAuthState({
         isLoggedIn: AuthService.isLoggedIn(),
-        isStaff: AuthService.isStaff()
+        isAdmin: AuthService.isAdmin()
       });
     };
 
@@ -31,14 +31,11 @@ export const Header = () => {
       <div className="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
         <div className="flex items-center gap-8">
           <Link to="/" className="text-2xl font-bold tracking-tighter text-blue-700">DormArch</Link>
-          <div className="hidden md:flex gap-6">
-            <Link to="/rooms" className="text-slate-600 hover:text-blue-600 transition-colors">Danh sách phòng</Link>
-          </div>
         </div>
         <div className="flex items-center gap-4">
           {authState.isLoggedIn ? (
             <div className="flex items-center space-x-2">
-              {authState.isStaff && (
+              {authState.isAdmin && (
                 <button
                   onClick={() => navigate('/admin')}
                   className="bg-slate-900 text-white px-4 py-2 text-sm font-bold rounded-lg hover:bg-slate-800 transition-all flex items-center gap-2 mr-2"

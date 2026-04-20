@@ -1,9 +1,12 @@
 import React from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { AuthService } from '../api/AuthService';
+import { UserRole } from '@dormarch/shared';
 
 export const CustomerSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const userRole = AuthService.getRole();
 
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -14,12 +17,16 @@ export const CustomerSidebar = () => {
 
   const menuItems = [
     { path: '/profile', icon: 'person', label: 'Thông tin cá nhân' },
-    { path: '/favorites', icon: 'favorite', label: 'Phòng quan tâm' },
-    { path: '/viewing-history', icon: 'calendar_today', label: 'Lịch xem phòng' },
+    { path: '/favourites-management', icon: 'favorite', label: 'Phòng quan tâm' },
+    { path: '/preview-forms-management', icon: 'calendar_today', label: 'Lịch xem phòng' },
     { path: '/orders', icon: 'shopping_cart', label: 'Đơn hàng' },
     { path: '/contracts', icon: 'description', label: 'Hợp đồng' },
     { path: '/checkout-requests', icon: 'inventory_2', label: 'Yêu cầu trả phòng' },
   ];
+
+  if (userRole === UserRole.SALES_STAFF) {
+    menuItems.splice(3, 0, { path: '/client-preview-form-managements', icon: 'calendar_clock', label: 'Đơn xem phòng khách hàng' });
+  }
 
   return (
     <aside className="md:col-span-3 space-y-4">

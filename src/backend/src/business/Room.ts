@@ -1,20 +1,31 @@
-import { RoomDB } from '../database/RoomDB';
-
 export class Room {
-  roomId: string;
-  status: string;
+  id: string;
+  dormId: string;
+  name: string;
+  block: string;
+  tower: string;
+  floor: number;
+  price: number;
+  totalBeds: number;
+  availableBeds: number;
+  amenities: string[];
+  specialNotes: string[];
+  imageUrl: string;
+  favoriteCount: number;
 
   constructor(data: Partial<Room>) {
-    this.roomId = data.roomId || '';
-    this.status = data.status || 'AVAILABLE';
-  }
-
-  static async getByRoomId(roomId: string): Promise<Room | null> {
-    const roomModel = await RoomDB.getByRoomId(roomId);
-    return roomModel ? new Room(roomModel) : null;
-  }
-
-  static async updateStatus(roomId: string, status: string): Promise<boolean> {
-    return await RoomDB.updateStatus(roomId, status);
+    this.id = data.id || '';
+    this.dormId = data.dormId || '';
+    this.name = data.name || '';
+    this.block = data.block || '';
+    this.tower = data.tower || '';
+    this.floor = data.floor || 0;
+    this.price = data.price || 0;
+    this.totalBeds = data.totalBeds || 0;
+    this.availableBeds = data.availableBeds || 0;
+    this.amenities = data.amenities || [];
+    this.specialNotes = data.specialNotes || [];
+    this.imageUrl = data.imageUrl || '';
+    this.favoriteCount = data.favoriteCount || 0;
   }
 }

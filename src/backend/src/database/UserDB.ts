@@ -15,15 +15,37 @@ export class UserDB {
       role: UserRole.GUEST
     },
     {
+      email: 'admin@gmail.com',
+      password: 'admin',
+      fullName: 'System Admin',
+      cccd: '000000000000',
+      birthday: '1990-01-01',
+      gender: 'Nam',
+      phone: '1111111111',
+      address: 'Admin address',
+      role: UserRole.ADMIN
+    },
+    {
       email: 'staff@gmail.com',
       password: 'staff@123',
-      fullName: 'Staff',
+      fullName: 'Sales Staff 1',
       cccd: '079201012345',
       birthday: '1998-05-15',
       gender: 'Nam',
       phone: '0901234567',
       address: 'Quận 1, TP.HCM',
-      role: UserRole.STAFF
+      role: UserRole.SALES_STAFF
+    },
+    {
+      email: 'staff2@gmail.com',
+      password: 'staff@123',
+      fullName: 'Sales Staff 2',
+      cccd: '079201012346',
+      birthday: '1995-10-10',
+      gender: 'Nữ',
+      phone: '0907654321',
+      address: 'Quận 3, TP.HCM',
+      role: UserRole.SALES_STAFF
     }
   ];
 

@@ -4,6 +4,8 @@ import userRoutes from './routes/userRoutes';
 import { checkoutRouter } from './routes/checkoutRoutes';
 import { contractRouter } from './routes/contractRoutes';
 import { refundRouter } from './routes/refundRoutes';
+import { previewRoutes } from './routes/previewRoutes';
+import { favouriteRoutes } from './routes/favouriteRoutes';
 
 const router = Router();
 
@@ -21,6 +23,11 @@ router.use('/checkout-requests', checkoutRouter);
 
 // Mount refund calculation routes under /refund-calculations
 router.use('/refund-calculations', refundRouter);
+// Mount preview routes under /previews
+router.use('/previews', previewRoutes);
+
+// Mount favourites routes under /favourites
+router.use('/favourites', favouriteRoutes);
 
 router.get('/', (req, res) => {
   res.json({ message: 'Welcome to DormArch API' });
