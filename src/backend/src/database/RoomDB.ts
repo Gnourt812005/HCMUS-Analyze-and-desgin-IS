@@ -131,6 +131,27 @@ export class RoomDB {
   static async getBedsByRoomId(roomId: string): Promise<BedOptionDTO[]> {
     return this.ROOM_BEDS.filter(bed => bed.roomId === roomId);
   }
+
+  static async markBedsStatus(
+    roomId: string,
+    bedIds: string[],
+    status: BedOptionDTO['status']
+  ): Promise<void> {
+    this.ROOM_BEDS = this.ROOM_BEDS.map((bed) => {
+      if (bed.roomId === roomId && bedIds.includes(bed.id)) {
+        return { ...bed, status };
+      }
+      return bed;
+    });
+
+    const room = this.MOCK_ROOMS.find((item) => item.id === roomId);
+    if (room) {
+      const availableBeds = this.ROOM_BEDS.filter(
+        (bed) => bed.roomId === roomId && bed.status === 'AVAILABLE'
+      ).length;
+      room.availableBeds = availableBeds;
+    }
+  }
   
   static async toggleFavorite(roomId: string, increment: boolean): Promise<Partial<Room> | null> {
     const idx = this.MOCK_ROOMS.findIndex(r => r.id === roomId);

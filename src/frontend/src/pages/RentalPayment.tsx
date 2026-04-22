@@ -5,6 +5,7 @@ import {
   PaymentAction,
   PaymentPreviewDTO
 } from '@dormarch/shared';
+import { RentalService } from '../api/RentalService';
 
 type PaymentFlowState = {
   registrationId: string;
@@ -22,6 +23,7 @@ export const RentalPayment = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [statusText, setStatusText] = useState('Sẵn sàng thanh toán');
+  const [invoiceId, setInvoiceId] = useState<string | null>(null);
 
   if (!flowState) {
     return (
@@ -40,10 +42,27 @@ export const RentalPayment = () => {
     setIsVerifying(true);
     setStatusText('Đang xác nhận giao dịch...');
 
-    window.setTimeout(() => {
-      setIsVerifying(false);
-      setIsCompleted(true);
-      setStatusText('Thanh toán thành công');
+    window.setTimeout(async () => {
+      try {
+        const response = await RentalService.confirm({
+          registrationId: flowState.registrationId,
+          action: flowState.action,
+          method
+        });
+
+        if (response.status !== 200) {
+          throw new Error('Xác nhận thanh toán thất bại.');
+        }
+
+        setInvoiceId(response.data.invoiceId);
+        setIsCompleted(true);
+        setStatusText('Thanh toán thành công');
+      } catch (error: any) {
+        setStatusText('Xác nhận thanh toán thất bại');
+        alert(error.message || 'Không thể xác nhận thanh toán.');
+      } finally {
+        setIsVerifying(false);
+      }
     }, 3000);
   };
 
@@ -102,7 +121,7 @@ export const RentalPayment = () => {
 
         {isCompleted && (
           <p className="mt-4 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-            Thanh toán đã hoàn tất. Bạn có thể quay về danh sách để thực hiện nghiệp vụ tiếp theo.
+            Thanh toán đã hoàn tất{invoiceId ? ` (Mã hóa đơn: ${invoiceId})` : ''}. Bạn có thể quay về danh sách để thực hiện nghiệp vụ tiếp theo.
           </p>
         )}
 

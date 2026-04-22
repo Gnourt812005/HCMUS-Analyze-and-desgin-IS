@@ -114,7 +114,10 @@ export const RentalCondition = () => {
           <label className="text-sm font-semibold text-slate-700">CCCD</label>
           <input
             value={idCard}
-            onChange={(e) => setIdCard(e.target.value)}
+            onChange={(e) => setIdCard(e.target.value.replace(/\D/g, '').slice(0, 12))}
+            inputMode="numeric"
+            pattern="\d{12}"
+            maxLength={12}
             placeholder="Nhập CCCD để kiểm tra lịch sử cọc"
             className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 text-sm"
           />

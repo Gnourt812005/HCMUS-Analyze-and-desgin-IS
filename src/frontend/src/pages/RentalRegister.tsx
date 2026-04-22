@@ -50,6 +50,13 @@ export const RentalRegister = () => {
 
   const handleRegister = async (event: FormEvent) => {
     event.preventDefault();
+
+    const normalizedPhone = phone.trim();
+    if (!/^\d{10}$/.test(normalizedPhone)) {
+      alert('Số điện thoại phải gồm đúng 10 chữ số.');
+      return;
+    }
+
     setLoadingRegister(true);
 
     try {
@@ -58,7 +65,7 @@ export const RentalRegister = () => {
         bedIds: flowState.bedIds,
         customerName,
         idCard: flowState.idCard,
-        phone,
+        phone: normalizedPhone,
         email,
         rentalMonths,
         acceptedConditions: flowState.acceptedConditions,
@@ -136,7 +143,10 @@ export const RentalRegister = () => {
             <label className="text-sm font-semibold text-slate-700">Số điện thoại</label>
             <input
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              inputMode="numeric"
+              pattern="\d{10}"
+              maxLength={10}
               required
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
             />
