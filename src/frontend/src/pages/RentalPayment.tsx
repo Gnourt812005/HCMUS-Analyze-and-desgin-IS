@@ -1,13 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   PaymentMethod,
-  PaymentSessionDTO,
-  PaymentVerificationOutcome,
   PaymentAction,
   PaymentPreviewDTO
 } from '@dormarch/shared';
-import { RentalService } from '../api/RentalService';
 
 type PaymentFlowState = {
   registrationId: string;
@@ -22,37 +19,9 @@ export const RentalPayment = () => {
   const flowState = state as PaymentFlowState | null;
 
   const [method, setMethod] = useState<PaymentMethod>(flowState?.defaultMethod || 'BANK');
-  const [session, setSession] = useState<PaymentSessionDTO | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const canVerify = !!session && session.status === 'QR_READY';
-  const canRetry = !!session && (session.status === 'TIMEOUT' || session.status === 'FAILED');
-  const isCompleted = session?.status === 'COMPLETED';
-
-  useEffect(() => {
-    if (!flowState) return;
-
-    const createCode = async () => {
-      setLoading(true);
-      try {
-        const response = await RentalService.createPaymentCode({
-          registrationId: flowState.registrationId,
-          action: flowState.action,
-          method
-        });
-
-        if (response.status === 200) {
-          setSession(response.data);
-        }
-      } catch (error: any) {
-        alert(error.message || 'Không thể tạo mã thanh toán.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    createCode();
-  }, [flowState, method]);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [statusText, setStatusText] = useState('Sẵn sàng thanh toán');
 
   if (!flowState) {
     return (
@@ -65,64 +34,17 @@ export const RentalPayment = () => {
     );
   }
 
-  const verify = async (outcome: PaymentVerificationOutcome) => {
-    if (!session || !canVerify) return;
+  const handlePaid = () => {
+    if (isVerifying || isCompleted) return;
 
-    setLoading(true);
-    try {
-      const verifyResponse = await RentalService.verifyPayment({
-        sessionId: session.sessionId,
-        outcome
-      });
+    setIsVerifying(true);
+    setStatusText('Đang xác nhận giao dịch...');
 
-      if (verifyResponse.status === 200) {
-        setSession(verifyResponse.data);
-      }
-
-      if (outcome === 'success') {
-        const finalizeResponse = await RentalService.finalizePayment({ sessionId: session.sessionId });
-        if (finalizeResponse.status === 200) {
-          setSession(finalizeResponse.data);
-          alert(`Thanh toán hoàn tất. Mã hóa đơn: ${finalizeResponse.data.invoiceId}`);
-        }
-      }
-    } catch (error: any) {
-      alert(error.message || 'Không thể xác minh giao dịch.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const retry = async () => {
-    if (!session || !canRetry) return;
-
-    setLoading(true);
-    try {
-      const response = await RentalService.retryPayment({ sessionId: session.sessionId });
-      if (response.status === 200) {
-        setSession(response.data);
-      }
-    } catch (error: any) {
-      alert(error.message || 'Không thể thử lại thanh toán.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const refreshStatus = async () => {
-    if (!session) return;
-
-    setLoading(true);
-    try {
-      const response = await RentalService.getPaymentStatus(session.sessionId);
-      if (response.status === 200) {
-        setSession(response.data);
-      }
-    } catch (error: any) {
-      alert(error.message || 'Không thể cập nhật trạng thái thanh toán.');
-    } finally {
-      setLoading(false);
-    }
+    window.setTimeout(() => {
+      setIsVerifying(false);
+      setIsCompleted(true);
+      setStatusText('Thanh toán thành công');
+    }, 3000);
   };
 
   return (
@@ -148,7 +70,7 @@ export const RentalPayment = () => {
           <select
             value={method}
             onChange={(e) => setMethod(e.target.value as PaymentMethod)}
-            disabled={loading || !!session}
+            disabled={isVerifying || isCompleted}
             className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           >
             <option value="BANK">Ngân hàng</option>
@@ -157,27 +79,24 @@ export const RentalPayment = () => {
         </div>
 
         <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <p className="text-sm text-slate-700">Mã QR thanh toán</p>
-          <p className="mt-2 font-mono text-sm text-slate-800 break-all">{session?.qrCode || 'Đang tạo mã...'}</p>
-          <p className="mt-2 text-xs text-slate-500">Trạng thái: {session?.status || 'INIT'}</p>
-          {session?.message && <p className="mt-1 text-xs text-slate-600">{session.message}</p>}
+          <p className="text-sm text-slate-700">Mã QR thanh toán mẫu</p>
+          <div className="mt-3 flex justify-center">
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=RENTAL-${flowState.registrationId}-${flowState.action}`}
+              alt="QR thanh toán mẫu"
+              className="h-[220px] w-[220px] rounded-md border border-slate-300 bg-white p-2"
+            />
+          </div>
+          <p className="mt-3 text-center text-sm text-slate-600">Trạng thái: {statusText}</p>
         </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-2 md:grid-cols-2">
-          <button onClick={() => verify('success')} disabled={loading || !canVerify} className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-300">
-            Đã quét QR và thanh toán
-          </button>
-          <button onClick={() => verify('timeout')} disabled={loading || !canVerify} className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-300">
-            Giả lập timeout ngân hàng
-          </button>
-          <button onClick={() => verify('cancel')} disabled={loading || !canVerify} className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-300">
-            Hủy / Không quét mã
-          </button>
-          <button onClick={retry} disabled={loading || !canRetry} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 disabled:bg-slate-100">
-            Thử lại
-          </button>
-          <button onClick={refreshStatus} disabled={loading || !session} className="rounded-lg border border-blue-300 px-4 py-2 text-sm font-semibold text-blue-700 disabled:bg-slate-100 disabled:text-slate-400">
-            Cập nhật trạng thái
+        <div className="mt-5">
+          <button
+            onClick={handlePaid}
+            disabled={isVerifying || isCompleted}
+            className="w-full rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-300"
+          >
+            {isVerifying ? 'Đang xác nhận...' : isCompleted ? 'Đã thanh toán' : 'Thanh toán'}
           </button>
         </div>
 

@@ -34,7 +34,7 @@ export interface PolicyAgreementDTO {
 
 export interface RentalEligibilityRequestDTO {
   roomId: string;
-  bedId: string;
+  bedIds: string[];
   idCard: string;
 }
 
@@ -54,7 +54,7 @@ export interface ServiceItemDTO {
 
 export interface RentalRegistrationRequestDTO {
   roomId: string;
-  bedId: string;
+  bedIds: string[];
   customerName: string;
   idCard: string;
   phone: string;
@@ -72,11 +72,18 @@ export interface SummaryItemDTO {
 export interface RentalRegistrationDTO {
   registrationId: string;
   roomId: string;
-  bedId: string;
+  bedIds: string[];
   roomPrice: number;
-  serviceTotal: number;
   alreadyDeposited: boolean;
   summary: SummaryItemDTO[];
+}
+
+export interface BedOptionDTO {
+  id: string;
+  roomId: string;
+  bedNumber: string;
+  status: 'AVAILABLE' | 'DEPOSITED' | 'BOOKED';
+  price: number;
 }
 
 export interface PaymentPreviewRequestDTO {
