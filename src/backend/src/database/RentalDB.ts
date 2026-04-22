@@ -121,6 +121,15 @@ export class RentalDB {
     }
   }
 
+  static async markBooked(roomId: string, bedIds: string[]): Promise<void> {
+    for (const bedId of bedIds) {
+      const bed = this.BED_DATA.find(item => item.roomId === roomId && item.bedId === bedId);
+      if (bed) {
+        bed.status = 'BOOKED';
+      }
+    }
+  }
+
   static async createRegistration(record: RentalRecord): Promise<void> {
     this.REGISTRATIONS.push(record);
   }

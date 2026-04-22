@@ -9,6 +9,7 @@ import {
 } from '@dormarch/shared';
 import { PaymentDB } from '../database/PaymentDB';
 import { RentalDB } from '../database/RentalDB';
+import { RoomDB } from '../database/RoomDB';
 import { Rental } from './Rental';
 
 export class Payment {
@@ -110,6 +111,12 @@ export class Payment {
         registration.idCard,
         registration.bedIds
       );
+      await RoomDB.markBedsStatus(registration.roomId, registration.bedIds, 'DEPOSITED');
+    }
+
+    if (session.action === 'FULL_PAYMENT') {
+      await RentalDB.markBooked(registration.roomId, registration.bedIds);
+      await RoomDB.markBedsStatus(registration.roomId, registration.bedIds, 'BOOKED');
     }
 
     return PaymentDB.updateSessionStatus(payload.sessionId, 'COMPLETED', 'Thanh toán thành công, đã tạo hóa đơn điện tử.');
@@ -134,6 +141,12 @@ export class Payment {
         registration.idCard,
         registration.bedIds
       );
+      await RoomDB.markBedsStatus(registration.roomId, registration.bedIds, 'DEPOSITED');
+    }
+
+    if (payload.action === 'FULL_PAYMENT') {
+      await RentalDB.markBooked(registration.roomId, registration.bedIds);
+      await RoomDB.markBedsStatus(registration.roomId, registration.bedIds, 'BOOKED');
     }
 
     return {
