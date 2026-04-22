@@ -8,7 +8,6 @@ export class CheckoutRequest {
   expectedDate: string; // ISO Date String
   status: CheckoutStatus;
   createdAt: string; // ISO Date String
-  documentUrl?: string;
 
   constructor(data: Partial<CheckoutRequest>) {
     this.requestId = data.requestId || '';
@@ -17,7 +16,6 @@ export class CheckoutRequest {
     this.expectedDate = data.expectedDate || new Date().toISOString();
     this.status = data.status || CheckoutStatus.PENDING;
     this.createdAt = data.createdAt || new Date().toISOString();
-    this.documentUrl = data.documentUrl;
   }
 
   toDto(): CheckoutRequestDTO {
@@ -28,7 +26,6 @@ export class CheckoutRequest {
       expectedDate: this.expectedDate,
       status: this.status,
       createdAt: this.createdAt,
-      documentUrl: this.documentUrl
     };
   }
 
@@ -46,7 +43,6 @@ export class CheckoutRequest {
       userCCCD: requestData.userCCCD,
       contractId: requestData.contractId,
       expectedDate: requestData.expectedDate,
-      documentUrl: requestData.documentUrl,
       requestId: `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       createdAt: new Date().toISOString(),
       status: CheckoutStatus.PENDING
@@ -64,7 +60,6 @@ export class CheckoutRequest {
       userCCCD: requestData.userCCCD,
       contractId: requestData.contractId,
       expectedDate: requestData.expectedDate,
-      documentUrl: requestData.documentUrl,
       requestId: `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       createdAt: new Date().toISOString(),
       status: CheckoutStatus.PENDING
@@ -96,10 +91,9 @@ export class CheckoutRequest {
 
     const currentStatus = currentRequest.status;
     if (expectedCurrentStatus !== undefined && currentStatus !== expectedCurrentStatus) {
-      throw new Error('Yêu cầu đã được cập nhật bởi quản trị viên khác. Vui lòng làm mới và thử lại.');
+      throw new Error('Yêu cầu đã được cập nhật. Vui lòng làm mới và thử lại.');
     }
 
-    // Define valid status transitions
     const validTransitions: Record<CheckoutStatus, CheckoutStatus[]> = {
       [CheckoutStatus.PENDING]: [CheckoutStatus.PROCESSING, CheckoutStatus.REJECTED, CheckoutStatus.CANCELLED],
       [CheckoutStatus.PROCESSING]: [CheckoutStatus.PENDING_LIQUIDATION, CheckoutStatus.REJECTED, CheckoutStatus.CANCELLED],
@@ -109,7 +103,6 @@ export class CheckoutRequest {
       [CheckoutStatus.CANCELLED]: [] 
     };
 
-    // Check if the transition is valid
     const allowedTransitions = validTransitions[currentStatus!] || [];
     if (!allowedTransitions.includes(newStatus)) {
       throw new Error(

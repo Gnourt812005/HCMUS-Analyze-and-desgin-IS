@@ -14,7 +14,6 @@ export interface CheckoutRequestDTO {
   expectedDate: string; // ISO Date String
   status: CheckoutStatus;
   createdAt: string; // ISO Date String
-  documentUrl?: string;
 }
 
 export interface RefundCalculationDTO {

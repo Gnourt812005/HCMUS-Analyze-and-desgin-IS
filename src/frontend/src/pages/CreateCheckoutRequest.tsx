@@ -1,13 +1,11 @@
-import { useEffect, useState, FormEvent, ChangeEvent } from 'react';
+import { useEffect, useState, FormEvent} from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CustomerSidebar } from '../components/CustomerSidebar';
 import { ApiClient } from '../api/ApiClient';
 import { CheckoutRequestDTO, UserProfileDTO, ContractDTO } from '@dormarch/shared';
 
 interface CheckoutForm {
   contractId: string;
   expectedDate: string;
-  documentFile: File | null;
 }
 
 export const CreateCheckoutRequest = () => {
@@ -18,16 +16,13 @@ export const CreateCheckoutRequest = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [documentFileName, setDocumentFileName] = useState('');
   const [selectedContractDetails, setSelectedContractDetails] = useState<ContractDTO | null>(null);
 
   const [form, setForm] = useState<CheckoutForm>({
     contractId: '',
     expectedDate: '',
-    documentFile: null,
   });
 
-  // Load profile and active contracts on mount
   useEffect(() => {
     const abortController = new AbortController();
     loadProfileAndContracts(abortController);
@@ -89,28 +84,6 @@ export const CreateCheckoutRequest = () => {
     }
   }, [form.contractId, activeContracts]);
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    if (file) {
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        setError('Tệp quá lớn (tối đa 10MB). Vui lòng chọn tệp khác.');
-        return;
-      }
-
-      // Validate file type
-      const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      if (!validTypes.includes(file.type)) {
-        setError('Loại tệp không được hỗ trợ. Vui lòng chọn PDF, JPG, PNG, DOC hoặc DOCX.');
-        return;
-      }
-
-      setForm({ ...form, documentFile: file });
-      setDocumentFileName(file.name);
-      setError(null);
-    }
-  };
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -131,11 +104,6 @@ export const CreateCheckoutRequest = () => {
       return;
     }
 
-    if (!form.documentFile) {
-      setError('Vui lòng đính kèm hợp đồng hoặc phiếu đặt cọc.');
-      return;
-    }
-
     // Validate expected date is in the future
     const selectedDate = new Date(form.expectedDate);
     const today = new Date();
@@ -149,36 +117,16 @@ export const CreateCheckoutRequest = () => {
     try {
       setSubmitting(true);
 
-      // Convert file to base64
-      let documentUrl = '';
-      if (form.documentFile) {
-        documentUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(form.documentFile!);
-        });
-      }
-
-      // Create checkout request
       await ApiClient.post<CheckoutRequestDTO>('/checkout-requests', {
         body: JSON.stringify({
           userCCCD: profile.cccd,
           contractId: form.contractId,
           expectedDate: form.expectedDate,
-          documentUrl,
         })
       });
 
       setSuccess(true);
-      setForm({
-        contractId: '',
-        expectedDate: '',
-        documentFile: null,
-      });
-      setDocumentFileName('');
 
-      // Redirect to checkout requests page after 2 seconds
       setTimeout(() => {
         navigate('/checkout-requests');
       }, 2000);
@@ -196,23 +144,16 @@ export const CreateCheckoutRequest = () => {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 px-6 py-8">
-        <CustomerSidebar />
-        <section className="md:col-span-9">
+        <section>
           <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
             <div className="text-center text-slate-500 py-16">Đang tải thông tin...</div>
           </div>
         </section>
-      </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 px-6 py-8">
-      <CustomerSidebar />
-
-      <section className="md:col-span-9 space-y-6">
-        {/* Header Section */}
+    <section className="space-y-6">
         <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
           <div className="flex items-start justify-between gap-4 mb-2">
             <div>
@@ -225,7 +166,6 @@ export const CreateCheckoutRequest = () => {
           </p>
         </div>
 
-        {/* Success Message */}
         {success && (
           <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
             <div className="flex items-start gap-3">
@@ -238,7 +178,6 @@ export const CreateCheckoutRequest = () => {
           </div>
         )}
 
-        {/* Error Message */}
         {error && !success && (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
             <div className="flex items-start gap-3">
@@ -251,7 +190,6 @@ export const CreateCheckoutRequest = () => {
           </div>
         )}
 
-        {/* Prerequisites Check */}
         {!loading && activeContracts.length === 0 && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
             <div className="flex items-start gap-3">
@@ -266,11 +204,9 @@ export const CreateCheckoutRequest = () => {
           </div>
         )}
 
-        {/* Main Form */}
         {activeContracts.length > 0 && (
           <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 border border-slate-200 space-y-6">
             
-            {/* Step 1: Select Room/Bed */}
             <div className="space-y-4">
               <div>
                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -314,7 +250,6 @@ export const CreateCheckoutRequest = () => {
               </div>
             </div>
 
-            {/* Step 2: Expected Date */}
             <div className="border-t border-slate-200 pt-6 space-y-4">
               <div>
                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -339,51 +274,6 @@ export const CreateCheckoutRequest = () => {
               </div>
             </div>
 
-            {/* Step 3: Upload Document */}
-            <div className="border-t border-slate-200 pt-6 space-y-4">
-              <div>
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">3</span>
-                  Tải lên hợp đồng hoặc phiếu đặt cọc
-                </h2>
-                <p className="text-sm text-slate-500 mt-2">Đính kèm hợp đồng hoặc phiếu đặt cọc</p>
-              </div>
-
-              <div className="border-2 border-dashed border-slate-300 rounded-3xl p-6 text-center hover:border-blue-400 hover:bg-blue-50 transition-all">
-                <input
-                  id="checkout-document-upload"
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  required
-                />
-                <label
-                  htmlFor="checkout-document-upload"
-                  className="cursor-pointer inline-flex flex-col items-center gap-2 w-full"
-                >
-                  <span className="material-symbols-outlined text-5xl text-blue-500">cloud_upload</span>
-                  <span className="font-semibold text-slate-700">Chọn tệp để tải lên</span>
-                  <span className="text-sm text-slate-500">
-                    Hỗ trợ: PDF, JPG, PNG, DOC, DOCX (tối đa 10MB)
-                  </span>
-                </label>
-              </div>
-
-              {documentFileName && (
-                <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
-                  <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-green-600">check_circle</span>
-                    <div>
-                      <p className="text-sm font-semibold text-green-900">Tệp đã chọn</p>
-                      <p className="text-sm text-green-700 mt-1">{documentFileName}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Selected Contract Details */}
             {selectedContractDetails && (
               <div className="border-t border-slate-200 pt-6 space-y-4">
                 <h3 className="text-sm font-semibold text-slate-700">Thông tin chi tiết hợp đồng</h3>
@@ -410,7 +300,6 @@ export const CreateCheckoutRequest = () => {
               </div>
             )}
 
-            {/* Form Actions */}
             <div className="border-t border-slate-200 pt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
@@ -430,6 +319,5 @@ export const CreateCheckoutRequest = () => {
           </form>
         )}
       </section>
-    </div>
   );
 };

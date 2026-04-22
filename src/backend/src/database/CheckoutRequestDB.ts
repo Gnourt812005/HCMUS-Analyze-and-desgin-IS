@@ -18,7 +18,6 @@ export class CheckoutRequestDB {
       expectedDate: '2005-07-15',
       status: CheckoutStatus.PROCESSING,
       createdAt: '2005-06-05',
-      documentUrl: 'https://example.com/contract/req-002.pdf'
     },
     {
       requestId: 'req-003',
@@ -27,7 +26,6 @@ export class CheckoutRequestDB {
       expectedDate: '2005-07-20',
       status: CheckoutStatus.LIQUIDATED,
       createdAt: '2005-06-10',
-      documentUrl: 'https://example.com/contract/req-003.pdf'
     }
   ];
 
@@ -72,15 +70,6 @@ export class CheckoutRequestDB {
     }
 
     this.MOCK_CHECKOUT_REQUESTS[requestIndex].status = newStatus;
-    return true;
-  }
-
-  static async updateDocuments(requestId: string, documentUrl: string): Promise<boolean> {
-    const requestIndex = this.MOCK_CHECKOUT_REQUESTS.findIndex(r => r.requestId === requestId);
-    if (requestIndex === -1)
-      return false;
-    this.MOCK_CHECKOUT_REQUESTS[requestIndex].documentUrl = documentUrl;
-    
     return true;
   }
 }

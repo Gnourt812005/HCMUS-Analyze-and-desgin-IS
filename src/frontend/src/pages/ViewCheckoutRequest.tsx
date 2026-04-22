@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CustomerSidebar } from '../components/CustomerSidebar';
 import { ApiClient } from '../api/ApiClient';
 import { CheckoutRequestDTO, CheckoutStatus, UserProfileDTO, ContractDTO, RefundCalculationDTO } from '@dormarch/shared';
 
@@ -191,19 +190,6 @@ export const ViewCheckoutRequest = () => {
               <p className="text-slate-600">Không tìm thấy thông tin hợp đồng. Vui lòng liên hệ quản lý.</p>
             )}
           </div>
-          {selectedRequest.documentUrl && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="font-semibold text-slate-800 mb-3">Tài liệu đính kèm</p>
-              <a
-                href={selectedRequest.documentUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block text-blue-600 hover:text-blue-800 underline"
-              >
-                Xem tài liệu đính kèm ban đầu
-              </a>
-            </div>
-          )}
         </>
       );
     }
@@ -247,34 +233,19 @@ export const ViewCheckoutRequest = () => {
             )}
           </div>
 
-          {(selectedRequest.documentUrl || status === CheckoutStatus.LIQUIDATED) && (
+          {status === CheckoutStatus.LIQUIDATED && (
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="font-semibold text-slate-800 mb-3">Tài liệu đính kèm</p>
-              {selectedRequest.documentUrl && (
+              {contract?.liquidationUrl ? (
                 <a
-                  href={selectedRequest.documentUrl}
+                  href={contract.liquidationUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block text-blue-600 hover:text-blue-800 underline"
+                  className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
                 >
-                  Xem tài liệu đính kèm ban đầu
+                  Xem biên bản trả phòng
                 </a>
-              )}
-              {status === CheckoutStatus.LIQUIDATED && (
-                <div className={selectedRequest.documentUrl ? 'mt-2' : ''}>
-                  {contract?.liquidationUrl ? (
-                    <a
-                      href={contract.liquidationUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block text-blue-600 hover:text-blue-800 underline"
-                    >
-                      Xem biên bản trả phòng
-                    </a>
-                  ) : (
-                    <p className="text-slate-600">Không tìm thấy biên bản trả phòng.</p>
-                  )}
-                </div>
+              ) : (
+                <p className="text-slate-600">Không tìm thấy biên bản trả phòng.</p>
               )}
             </div>
           )}
@@ -286,10 +257,7 @@ export const ViewCheckoutRequest = () => {
   };
 
  return (
-    <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 px-6">
-      <CustomerSidebar />
-
-      <section className="md:col-span-9 space-y-8">
+    <section className="space-y-8">
         <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
@@ -436,6 +404,5 @@ export const ViewCheckoutRequest = () => {
           </div>
         )}
       </section>
-    </div>
   );
 };

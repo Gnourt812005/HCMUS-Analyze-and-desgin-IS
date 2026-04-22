@@ -18,7 +18,7 @@ favouriteRoutes.get('/', authMiddleware, async (req: AuthRequest, res) => {
     
     // Get all rooms and dorms
     const rooms = await RoomDB.getAll();
-    const dorms = await DormDB.getAll();
+    const dorms = await DormDB.fetchAll();
 
     // Filter relevant rooms
     const favoritedRooms = rooms.filter(r => roomIds.includes(r.id!));

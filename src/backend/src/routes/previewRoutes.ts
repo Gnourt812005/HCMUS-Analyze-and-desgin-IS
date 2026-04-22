@@ -8,7 +8,7 @@ import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
 
 // Helper function to extract Room and Dorm details
 async function getRoomAndDormInfo(roomId: string) {
-  const dorms = await DormDB.getAll();
+  const dorms = await DormDB.fetchAll();
   for (const dorm of dorms) {
     if (!dorm.id) continue;
     const rooms = await RoomDB.getByDormId(dorm.id);

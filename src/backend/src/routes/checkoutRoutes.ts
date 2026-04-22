@@ -50,7 +50,7 @@ checkoutRouter.get('/:id/details', async (req: Request, res: Response) => {
 
 checkoutRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const { userCCCD, contractId, expectedDate, documentUrl } = req.body;
+    const { userCCCD, contractId, expectedDate} = req.body;
 
     if (!userCCCD || !contractId || !expectedDate) {
       res.status(400).json({ message: 'userCCCD, contractId và expectedDate là bắt buộc.' });
@@ -77,8 +77,7 @@ checkoutRouter.post('/', async (req: Request, res: Response) => {
     const createResult = await CheckoutRequest.createWithDuplicateCheck({
       userCCCD,
       contractId,
-      expectedDate,
-      documentUrl
+      expectedDate
     });
 
     if (!createResult.success) {
@@ -137,7 +136,7 @@ checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
 
 checkoutRouter.patch('/:id/complete-liquidation', async (req: Request, res: Response) => {
   try {
-    const { checkoutDocumentUrl, liquidationDocumentUrl, status, expectedStatus } = req.body;
+    const {liquidationDocumentUrl, status, expectedStatus } = req.body;
 
     const request = await CheckoutRequest.getById(req.params.id);
     if (!request) {
@@ -149,10 +148,6 @@ checkoutRouter.patch('/:id/complete-liquidation', async (req: Request, res: Resp
     const success = await CheckoutRequest.updateStatus(req.params.id, targetStatus, expectedStatus as CheckoutStatus | undefined);
     if (!success) {
       throw new Error('Yêu cầu đã được cập nhật bởi quản trị viên khác. Vui lòng làm mới và thử lại.');
-    }
-
-    if (checkoutDocumentUrl) {
-      await CheckoutRequestDB.updateDocuments(req.params.id, checkoutDocumentUrl);
     }
 
     if (request.contractId) {

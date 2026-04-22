@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ApiClient } from '../../api/ApiClient';
 import { DormDTO, CreateDormDTO, UpdateDormDTO } from '@dormarch/shared';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 export const AdminDormDetail = () => {
     const { id } = useParams<{ id: string }>();

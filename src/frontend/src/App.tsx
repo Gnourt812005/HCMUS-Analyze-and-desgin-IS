@@ -14,6 +14,8 @@ import { RentalPayment } from './pages/RentalPayment';
 import {FavouriteManagement} from "./pages/FavouriteManagement";
 import {PreviewFormManagement} from "./pages/PreviewFormManagement";
 import {ClientPreviewFormManagement} from "./pages/ClientPreviewFormManagement";
+import { ViewCheckoutRequest } from './pages/ViewCheckoutRequest';
+import { CreateCheckoutRequest } from './pages/CreateCheckoutRequest';
 
 import { UserLayout } from './components/UserLayout';
 import { AccountLayout } from './components/AccountLayout';
@@ -54,7 +56,8 @@ function App() {
             <Route path="client-preview-form-managements" element={<ClientPreviewFormManagement />} />
             <Route path="orders" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Đơn hàng sẽ sớm ra mắt</div>} />
             <Route path="contracts" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Hợp đồng sẽ sớm ra mắt</div>} />
-            <Route path="checkout-requests" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Yêu cầu trả phòng sẽ sớm ra mắt</div>} />
+            <Route path="checkout-requests" element={<ViewCheckoutRequest />} />
+            <Route path="create-checkout-request" element={<CreateCheckoutRequest />} />
           </Route>
         </Route>
 
