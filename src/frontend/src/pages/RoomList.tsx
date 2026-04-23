@@ -11,7 +11,6 @@ export interface Room {
   dormId: string;
   name: string;
   block: string;
-  tower: string;
   floor: number;
   price: number;
   totalBeds: number;
@@ -127,7 +126,6 @@ export const RoomList = () => {
             dormId: selectedRoomData.dormId,
             name: selectedRoomData.name,
             block: selectedRoomData.block,
-            tower: selectedRoomData.tower,
             floor: selectedRoomData.floor,
             price: selectedRoomData.price,
             totalBeds: selectedRoomData.totalBeds,
@@ -154,9 +152,11 @@ export const RoomList = () => {
         }));
 
         try {
-            await ApiClient.post(`/rooms/${roomId}/favorite`, {
-                body: JSON.stringify({ action: increment ? 'increase' : 'decrease' }),
-            });
+            if (increment) {
+                await ApiClient.post(`/favourites/${roomId}`);
+            } else {
+                await ApiClient.delete(`/favourites/${roomId}`);
+            }
         } catch (error) {
             console.error("Failed to toggle favorite", error);
             // Revert on error
@@ -550,7 +550,7 @@ export const RoomList = () => {
                                         <h2 className="mb-2 text-2xl font-bold text-slate-800">Phòng {selectedRoomDetail.name}</h2>
                                         <div className="flex items-center gap-2 text-slate-600 font-medium">
                                             <Building2 className="h-4 w-4 text-blue-600" />
-                                            <span>Tòa {selectedRoomDetail.tower} - Block {selectedRoomDetail.block}</span>
+                                            <span>Block {selectedRoomDetail.block}</span>
                                         </div>
                                     </div>
                                     <div className="text-right">

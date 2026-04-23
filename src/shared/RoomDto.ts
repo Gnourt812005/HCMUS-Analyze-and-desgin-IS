@@ -14,7 +14,6 @@ export interface RoomDetailDTO {
   dormId: string;
   name: string;
   block: string;
-  tower: string;
   floor: number;
   price: number;
   totalBeds: number;
