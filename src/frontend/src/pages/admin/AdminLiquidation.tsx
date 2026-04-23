@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ApiClient } from '../../api/ApiClient';
 import { CheckoutRequestDTO, ContractDTO, RefundCalculationDTO, CheckoutStatus } from '@dormarch/shared';
@@ -15,8 +15,6 @@ export const AdminLiquidation = () => {
   const [checkoutRequest, setCheckoutRequest] = useState<CheckoutRequestDTO | null>(null);
   const [contract, setContract] = useState<ContractDTO | null>(null);
   const [calculation, setCalculation] = useState<RefundCalculationDTO | null>(null);
-  const [checkoutDocumentFile, setCheckoutDocumentFile] = useState<File | null>(null);
-  const [checkoutDocumentName, setCheckoutDocumentName] = useState('');
 
   // Load data on mount
   useEffect(() => {
@@ -80,52 +78,15 @@ export const AdminLiquidation = () => {
     }
   };
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    if (!file) {
-      setCheckoutDocumentFile(null);
-      setCheckoutDocumentName('');
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Tệp quá lớn (tối đa 10MB). Vui lòng chọn tệp khác.');
-      return;
-    }
-
-    const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    if (!validTypes.includes(file.type)) {
-      setError('Loại tệp không được hỗ trợ. Vui lòng chọn PDF, JPG, PNG, DOC hoặc DOCX.');
-      return;
-    }
-
-    setCheckoutDocumentFile(file);
-    setCheckoutDocumentName(file.name);
-    setError(null);
-  };
-
   const handleFinalizeLiquidation = async () => {
     if (!checkoutRequest) return;
-
-    if (!checkoutDocumentFile) {
-      setError('Vui lòng tải lên biên bản trả phòng.');
-      return;
-    }
 
     try {
       setFinalizing(true);
       setError(null);
 
-      const checkoutDocumentUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(checkoutDocumentFile!);
-      });
-
       await ApiClient.patch(`/checkout-requests/${checkoutRequest.requestId}/complete-liquidation`, {
         body: JSON.stringify({
-          checkoutDocumentUrl,
           status: CheckoutStatus.LIQUIDATED,
           expectedStatus: checkoutRequest.status
         })
@@ -277,39 +238,6 @@ export const AdminLiquidation = () => {
             {calculation.notes || 'Không có ghi chú.'}
           </p>
         </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200 space-y-4">
-        <div>
-          <h2 className="text-lg font-bold text-slate-900">Tải lên biên bản trả phòng</h2>
-          <p className="text-sm text-slate-500 mt-1">Vui lòng tải lên biên bản trả phòng để hoàn tất thanh lý.</p>
-        </div>
-
-        <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:border-blue-400 hover:bg-blue-50 transition-all">
-          <input
-            id="checkout-document-upload"
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          <label htmlFor="checkout-document-upload" className="cursor-pointer block">
-            <span className="material-symbols-outlined text-3xl text-blue-500 mb-2">cloud_upload</span>
-            <div className="text-sm font-semibold text-slate-700 mb-1">
-              {checkoutDocumentName || 'Chọn tệp biên bản trả phòng'}
-            </div>
-            <div className="text-xs text-slate-500">
-              PDF, JPG, PNG, DOC, DOCX (tối đa 10MB)
-            </div>
-          </label>
-        </div>
-
-        {checkoutDocumentName && (
-          <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
-            <span className="material-symbols-outlined text-base">check_circle</span>
-            <span>{checkoutDocumentName}</span>
-          </div>
-        )}
       </div>
 
       <div className="flex gap-3">

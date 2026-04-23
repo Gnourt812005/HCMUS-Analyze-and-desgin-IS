@@ -50,10 +50,10 @@ checkoutRouter.get('/:id/details', async (req: Request, res: Response) => {
 
 checkoutRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const { userCCCD, contractId, expectedDate} = req.body;
+    const { userEmail, contractId, expectedDate} = req.body;
 
-    if (!userCCCD || !contractId || !expectedDate) {
-      res.status(400).json({ message: 'userCCCD, contractId và expectedDate là bắt buộc.' });
+    if (!userEmail || !contractId || !expectedDate) {
+      res.status(400).json({ message: 'userEmail, contractId và expectedDate là bắt buộc.' });
       return;
     }
 
@@ -68,14 +68,14 @@ checkoutRouter.post('/', async (req: Request, res: Response) => {
       return;
     }
 
-    if (contract.userCCCD !== userCCCD) {
+    if (contract.userEmail !== userEmail) {
       res.status(400).json({ message: 'Hợp đồng không thuộc về khách hàng này.' });
       return;
     }
 
     // Use atomic insert-with-check to prevent race condition with concurrent requests
     const createResult = await CheckoutRequest.createWithDuplicateCheck({
-      userCCCD,
+      userEmail,
       contractId,
       expectedDate
     });
@@ -136,7 +136,7 @@ checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
 
 checkoutRouter.patch('/:id/complete-liquidation', async (req: Request, res: Response) => {
   try {
-    const {liquidationDocumentUrl, status, expectedStatus } = req.body;
+    const { status, expectedStatus } = req.body;
 
     const request = await CheckoutRequest.getById(req.params.id);
     if (!request) {
@@ -151,9 +151,6 @@ checkoutRouter.patch('/:id/complete-liquidation', async (req: Request, res: Resp
     }
 
     if (request.contractId) {
-      if (liquidationDocumentUrl) {
-        await ContractDB.updateLiquidationUrl(request.contractId, liquidationDocumentUrl);
-      }
       await ContractDB.updateStatus(request.contractId, ContractStatus.LIQUIDATED);
       const contract = await Contract.getByContractId(request.contractId);
       // if (contract?.roomId) {

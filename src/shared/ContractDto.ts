@@ -15,6 +15,5 @@ export interface ContractDTO {
   depositAmount?: number;
   status?: ContractStatus;
   signatureUrl?: string;
-  liquidationUrl?: string;
   createdAt?: string;
 }

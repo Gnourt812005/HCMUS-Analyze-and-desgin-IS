@@ -15,7 +15,7 @@ export const AdminCheckout = () => {
 
   // Form create
   const [createForm, setCreateForm] = useState({
-    userCCCD: '',
+    userEmail: '',
     contractId: '',
     expectedDate: '',
   });
@@ -87,7 +87,7 @@ export const AdminCheckout = () => {
     e.preventDefault();
     
     // Validation
-    if (!createForm.userCCCD || !createForm.contractId || !createForm.expectedDate) {
+    if (!createForm.userEmail || !createForm.contractId || !createForm.expectedDate) {
       setError('Vui lòng điền đầy đủ thông tin và chọn hợp đồng.');
       return;
     }
@@ -95,7 +95,7 @@ export const AdminCheckout = () => {
     try {
       const newRequest = await ApiClient.post<CheckoutRequestDTO>('/checkout-requests', {
         body: JSON.stringify({
-          userCCCD: createForm.userCCCD,
+          userEmail: createForm.userEmail,
           contractId: createForm.contractId,
           expectedDate: createForm.expectedDate,
         })
@@ -105,7 +105,7 @@ export const AdminCheckout = () => {
       setCheckoutRequests([...checkoutRequests, newRequest]);
       
       setShowCreateModal(false);
-      setCreateForm({ userCCCD: '', contractId: '', expectedDate: '' });
+      setCreateForm({ userEmail: '', contractId: '', expectedDate: '' });
       setSearchingUser(false);
       setUserSearchError(null);
       setSearchedUser(null);
@@ -118,8 +118,8 @@ export const AdminCheckout = () => {
   };
 
   const handleSearchUser = async () => {
-    if (!createForm.userCCCD) {
-      setUserSearchError('Vui lòng nhập CCCD khách hàng để tìm kiếm.');
+    if (!createForm.userEmail) {
+      setUserSearchError('Vui lòng nhập Email khách hàng để tìm kiếm.');
       return;
     }
 
@@ -131,7 +131,7 @@ export const AdminCheckout = () => {
 
     try {
       const response = await ApiClient.get<{ user: UserProfileDTO | null; contracts: ContractDTO[] }>(
-        `/contracts/active-by-user/${encodeURIComponent(createForm.userCCCD)}`
+        `/contracts/active-by-user/${encodeURIComponent(createForm.userEmail)}`
       );
 
       if (!response.user) {
@@ -249,7 +249,7 @@ export const AdminCheckout = () => {
 
   const filtered = useMemo(() => checkoutRequests.filter(r => {
     const kw = keyword.toLowerCase();
-    const matchKw = !keyword || r.requestId.toLowerCase().includes(kw) || r.userCCCD.toLowerCase().includes(kw) || r.contractId.toLowerCase().includes(kw);
+    const matchKw = !keyword || r.requestId.toLowerCase().includes(kw) || r.userEmail.toLowerCase().includes(kw) || r.contractId.toLowerCase().includes(kw);
     const matchStatus = statusFilter === 'all' || r.status === statusFilter;
     return matchKw && matchStatus;
   }), [checkoutRequests, keyword, statusFilter]);
@@ -317,7 +317,7 @@ export const AdminCheckout = () => {
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
           <input
             type="text"
-            placeholder="Tìm theo mã yêu cầu, CCCD, hợp đồng..."
+            placeholder="Tìm theo mã yêu cầu, Email, hợp đồng..."
             value={keyword}
             onChange={e => setKeyword(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-slate-50 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
@@ -354,7 +354,7 @@ export const AdminCheckout = () => {
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
                 <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Mã YC</th>
-                <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Khách hàng / CCCD</th>
+              <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Khách hàng / Email</th>
                 <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Hợp đồng</th>
                 <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Tài chính</th>
                 <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Lịch trình</th>
@@ -371,7 +371,7 @@ export const AdminCheckout = () => {
                 >
                   <td className="px-5 py-4 font-bold text-blue-700">{request.requestId}</td>
                   <td className="px-5 py-4">
-                    <p className="font-semibold text-slate-800">{request.userCCCD}</p>
+                  <p className="font-semibold text-slate-800">{request.userEmail}</p>
                   </td>
                   <td className="px-5 py-4">
                     <p className="font-medium text-slate-700">{request.contractId}</p>
@@ -429,24 +429,24 @@ export const AdminCheckout = () => {
             <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
               <div className="space-y-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
-                  CCCD khách hàng *
+                Email khách hàng *
                 </label>
                 <div className="flex gap-2 items-center">
                   <input
                     type="text"
-                    value={createForm.userCCCD}
+                  value={createForm.userEmail}
                     onChange={(e) => {
-                      setCreateForm({ ...createForm, userCCCD: e.target.value, contractId: '' });
+                    setCreateForm({ ...createForm, userEmail: e.target.value, contractId: '' });
                       setSearchedUser(null);
                       setAvailableContracts([]);
                       setUserSearchError(null);
                     }}
-                    placeholder="Nhập CCCD..."
+                  placeholder="Nhập Email..."
                     className="flex-1 bg-slate-50 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                   />
                   <button
                     type="button"
-                    disabled={!createForm.userCCCD || searchingUser}
+                  disabled={!createForm.userEmail || searchingUser}
                     onClick={handleSearchUser}
                     className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-5 py-3 rounded-lg transition-all disabled:opacity-50"
                   >
@@ -465,8 +465,8 @@ export const AdminCheckout = () => {
                     <p className="font-bold text-slate-800">{searchedUser.fullName || 'Không rõ tên'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">CCCD</p>
-                    <p className="font-bold text-slate-800">{searchedUser.cccd}</p>
+                  <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">Email</p>
+                  <p className="font-bold text-slate-800">{searchedUser.email}</p>
                   </div>
                 </div>
               )}
@@ -519,7 +519,7 @@ export const AdminCheckout = () => {
               <button
                 onClick={() => {
                   setShowCreateModal(false);
-                  setCreateForm({ userCCCD: '', contractId: '', expectedDate: '' });
+                setCreateForm({ userEmail: '', contractId: '', expectedDate: '' });
                   setSearchingUser(false);
                   setUserSearchError(null);
                   setSearchedUser(null);
@@ -566,8 +566,8 @@ export const AdminCheckout = () => {
             <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
               <div className="grid grid-cols-2 gap-x-8 gap-y-4 bg-slate-50 rounded-xl p-5 border border-slate-100">
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Khách hàng / CCCD</span>
-                  <span className="text-sm font-semibold text-slate-800">{selectedRequest.userCCCD}</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Khách hàng / Email</span>
+                  <span className="text-sm font-semibold text-slate-800">{selectedRequest.userEmail}</span>
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Hợp đồng</span>
@@ -620,7 +620,7 @@ export const AdminCheckout = () => {
               ) : (
                 <div className="flex flex-col items-center justify-center p-8 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-slate-400">
                   <span className="material-symbols-outlined text-4xl mb-2">receipt_long</span>
-                  <span className="text-sm font-medium">Chưa có bảng đối soát / hoàn cọc</span>
+                  <span className="text-sm font-medium">Chưa có bảng đối soát</span>
                 </div>
               )}
             </div>

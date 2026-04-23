@@ -86,8 +86,8 @@ export const ViewCheckoutRequest = () => {
       
       if (abortController.signal.aborted) return;
       
-      const filteredRequests = profileData.cccd
-        ? allRequests.filter((request) => request.userCCCD === profileData.cccd)
+      const filteredRequests = profileData.email
+        ? allRequests.filter((request) => request.userEmail === profileData.email)
         : [];
 
       setCheckoutRequests(filteredRequests);
@@ -332,7 +332,6 @@ export const ViewCheckoutRequest = () => {
                 ) : requestDetail?.refund ? (
                   <div>
                     <div className="flex items-center gap-3 mb-4">
-                      <span className="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center flex-shrink-0">1</span>
                       <h3 className="text-sm font-black uppercase tracking-wider text-slate-700">Bảng tính đối soát</h3>
                       <div className="flex-1 h-px bg-slate-200" />
                     </div>
@@ -367,30 +366,10 @@ export const ViewCheckoutRequest = () => {
                 ) : (selectedRequest.status === CheckoutStatus.PROCESSING || selectedRequest.status === CheckoutStatus.PENDING_LIQUIDATION || selectedRequest.status === CheckoutStatus.LIQUIDATED) ? (
                   <div className="flex flex-col items-center justify-center p-8 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-slate-400">
                     <span className="material-symbols-outlined text-4xl mb-2">receipt_long</span>
-                    <span className="text-sm font-medium">Quản lý chưa lập bảng đối soát</span>
+                    <span className="text-sm font-medium">Chưa có bảng đối soát</span>
                   </div>
                 ) : null}
 
-                {selectedRequest.status === CheckoutStatus.LIQUIDATED && requestDetail?.contract?.liquidationUrl && (
-                  <div>
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="w-7 h-7 rounded-full bg-emerald-600 text-white text-xs font-black flex items-center justify-center flex-shrink-0">2</span>
-                      <h3 className="text-sm font-black uppercase tracking-wider text-slate-700">Biên bản trả phòng</h3>
-                      <div className="flex-1 h-px bg-slate-200" />
-                    </div>
-                    <div className="pl-10">
-                      <a
-                        href={requestDetail.contract.liquidationUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center rounded-xl bg-blue-50 text-blue-700 border border-blue-200 px-5 py-3 text-sm font-bold hover:bg-blue-100 transition-colors gap-2"
-                      >
-                        <span className="material-symbols-outlined text-lg">description</span>
-                        Xem biên bản trả phòng
-                      </a>
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div className="flex items-center justify-between px-7 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl">

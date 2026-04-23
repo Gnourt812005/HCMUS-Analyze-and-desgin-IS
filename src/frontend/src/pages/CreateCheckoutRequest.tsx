@@ -49,20 +49,10 @@ export const CreateCheckoutRequest = () => {
       
       setProfile(profileData);
 
-      // Load all contracts for the customer
-      const allContracts = await ApiClient.get<ContractDTO[]>('/contracts');
+      const activeContracts = await ApiClient.get<ContractDTO[]>('/contracts');
       
       if (abortController.signal.aborted) return;
-      
-      // Filter active contracts for this customer
-      if (profileData.cccd) {
-        const customerContracts = allContracts.filter(
-          (contract: ContractDTO) => 
-            contract.userCCCD === profileData.cccd && 
-            contract.status === 'ACTIVE'
-        );
-        setActiveContracts(customerContracts);
-      }
+      setActiveContracts(activeContracts);
     } catch (err) {
       if (!abortController.signal.aborted) {
         setError(
@@ -124,7 +114,7 @@ export const CreateCheckoutRequest = () => {
 
       await ApiClient.post<CheckoutRequestDTO>('/checkout-requests', {
         body: JSON.stringify({
-          userCCCD: profile.cccd,
+          userEmail: profile.email,
           contractId: form.contractId,
           expectedDate: form.expectedDate,
         })
