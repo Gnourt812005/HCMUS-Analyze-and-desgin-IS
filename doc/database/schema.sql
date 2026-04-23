@@ -1,10 +1,16 @@
--- =========================================================
--- DORM ARCH SYSTEM - DATABASE SCHEMA (PostgreSQL)
--- Standardized to snake_case, relational integrity, and UUIDs
--- =========================================================
-
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- 0. CUSTOM TYPES (ENUMS)
+CREATE TYPE user_role_type AS ENUM ('GUEST', 'MANAGER', 'SALE_STAFF', 'ADMIN');
+CREATE TYPE dorm_room_status_type AS ENUM ('AVAILABLE', 'FULL', 'NEARLY_FULL');
+CREATE TYPE utility_type AS ENUM ('ROOM', 'DORM', 'BED');
+CREATE TYPE utility_status_type AS ENUM ('GOOD', 'BROKEN', 'MAINTAINED');
+CREATE TYPE bed_status_type AS ENUM ('AVAILABLE', 'DEPOSITED', 'BOOKED');
+CREATE TYPE form_status_type AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED');
+CREATE TYPE rental_type AS ENUM ('DEPOSIT', 'FULL');
+CREATE TYPE payment_method_type AS ENUM ('QR', 'TRANSFER');
+CREATE TYPE payment_status_type AS ENUM ('PENDING', 'SUCCESS', 'FAILED', 'TIMEOUT');
+CREATE TYPE contract_status_type AS ENUM ('ACTIVE', 'TERMINATED', 'LIQUIDATED');
+CREATE TYPE handover_type AS ENUM ('IN', 'OUT');
+CREATE TYPE checkout_status_type AS ENUM ('PENDING', 'PROCESSING', 'LIQUIDATED', 'CANCELLED');
 
 -- 1. USERS & ROLES
 CREATE TABLE users (
@@ -16,7 +22,7 @@ CREATE TABLE users (
     gender VARCHAR(10),
     phone VARCHAR(15),
     address TEXT,
-    role VARCHAR(20) DEFAULT 'GUEST', -- GUEST, MANAGER, SALE_STAFF, ADMIN
+    role user_role_type DEFAULT 'GUEST',
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -35,7 +41,7 @@ CREATE TABLE dorms (
     name VARCHAR(255) NOT NULL,
     address TEXT NOT NULL,
     phone VARCHAR(15),
-    status VARCHAR(20) DEFAULT 'AVAILABLE', -- AVAILABLE, FULL, NEARLY_FULL 
+    status dorm_room_status_type DEFAULT 'AVAILABLE',
     total_rooms INTEGER DEFAULT 0,
     available_rooms INTEGER DEFAULT 0,
     manager_id VARCHAR(255) REFERENCES users(email),
@@ -56,7 +62,7 @@ CREATE TABLE dorm_fees (
 CREATE TABLE utilities (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title VARCHAR(255) NOT NULL,
-    type VARCHAR(20), -- ROOM, DORM, BED
+    type utility_type,
     is_liable BOOLEAN DEFAULT FALSE,
     incurred_price NUMERIC(12, 2) DEFAULT 0
 );
@@ -64,7 +70,7 @@ CREATE TABLE utilities (
 CREATE TABLE dorm_utilities (
     dorm_id UUID REFERENCES dorms(id) ON DELETE CASCADE,
     utility_id UUID REFERENCES utilities(id) ON DELETE CASCADE,
-    status VARCHAR(20) DEFAULT 'GOOD', -- GOOD, BROKEN, MAINTAINED
+    status utility_status_type DEFAULT 'GOOD',
     PRIMARY KEY (dorm_id, utility_id)
 );
 
@@ -75,7 +81,7 @@ CREATE TABLE rooms (
     name VARCHAR(50) NOT NULL, -- Room number/name (e.g., A101)
     block VARCHAR(50),
     floor INTEGER,
-    status VARCHAR(20) DEFAULT 'AVAILABLE', -- AVAILABLE, FULL, NEARLY_FULL 
+    status dorm_room_status_type DEFAULT 'AVAILABLE',
     total_beds INTEGER DEFAULT 0,
     available_beds INTEGER DEFAULT 0,
     image_url TEXT,
@@ -94,7 +100,7 @@ CREATE TABLE beds (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     room_id UUID REFERENCES rooms(id) ON DELETE CASCADE,
     bed_number VARCHAR(10) NOT NULL,
-    status VARCHAR(20) DEFAULT 'AVAILABLE', -- AVAILABLE, DEPOSITED, BOOKED
+    status bed_status_type DEFAULT 'AVAILABLE',
     price NUMERIC(12, 2) DEFAULT 0
 );
 
@@ -111,7 +117,7 @@ CREATE TABLE preview_forms (
     user_email VARCHAR(255) REFERENCES users(email),
     room_id UUID REFERENCES rooms(id),
     preview_date TIMESTAMPTZ NOT NULL,
-    status VARCHAR(20) DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED, CANCELLED
+    status form_status_type DEFAULT 'PENDING',
     staff_email VARCHAR(255) REFERENCES users(email),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -123,7 +129,7 @@ CREATE TABLE rental_forms (
     deadline TIMESTAMPTZ,
     total_amount NUMERIC(12, 2) DEFAULT 0,
     deposit_form_id UUID REFERENCES rental_forms(id),
-    type VARCHAR(20), -- DEPOSIT, FULL
+    type rental_type,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -137,9 +143,9 @@ CREATE TABLE rental_form_beds (
 CREATE TABLE payments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     rental_form_id UUID REFERENCES rental_forms(id),
-    method VARCHAR(20), -- QR, TRANSFER
+    method payment_method_type,
     amount NUMERIC(12, 2) NOT NULL,
-    status VARCHAR(20) DEFAULT 'PENDING', -- PENDING, SUCCESS, FAILED, TIMEOUT
+    status payment_status_type DEFAULT 'PENDING',
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -150,7 +156,7 @@ CREATE TABLE contracts (
     start_date DATE NOT NULL,
     stay_duration INTEGER, -- In months
     rental_form_id UUID REFERENCES rental_forms(id),
-    status VARCHAR(20) DEFAULT 'ACTIVE', -- ACTIVE, TERMINATED, LIQUIDATED
+    status contract_status_type DEFAULT 'ACTIVE',
     signature_url TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -165,7 +171,7 @@ CREATE TABLE contract_beds (
 CREATE TABLE handovers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     contract_id UUID REFERENCES contracts(id) ON DELETE CASCADE,
-    type VARCHAR(10), -- IN, OUT
+    type handover_type,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -183,7 +189,7 @@ CREATE TABLE checkout_requests (
     user_email VARCHAR(255) REFERENCES users(email),
     contract_id UUID REFERENCES contracts(id),
     expected_date DATE NOT NULL,
-    status VARCHAR(30) DEFAULT 'PENDING', -- PENDING, PROCESSING, LIQUIDATED, CANCELLED
+    status checkout_status_type DEFAULT 'PENDING',
     handover_id UUID REFERENCES handovers(id),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -200,3 +206,14 @@ CREATE TABLE refund_calculations (
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 15. INDEXES
+CREATE INDEX idx_dorms_manager ON dorms(manager_id);
+CREATE INDEX idx_rooms_dorm_id ON rooms(dorm_id);
+CREATE INDEX idx_beds_room_id ON beds(room_id);
+CREATE INDEX idx_preview_forms_user ON preview_forms(user_email);
+CREATE INDEX idx_rental_forms_user ON rental_forms(user_email);
+CREATE INDEX idx_payments_rental_form ON payments(rental_form_id);
+CREATE INDEX idx_contracts_user ON contracts(user_email);
+CREATE INDEX idx_checkout_requests_user ON checkout_requests(user_email);
+CREATE INDEX idx_refund_calculations_request ON refund_calculations(request_id);

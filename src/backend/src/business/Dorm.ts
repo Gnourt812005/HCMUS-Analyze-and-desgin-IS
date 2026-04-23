@@ -40,7 +40,7 @@ export class Dorm {
     if (keyword) {
       dorms = await DormDB.fetchByKeyword(keyword);
     } else {
-      dorms = await DormDB.fetchAll();
+      dorms = await DormDB.getAll();
     }
     return dorms.map(d => d.toDTO());
   }

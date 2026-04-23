@@ -44,7 +44,7 @@ export class DormDB {
     },
   ];
 
-  static async fetchAll(): Promise<Dorm[]> {
+  static async getAll(): Promise<Dorm[]> {
     return this.MOCK_DORMS.map(d => new Dorm(d));
   }
 
