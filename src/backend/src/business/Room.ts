@@ -3,7 +3,6 @@ export class Room {
   dormId: string;
   name: string;
   block: string;
-  tower: string;
   floor: number;
   price: number;
   totalBeds: number;
@@ -18,7 +17,6 @@ export class Room {
     this.dormId = data.dormId || '';
     this.name = data.name || '';
     this.block = data.block || '';
-    this.tower = data.tower || '';
     this.floor = data.floor || 0;
     this.price = data.price || 0;
     this.totalBeds = data.totalBeds || 0;

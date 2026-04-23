@@ -4,7 +4,7 @@ export class PreviewForm {
   userId: string;
   previewDatetime: string;
   createdDatetime: string;
-  status: 'complete' | 'canceled' | 'ongoing';
+  status: 'pending' | 'rejected' | 'approved' | 'canceled';
   staffId: string | null;
 
   constructor(data: Partial<PreviewForm>) {
@@ -13,7 +13,7 @@ export class PreviewForm {
     this.userId = data.userId || '';
     this.previewDatetime = data.previewDatetime || '';
     this.createdDatetime = data.createdDatetime || new Date().toISOString();
-    this.status = data.status || 'ongoing';
+    this.status = data.status || 'pending';
     this.staffId = data.staffId || null;
   }
 }
