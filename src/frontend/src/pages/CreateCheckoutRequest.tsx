@@ -15,13 +15,18 @@ export const CreateCheckoutRequest = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
   const [selectedContractDetails, setSelectedContractDetails] = useState<ContractDTO | null>(null);
 
   const [form, setForm] = useState<CheckoutForm>({
     contractId: '',
     expectedDate: '',
   });
+
+  const showSuccess = (msg: string) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -125,11 +130,11 @@ export const CreateCheckoutRequest = () => {
         })
       });
 
-      setSuccess(true);
-
+      showSuccess('Gửi yêu cầu thành công!');
+      setForm({ contractId: '', expectedDate: '' });
       setTimeout(() => {
         navigate('/checkout-requests');
-      }, 2000);
+      }, 1500);
 
     } catch (err) {
       setError(
@@ -154,6 +159,22 @@ export const CreateCheckoutRequest = () => {
 
   return (
     <section className="space-y-6">
+        {successMsg && (
+          <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
+            <span className="material-symbols-outlined text-lg">check_circle</span>
+            <span className="text-sm font-semibold">{successMsg}</span>
+          </div>
+        )}
+        {error && (
+          <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-red-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
+            <span className="material-symbols-outlined text-lg">error</span>
+            <span className="text-sm font-semibold">{error}</span>
+            <button onClick={() => setError(null)} className="ml-2 hover:text-red-200 transition-colors p-1 flex items-center justify-center">
+              <span className="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+        )}
+
         <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
           <div className="flex items-start justify-between gap-4 mb-2">
             <div>
@@ -166,32 +187,8 @@ export const CreateCheckoutRequest = () => {
           </p>
         </div>
 
-        {success && (
-          <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
-            <div className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-green-600 mt-0.5">check_circle</span>
-              <div>
-                <p className="font-semibold text-green-900">Gửi yêu cầu thành công!</p>
-                <p className="text-sm text-green-700 mt-1">Yêu cầu trả phòng của bạn đã được ghi nhận vào hệ thống. Bạn sẽ được chuyển hướng đến danh sách yêu cầu...</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {error && !success && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-            <div className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-red-600 mt-0.5">error</span>
-              <div>
-                <p className="font-semibold text-red-900">Có lỗi xảy ra</p>
-                <p className="text-sm text-red-700 mt-1">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {!loading && activeContracts.length === 0 && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
             <div className="flex items-start gap-3">
               <span className="material-symbols-outlined text-amber-600 mt-0.5">info</span>
               <div>
@@ -220,7 +217,7 @@ export const CreateCheckoutRequest = () => {
                 {activeContracts.map((contract) => (
                   <label
                     key={contract.contractId}
-                    className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                    className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
                       form.contractId === contract.contractId
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-slate-200 bg-slate-50 hover:border-slate-300'
@@ -267,7 +264,7 @@ export const CreateCheckoutRequest = () => {
                   type="date"
                   value={form.expectedDate}
                   onChange={(e) => setForm({ ...form, expectedDate: e.target.value })}
-                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all"
                   required
                 />
                 <p className="text-xs text-slate-500 mt-2">Ngày trả phòng phải là ngày trong tương lai</p>
@@ -278,21 +275,21 @@ export const CreateCheckoutRequest = () => {
               <div className="border-t border-slate-200 pt-6 space-y-4">
                 <h3 className="text-sm font-semibold text-slate-700">Thông tin chi tiết hợp đồng</h3>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Mã hợp đồng</p>
                     <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.contractId}</p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Phòng/Giường</p>
                     <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.roomId}</p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Số tiền cọc</p>
                     <p className="mt-2 text-sm font-semibold text-slate-900">
                       {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedContractDetails.depositAmount || 0)}
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Thời hạn</p>
                     <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.stayDuration} tháng</p>
                   </div>
@@ -304,14 +301,14 @@ export const CreateCheckoutRequest = () => {
               <button
                 type="button"
                 onClick={() => navigate('/checkout-requests')}
-                className="rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                className="rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 Hủy
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
+                className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
               >
                 {submitting ? 'Đang gửi yêu cầu...' : 'Gửi yêu cầu'}
               </button>

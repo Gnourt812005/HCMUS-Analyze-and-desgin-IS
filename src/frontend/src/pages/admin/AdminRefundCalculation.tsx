@@ -34,7 +34,7 @@ export const AdminRefundCalculation = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
 
   const [checkoutRequest, setCheckoutRequest] = useState<CheckoutRequestDTO | null>(null);
   const [contract, setContract] = useState<ContractDTO | null>(null);
@@ -66,6 +66,11 @@ export const AdminRefundCalculation = () => {
       abortController.abort();
     };
   }, [requestId]);
+
+  const showSuccess = (msg: string) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
 
   const loadData = async (abortController: AbortController) => {
     if (!requestId) {
@@ -219,9 +224,14 @@ export const AdminRefundCalculation = () => {
           additionalDeductions.compensationFee +
           additionalDeductions.otherDeductions,
         finalRefundAmount: calculationResult.finalRefundAmount,
-        notes: `${calculationResult.refundRule}. Ghi chú thiệt hại: ${
-          damageInspection.damageSummary || 'Không'
-        }. Ghi chú khoản khác: ${additionalDeductions.otherDeductionsNotes || 'Không'}.`,
+          notes: `[Quy định áp dụng]
+${calculationResult.refundRule}
+
+[Ghi chú thiệt hại]
+${damageInspection.damageSummary || 'Không có'}
+
+[Ghi chú khoản phát sinh khác]
+${additionalDeductions.otherDeductionsNotes || 'Không có'}`,
       };
 
       let savedCalculation: RefundCalculationDTO;
@@ -256,12 +266,10 @@ export const AdminRefundCalculation = () => {
         return;
       }
 
-      setSuccess(true);
-
-      // Redirect after 2 seconds
+      showSuccess('Lưu bảng đối soát thành công!');
       setTimeout(() => {
         navigate('/admin/checkout');
-      }, 2000);
+      }, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Lỗi lưu bảng đối soát');
     } finally {
@@ -283,7 +291,7 @@ export const AdminRefundCalculation = () => {
   if (!checkoutRequest || !contract) {
     return (
       <div className="p-6">
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
           Không tìm thấy yêu cầu hoặc hợp đồng
         </div>
       </div>
@@ -299,37 +307,26 @@ export const AdminRefundCalculation = () => {
         </div>
         <button
           onClick={() => navigate('/admin/checkout')}
-          className="inline-flex items-center justify-center rounded-full bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"
+          className="inline-flex items-center justify-center rounded-xl bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"
         >
           ✕
         </button>
       </div>
 
-      {/* Success Message */}
-      {success && (
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
-          <div className="flex items-start gap-3">
-            <span className="material-symbols-outlined text-green-600 mt-0.5">check_circle</span>
-            <div>
-              <p className="font-semibold text-green-900">Lưu bảng đối soát thành công!</p>
-              <p className="text-sm text-green-700 mt-1">
-                Bảng tính hoàn cọc đã được lưu. Bạn sẽ được quay lại danh sách yêu cầu...
-              </p>
-            </div>
-          </div>
+      {successMsg && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
+          <span className="material-symbols-outlined text-lg">check_circle</span>
+          <span className="text-sm font-semibold">{successMsg}</span>
         </div>
       )}
 
-      {/* Error Message */}
-      {error && !success && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-          <div className="flex items-start gap-3">
-            <span className="material-symbols-outlined text-red-600 mt-0.5">error</span>
-            <div>
-              <p className="font-semibold text-red-900">Có lỗi xảy ra</p>
-              <p className="text-sm text-red-700 mt-1">{error}</p>
-            </div>
-          </div>
+      {error && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-red-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
+          <span className="material-symbols-outlined text-lg">error</span>
+          <span className="text-sm font-semibold">{error}</span>
+          <button onClick={() => setError(null)} className="ml-2 hover:text-red-200 transition-colors p-1 flex items-center justify-center">
+            <span className="material-symbols-outlined text-lg">close</span>
+          </button>
         </div>
       )}
 
@@ -342,25 +339,25 @@ export const AdminRefundCalculation = () => {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs text-slate-500 uppercase">Mã hợp đồng</p>
               <p className="mt-2 text-sm font-semibold text-slate-900">{contract.contractId}</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs text-slate-500 uppercase">Phòng / Giường</p>
               <p className="mt-2 text-sm font-semibold text-slate-900">{contract.roomId}</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs text-slate-500 uppercase">Số tiền cọc</p>
               <p className="mt-2 text-sm font-semibold text-slate-900">
                 {formatCurrency(contract.depositAmount || 0)}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs text-slate-500 uppercase">Thời hạn</p>
               <p className="mt-2 text-sm font-semibold text-slate-900">{contract.stayDuration} tháng</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
               <p className="text-xs text-slate-500 uppercase">Ngày tạo yêu cầu</p>
               <p className="mt-2 text-sm font-semibold text-slate-900">
                 {new Date(checkoutRequest.createdAt).toLocaleDateString('vi-VN')}
@@ -387,7 +384,7 @@ export const AdminRefundCalculation = () => {
               onChange={(e) => setDamageInspection({ ...damageInspection, damageSummary: e.target.value })}
               placeholder="Mô tả chi tiết về những hư hỏng, thiệt hại..."
               rows={3}
-              className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
             />
           </div>
 
@@ -405,7 +402,7 @@ export const AdminRefundCalculation = () => {
                 onChange={(e) =>
                   setDamageInspection({ ...damageInspection, damageAmount: parseFloat(e.target.value) || 0 })
                 }
-                className="flex-1 rounded-2xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                className="flex-1 rounded-xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
               />
             </div>
             <p className="text-xs text-slate-500 mt-1">Nhập số tiền làm hư hỏng (không có định dạng)</p>
@@ -439,7 +436,7 @@ export const AdminRefundCalculation = () => {
                       unpaidRent: parseFloat(e.target.value) || 0,
                     })
                   }
-                  className="flex-1 rounded-2xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                className="flex-1 rounded-xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
                 />
               </div>
             </div>
@@ -459,7 +456,7 @@ export const AdminRefundCalculation = () => {
                       unpaidUtilities: parseFloat(e.target.value) || 0,
                     })
                   }
-                  className="flex-1 rounded-2xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                className="flex-1 rounded-xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
                 />
               </div>
             </div>
@@ -479,7 +476,7 @@ export const AdminRefundCalculation = () => {
                       compensationFee: parseFloat(e.target.value) || 0,
                     })
                   }
-                  className="flex-1 rounded-2xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                className="flex-1 rounded-xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
                 />
               </div>
             </div>
@@ -499,7 +496,7 @@ export const AdminRefundCalculation = () => {
                       otherDeductions: parseFloat(e.target.value) || 0,
                     })
                   }
-                  className="flex-1 rounded-2xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                className="flex-1 rounded-xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
                 />
               </div>
             </div>
@@ -516,7 +513,7 @@ export const AdminRefundCalculation = () => {
                 }
                 placeholder="Mô tả chi tiết khoản khác..."
                 rows={2}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
               />
             </div>
           </div>
@@ -526,7 +523,7 @@ export const AdminRefundCalculation = () => {
           <button
             type="button"
             onClick={calculateRefund}
-            className="rounded-full bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-3 text-sm font-semibold text-white hover:from-blue-700 hover:to-blue-800 transition-all shadow-md"
+          className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-3 text-sm font-semibold text-white hover:from-blue-700 hover:to-blue-800 transition-all shadow-md"
           >
             Tính toán tổng
           </button>
@@ -541,12 +538,12 @@ export const AdminRefundCalculation = () => {
             </h2>
 
             <div className="space-y-3">
-              <div className="flex justify-between items-center rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="flex justify-between items-center rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <span className="text-sm font-semibold text-slate-700">Tiền cọc ban đầu từ hợp đồng</span>
                 <span className="text-lg font-bold text-slate-900">{formatCurrency(calculationResult.initialDeposit)}</span>
               </div>
 
-              <div className="flex justify-between items-center rounded-2xl border border-slate-200 bg-blue-50 p-4">
+            <div className="flex justify-between items-center rounded-xl border border-slate-200 bg-blue-50 p-4">
                 <div>
                   <span className="text-sm font-semibold text-slate-700">Tiền cọc được xét hoàn</span>
                   <p className="text-xs text-slate-500">{calculationResult.refundRule}</p>
@@ -556,12 +553,12 @@ export const AdminRefundCalculation = () => {
                 </span>
               </div>
 
-              <div className="flex justify-between items-center rounded-2xl border border-slate-200 bg-red-50 p-4">
+            <div className="flex justify-between items-center rounded-xl border border-slate-200 bg-red-50 p-4">
                 <span className="text-sm font-semibold text-slate-700">Chi phí hư hỏng</span>
                 <span className="text-lg font-bold text-red-700">- {formatCurrency(calculationResult.damageFee)}</span>
               </div>
 
-              <div className="flex justify-between items-center rounded-2xl border border-slate-200 bg-orange-50 p-4">
+            <div className="flex justify-between items-center rounded-xl border border-slate-200 bg-orange-50 p-4">
                 <span className="text-sm font-semibold text-slate-700">Tổng khoản khác cần khấu trừ</span>
                 <span className="text-lg font-bold text-orange-700">
                   - {formatCurrency(calculationResult.otherDeductionsTotal)}
@@ -570,7 +567,7 @@ export const AdminRefundCalculation = () => {
 
               <div className="border-t-2 border-slate-200 pt-4">
                 <div
-                  className={`flex justify-between items-center rounded-2xl border-2 p-4 ${
+                className={`flex justify-between items-center rounded-xl border-2 p-4 ${
                     calculationResult.customerOwes
                       ? 'border-red-300 bg-red-50'
                       : 'border-green-300 bg-green-50'
@@ -594,7 +591,7 @@ export const AdminRefundCalculation = () => {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm font-semibold text-slate-700 mb-2">Chi tiết khấu trừ</p>
               <ul className="space-y-1 text-sm text-slate-600">
                 <li className="flex justify-between">
@@ -626,14 +623,14 @@ export const AdminRefundCalculation = () => {
           <button
             type="button"
             onClick={() => navigate('/admin/checkout')}
-            className="rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+          className="rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
           >
             Hủy
           </button>
           <button
             type="submit"
             disabled={submitting || !hasCalculated}
-            className="rounded-full bg-green-600 px-6 py-3 text-sm font-semibold text-white hover:bg-green-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
+          className="rounded-xl bg-green-600 px-6 py-3 text-sm font-semibold text-white hover:bg-green-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
           >
             {submitting ? 'Đang lưu...' : 'Lưu'}
           </button>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiClient } from '../api/ApiClient';
 import { CheckoutRequestDTO, CheckoutStatus, UserProfileDTO, ContractDTO, RefundCalculationDTO } from '@dormarch/shared';
@@ -14,42 +14,31 @@ const formatCurrency = (value?: number | null) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number.isNaN(safeValue) ? 0 : safeValue);
 };
 
-const getStatusLabel = (status: CheckoutStatus) => {
-  switch (status) {
-    case CheckoutStatus.PENDING:
-      return 'Chờ xử lý';
-    case CheckoutStatus.PROCESSING:
-      return 'Đang xử lý';
-    case CheckoutStatus.PENDING_LIQUIDATION:
-      return 'Chờ thanh lý';
-    case CheckoutStatus.LIQUIDATED:
-      return 'Đã thanh lý';
-    case CheckoutStatus.CANCELLED:
-      return 'Đã hủy';
-    case CheckoutStatus.REJECTED:
-      return 'Từ chối';
-    default:
-      return status;
-  }
+const STATUS_STYLE: Record<CheckoutStatus, string> = {
+  [CheckoutStatus.PENDING]: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  [CheckoutStatus.PROCESSING]: 'bg-blue-50 text-blue-700 border-blue-200',
+  [CheckoutStatus.PENDING_LIQUIDATION]: 'bg-purple-50 text-purple-700 border-purple-200',
+  [CheckoutStatus.LIQUIDATED]: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  [CheckoutStatus.REJECTED]: 'bg-red-50 text-red-600 border-red-200',
+  [CheckoutStatus.CANCELLED]: 'bg-slate-100 text-slate-500 border-slate-200',
 };
 
-const getStatusBadgeClass = (status: CheckoutStatus) => {
-  switch (status) {
-    case CheckoutStatus.PENDING:
-      return 'bg-yellow-100 text-yellow-800';
-    case CheckoutStatus.PROCESSING:
-      return 'bg-blue-100 text-blue-800';
-    case CheckoutStatus.PENDING_LIQUIDATION:
-      return 'bg-purple-100 text-purple-800';
-    case CheckoutStatus.LIQUIDATED:
-      return 'bg-green-100 text-green-800';
-    case CheckoutStatus.CANCELLED:
-      return 'bg-gray-100 text-gray-800';
-    case CheckoutStatus.REJECTED:
-      return 'bg-red-100 text-red-800';
-    default:
-      return 'bg-slate-100 text-slate-800';
-  }
+const STATUS_DOT: Record<CheckoutStatus, string> = {
+  [CheckoutStatus.PENDING]: 'bg-yellow-500',
+  [CheckoutStatus.PROCESSING]: 'bg-blue-500',
+  [CheckoutStatus.PENDING_LIQUIDATION]: 'bg-purple-500',
+  [CheckoutStatus.LIQUIDATED]: 'bg-emerald-500',
+  [CheckoutStatus.REJECTED]: 'bg-red-500',
+  [CheckoutStatus.CANCELLED]: 'bg-slate-400',
+};
+
+const STATUS_LABEL: Record<CheckoutStatus, string> = {
+  [CheckoutStatus.PENDING]: 'Chờ xử lý',
+  [CheckoutStatus.PROCESSING]: 'Đang xử lý',
+  [CheckoutStatus.PENDING_LIQUIDATION]: 'Chờ thanh lý',
+  [CheckoutStatus.LIQUIDATED]: 'Đã thanh lý',
+  [CheckoutStatus.REJECTED]: 'Từ chối',
+  [CheckoutStatus.CANCELLED]: 'Đã hủy',
 };
 
 export const ViewCheckoutRequest = () => {
@@ -62,6 +51,13 @@ export const ViewCheckoutRequest = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const detailAbortControllerRef = useRef<AbortController | null>(null);
+
+  const stats = useMemo(() => ({
+    total: checkoutRequests.length,
+    pending: checkoutRequests.filter(r => r.status === CheckoutStatus.PENDING).length,
+    processing: checkoutRequests.filter(r => r.status === CheckoutStatus.PROCESSING || r.status === CheckoutStatus.PENDING_LIQUIDATION).length,
+    completed: checkoutRequests.filter(r => r.status === CheckoutStatus.LIQUIDATED).length,
+  }), [checkoutRequests]);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -173,236 +169,254 @@ export const ViewCheckoutRequest = () => {
     }
   };
 
-  const renderStatusSpecific = () => {
-    if (!selectedRequest) return null;
-    const status = selectedRequest.status;
-    const contract = requestDetail?.contract;
-    const refund = requestDetail?.refund;
-
-    if (status === CheckoutStatus.PENDING) {
-      return (
-        <>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <p className="font-semibold text-slate-800 mb-2">Số tiền cọc theo hợp đồng</p>
-            {contract ? (
-              <p className="text-slate-900 text-lg font-bold">{formatCurrency(contract.depositAmount)}</p>
-            ) : (
-              <p className="text-slate-600">Không tìm thấy thông tin hợp đồng. Vui lòng liên hệ quản lý.</p>
-            )}
-          </div>
-        </>
-      );
-    }
-
-    if (status === CheckoutStatus.PROCESSING || status === CheckoutStatus.PENDING_LIQUIDATION || status === CheckoutStatus.LIQUIDATED) {
-      return (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-4">
-          <div>
-            <p className="font-semibold text-slate-800 mb-3">Bảng tính chi phí</p>
-            {detailLoading ? (
-              <p className="text-slate-500">Đang tải chi tiết...</p>
-            ) : refund ? (
-              <>
-                <div className="grid gap-3 text-sm text-slate-700">
-                  <div className="flex justify-between gap-4">
-                    <span>Tiền cọc</span>
-                    <span>{formatCurrency(refund.depositAmount)}</span>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <span>Phí hư hỏng</span>
-                    <span>{formatCurrency(refund.damageFee)}</span>
-                  </div>
-                  <div className="flex justify-between gap-4">
-                    <span>Phí phát sinh</span>
-                    <span>{formatCurrency(refund.extraFee)}</span>
-                  </div>
-                  <div className="border-t border-slate-200 pt-3 flex justify-between gap-4 font-semibold text-slate-900">
-                    <span>Tổng hoàn trả / cần đóng</span>
-                    <span>{formatCurrency(refund.finalRefundAmount)}</span>
-                  </div>
-                </div>
-                <div className="border-t border-slate-200 pt-3 mt-4">
-                  <p className="font-semibold text-slate-800 mb-2">Ghi chú chi tiết từ quản lý</p>
-                  <div className="text-sm text-slate-600 whitespace-pre-wrap bg-white p-3 rounded-lg border border-slate-200">
-                    {refund.notes || 'Không có ghi chú.'}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <p className="text-slate-600">Không có bảng tính chi phí.</p>
-            )}
-          </div>
-
-          {status === CheckoutStatus.LIQUIDATED && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              {contract?.liquidationUrl ? (
-                <a
-                  href={contract.liquidationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
-                >
-                  Xem biên bản trả phòng
-                </a>
-              ) : (
-                <p className="text-slate-600">Không tìm thấy biên bản trả phòng.</p>
-              )}
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    return null;
-  };
-
  return (
-    <section className="space-y-8">
+    <div className="w-full space-y-6">
         <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Xem yêu cầu trả phòng</h1>
-              <p className="text-sm text-slate-500">Danh sách các yêu cầu bạn đã tạo.</p>
+              <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+                Yêu cầu Trả phòng
+                <span className="flex items-center justify-center bg-blue-100 text-blue-700 text-sm font-bold px-3 py-1 rounded-full">
+                  {stats.total}
+                </span>
+              </h1>
+              <p className="text-slate-500 text-sm mt-1">Danh sách các yêu cầu bạn đã tạo.</p>
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700">
-                {checkoutRequests.length} yêu cầu
-              </span>
-              <button
-                type="button"
-                onClick={() => navigate('/create-checkout-request')}
-                className="inline-flex items-center justify-center rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
-              >
-                + Tạo yêu cầu trả phòng
-              </button>
-            </div>
+            <button
+              onClick={() => navigate('/create-checkout-request')}
+              className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all active:scale-95 shadow-md shadow-blue-200"
+            >
+              <span className="material-symbols-outlined text-lg">add</span>
+              Tạo yêu cầu mới
+            </button>
           </div>
+        </div>
 
-          {error && (
-            <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-              {error}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: 'Tổng yêu cầu', value: stats.total, icon: 'receipt_long', color: 'text-blue-600 bg-blue-50' },
+            { label: 'Chờ tiếp nhận', value: stats.pending, icon: 'pending_actions', color: 'text-amber-600 bg-amber-50' },
+            { label: 'Đang xử lý', value: stats.processing, icon: 'sync', color: 'text-purple-600 bg-purple-50' },
+            { label: 'Đã hoàn tất', value: stats.completed, icon: 'check_circle', color: 'text-emerald-600 bg-emerald-50' },
+          ].map(s => (
+            <div key={s.label} className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex items-center gap-4">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.color}`}>
+                <span className="material-symbols-outlined text-xl">{s.icon}</span>
+              </div>
+              <div>
+                <p className="text-2xl font-extrabold text-slate-900">{s.value}</p>
+                <p className="text-xs text-slate-500 font-medium">{s.label}</p>
+              </div>
             </div>
-          )}
+          ))}
+        </div>
 
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl flex justify-between items-center text-sm font-semibold">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-red-600 text-lg">error</span>
+              <span>{error}</span>
+            </div>
+            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 p-1">
+              <span className="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+        )}
+
+        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           {loading ? (
-            <div className="py-16 text-center text-slate-500">Đang tải yêu cầu...</div>
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+              <span className="material-symbols-outlined animate-spin text-4xl mb-3">autorenew</span>
+              <p className="font-medium">Đang tải dữ liệu...</p>
+            </div>
           ) : checkoutRequests.length === 0 ? (
-            <div className="py-16 text-center text-slate-500">
-              Bạn chưa có yêu cầu trả phòng nào.
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+              <span className="material-symbols-outlined text-5xl mb-3">assignment_return</span>
+              <p className="font-medium">Bạn chưa có yêu cầu trả phòng nào</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm text-slate-700">
-                <thead className="bg-slate-50 text-slate-900">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold">Mã yêu cầu</th>
-                    <th className="px-4 py-3 font-semibold">Ngày tạo</th>
-                    <th className="px-4 py-3 font-semibold">Ngày dự kiến trả</th>
-                    <th className="px-4 py-3 font-semibold">Trạng thái</th>
-                    <th className="px-4 py-3 font-semibold">Hành động</th>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50">
+                  <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Mã YC</th>
+                  <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Hợp đồng</th>
+                  <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Lịch trình</th>
+                  <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Trạng thái</th>
+                  <th className="px-5 py-4"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {checkoutRequests.map((request) => (
+                  <tr
+                    key={request.requestId}
+                    className="hover:bg-slate-50/70 transition-colors cursor-pointer"
+                    onClick={() => loadDetail(request)}
+                  >
+                    <td className="px-5 py-4 font-bold text-blue-700">{request.requestId}</td>
+                    <td className="px-5 py-4">
+                      <p className="font-semibold text-slate-800">{request.contractId}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="text-slate-700">{new Date(request.createdAt).toLocaleDateString('vi-VN')}</p>
+                      <p className="text-xs text-slate-400">→ {new Date(request.expectedDate).toLocaleDateString('vi-VN')}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_STYLE[request.status]}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[request.status]}`} />
+                        {STATUS_LABEL[request.status]}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-700">
+                        <span className="material-symbols-outlined text-base">chevron_right</span>
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {checkoutRequests.map((request) => (
-                    <tr key={request.requestId} className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
-                      <td className="px-4 py-3 text-slate-900 font-medium">{request.requestId}</td>
-                      <td className="px-4 py-3">{new Date(request.createdAt).toLocaleDateString('vi-VN')}</td>
-                      <td className="px-4 py-3">{new Date(request.expectedDate).toLocaleDateString('vi-VN')}</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(request.status)}`}>
-                          {getStatusLabel(request.status)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => loadDetail(request)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded-lg transition-colors text-xs"
-                        >
-                          Xem chi tiết
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {checkoutRequests.length > 0 && (
+            <div className="px-5 py-3 border-t border-slate-100 text-xs text-slate-400">
+              Hiển thị {checkoutRequests.length} yêu cầu
             </div>
           )}
         </div>
 
         {selectedRequest && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 px-4 py-8">
-            <div className="mx-auto w-full max-w-3xl">
-              <div className="rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
-                <div className="flex items-start gap-4 mb-6">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeDetail} />
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col">
+              <div className="px-7 py-5 border-b border-slate-100">
+                <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="text-xl font-bold text-slate-900">Chi tiết yêu cầu trả phòng</h2>
-                    <p className="text-sm text-slate-500">Mã yêu cầu: {selectedRequest.requestId}</p>
+                    <div className="flex items-center gap-3 mb-1">
+                      <h2 className="text-xl font-bold text-slate-900">Yêu cầu {selectedRequest.requestId}</h2>
+                      <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${STATUS_STYLE[selectedRequest.status]}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[selectedRequest.status]}`} />
+                        {STATUS_LABEL[selectedRequest.status]}
+                      </span>
+                    </div>
+                    <p className="text-slate-500 text-sm">Ngày tạo: {new Date(selectedRequest.createdAt).toLocaleDateString('vi-VN')}</p>
+                  </div>
+                  <button onClick={closeDetail} className="p-2 hover:bg-slate-100 rounded-lg transition-colors mt-1">
+                    <span className="material-symbols-outlined text-slate-500">close</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
+                <div className="grid grid-cols-2 gap-x-8 gap-y-4 bg-slate-50 rounded-xl p-5 border border-slate-100">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Hợp đồng</span>
+                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract ? requestDetail.contract.contractId : selectedRequest.contractId}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Phòng</span>
+                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract ? `Phòng ${requestDetail.contract.roomId}` : 'Đang tải...'}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Ngày dự kiến trả</span>
+                    <span className="text-sm font-semibold text-slate-800">{new Date(selectedRequest.expectedDate).toLocaleDateString('vi-VN')}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Tiền cọc</span>
+                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract ? formatCurrency(requestDetail.contract.depositAmount) : 'Đang tải...'}</span>
                   </div>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm text-slate-500">Ngày tạo</p>
-                    <p className="mt-2 text-slate-900 font-medium">{new Date(selectedRequest.createdAt).toLocaleDateString('vi-VN')}</p>
+                {detailLoading ? (
+                  <div className="flex items-center justify-center py-10 text-slate-400">
+                    <span className="material-symbols-outlined animate-spin text-3xl mb-2">autorenew</span>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm text-slate-500">Ngày dự kiến trả</p>
-                    <p className="mt-2 text-slate-900 font-medium">{new Date(selectedRequest.expectedDate).toLocaleDateString('vi-VN')}</p>
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
-                    <p className="text-sm text-slate-500">Trạng thái</p>
-                    <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-sm font-semibold ${getStatusBadgeClass(selectedRequest.status)}`}>
-                      {getStatusLabel(selectedRequest.status)}
-                    </span>
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
-                    <p className="text-sm text-slate-500">Hợp đồng / Phòng đang thuê</p>
-                    <p className="mt-2 text-slate-900 font-medium">
-                      {requestDetail?.contract ? `Hợp đồng ${requestDetail.contract.contractId}` : 'Không có dữ liệu hợp đồng'}
-                    </p>
-                  </div>
-                </div>
+                ) : requestDetail?.refund ? (
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center flex-shrink-0">1</span>
+                      <h3 className="text-sm font-black uppercase tracking-wider text-slate-700">Bảng tính đối soát</h3>
+                      <div className="flex-1 h-px bg-slate-200" />
+                    </div>
+                    <div className="pl-10 space-y-2">
+                      <div className="flex items-center justify-between py-2.5 border-b border-dashed border-slate-200">
+                        <span className="text-sm text-slate-600">Cọc theo hợp đồng</span>
+                        <span className="text-sm font-bold text-slate-800">{formatCurrency(requestDetail.refund.depositAmount)}</span>
+                      </div>
+                      <div className="flex items-center justify-between py-2.5 border-b border-dashed border-slate-200">
+                        <span className="text-sm text-slate-600">Phí hư hỏng (-khấu trừ)</span>
+                        <span className="text-sm font-bold text-red-600">-{formatCurrency(requestDetail.refund.damageFee)}</span>
+                      </div>
+                      <div className="flex items-center justify-between py-2.5 border-b border-slate-200">
+                        <span className="text-sm text-slate-600">Phí phát sinh nợ (-khấu trừ)</span>
+                        <span className="text-sm font-bold text-red-600">-{formatCurrency(requestDetail.refund.extraFee)}</span>
+                      </div>
+                      <div className="flex items-center justify-between py-3">
+                        <span className="text-sm font-bold text-slate-800">Khoản hoàn / Cần đóng</span>
+                        <span className="text-lg font-black text-blue-700">{formatCurrency(requestDetail.refund.finalRefundAmount)}</span>
+                      </div>
+                    </div>
 
-                <div className="mt-6 space-y-4">
-                  {requestDetail && renderStatusSpecific()}
-
-                  {!requestDetail && detailLoading && (
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-500">Đang tải chi tiết...</div>
-                  )}
-
-                  {!requestDetail && !detailLoading && (
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-500">Không có dữ liệu chi tiết.</div>
-                  )}
-                </div>
-
-                <div className="mt-6 border-t border-slate-200 pt-4">
-                  <div className="flex flex-col sm:flex-row sm:justify-center gap-3">
-                    {(selectedRequest.status === CheckoutStatus.PENDING ||
-                      selectedRequest.status === CheckoutStatus.PROCESSING ||
-                      selectedRequest.status === CheckoutStatus.PENDING_LIQUIDATION) && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleCancelRequest(selectedRequest.requestId);
-                          closeDetail();
-                        }}
-                        className="rounded-full border border-red-300 bg-red-50 px-5 py-3 text-sm font-semibold text-red-700 hover:bg-red-100"
-                      >
-                        Hủy yêu cầu
-                      </button>
+                    {requestDetail.refund.notes && (
+                      <div className="pl-10 mt-4">
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Ghi chú đối soát</p>
+                        <p className="text-sm text-slate-600 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 whitespace-pre-wrap">
+                          {requestDetail.refund.notes}
+                        </p>
+                      </div>
                     )}
-                    <button
-                      onClick={closeDetail}
-                      className="rounded-full bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200"
-                    >
-                      Đóng
-                    </button>
                   </div>
+                ) : (selectedRequest.status === CheckoutStatus.PROCESSING || selectedRequest.status === CheckoutStatus.PENDING_LIQUIDATION || selectedRequest.status === CheckoutStatus.LIQUIDATED) ? (
+                  <div className="flex flex-col items-center justify-center p-8 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-slate-400">
+                    <span className="material-symbols-outlined text-4xl mb-2">receipt_long</span>
+                    <span className="text-sm font-medium">Quản lý chưa lập bảng đối soát</span>
+                  </div>
+                ) : null}
+
+                {selectedRequest.status === CheckoutStatus.LIQUIDATED && requestDetail?.contract?.liquidationUrl && (
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="w-7 h-7 rounded-full bg-emerald-600 text-white text-xs font-black flex items-center justify-center flex-shrink-0">2</span>
+                      <h3 className="text-sm font-black uppercase tracking-wider text-slate-700">Biên bản trả phòng</h3>
+                      <div className="flex-1 h-px bg-slate-200" />
+                    </div>
+                    <div className="pl-10">
+                      <a
+                        href={requestDetail.contract.liquidationUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center rounded-xl bg-blue-50 text-blue-700 border border-blue-200 px-5 py-3 text-sm font-bold hover:bg-blue-100 transition-colors gap-2"
+                      >
+                        <span className="material-symbols-outlined text-lg">description</span>
+                        Xem biên bản trả phòng
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between px-7 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
+                <div>
+                  {(selectedRequest.status === CheckoutStatus.PENDING ||
+                    selectedRequest.status === CheckoutStatus.PROCESSING ||
+                    selectedRequest.status === CheckoutStatus.PENDING_LIQUIDATION) && (
+                    <button
+                      onClick={() => {
+                        handleCancelRequest(selectedRequest.requestId);
+                        closeDetail();
+                      }}
+                      className="flex items-center gap-1.5 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-semibold transition-all"
+                    >
+                      <span className="material-symbols-outlined text-base">cancel</span>
+                      Hủy yêu cầu
+                    </button>
+                  )}
                 </div>
+                <button onClick={closeDetail} className="px-5 py-2.5 text-sm font-semibold bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg transition-all">
+                  Đóng
+                </button>
               </div>
             </div>
           </div>
         )}
-      </section>
+      </div>
   );
 };

@@ -10,7 +10,7 @@ export const AdminLiquidation = () => {
   const [loading, setLoading] = useState(true);
   const [finalizing, setFinalizing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
 
   const [checkoutRequest, setCheckoutRequest] = useState<CheckoutRequestDTO | null>(null);
   const [contract, setContract] = useState<ContractDTO | null>(null);
@@ -27,6 +27,11 @@ export const AdminLiquidation = () => {
       abortController.abort();
     };
   }, [requestId]);
+
+  const showSuccess = (msg: string) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
 
   const loadData = async (abortController: AbortController) => {
     if (!requestId) {
@@ -126,12 +131,10 @@ export const AdminLiquidation = () => {
         })
       });
 
-      setSuccess(true);
-
-      // Redirect after 2 seconds
+      showSuccess('Hoàn tất thanh lý thành công!');
       setTimeout(() => {
         navigate('/admin/checkout');
-      }, 2000);
+      }, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Lỗi hoàn tất thanh lý');
     } finally {
@@ -162,13 +165,13 @@ export const AdminLiquidation = () => {
           </div>
           <button
             onClick={() => navigate('/admin/checkout')}
-            className="inline-flex items-center justify-center rounded-full bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"
+            className="inline-flex items-center justify-center rounded-xl bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"
           >
             ✕
           </button>
         </div>
 
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
           <div className="flex items-start gap-3">
             <span className="material-symbols-outlined text-red-600 mt-0.5">error</span>
             <div>
@@ -192,37 +195,26 @@ export const AdminLiquidation = () => {
         </div>
         <button
           onClick={() => navigate('/admin/checkout')}
-          className="inline-flex items-center justify-center rounded-full bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"
+          className="inline-flex items-center justify-center rounded-xl bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"
         >
           ✕
         </button>
       </div>
 
-      {/* Success Message */}
-      {success && (
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
-          <div className="flex items-start gap-3">
-            <span className="material-symbols-outlined text-green-600 mt-0.5">check_circle</span>
-            <div>
-              <p className="font-semibold text-green-900">Hoàn tất thanh lý thành công!</p>
-              <p className="text-sm text-green-700 mt-1">
-                Yêu cầu trả phòng đã được hoàn tất. Bạn sẽ được quay lại danh sách yêu cầu...
-              </p>
-            </div>
-          </div>
+      {successMsg && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
+          <span className="material-symbols-outlined text-lg">check_circle</span>
+          <span className="text-sm font-semibold">{successMsg}</span>
         </div>
       )}
 
-      {/* Error Message */}
-      {error && !success && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-          <div className="flex items-start gap-3">
-            <span className="material-symbols-outlined text-red-600 mt-0.5">error</span>
-            <div>
-              <p className="font-semibold text-red-900">Có lỗi xảy ra</p>
-              <p className="text-sm text-red-700 mt-1">{error}</p>
-            </div>
-          </div>
+      {error && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-red-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
+          <span className="material-symbols-outlined text-lg">error</span>
+          <span className="text-sm font-semibold">{error}</span>
+          <button onClick={() => setError(null)} className="ml-2 hover:text-red-200 transition-colors p-1 flex items-center justify-center">
+            <span className="material-symbols-outlined text-lg">close</span>
+          </button>
         </div>
       )}
 
@@ -233,21 +225,21 @@ export const AdminLiquidation = () => {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs text-slate-500 uppercase">Mã hợp đồng</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">{contract.contractId}</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs text-slate-500 uppercase">Phòng / Giường</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">{contract.roomId}</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs text-slate-500 uppercase">Số tiền cọc</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">
               {formatCurrency(contract.depositAmount || 0)}
             </p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs text-slate-500 uppercase">Thời hạn</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">{contract.stayDuration} tháng</p>
           </div>
@@ -293,7 +285,7 @@ export const AdminLiquidation = () => {
           <p className="text-sm text-slate-500 mt-1">Vui lòng tải lên biên bản trả phòng để hoàn tất thanh lý.</p>
         </div>
 
-        <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-blue-400 hover:bg-blue-50 transition-all">
+        <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:border-blue-400 hover:bg-blue-50 transition-all">
           <input
             id="checkout-document-upload"
             type="file"
@@ -323,14 +315,14 @@ export const AdminLiquidation = () => {
       <div className="flex gap-3">
         <button
           onClick={() => navigate('/admin/checkout')}
-          className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium py-3 px-4 rounded-lg transition-colors"
+          className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium py-3 px-4 rounded-xl transition-colors"
         >
           Hủy
         </button>
         <button
           onClick={handleFinalizeLiquidation}
           disabled={finalizing}
-          className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
+          className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-xl transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
         >
           {finalizing ? 'Đang hoàn tất...' : 'Hoàn tất thanh lý'}
         </button>
