@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { CustomerSidebar } from '../components/CustomerSidebar';
 import { ApiClient } from '../api/ApiClient';
 import { UserProfileDTO, UserRole } from '@dormarch/shared';
 

@@ -8,6 +8,7 @@ import { previewRoutes } from './routes/previewRoutes';
 import { favouriteRoutes } from './routes/favouriteRoutes';
 
 import { dormRoutes } from './routes/dormRoutes';
+import { dbClient } from './database/DatabaseClient';
 
 const router = Router();
 
