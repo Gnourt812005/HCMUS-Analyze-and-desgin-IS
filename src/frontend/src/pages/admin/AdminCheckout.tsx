@@ -102,7 +102,7 @@ export const AdminCheckout = () => {
       });
       
       // Optimistic update - thêm yêu cầu mới vào danh sách ngay lập tức
-      setCheckoutRequests([...checkoutRequests, newRequest]);
+      setCheckoutRequests(prev => [...prev, newRequest]);
       
       setShowCreateModal(false);
       setCreateForm({ userEmail: '', contractId: '', expectedDate: '' });
@@ -162,10 +162,9 @@ export const AdminCheckout = () => {
 
   // Tiếp nhận (chuyển từ PENDING -> PROCESSING)
   const handleAccept = async (requestId: string) => {
-    const originalRequests = checkoutRequests;
     try {
       setCheckoutRequests(
-        checkoutRequests.map(r => r.requestId === requestId ? { ...r, status: CheckoutStatus.PROCESSING } : r)
+        prev => prev.map(r => r.requestId === requestId ? { ...r, status: CheckoutStatus.PROCESSING } : r)
       );
       
       const request = checkoutRequests.find(r => r.requestId === requestId);
@@ -180,20 +179,20 @@ export const AdminCheckout = () => {
       showSuccess('Đã tiếp nhận yêu cầu trả phòng!');
       setShowDetailModal(false);
     } catch (err) {
-      setCheckoutRequests(originalRequests);
+      // Rollback
+      setCheckoutRequests(prev => prev.map(r => r.requestId === requestId ? { ...r, status: CheckoutStatus.PENDING } : r));
       setError(err instanceof Error ? err.message : 'Lỗi cập nhật trạng thái');
     }
   };
 
   // Hủy yêu cầu
   const handleCancelRequest = async (requestId: string) => {
-    const originalRequests = checkoutRequests;
+    const request = checkoutRequests.find(r => r.requestId === requestId);
     try {
       setCheckoutRequests(
-        checkoutRequests.map(r => r.requestId === requestId ? { ...r, status: CheckoutStatus.CANCELLED } : r)
+        prev => prev.map(r => r.requestId === requestId ? { ...r, status: CheckoutStatus.CANCELLED } : r)
       );
       
-      const request = checkoutRequests.find(r => r.requestId === requestId);
       await ApiClient.patch(`/checkout-requests/${requestId}/status`, {
         body: JSON.stringify({
           status: CheckoutStatus.CANCELLED,
@@ -205,7 +204,8 @@ export const AdminCheckout = () => {
       showSuccess('Đã hủy yêu cầu trả phòng.');
       setShowDetailModal(false);
     } catch (err) {
-      setCheckoutRequests(originalRequests);
+      // Rollback
+      setCheckoutRequests(prev => prev.map(r => r.requestId === requestId ? { ...r, status: request?.status || CheckoutStatus.PENDING } : r));
       setError(err instanceof Error ? err.message : 'Lỗi hủy yêu cầu');
     }
   };

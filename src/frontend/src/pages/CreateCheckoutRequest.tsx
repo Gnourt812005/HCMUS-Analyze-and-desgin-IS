@@ -100,7 +100,8 @@ export const CreateCheckoutRequest = () => {
     }
 
     // Validate expected date is in the future
-    const selectedDate = new Date(form.expectedDate);
+    const [year, month, day] = form.expectedDate.split('-').map(Number);
+    const selectedDate = new Date(year, month - 1, day);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     

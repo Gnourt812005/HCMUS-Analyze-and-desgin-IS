@@ -58,6 +58,18 @@ export const AdminRefundCalculation = () => {
   const [calculationResult, setCalculationResult] = useState<CalculationResult | null>(null);
   const [hasCalculated, setHasCalculated] = useState(false);
 
+  // Invalidate the calculation if the user changes any inputs after calculating
+  useEffect(() => {
+    if (hasCalculated) {
+      setHasCalculated(false);
+      setCalculationResult(null);
+    }
+  }, [
+    damageInspection.damageAmount, additionalDeductions.unpaidRent, 
+    additionalDeductions.unpaidUtilities, additionalDeductions.compensationFee, 
+    additionalDeductions.otherDeductions
+  ]);
+
   // Load data on mount
   useEffect(() => {
     const abortController = new AbortController();
