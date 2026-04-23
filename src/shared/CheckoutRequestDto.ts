@@ -19,6 +19,7 @@ export interface CheckoutRequestDTO {
 export interface RefundCalculationDTO {
   calculationId: string;
   requestId: string;
+  contractId?: string;
   depositAmount: number;
   damageFee: number;
   extraFee: number;

@@ -5,10 +5,12 @@ export class RefundDB {
     {
       calculationId: 'calc-001',
       requestId: 'req-001',
+      contractId: 'contract-001',
       depositAmount: 1000,
       damageFee: 200,
       extraFee: 50,
-      finalRefundAmount: 750
+      finalRefundAmount: 750,
+      notes: 'Khấu trừ phí làm hỏng cửa'
     }
   ];
 
