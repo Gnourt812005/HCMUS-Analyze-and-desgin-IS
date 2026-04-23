@@ -9,6 +9,7 @@ import {
 } from '@dormarch/shared';
 import { PaymentDB } from '../database/PaymentDB';
 import { RentalDB } from '../database/RentalDB';
+import { RoomDB } from '../database/RoomDB';
 import { Rental } from './Rental';
 
 export class Payment {
@@ -38,11 +39,19 @@ export class Payment {
     await PaymentDB.updateSessionStatus(payload.sessionId, 'VERIFYING');
 
     if (payload.outcome === 'timeout') {
-      return PaymentDB.updateSessionStatus(payload.sessionId, 'TIMEOUT', 'Hết thời gian chờ phản hồi từ ngân hàng.');
+      return PaymentDB.updateSessionStatus(
+        payload.sessionId,
+        'TIMEOUT',
+        'Hết thời gian chờ phản hồi từ ngân hàng.'
+      );
     }
 
     if (payload.outcome === 'cancel') {
-      return PaymentDB.updateSessionStatus(payload.sessionId, 'FAILED', 'Khách hàng đã hủy hoặc không quét mã.');
+      return PaymentDB.updateSessionStatus(
+        payload.sessionId,
+        'FAILED',
+        'Khách hàng đã hủy hoặc không quét mã.'
+      );
     }
 
     return PaymentDB.updateSessionStatus(payload.sessionId, 'SUCCESS', 'Xác minh giao dịch thành công.');
@@ -97,7 +106,17 @@ export class Payment {
     await PaymentDB.attachInvoice(payload.sessionId, invoiceId);
 
     if (session.action === 'DEPOSIT') {
-      await RentalDB.markDeposited(registration.roomId, registration.idCard);
+      await RentalDB.markDeposited(
+        registration.roomId,
+        registration.idCard,
+        registration.bedIds
+      );
+      await RoomDB.markBedsStatus(registration.roomId, registration.bedIds, 'DEPOSITED');
+    }
+
+    if (session.action === 'FULL_PAYMENT') {
+      await RentalDB.markBooked(registration.roomId, registration.bedIds);
+      await RoomDB.markBedsStatus(registration.roomId, registration.bedIds, 'BOOKED');
     }
 
     return PaymentDB.updateSessionStatus(payload.sessionId, 'COMPLETED', 'Thanh toán thành công, đã tạo hóa đơn điện tử.');
@@ -117,7 +136,17 @@ export class Payment {
     const invoiceId = await PaymentDB.createInvoice(payload.registrationId, preview.totalAmount, payload.action);
 
     if (payload.action === 'DEPOSIT') {
-      await RentalDB.markDeposited(registration.roomId, registration.idCard);
+      await RentalDB.markDeposited(
+        registration.roomId,
+        registration.idCard,
+        registration.bedIds
+      );
+      await RoomDB.markBedsStatus(registration.roomId, registration.bedIds, 'DEPOSITED');
+    }
+
+    if (payload.action === 'FULL_PAYMENT') {
+      await RentalDB.markBooked(registration.roomId, registration.bedIds);
+      await RoomDB.markBedsStatus(registration.roomId, registration.bedIds, 'BOOKED');
     }
 
     return {

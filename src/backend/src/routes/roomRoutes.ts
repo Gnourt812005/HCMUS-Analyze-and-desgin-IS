@@ -18,6 +18,15 @@ roomRoutes.get('/', async (req, res) => {
   }
 });
 
+roomRoutes.get('/:roomId/beds', async (req, res) => {
+  try {
+    const beds = await RoomDB.getBedsByRoomId(req.params.roomId);
+    res.json({ message: 'Success', status: 200, data: beds });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal Server Error', status: 500, data: [] });
+  }
+});
+
 roomRoutes.post('/:roomId/favorite', async (req, res) => {
   try {
     const { roomId } = req.params;

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, SlidersHorizontal, DollarSign, Bed, Users, Building2, MapPin, CheckCircle2, AlertCircle, Heart, X } from "lucide-react";
-import { RoomBriefDTO, RoomDetailDTO } from "@dormarch/shared";
+import { BedOptionDTO, RoomBriefDTO, RoomDetailDTO } from "@dormarch/shared";
 import { ApiClient } from "../api/ApiClient";
 import { AuthService } from "../api/AuthService";
 
@@ -38,7 +38,8 @@ const roomImages: Record<string, string> = {
 };
 
 export const RoomList = () => {
-    const { dormId } = useParams();
+    const { dormid } = useParams();
+    const dormId = dormid || "";
     const navigate = useNavigate();
     
     // Store all of that information into interfere Room
@@ -50,10 +51,14 @@ export const RoomList = () => {
     
     // Preview form state
     const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [showBedSelectionModal, setShowBedSelectionModal] = useState(false);
     const [previewDate, setPreviewDate] = useState("");
     const [previewTime, setPreviewTime] = useState("");
     const [previewSuccess, setPreviewSuccess] = useState(false);
     const [previewError, setPreviewError] = useState("");
+    const [bedOptions, setBedOptions] = useState<BedOptionDTO[]>([]);
+    const [selectedBedIds, setSelectedBedIds] = useState<string[]>([]);
+    const [loadingBeds, setLoadingBeds] = useState(false);
     
     const [filters, setFilters] = useState<FilterState>({
         priceRange: [0, 3000000],
@@ -67,7 +72,9 @@ export const RoomList = () => {
         const fetchRooms = async () => {
             try {
                 // Fetch all of the rooms' data from the backend via api
-                const response = await ApiClient.get<{ status: number, data: Room[] }>(`/rooms${dormId ? `?dormId=${dormId}` : ''}`);
+                const response = await ApiClient.get<{ status: number; data: Room[] }>(
+                    `/rooms${dormId ? `?dormId=${dormId}` : ''}`
+                );
                 
                 if (response.status === 200) {
                     setOriginalRooms(response.data);
@@ -190,7 +197,7 @@ export const RoomList = () => {
 
         try {
             const user = AuthService.getUserInfo();
-            const response = await ApiClient.post<{ status: number, message: string }>("/previews", {
+            const response = await ApiClient.post<{ status: number; message: string }>("/previews", {
                 body: JSON.stringify({
                     roomId: selectedRoomId,
                     userId: user?.email || "unknown", // in real app, might use user.id
@@ -208,6 +215,37 @@ export const RoomList = () => {
         } catch (error: any) {
             setPreviewError(error.message || "Failed to book preview");
         }
+    };
+
+    const handleRegisterRental = async () => {
+        if (!selectedRoomDetail) return;
+
+        setLoadingBeds(true);
+        setSelectedBedIds([]);
+        try {
+            const response = await ApiClient.get<{ status: number; data: BedOptionDTO[] }>(`/rooms/${selectedRoomDetail.id}/beds`);
+            if (response.status === 200) {
+                setBedOptions(response.data);
+                setShowBedSelectionModal(true);
+            }
+        } catch (error: any) {
+            alert(error.message || "Không tải được danh sách giường.");
+        } finally {
+            setLoadingBeds(false);
+        }
+    };
+
+    const toggleBedSelection = (bedId: string) => {
+        setSelectedBedIds((prev) =>
+            prev.includes(bedId) ? prev.filter((id) => id !== bedId) : [...prev, bedId]
+        );
+    };
+
+    const confirmBedSelection = () => {
+        if (!selectedRoomDetail || selectedBedIds.length === 0) return;
+        const encodedBedIds = encodeURIComponent(selectedBedIds.join(','));
+        navigate(`/rental/conditions?roomId=${selectedRoomDetail.id}&bedIds=${encodedBedIds}`);
+        setShowBedSelectionModal(false);
     };
 
     return (
@@ -614,7 +652,94 @@ export const RoomList = () => {
                                             ? "Hết chỗ"
                                             : "Đăng ký xem phòng"}
                                     </button>
+
+                                    <button
+                                        onClick={handleRegisterRental}
+                                        disabled={selectedRoomDetail.availableBeds === 0 || loadingBeds}
+                                        className="flex-1 rounded-xl border-2 border-red-500 bg-white px-6 py-3 font-semibold text-red-500 transition-all hover:bg-red-500 hover:text-white disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400 disabled:hover:bg-white"
+                                    >
+                                        {selectedRoomDetail.availableBeds === 0 ? 'Hết chỗ' : loadingBeds ? 'Đang tải giường...' : 'Đăng ký thuê'}
+                                    </button>
                                 </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showBedSelectionModal && selectedRoomDetail && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setShowBedSelectionModal(false)}
+                        className="fixed inset-0 z-[75] flex items-center justify-center bg-black/50 p-4"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full max-w-xl rounded-xl bg-white p-6 shadow-2xl"
+                        >
+                            <div className="mb-4 flex items-center justify-between">
+                                <h3 className="text-lg font-bold text-slate-800">Chọn giường để đăng ký thuê</h3>
+                                <button
+                                    onClick={() => setShowBedSelectionModal(false)}
+                                    className="rounded-full p-2 transition-colors hover:bg-slate-100 text-slate-500"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            <p className="mb-4 text-sm text-slate-600">Phòng {selectedRoomDetail.name} - chọn một hoặc nhiều giường còn trống.</p>
+
+                            <div className="space-y-2 max-h-72 overflow-auto pr-1">
+                                {bedOptions.map((bed) => {
+                                    const isAvailable = bed.status === 'AVAILABLE';
+                                    const isSelected = selectedBedIds.includes(bed.id);
+                                    return (
+                                        <label
+                                            key={bed.id}
+                                            className={`flex items-center justify-between rounded-lg border px-3 py-3 ${
+                                                isAvailable ? 'border-slate-200 bg-white' : 'border-slate-200 bg-slate-100'
+                                            }`}
+                                        >
+                                            <span>
+                                                <span className="block font-semibold text-slate-800">Giường {bed.bedNumber}</span>
+                                                <span className="block text-xs text-slate-500">{bed.price.toLocaleString()} VNĐ/tháng</span>
+                                            </span>
+                                            <span className="flex items-center gap-3">
+                                                <span className={`text-xs font-semibold ${isAvailable ? 'text-green-600' : 'text-slate-500'}`}>
+                                                    {isAvailable ? 'Còn trống' : bed.status === 'DEPOSITED' ? 'Đã cọc' : 'Đã thuê'}
+                                                </span>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    disabled={!isAvailable}
+                                                    onChange={() => toggleBedSelection(bed.id)}
+                                                />
+                                            </span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="mt-5 flex justify-end gap-3">
+                                <button
+                                    onClick={() => setShowBedSelectionModal(false)}
+                                    className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={confirmBedSelection}
+                                    disabled={selectedBedIds.length === 0}
+                                    className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-300"
+                                >
+                                    Tiếp tục ({selectedBedIds.length} giường)
+                                </button>
                             </div>
                         </motion.div>
                     </motion.div>
