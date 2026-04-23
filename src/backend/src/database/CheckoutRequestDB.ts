@@ -5,15 +5,16 @@ export class CheckoutRequestDB {
   private static MOCK_CHECKOUT_REQUESTS: Partial<CheckoutRequest>[] = [
     {
       requestId: 'req-001',
-      userCCCD: '0123456789',
+      userEmail: 'test@gmail.com',
       contractId: 'contract-001',
       expectedDate: '2005-06-30',
       status: CheckoutStatus.PENDING,
+      handoverId: 'handover-001',
       createdAt: '2005-06-01'
     },
     {
       requestId: 'req-002',
-      userCCCD: '0987654321',
+      userEmail: 'test2@gmail.com',
       contractId: 'contract-002',
       expectedDate: '2005-07-15',
       status: CheckoutStatus.PROCESSING,
@@ -21,7 +22,7 @@ export class CheckoutRequestDB {
     },
     {
       requestId: 'req-003',
-      userCCCD: '0123456789',
+      userEmail: 'test@gmail.com',
       contractId: 'contract-001',
       expectedDate: '2005-07-20',
       status: CheckoutStatus.LIQUIDATED,
@@ -38,11 +39,11 @@ export class CheckoutRequestDB {
     return true;
   }
 
-  static async insertIfNoActiveRequest(request: CheckoutRequest, contractId: string, userCCCD: string): Promise<{ success: boolean; error?: string }> {
+  static async insertIfNoActiveRequest(request: CheckoutRequest, contractId: string, userEmail: string): Promise<{ success: boolean; error?: string }> {
     // Atomic check-and-insert: check for active request, return error if exists
     const existingActive = this.MOCK_CHECKOUT_REQUESTS.find(r =>
       r.contractId === contractId &&
-      r.userCCCD === userCCCD &&
+      r.userEmail === userEmail &&
       [CheckoutStatus.PENDING, CheckoutStatus.PROCESSING, CheckoutStatus.PENDING_LIQUIDATION].includes(r.status as CheckoutStatus)
     );
 

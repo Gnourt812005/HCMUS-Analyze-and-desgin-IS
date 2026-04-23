@@ -3,28 +3,31 @@ import { CheckoutRequestDB } from '../database/CheckoutRequestDB';
 
 export class CheckoutRequest {
   requestId: string; // PK
-  userCCCD: string;
+  userEmail: string;
   contractId?: string;
   expectedDate: string; // ISO Date String
   status: CheckoutStatus;
+  handoverId?: string;
   createdAt: string; // ISO Date String
 
   constructor(data: Partial<CheckoutRequest>) {
     this.requestId = data.requestId || '';
-    this.userCCCD = data.userCCCD || '';
+    this.userEmail = data.userEmail || '';
     this.contractId = data.contractId;
     this.expectedDate = data.expectedDate || new Date().toISOString();
     this.status = data.status || CheckoutStatus.PENDING;
+    this.handoverId = data.handoverId;
     this.createdAt = data.createdAt || new Date().toISOString();
   }
 
   toDto(): CheckoutRequestDTO {
     return {
       requestId: this.requestId,
-      userCCCD: this.userCCCD,
+      userEmail: this.userEmail,
       contractId: this.contractId,
       expectedDate: this.expectedDate,
       status: this.status,
+      handoverId: this.handoverId,
       createdAt: this.createdAt,
     };
   }
@@ -35,12 +38,12 @@ export class CheckoutRequest {
   }
 
   static async create(requestData: Partial<CheckoutRequestDTO>): Promise<CheckoutRequestDTO> {
-    if (!requestData.userCCCD || !requestData.expectedDate || !requestData.contractId) {
-      throw new Error('userCCCD, contractId và expectedDate là bắt buộc.');
+    if (!requestData.userEmail || !requestData.expectedDate || !requestData.contractId) {
+      throw new Error('userEmail, contractId và expectedDate là bắt buộc.');
     }
 
     const newRequest = new CheckoutRequest({
-      userCCCD: requestData.userCCCD,
+      userEmail: requestData.userEmail,
       contractId: requestData.contractId,
       expectedDate: requestData.expectedDate,
       requestId: `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -52,12 +55,12 @@ export class CheckoutRequest {
   }
 
   static async createWithDuplicateCheck(requestData: Partial<CheckoutRequestDTO>): Promise<{ success: boolean; request?: CheckoutRequestDTO; error?: string }> {
-    if (!requestData.userCCCD || !requestData.expectedDate || !requestData.contractId) {
-      throw new Error('userCCCD, contractId và expectedDate là bắt buộc.');
+    if (!requestData.userEmail || !requestData.expectedDate || !requestData.contractId) {
+      throw new Error('userEmail, contractId và expectedDate là bắt buộc.');
     }
 
     const newRequest = new CheckoutRequest({
-      userCCCD: requestData.userCCCD,
+      userEmail: requestData.userEmail,
       contractId: requestData.contractId,
       expectedDate: requestData.expectedDate,
       requestId: `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -68,7 +71,7 @@ export class CheckoutRequest {
     const result = await CheckoutRequestDB.insertIfNoActiveRequest(
       newRequest,
       requestData.contractId,
-      requestData.userCCCD
+      requestData.userEmail
     );
 
     if (result.success) {

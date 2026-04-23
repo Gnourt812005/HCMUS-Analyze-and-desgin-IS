@@ -9,10 +9,11 @@ export enum CheckoutStatus {
 
 export interface CheckoutRequestDTO {
   requestId: string;
-  userCCCD: string;
+  userEmail: string;
   contractId?: string;
   expectedDate: string; // ISO Date String
   status: CheckoutStatus;
+  handoverId?: string;
   createdAt: string; // ISO Date String
 }
 
@@ -25,5 +26,5 @@ export interface RefundCalculationDTO {
   extraFee: number;
   finalRefundAmount: number;
   notes?: string;
+  createdAt?: string;
 }
-

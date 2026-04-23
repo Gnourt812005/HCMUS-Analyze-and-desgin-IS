@@ -10,7 +10,8 @@ export class RefundDB {
       damageFee: 200,
       extraFee: 50,
       finalRefundAmount: 750,
-      notes: 'Khấu trừ phí làm hỏng cửa'
+      notes: 'Khấu trừ phí làm hỏng cửa',
+      createdAt: '2024-06-01T10:00:00Z'
     }
   ];
 

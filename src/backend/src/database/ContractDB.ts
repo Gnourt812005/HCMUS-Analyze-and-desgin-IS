@@ -5,46 +5,52 @@ export class ContractDB {
   private static MOCK_CONTRACTS: Partial<Contract>[] = [
     {
       contractId: 'contract-001',
-      userCCCD: '079201012345',
+      userEmail: 'test@gmail.com',
+      rentalFormId: 'reg-001',
       roomId: 'A101',
       startDate: '2024-01-15',
       stayDuration: 6,
       depositAmount: 1000000,
       liquidationUrl: 'https://example.com/contract/contract-001.pdf',
-      status: ContractStatus.ACTIVE
+      signatureUrl: 'https://example.com/signature/contract-001.png',
+      status: ContractStatus.ACTIVE,
+      createdAt: '2024-01-10T10:00:00Z'
     },
     {
       contractId: 'contract-002',
-      userCCCD: '079201012345',
+      userEmail: 'test@gmail.com',
+      rentalFormId: 'reg-002',
       roomId: 'B202',
       startDate: '2024-02-01',
       stayDuration: 12,
       depositAmount: 1500000,
       liquidationUrl: 'https://example.com/contract/contract-002.pdf',
-      status: ContractStatus.ACTIVE
+      status: ContractStatus.ACTIVE,
+      createdAt: '2024-01-25T10:00:00Z'
     },
     {
       contractId: 'contract-003',
-      userCCCD: '079201012345',
+      userEmail: 'test2@gmail.com',
       roomId: 'C303',
       startDate: '2024-03-01',
       stayDuration: 3,
       depositAmount: 800000,
       liquidationUrl: 'https://example.com/contract/contract-003.pdf',
-      status: ContractStatus.PENDING_CHECKOUT
+      status: ContractStatus.PENDING_CHECKOUT,
+      createdAt: '2024-02-25T10:00:00Z'
     }
   ];
 
-  static async getByUserCCCD(userCCCD: string): Promise<Partial<Contract> | null> {
-    return this.MOCK_CONTRACTS.find(contract => contract.userCCCD === userCCCD) || null;
+  static async getByUserEmail(userEmail: string): Promise<Partial<Contract> | null> {
+    return this.MOCK_CONTRACTS.find(contract => contract.userEmail === userEmail) || null;
   }
 
   static async getByContractId(contractId: string): Promise<Partial<Contract> | null> {
     return this.MOCK_CONTRACTS.find(contract => contract.contractId === contractId) || null;
   }
 
-  static async getActiveByUserCCCD(userCCCD: string): Promise<Partial<Contract>[]> {
-    return this.MOCK_CONTRACTS.filter(contract => contract.userCCCD === userCCCD && contract.status === ContractStatus.ACTIVE);
+  static async getActiveByUserEmail(userEmail: string): Promise<Partial<Contract>[]> {
+    return this.MOCK_CONTRACTS.filter(contract => contract.userEmail === userEmail && contract.status === ContractStatus.ACTIVE);
   }
 
   static async updateLiquidationUrl(contractId: string, liquidationUrl: string): Promise<boolean> {
