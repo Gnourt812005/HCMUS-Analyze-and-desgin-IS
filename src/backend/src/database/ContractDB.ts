@@ -1,61 +1,54 @@
 import { Contract } from '../business/Contract';
 import { ContractStatus } from '@dormarch/shared';
+import { dbClient } from './DatabaseClient';
 
 export class ContractDB {
-  private static MOCK_CONTRACTS: Partial<Contract>[] = [
-    {
-      contractId: 'contract-001',
-      userEmail: 'test@gmail.com',
-      rentalFormId: 'reg-001',
-      roomId: 'A101',
-      startDate: '2024-01-15',
-      stayDuration: 6,
-      depositAmount: 1000000,
-      signatureUrl: 'https://example.com/signature/contract-001.png',
-      status: ContractStatus.ACTIVE,
-      createdAt: '2024-01-10T10:00:00Z'
-    },
-    {
-      contractId: 'contract-002',
-      userEmail: 'test@gmail.com',
-      rentalFormId: 'reg-002',
-      roomId: 'B202',
-      startDate: '2024-02-01',
-      stayDuration: 12,
-      depositAmount: 1500000,
-      status: ContractStatus.ACTIVE,
-      createdAt: '2024-01-25T10:00:00Z'
-    },
-    {
-      contractId: 'contract-003',
-      userEmail: 'test2@gmail.com',
-      roomId: 'C303',
-      startDate: '2024-03-01',
-      stayDuration: 3,
-      depositAmount: 800000,
-      status: ContractStatus.PENDING_CHECKOUT,
-      createdAt: '2024-02-25T10:00:00Z'
-    }
-  ];
+  private static mapRow(row: any): Partial<Contract> {
+    return {
+      contractId: row.contract_id,
+      userEmail: row.user_email,
+      rentalFormId: row.rental_form_id,
+      roomId: row.room_id,
+      startDate: row.start_date,
+      stayDuration: row.stay_duration,
+      signatureUrl: row.signature_url,
+      status: row.status as ContractStatus,
+      createdAt: row.created_at,
+    };
+  }
+
+  private static readonly BASE_QUERY = `
+    SELECT c.id as contract_id, c.user_email, c.rental_form_id, c.start_date, c.stay_duration, c.status, c.signature_url, c.created_at,
+           (SELECT r.name 
+            FROM contract_beds cb 
+            JOIN beds b ON cb.bed_id = b.id 
+            JOIN rooms r ON b.room_id = r.id 
+            WHERE cb.contract_id = c.id 
+            LIMIT 1) as room_id
+    FROM contracts c
+  `;
 
   static async getByUserEmail(userEmail: string): Promise<Partial<Contract> | null> {
-    return this.MOCK_CONTRACTS.find(contract => contract.userEmail === userEmail) || null;
+    const sql = `${this.BASE_QUERY} WHERE c.user_email = $1 LIMIT 1`;
+    const result = await dbClient.query(sql, [userEmail]);
+    return result.rows[0] ? this.mapRow(result.rows[0]) : null;
   }
 
   static async getByContractId(contractId: string): Promise<Partial<Contract> | null> {
-    return this.MOCK_CONTRACTS.find(contract => contract.contractId === contractId) || null;
+    const sql = `${this.BASE_QUERY} WHERE c.id = $1 LIMIT 1`;
+    const result = await dbClient.query(sql, [contractId]);
+    return result.rows[0] ? this.mapRow(result.rows[0]) : null;
   }
 
   static async getActiveByUserEmail(userEmail: string): Promise<Partial<Contract>[]> {
-    return this.MOCK_CONTRACTS.filter(contract => contract.userEmail === userEmail && contract.status === ContractStatus.ACTIVE);
+    const sql = `${this.BASE_QUERY} WHERE c.user_email = $1 AND c.status = $2`;
+    const result = await dbClient.query(sql, [userEmail, ContractStatus.ACTIVE]);
+    return result.rows.map(row => this.mapRow(row));
   }
 
   static async updateStatus(contractId: string, status: ContractStatus): Promise<boolean> {
-    const contractIndex = this.MOCK_CONTRACTS.findIndex(c => c.contractId === contractId);
-    if (contractIndex === -1)
-      return false;
-    
-    this.MOCK_CONTRACTS[contractIndex].status = status as ContractStatus;
-    return true;
+    const sql = `UPDATE contracts SET status = $1 WHERE id = $2`;
+    const result = await dbClient.query(sql, [status, contractId]);
+    return result.rowCount > 0;
   }
 }

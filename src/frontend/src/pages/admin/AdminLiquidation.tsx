@@ -15,6 +15,7 @@ export const AdminLiquidation = () => {
   const [checkoutRequest, setCheckoutRequest] = useState<CheckoutRequestDTO | null>(null);
   const [contract, setContract] = useState<ContractDTO | null>(null);
   const [calculation, setCalculation] = useState<RefundCalculationDTO | null>(null);
+  const [depositAmount, setDepositAmount] = useState(0);
 
   // Load data on mount
   useEffect(() => {
@@ -46,6 +47,7 @@ export const AdminLiquidation = () => {
       interface DetailResponse {
         request: CheckoutRequestDTO;
         contract?: ContractDTO | null;
+        depositAmount?: number;
       }
       const detailData = await ApiClient.get<DetailResponse>(`/checkout-requests/${requestId}/details`);
       
@@ -54,6 +56,7 @@ export const AdminLiquidation = () => {
       setCheckoutRequest(detailData.request);
       if (detailData.contract) {
         setContract(detailData.contract);
+        setDepositAmount(detailData.depositAmount || 0);
       }
 
       // Load refund calculation
@@ -197,7 +200,7 @@ export const AdminLiquidation = () => {
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs text-slate-500 uppercase">Số tiền cọc</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">
-              {formatCurrency(contract.depositAmount || 0)}
+              {formatCurrency(depositAmount)}
             </p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">

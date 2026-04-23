@@ -273,13 +273,7 @@ export const CreateCheckoutRequest = () => {
                     <p className="text-xs text-slate-500">Phòng/Giường</p>
                     <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.roomId}</p>
                   </div>
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs text-slate-500">Số tiền cọc</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">
-                      {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedContractDetails.depositAmount || 0)}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
                     <p className="text-xs text-slate-500">Thời hạn</p>
                     <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.stayDuration} tháng</p>
                   </div>

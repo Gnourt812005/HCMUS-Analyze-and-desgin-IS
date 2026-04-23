@@ -7,6 +7,7 @@ type CheckoutRequestDetailResponse = {
   request: CheckoutRequestDTO;
   contract?: ContractDTO | null;
   refund?: RefundCalculationDTO | null;
+  depositAmount?: number;
 };
 
 const formatCurrency = (value?: number | null) => {
@@ -321,7 +322,7 @@ export const ViewCheckoutRequest = () => {
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Tiền cọc</span>
-                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract ? formatCurrency(requestDetail.contract.depositAmount) : 'Đang tải...'}</span>
+                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract ? formatCurrency(requestDetail.depositAmount) : 'Đang tải...'}</span>
                   </div>
                 </div>
 

@@ -39,6 +39,7 @@ export const AdminRefundCalculation = () => {
   const [checkoutRequest, setCheckoutRequest] = useState<CheckoutRequestDTO | null>(null);
   const [contract, setContract] = useState<ContractDTO | null>(null);
   const [existingCalculation, setExistingCalculation] = useState<RefundCalculationDTO | null>(null);
+  const [depositAmount, setDepositAmount] = useState(0);
 
   const [damageInspection, setDamageInspection] = useState<DamageInspection>({
     roomCondition: '',
@@ -87,6 +88,7 @@ export const AdminRefundCalculation = () => {
       interface DetailResponse {
         request: CheckoutRequestDTO;
         contract?: ContractDTO | null;
+        depositAmount?: number;
       }
       const detailData = await ApiClient.get<DetailResponse>(`/checkout-requests/${requestId}/details`);
       
@@ -95,6 +97,7 @@ export const AdminRefundCalculation = () => {
       setCheckoutRequest(detailData.request);
       if (detailData.contract) {
         setContract(detailData.contract);
+        setDepositAmount(detailData.depositAmount || 0);
       }
 
       // Try to load existing calculation
@@ -130,7 +133,7 @@ export const AdminRefundCalculation = () => {
     setError(null);
 
     // Base deposit amount from contract
-    const initialDeposit = contract.depositAmount; // depositAmount is not optional in ContractDTO
+    const initialDeposit = depositAmount;
     let baseRefundableDeposit = 0;
     let refundRule = '';
 
@@ -350,7 +353,7 @@ ${additionalDeductions.otherDeductionsNotes || 'Không có'}`,
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs text-slate-500 uppercase">Số tiền cọc</p>
               <p className="mt-2 text-sm font-semibold text-slate-900">
-                {formatCurrency(contract.depositAmount || 0)}
+                {formatCurrency(depositAmount)}
               </p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">

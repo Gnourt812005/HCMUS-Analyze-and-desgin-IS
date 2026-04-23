@@ -12,7 +12,6 @@ export interface ContractDTO {
   roomId?: string;
   startDate?: string;
   stayDuration?: number;
-  depositAmount?: number;
   status?: ContractStatus;
   signatureUrl?: string;
   createdAt?: string;

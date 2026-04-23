@@ -8,7 +8,6 @@ export class Contract {
   roomId?: string;
   startDate?: string;
   stayDuration?: number;
-  depositAmount?: number;
   signatureUrl?: string;
   createdAt?: string;
   status: ContractStatus;
@@ -20,7 +19,6 @@ export class Contract {
     this.roomId = data.roomId;
     this.startDate = data.startDate;
     this.stayDuration = data.stayDuration || 0;
-    this.depositAmount = data.depositAmount || 0;
     this.signatureUrl = data.signatureUrl;
     this.createdAt = data.createdAt || new Date().toISOString();
     this.status = data.status || ContractStatus.ACTIVE;
@@ -34,7 +32,6 @@ export class Contract {
       roomId: this.roomId,
       startDate: this.startDate,
       stayDuration: this.stayDuration,
-      depositAmount: this.depositAmount,
       status: this.status,
       signatureUrl: this.signatureUrl,
       createdAt: this.createdAt
