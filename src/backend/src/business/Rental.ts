@@ -38,15 +38,26 @@ export class Rental {
   static async checkEligibility(payload: RentalEligibilityRequestDTO): Promise<RentalEligibilityDTO> {
     const reasons: string[] = [];
 
-    if (!payload.roomId || !payload.bedId) {
-      reasons.push('Thiếu thông tin phòng hoặc giường.');
+    if (!payload.roomId || !payload.bedIds || payload.bedIds.length === 0) {
+      reasons.push('Thiếu thông tin phòng hoặc danh sách giường.');
     }
 
     if (!/^\d{9,12}$/.test(payload.idCard)) {
       reasons.push('CCCD không hợp lệ.');
     }
 
-    const alreadyDeposited = await RentalDB.hasDeposit(payload.roomId, payload.idCard);
+    const alreadyDeposited = await RentalDB.hasDeposit(
+      payload.roomId,
+      payload.idCard,
+      payload.bedIds
+    );
+
+    if (payload.roomId && payload.bedIds && payload.bedIds.length > 0) {
+      const bedsAvailable = await RentalDB.areBedsAvailable(payload.roomId, payload.bedIds);
+      if (!bedsAvailable) {
+        reasons.push('Một hoặc nhiều giường đã được giữ chỗ hoặc không khả dụng.');
+      }
+    }
 
     return {
       eligible: reasons.length === 0,
@@ -72,7 +83,7 @@ export class Rental {
 
     const eligibility = await this.checkEligibility({
       roomId: payload.roomId,
-      bedId: payload.bedId,
+      bedIds: payload.bedIds,
       idCard: payload.idCard
     });
 
@@ -80,29 +91,25 @@ export class Rental {
       throw new Error(eligibility.reasons.join(' '));
     }
 
-    const roomPrice = await RentalDB.getRoomPrice(payload.roomId, payload.bedId);
-    const serviceTotal = payload.services.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const roomPrice = await RentalDB.getBedsTotalPrice(payload.roomId, payload.bedIds);
     const registrationId = `REG-${Date.now()}`;
 
     await RentalDB.createRegistration({
       ...payload,
       registrationId,
       roomPrice,
-      serviceTotal,
       alreadyDeposited: eligibility.alreadyDeposited
     });
 
     const summary: SummaryItemDTO[] = [
-      { label: 'Tiền phòng tháng đầu', amount: roomPrice },
-      { label: 'Dịch vụ đã chọn', amount: serviceTotal }
+      { label: 'Tiền phòng tháng đầu', amount: roomPrice }
     ];
 
     return {
       registrationId,
       roomId: payload.roomId,
-      bedId: payload.bedId,
+      bedIds: payload.bedIds,
       roomPrice,
-      serviceTotal,
       alreadyDeposited: eligibility.alreadyDeposited,
       summary
     };
@@ -118,28 +125,28 @@ export class Rental {
 
     if (payload.action === 'DEPOSIT') {
       const items: SummaryItemDTO[] = [
-        { label: 'Tiền đặt cọc (30%)', amount: depositAmount },
-        { label: 'Dịch vụ đã chọn', amount: registration.serviceTotal }
+        { label: 'Tiền đặt cọc (30%)', amount: depositAmount }
       ];
 
       return {
         registrationId: payload.registrationId,
         action: payload.action,
         items,
-        totalAmount: depositAmount + registration.serviceTotal
+        totalAmount: depositAmount
       };
     }
 
     const items: SummaryItemDTO[] = [
-      { label: 'Tiền phòng tháng đầu', amount: registration.roomPrice },
-      { label: 'Dịch vụ đã chọn', amount: registration.serviceTotal }
+      { label: 'Tiền phòng tháng đầu', amount: registration.roomPrice }
     ];
 
     if (registration.alreadyDeposited) {
       items.push({ label: 'Đã trừ tiền cọc', amount: -depositAmount });
     }
 
-    const totalAmount = registration.roomPrice + registration.serviceTotal - (registration.alreadyDeposited ? depositAmount : 0);
+    const totalAmount = registration.roomPrice - (registration.alreadyDeposited
+      ? depositAmount
+      : 0);
 
     return {
       registrationId: payload.registrationId,

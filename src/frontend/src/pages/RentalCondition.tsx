@@ -8,7 +8,13 @@ export const RentalCondition = () => {
   const [searchParams] = useSearchParams();
 
   const roomId = searchParams.get('roomId') || '';
-  const bedId = searchParams.get('bedId') || '';
+  const bedIds = useMemo(() => {
+    const raw = searchParams.get('bedIds') || '';
+    return raw
+      .split(',')
+      .map(item => item.trim())
+      .filter(Boolean);
+  }, [searchParams]);
 
   const [conditions, setConditions] = useState<RentalConditionDTO[]>([]);
   const [policy, setPolicy] = useState<PolicyContentDTO | null>(null);
@@ -17,8 +23,8 @@ export const RentalCondition = () => {
   const [loading, setLoading] = useState(false);
 
   const canContinue = useMemo(() => {
-    return roomId.length > 0 && bedId.length > 0 && accepted && idCard.trim().length == 12;
-  }, [roomId, bedId, accepted, idCard]);
+    return roomId.length > 0 && bedIds.length > 0 && accepted && idCard.trim().length === 12;
+  }, [roomId, bedIds, accepted, idCard]);
 
   useEffect(() => {
     const load = async () => {
@@ -48,7 +54,7 @@ export const RentalCondition = () => {
 
     setLoading(true);
     try {
-      const response = await RentalService.checkEligibility({ roomId, bedId, idCard });
+      const response = await RentalService.checkEligibility({ roomId, bedIds, idCard });
       if (response.status !== 200 || !response.data.eligible) {
         const reasons = response.data?.reasons?.join('\n') || 'Không đủ điều kiện thuê.';
         alert(reasons);
@@ -68,7 +74,7 @@ export const RentalCondition = () => {
       navigate('/rental/register', {
         state: {
           roomId,
-          bedId,
+          bedIds,
           idCard,
           acceptedConditions: true,
           alreadyDeposited: response.data.alreadyDeposited,
@@ -86,7 +92,7 @@ export const RentalCondition = () => {
     <div className="mx-auto max-w-3xl px-6 py-10">
       <div className="rounded-lg border border-slate-200 bg-white p-6">
         <h1 className="text-2xl font-bold text-slate-800">Điều kiện thuê</h1>
-        <p className="mt-1 text-sm text-slate-600">Phòng {roomId} - Giường {bedId}</p>
+        <p className="mt-1 text-sm text-slate-600">Phòng {roomId} - Giường {bedIds.join(', ')}</p>
 
         {policy && (
           <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 p-4">
@@ -108,14 +114,22 @@ export const RentalCondition = () => {
           <label className="text-sm font-semibold text-slate-700">CCCD</label>
           <input
             value={idCard}
-            onChange={(e) => setIdCard(e.target.value)}
+            onChange={(e) => setIdCard(e.target.value.replace(/\D/g, '').slice(0, 12))}
+            inputMode="numeric"
+            pattern="\d{12}"
+            maxLength={12}
             placeholder="Nhập CCCD để kiểm tra lịch sử cọc"
             className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 text-sm"
           />
         </div>
 
         <label className="mt-4 flex items-start gap-2 text-sm text-slate-700">
-          <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} className="mt-1" />
+          <input
+            type="checkbox"
+            checked={accepted}
+            onChange={(e) => setAccepted(e.target.checked)}
+            className="mt-1"
+          />
           Tôi đồng ý với toàn bộ điều kiện thuê.
         </label>
 

@@ -7,6 +7,7 @@ import { rentalRoutes } from './routes/rentalRoutes';
 import { paymentRoutes } from './routes/paymentRoutes';
 import { roomRoutes } from './routes/roomRoutes';
 import { previewRoutes } from './routes/previewRoutes';
+import { dbClient } from './database/DatabaseClient';
 
 dotenv.config();
 
@@ -29,5 +30,16 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
+
+  async function startServer() {
+    try {
+      const client = await dbClient.getClient();
+      client.release();
+    } catch (err) {
+      console.error('💥 Could not start server: Database connection failed');
+      process.exit(1);
+    }
+  }
+  startServer();  
   console.log(`🚀 DormArch Backend running at http://localhost:${PORT}`);
 });

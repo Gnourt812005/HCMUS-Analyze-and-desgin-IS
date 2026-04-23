@@ -1,28 +1,21 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   PaymentAction,
   PaymentMethod,
   PaymentPreviewDTO,
-  RentalRegistrationDTO,
-  ServiceItemDTO
+  RentalRegistrationDTO
 } from '@dormarch/shared';
 import { RentalService } from '../api/RentalService';
 
 type RegisterFlowState = {
   roomId: string;
-  bedId: string;
+  bedIds: string[];
   idCard: string;
   acceptedConditions: boolean;
   alreadyDeposited: boolean;
   lockBedSelection: boolean;
 };
-
-const SERVICES: ServiceItemDTO[] = [
-  { id: 'wifi', name: 'Wifi tốc độ cao', price: 120000, quantity: 1 },
-  { id: 'parking', name: 'Giữ xe tháng', price: 150000, quantity: 1 },
-  { id: 'laundry', name: 'Giặt sấy', price: 90000, quantity: 1 }
-];
 
 export const RentalRegister = () => {
   const navigate = useNavigate();
@@ -33,7 +26,6 @@ export const RentalRegister = () => {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [rentalMonths, setRentalMonths] = useState(6);
-  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
 
   const [registration, setRegistration] = useState<RentalRegistrationDTO | null>(null);
   const [preview, setPreview] = useState<PaymentPreviewDTO | null>(null);
@@ -42,11 +34,6 @@ export const RentalRegister = () => {
 
   const [loadingRegister, setLoadingRegister] = useState(false);
   const [loadingPreview, setLoadingPreview] = useState(false);
-
-  const selectedServices = useMemo(
-    () => SERVICES.filter((service) => selectedServiceIds.includes(service.id)),
-    [selectedServiceIds]
-  );
 
   if (!flowState) {
     return (
@@ -61,27 +48,28 @@ export const RentalRegister = () => {
     );
   }
 
-  const toggleService = (serviceId: string) => {
-    setSelectedServiceIds((prev) =>
-      prev.includes(serviceId) ? prev.filter((id) => id !== serviceId) : [...prev, serviceId]
-    );
-  };
-
   const handleRegister = async (event: FormEvent) => {
     event.preventDefault();
+
+    const normalizedPhone = phone.trim();
+    if (!/^\d{10}$/.test(normalizedPhone)) {
+      alert('Số điện thoại phải gồm đúng 10 chữ số.');
+      return;
+    }
+
     setLoadingRegister(true);
 
     try {
       const response = await RentalService.register({
         roomId: flowState.roomId,
-        bedId: flowState.bedId,
+        bedIds: flowState.bedIds,
         customerName,
         idCard: flowState.idCard,
-        phone,
+        phone: normalizedPhone,
         email,
         rentalMonths,
         acceptedConditions: flowState.acceptedConditions,
-        services: selectedServices
+        services: []
       });
 
       if (response.status === 201) {
@@ -132,7 +120,7 @@ export const RentalRegister = () => {
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
       <h1 className="text-3xl font-bold text-slate-800">Đăng ký thuê</h1>
-      <p className="mt-2 text-slate-600">Phòng {flowState.roomId} - Giường {flowState.bedId}</p>
+      <p className="mt-2 text-slate-600">Phòng {flowState.roomId} - Giường {flowState.bedIds.join(', ')}</p>
 
       {flowState.lockBedSelection && (
         <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900">
@@ -144,34 +132,44 @@ export const RentalRegister = () => {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <label className="text-sm font-semibold text-slate-700">Họ tên</label>
-            <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} required className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+            <input
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              required
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            />
           </div>
           <div>
             <label className="text-sm font-semibold text-slate-700">Số điện thoại</label>
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} required className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              inputMode="numeric"
+              pattern="\d{10}"
+              maxLength={10}
+              required
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            />
           </div>
           <div>
             <label className="text-sm font-semibold text-slate-700">Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            />
           </div>
           <div>
             <label className="text-sm font-semibold text-slate-700">Số tháng thuê</label>
-            <input type="number" min={1} value={rentalMonths} onChange={(e) => setRentalMonths(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
-          </div>
-        </div>
-
-        <div>
-          <p className="text-sm font-semibold text-slate-700 mb-2">Dịch vụ đăng ký</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {SERVICES.map((service) => (
-              <label key={service.id} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2">
-                <span>
-                  <span className="block text-sm font-medium text-slate-800">{service.name}</span>
-                  <span className="block text-xs text-slate-500">{service.price.toLocaleString('vi-VN')} VND</span>
-                </span>
-                <input type="checkbox" checked={selectedServiceIds.includes(service.id)} onChange={() => toggleService(service.id)} />
-              </label>
-            ))}
+            <input
+              type="number"
+              min={1}
+              value={rentalMonths}
+              onChange={(e) => setRentalMonths(Number(e.target.value))}
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+            />
           </div>
         </div>
 

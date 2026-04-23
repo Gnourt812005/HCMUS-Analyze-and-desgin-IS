@@ -1,4 +1,5 @@
 import { Room } from '../business/Room';
+import { BedOptionDTO } from '@dormarch/shared';
 
 export class RoomDB {
   private static MOCK_ROOMS: Partial<Room>[] = [
@@ -94,12 +95,62 @@ export class RoomDB {
     }
   ];
 
+  private static ROOM_BEDS: BedOptionDTO[] = [
+    { id: '101-B1', roomId: '101', bedNumber: 'B1', status: 'AVAILABLE', price: 1500000 },
+    { id: '101-B2', roomId: '101', bedNumber: 'B2', status: 'AVAILABLE', price: 1500000 },
+    { id: '101-B3', roomId: '101', bedNumber: 'B3', status: 'BOOKED', price: 1500000 },
+    { id: '101-B4', roomId: '101', bedNumber: 'B4', status: 'BOOKED', price: 1500000 },
+    { id: '102-B1', roomId: '102', bedNumber: 'B1', status: 'AVAILABLE', price: 2000000 },
+    { id: '102-B2', roomId: '102', bedNumber: 'B2', status: 'BOOKED', price: 2000000 },
+    { id: '201-B1', roomId: '201', bedNumber: 'B1', status: 'AVAILABLE', price: 1800000 },
+    { id: '201-B2', roomId: '201', bedNumber: 'B2', status: 'AVAILABLE', price: 1800000 },
+    { id: '201-B3', roomId: '201', bedNumber: 'B3', status: 'AVAILABLE', price: 1800000 },
+    { id: '201-B4', roomId: '201', bedNumber: 'B4', status: 'BOOKED', price: 1800000 },
+    { id: '301-B1', roomId: '301', bedNumber: 'B1', status: 'AVAILABLE', price: 1200000 },
+    { id: '301-B2', roomId: '301', bedNumber: 'B2', status: 'AVAILABLE', price: 1200000 },
+    { id: '301-B3', roomId: '301', bedNumber: 'B3', status: 'AVAILABLE', price: 1200000 },
+    { id: '301-B4', roomId: '301', bedNumber: 'B4', status: 'AVAILABLE', price: 1200000 },
+    { id: '301-B5', roomId: '301', bedNumber: 'B5', status: 'BOOKED', price: 1200000 },
+    { id: '301-B6', roomId: '301', bedNumber: 'B6', status: 'BOOKED', price: 1200000 },
+    { id: '302-B1', roomId: '302', bedNumber: 'B1', status: 'BOOKED', price: 2500000 },
+    { id: '302-B2', roomId: '302', bedNumber: 'B2', status: 'BOOKED', price: 2500000 },
+    { id: '401-B1', roomId: '401', bedNumber: 'B1', status: 'AVAILABLE', price: 1600000 },
+    { id: '401-B2', roomId: '401', bedNumber: 'B2', status: 'AVAILABLE', price: 1600000 },
+    { id: '401-B3', roomId: '401', bedNumber: 'B3', status: 'AVAILABLE', price: 1600000 },
+    { id: '401-B4', roomId: '401', bedNumber: 'B4', status: 'AVAILABLE', price: 1600000 }
+  ];
+
   static async getByDormId(dormId: string): Promise<Partial<Room>[]> {
     return this.MOCK_ROOMS.filter(r => r.dormId === dormId);
   }
 
   static async getAll(): Promise<Partial<Room>[]> {
     return this.MOCK_ROOMS;
+  }
+
+  static async getBedsByRoomId(roomId: string): Promise<BedOptionDTO[]> {
+    return this.ROOM_BEDS.filter(bed => bed.roomId === roomId);
+  }
+
+  static async markBedsStatus(
+    roomId: string,
+    bedIds: string[],
+    status: BedOptionDTO['status']
+  ): Promise<void> {
+    this.ROOM_BEDS = this.ROOM_BEDS.map((bed) => {
+      if (bed.roomId === roomId && bedIds.includes(bed.id)) {
+        return { ...bed, status };
+      }
+      return bed;
+    });
+
+    const room = this.MOCK_ROOMS.find((item) => item.id === roomId);
+    if (room) {
+      const availableBeds = this.ROOM_BEDS.filter(
+        (bed) => bed.roomId === roomId && bed.status === 'AVAILABLE'
+      ).length;
+      room.availableBeds = availableBeds;
+    }
   }
   
   static async toggleFavorite(roomId: string, increment: boolean): Promise<Partial<Room> | null> {
