@@ -46,11 +46,13 @@ export class CheckoutRequest {
       userEmail: requestData.userEmail,
       contractId: requestData.contractId,
       expectedDate: requestData.expectedDate,
-      requestId: `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       createdAt: new Date().toISOString(),
       status: CheckoutStatus.PENDING
     });
-    await CheckoutRequestDB.insert(newRequest);
+    
+    const insertedId = await CheckoutRequestDB.insert(newRequest);
+    if (insertedId) newRequest.requestId = insertedId;
+    
     return newRequest.toDto();
   }
 
@@ -63,7 +65,6 @@ export class CheckoutRequest {
       userEmail: requestData.userEmail,
       contractId: requestData.contractId,
       expectedDate: requestData.expectedDate,
-      requestId: `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       createdAt: new Date().toISOString(),
       status: CheckoutStatus.PENDING
     });
@@ -75,6 +76,7 @@ export class CheckoutRequest {
     );
 
     if (result.success) {
+      if (result.requestId) newRequest.requestId = result.requestId;
       return { success: true, request: newRequest.toDto() };
     } else {
       return { success: false, error: result.error };
@@ -98,11 +100,9 @@ export class CheckoutRequest {
     }
 
     const validTransitions: Record<CheckoutStatus, CheckoutStatus[]> = {
-      [CheckoutStatus.PENDING]: [CheckoutStatus.PROCESSING, CheckoutStatus.REJECTED, CheckoutStatus.CANCELLED],
-      [CheckoutStatus.PROCESSING]: [CheckoutStatus.PENDING_LIQUIDATION, CheckoutStatus.REJECTED, CheckoutStatus.CANCELLED],
-      [CheckoutStatus.PENDING_LIQUIDATION]: [CheckoutStatus.LIQUIDATED, CheckoutStatus.CANCELLED],
+      [CheckoutStatus.PENDING]: [CheckoutStatus.PROCESSING, CheckoutStatus.CANCELLED],
+      [CheckoutStatus.PROCESSING]: [CheckoutStatus.LIQUIDATED, CheckoutStatus.CANCELLED],
       [CheckoutStatus.LIQUIDATED]: [], 
-      [CheckoutStatus.REJECTED]: [], 
       [CheckoutStatus.CANCELLED]: [] 
     };
 

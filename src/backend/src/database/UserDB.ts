@@ -1,98 +1,78 @@
 import { User } from '../business/User';
 import { UserRole } from '@dormarch/shared';
+import { dbClient } from './DatabaseClient';
 
 export class UserDB {
-  private static MOCK_USERS: Partial<User>[] = [
-    {
-      email: 'test@gmail.com',
-      password: 'test@123',
-      fullName: 'Tran Van A',
-      cccd: '079201012345',
-      birthday: '1998-05-15',
-      gender: 'Nam',
-      phone: '0901234567',
-      address: 'Quận 1, TP.HCM',
-      role: UserRole.GUEST
-    },
-    {
-      email: 'admin@gmail.com',
-      password: 'admin',
-      fullName: 'System Admin',
-      cccd: '000000000000',
-      birthday: '1990-01-01',
-      gender: 'Nam',
-      phone: '1111111111',
-      address: 'Admin address',
-      role: UserRole.ADMIN
-    },
-    {
-      email: 'staff@gmail.com',
-      password: 'staff@123',
-      fullName: 'Sales Staff 1',
-      cccd: '079201012345',
-      birthday: '1998-05-15',
-      gender: 'Nam',
-      phone: '0901234567',
-      address: 'Quận 1, TP.HCM',
-      role: UserRole.SALES_STAFF
-    },
-    {
-      email: 'staff2@gmail.com',
-      password: 'staff@123',
-      fullName: 'Sales Staff 2',
-      cccd: '079201012346',
-      birthday: '1995-10-10',
-      gender: 'Nữ',
-      phone: '0907654321',
-      address: 'Quận 3, TP.HCM',
-      role: UserRole.SALES_STAFF
-    }
-  ];
+  private static mapRow(row: any): Partial<User> {
+    return {
+      email: row.email,
+      password: row.password,
+      fullName: row.full_name,
+      cccd: row.cccd,
+      birthday: row.birthday,
+      gender: row.gender,
+      phone: row.phone,
+      address: row.address,
+      role: row.role as UserRole
+    };
+  }
 
   static async fetchCredentialByEmail(email: string): Promise<User | null> {
-    const row = this.MOCK_USERS.find(u => u.email === email);
-    if (!row) return null;
-    return new User(row);
+    const sql = `SELECT * FROM users WHERE email = $1 LIMIT 1`;
+    const result = await dbClient.query(sql, [email]);
+    if (result.rows.length === 0) return null;
+    return new User(this.mapRow(result.rows[0]));
   }
 
   static async fetchByCCCD(cccd: string): Promise<User | null> {
-    const row = this.MOCK_USERS.find(u => u.cccd === cccd);
-    if (!row) return null;
-    return new User(row);
+    const sql = `SELECT * FROM users WHERE cccd = $1 LIMIT 1`;
+    const result = await dbClient.query(sql, [cccd]);
+    if (result.rows.length === 0) return null;
+    return new User(this.mapRow(result.rows[0]));
   }
 
   static async checkEmailExists(email: string): Promise<boolean> {
-    return this.MOCK_USERS.some(u => u.email === email);
+    const sql = `SELECT 1 FROM users WHERE email = $1 LIMIT 1`;
+    const result = await dbClient.query(sql, [email]);
+    return (result.rowCount ?? 0) > 0;
   }
 
   static async update(email: string, data: Partial<User>): Promise<boolean> {
-    const userIndex = this.MOCK_USERS.findIndex(u => u.email === email);
-    if (userIndex === -1) return false;
-
-    // Spread old data and overwrite with new data
-    this.MOCK_USERS[userIndex] = { ...this.MOCK_USERS[userIndex], ...data };
-    return true;
+    const sql = `
+      UPDATE users
+      SET full_name = COALESCE($1, full_name),
+          cccd = COALESCE($2, cccd),
+          birthday = COALESCE($3, birthday),
+          gender = COALESCE($4, gender),
+          phone = COALESCE($5, phone),
+          address = COALESCE($6, address),
+          role = COALESCE($7, role)
+      WHERE email = $8
+    `;
+    const values = [
+      data.fullName, data.cccd, data.birthday, data.gender, 
+      data.phone, data.address, data.role, email
+    ];
+    const result = await dbClient.query(sql, values);
+    return (result.rowCount ?? 0) > 0;
   }
 
   static async updatePassword(email: string, newPassword: string): Promise<boolean> {
-    const userIndex = this.MOCK_USERS.findIndex(u => u.email === email);
-    if (userIndex === -1) return false;
-
-    this.MOCK_USERS[userIndex].password = newPassword;
-    return true;
+    const sql = `UPDATE users SET password = $1 WHERE email = $2`;
+    const result = await dbClient.query(sql, [newPassword, email]);
+    return (result.rowCount ?? 0) > 0;
   }
 
   static async insert(user: User): Promise<boolean> {
-    this.MOCK_USERS.push({
-      email: user.email,
-      password: user.password,
-      fullName: user.fullName,
-      cccd: user.cccd,
-      birthday: user.birthday,
-      gender: user.gender,
-      phone: user.phone,
-      address: user.address,
-    });
-    return true;
+    const sql = `
+      INSERT INTO users (email, password, full_name, cccd, birthday, gender, phone, address, role)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `;
+    const values = [
+      user.email, user.password, user.fullName, user.cccd,
+      user.birthday, user.gender, user.phone, user.address, user.role || UserRole.GUEST
+    ];
+    const result = await dbClient.query(sql, values);
+    return (result.rowCount ?? 0) > 0;
   }
 }

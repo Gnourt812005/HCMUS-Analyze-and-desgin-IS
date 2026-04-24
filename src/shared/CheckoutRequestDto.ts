@@ -1,9 +1,7 @@
 export enum CheckoutStatus {
   PENDING = 'PENDING',                           
   PROCESSING = 'PROCESSING',                     
-  PENDING_LIQUIDATION = 'PENDING_LIQUIDATION',   
   LIQUIDATED = 'LIQUIDATED',                     
-  REJECTED = 'REJECTED',                         
   CANCELLED = 'CANCELLED'                        
 }
 

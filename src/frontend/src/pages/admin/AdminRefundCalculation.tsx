@@ -266,21 +266,6 @@ ${additionalDeductions.otherDeductionsNotes || 'Không có'}`,
 
       setExistingCalculation(savedCalculation);
 
-      // Update checkout request status to PENDING_LIQUIDATION only after calculation succeeds
-      try {
-        await ApiClient.patch(`/checkout-requests/${checkoutRequest.requestId}/status`, {
-          body: JSON.stringify({
-            status: CheckoutStatus.PENDING_LIQUIDATION,
-            expectedStatus: checkoutRequest.status
-          }),
-        });
-      } catch (statusErr) {
-        // Log the error but don't fail - calculation was saved successfully
-        console.error('Failed to update checkout status:', statusErr);
-        setError('Lưu bảng đối soát thành công nhưng cập nhật trạng thái thất bại. Vui lòng làm mới trang.');
-        return;
-      }
-
       showSuccess('Lưu bảng đối soát thành công!');
       setTimeout(() => {
         navigate('/admin/checkout');

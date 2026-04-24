@@ -72,7 +72,7 @@ checkoutRouter.post('/', async (req: Request, res: Response) => {
       return;
     }
 
-    if (contract.status !== 'ACTIVE') {
+    if (contract.status !== ContractStatus.ACTIVE) {
       res.status(400).json({ message: 'Hợp đồng không còn hiệu lực. Không thể tạo yêu cầu trả phòng.' });
       return;
     }
@@ -92,11 +92,6 @@ checkoutRouter.post('/', async (req: Request, res: Response) => {
     if (!createResult.success) {
       res.status(400).json({ message: createResult.error || 'Không thể tạo yêu cầu' });
       return;
-    }
-
-    // Update associated contract status to PENDING_CHECKOUT only after successful request creation
-    if (contractId && createResult.request) {
-      await ContractDB.updateStatus(contractId, ContractStatus.PENDING_CHECKOUT);
     }
 
     res.status(201).json(createResult.request);
@@ -121,13 +116,6 @@ checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
     const success = await CheckoutRequest.updateStatus(requestId, newStatus, expectedCurrentStatus);
     if (!success) {
       throw new Error('Yêu cầu đã được cập nhật bởi quản trị viên khác. Vui lòng làm mới và thử lại.');
-    }
-
-    if (currentRequest.contractId) {
-      // If the checkout request is cancelled or rejected, revert contract status to ACTIVE
-      if ([CheckoutStatus.CANCELLED, CheckoutStatus.REJECTED].includes(newStatus)) {
-        await ContractDB.updateStatus(currentRequest.contractId, ContractStatus.ACTIVE);
-      }
     }
 
     const updated = await CheckoutRequest.getById(requestId);

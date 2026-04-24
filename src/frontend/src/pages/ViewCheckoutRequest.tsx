@@ -18,27 +18,21 @@ const formatCurrency = (value?: number | null) => {
 const STATUS_STYLE: Record<CheckoutStatus, string> = {
   [CheckoutStatus.PENDING]: 'bg-yellow-50 text-yellow-700 border-yellow-200',
   [CheckoutStatus.PROCESSING]: 'bg-blue-50 text-blue-700 border-blue-200',
-  [CheckoutStatus.PENDING_LIQUIDATION]: 'bg-purple-50 text-purple-700 border-purple-200',
   [CheckoutStatus.LIQUIDATED]: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  [CheckoutStatus.REJECTED]: 'bg-red-50 text-red-600 border-red-200',
   [CheckoutStatus.CANCELLED]: 'bg-slate-100 text-slate-500 border-slate-200',
 };
 
 const STATUS_DOT: Record<CheckoutStatus, string> = {
   [CheckoutStatus.PENDING]: 'bg-yellow-500',
   [CheckoutStatus.PROCESSING]: 'bg-blue-500',
-  [CheckoutStatus.PENDING_LIQUIDATION]: 'bg-purple-500',
   [CheckoutStatus.LIQUIDATED]: 'bg-emerald-500',
-  [CheckoutStatus.REJECTED]: 'bg-red-500',
   [CheckoutStatus.CANCELLED]: 'bg-slate-400',
 };
 
 const STATUS_LABEL: Record<CheckoutStatus, string> = {
   [CheckoutStatus.PENDING]: 'Chờ xử lý',
   [CheckoutStatus.PROCESSING]: 'Đang xử lý',
-  [CheckoutStatus.PENDING_LIQUIDATION]: 'Chờ thanh lý',
   [CheckoutStatus.LIQUIDATED]: 'Đã thanh lý',
-  [CheckoutStatus.REJECTED]: 'Từ chối',
   [CheckoutStatus.CANCELLED]: 'Đã hủy',
 };
 
@@ -56,7 +50,7 @@ export const ViewCheckoutRequest = () => {
   const stats = useMemo(() => ({
     total: checkoutRequests.length,
     pending: checkoutRequests.filter(r => r.status === CheckoutStatus.PENDING).length,
-    processing: checkoutRequests.filter(r => r.status === CheckoutStatus.PROCESSING || r.status === CheckoutStatus.PENDING_LIQUIDATION).length,
+    processing: checkoutRequests.filter(r => r.status === CheckoutStatus.PROCESSING).length,
     completed: checkoutRequests.filter(r => r.status === CheckoutStatus.LIQUIDATED).length,
   }), [checkoutRequests]);
 
@@ -364,7 +358,7 @@ export const ViewCheckoutRequest = () => {
                       </div>
                     )}
                   </div>
-                ) : (selectedRequest.status === CheckoutStatus.PROCESSING || selectedRequest.status === CheckoutStatus.PENDING_LIQUIDATION || selectedRequest.status === CheckoutStatus.LIQUIDATED) ? (
+                ) : (selectedRequest.status === CheckoutStatus.PROCESSING || selectedRequest.status === CheckoutStatus.LIQUIDATED) ? (
                   <div className="flex flex-col items-center justify-center p-8 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-slate-400">
                     <span className="material-symbols-outlined text-4xl mb-2">receipt_long</span>
                     <span className="text-sm font-medium">Chưa có bảng đối soát</span>
@@ -376,8 +370,7 @@ export const ViewCheckoutRequest = () => {
               <div className="flex items-center justify-between px-7 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
                 <div>
                   {(selectedRequest.status === CheckoutStatus.PENDING ||
-                    selectedRequest.status === CheckoutStatus.PROCESSING ||
-                    selectedRequest.status === CheckoutStatus.PENDING_LIQUIDATION) && (
+                    selectedRequest.status === CheckoutStatus.PROCESSING) && (
                     <button
                       onClick={() => {
                         handleCancelRequest(selectedRequest.requestId);

@@ -21,55 +21,62 @@ export class CheckoutRequestDB {
     return result.rows.map(row => this.mapRow(row));
   }
 
-  static async insert(request: CheckoutRequest): Promise<boolean> {
+  static async insert(request: CheckoutRequest): Promise<string | null> {
     const sql = `
-      INSERT INTO checkout_requests (id, user_email, contract_id, expected_date, status, handover_id, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO checkout_requests (user_email, contract_id, expected_date, status, handover_id, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id
     `;
     const values = [
-      request.requestId, request.userEmail, request.contractId, request.expectedDate,
-      request.status, request.handoverId, request.createdAt || new Date().toISOString()
+      request.userEmail, 
+      request.contractId ?? null, 
+      request.expectedDate,
+      request.status, 
+      request.handoverId ?? null, 
+      request.createdAt || new Date().toISOString()
     ];
     try {
-      await dbClient.query(sql, values);
-      return true;
+      const result = await dbClient.query(sql, values);
+      return result.rows[0]?.id || null;
     } catch (e) {
       console.error("Database insert failed:", e);
-      return false;
+      return null;
     }
   }
 
-  static async insertIfNoActiveRequest(request: CheckoutRequest, contractId: string, userEmail: string): Promise<{ success: boolean; error?: string }> {
-    const client = await dbClient.getClient();
-    try {
-      await client.query('BEGIN');
-
-      const checkSql = `
+  static async insertIfNoActiveRequest(request: CheckoutRequest, contractId: string, userEmail: string): Promise<{ success: boolean; error?: string; requestId?: string }> {
+    const sql = `
+      INSERT INTO checkout_requests (user_email, contract_id, expected_date, status, handover_id, created_at)
+      SELECT $1, $2, $3, $4, $5, $6
+      WHERE NOT EXISTS (
         SELECT 1 FROM checkout_requests 
-        WHERE contract_id = $1 AND user_email = $2 AND status IN ($3, $4, $5)
-      `;
-      const existingActive = await client.query(checkSql, [contractId, userEmail, CheckoutStatus.PENDING, CheckoutStatus.PROCESSING, CheckoutStatus.PENDING_LIQUIDATION]);
+        WHERE contract_id = $2 AND status::text IN ($7, $8)
+      )
+      RETURNING id;
+    `;
+    
+    const values = [
+      request.userEmail, 
+      request.contractId ?? null, 
+      request.expectedDate, 
+      request.status, 
+      request.handoverId ?? null, 
+      request.createdAt || new Date().toISOString(),
+      CheckoutStatus.PENDING,
+      CheckoutStatus.PROCESSING
+    ];
 
-      if (existingActive.rows.length > 0) {
-        await client.query('ROLLBACK');
+    try {
+      const result = await dbClient.query(sql, values);
+      
+      if ((result.rowCount ?? 0) === 0) {
         return { success: false, error: 'Đã có yêu cầu trả phòng đang xử lý cho hợp đồng này.' };
       }
-
-      const insertSql = `
-        INSERT INTO checkout_requests (id, user_email, contract_id, expected_date, status, handover_id, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-      `;
-      const values = [request.requestId, request.userEmail, request.contractId, request.expectedDate, request.status, request.handoverId, request.createdAt || new Date().toISOString()];
-      await client.query(insertSql, values);
-      await client.query('COMMIT');
       
-      return { success: true };
-    } catch (e) {
-      await client.query('ROLLBACK');
+      return { success: true, requestId: result.rows[0].id };
+    } catch (e: any) {
       console.error(e);
-      return { success: false, error: 'Lỗi cơ sở dữ liệu khi tạo yêu cầu.' };
-    } finally {
-      client.release();
+      return { success: false, error: `Lỗi cơ sở dữ liệu khi tạo yêu cầu. ${e.message}` };
     }
   }
 

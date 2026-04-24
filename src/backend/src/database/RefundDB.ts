@@ -29,15 +29,14 @@ export class RefundDB {
   }
 
   static async create(data: Partial<RefundCalculation>): Promise<Partial<RefundCalculation>> {
-    const calculationId = `calc-${Date.now()}`;
     const sql = `
       INSERT INTO refund_calculations 
-      (id, request_id, contract_id, deposit_amount, damage_fee, extra_fee, final_refund_amount, notes, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+      (request_id, contract_id, deposit_amount, damage_fee, extra_fee, final_refund_amount, notes, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
       RETURNING *
     `;
     const values = [
-      calculationId, data.requestId, data.contractId, data.depositAmount || 0,
+      data.requestId, data.contractId, data.depositAmount || 0,
       data.damageFee || 0, data.extraFee || 0, data.finalRefundAmount || 0, data.notes || ''
     ];
     const result = await dbClient.query(sql, values);
