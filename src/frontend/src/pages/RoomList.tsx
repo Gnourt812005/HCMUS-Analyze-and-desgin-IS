@@ -71,12 +71,12 @@ export const RoomList = () => {
         const fetchRooms = async () => {
             try {
                 // Fetch all of the rooms' data from the backend via api
-                const response = await ApiClient.get<{ status: number; data: Room[] }>(
+                const response = await ApiClient.get<{ status: number; data: { rooms: Room[], total: number } }>(
                     `/rooms${dormId ? `?dormId=${dormId}` : ''}`
                 );
                 
                 if (response.status === 200) {
-                    setOriginalRooms(response.data);
+                    setOriginalRooms(response.data.rooms);
                 }
             } catch (error) {
                 console.error("Failed to fetch rooms", error);
@@ -131,7 +131,7 @@ export const RoomList = () => {
             totalBeds: selectedRoomData.totalBeds,
             availableBeds: selectedRoomData.availableBeds,
             amenities: selectedRoomData.amenities,
-            specialNotes: selectedRoomData.specialNotes,
+            // specialNotes: selectedRoomData.specialNotes,
             imageUrl: selectedRoomData.imageUrl,
             favoriteCount: selectedRoomData.favoriteCount,
         };
@@ -605,22 +605,22 @@ export const RoomList = () => {
                                     </div>
                                 </div>
 
-                                {selectedRoomDetail.specialNotes.length > 0 && (
-                                    <div className="mb-8">
-                                        <h3 className="mb-3 font-bold text-lg text-slate-800">Lưu ý đặc biệt</h3>
-                                        <div className="space-y-3">
-                                            {selectedRoomDetail.specialNotes.map((note) => (
-                                                <div
-                                                    key={note}
-                                                    className="flex items-start gap-3 rounded-lg bg-blue-50 p-4 border border-blue-100"
-                                                >
-                                                    <AlertCircle className="h-5 w-5 shrink-0 text-blue-600 mt-0.5" />
-                                                    <span className="text-sm font-medium text-blue-900">{note}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
+                                {/* {selectedRoomDetail.specialNotes.length > 0 && (
+                                    // <div className="mb-8">
+                                    //     <h3 className="mb-3 font-bold text-lg text-slate-800">Lưu ý đặc biệt</h3>
+                                    //     <div className="space-y-3">
+                                    //         {selectedRoomDetail.specialNotes.map((note) => (
+                                    //             <div
+                                    //                 key={note}
+                                    //                 className="flex items-start gap-3 rounded-lg bg-blue-50 p-4 border border-blue-100"
+                                    //             >
+                                    //                 <AlertCircle className="h-5 w-5 shrink-0 text-blue-600 mt-0.5" />
+                                    //                 <span className="text-sm font-medium text-blue-900">{note}</span>
+                                    //             </div>
+                                    //         ))}
+                                    //     </div>
+                                    // </div>
+                                //)} */}
 
                                 <div className="flex gap-4">
                                     <button

@@ -21,6 +21,7 @@ import { AdminLayout } from './components/AdminLayout';
 import { AdminDorm } from './pages/admin/AdminDorm';
 import { AdminDormDetail } from './pages/admin/AdminDormDetail';
 import { AdminRooms } from './pages/admin/AdminRooms';
+import { AdminRoomDetail } from './pages/admin/AdminRoomDetail';
 import { AdminViewing } from './pages/admin/AdminViewing';
 import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminContracts } from './pages/admin/AdminContracts';
@@ -64,6 +65,8 @@ function App() {
           <Route path="dorms/new" element={<AdminDormDetail />} />
           <Route path="dorms/:id" element={<AdminDormDetail />} />
           <Route path="rooms" element={<AdminRooms />} />
+          <Route path="rooms/create" element={<AdminRoomDetail />} />
+          <Route path="rooms/:id" element={<AdminRoomDetail />} />
           <Route path="client-preview-forms-management" element={<ClientPreviewFormManagement />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="contracts" element={<AdminContracts />} />

@@ -11,7 +11,8 @@ async function getRoomAndDormInfo(roomId: string) {
   const dorms = await DormDB.getAll();
   for (const dorm of dorms) {
     if (!dorm.id) continue;
-    const rooms = await RoomDB.getByDormId(dorm.id);
+    const result = await RoomDB.fetchAll({ dormId: dorm.id });
+    const rooms = result.rooms;
     const match = rooms.find((r) => r.id === roomId);
     if (match) {
       return {
