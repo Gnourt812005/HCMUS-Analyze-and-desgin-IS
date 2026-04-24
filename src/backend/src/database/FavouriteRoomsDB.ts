@@ -1,3 +1,5 @@
+import { DatabaseClient } from './DatabaseClient';
+
 export class FavouriteRooms {
   userId: string;
   roomId: string;
@@ -16,22 +18,51 @@ export class FavouriteRoomsDB {
   ];
 
   static async getRoomIdsByUserId(userId: string): Promise<string[]> {
-    return this.MOCK_RECORDS.filter(r => r.userId === userId).map(r => r.roomId);
+    try {
+      const result = await DatabaseClient.getInstance().query(
+        `SELECT room_id FROM user_favorite_rooms WHERE user_email = $1`,
+        [userId]
+      );
+      
+      // If DB fails or is empty, can fallback to mock if you want, but user wants actual DB fetching
+      // we'll return DB results
+      if (result.rows.length > 0) {
+        return result.rows.map((r: any) => r.room_id);
+      }
+      return [];
+    } catch (e) {
+      console.error("Could not fetch favorites from database:", e);
+      return [];
+    }
   }
 
   static async insert(userId: string, roomId: string): Promise<boolean> {
     // Prevent duplicate favorites
-    const existing = this.MOCK_RECORDS.find(r => r.userId === userId && r.roomId === roomId);
-    if (existing) {
-        return false;
+    const isDuplicate = await DatabaseClient.getInstance().query('SELECT 1 FROM user_favorite_rooms WHERE user_email = $1 AND room_id = $2', [userId, roomId]);
+
+    if (isDuplicate.rows.length > 0) {
+      console.warn(`Favorite already exists for user ${userId} and room ${roomId}`);
+      return false;
     }
-    this.MOCK_RECORDS.push(new FavouriteRooms(userId, roomId));
-    return true;
+
+    const query = `INSERT INTO user_favorite_rooms (user_email, room_id) VALUES ($1, $2)`;
+    try {
+      await DatabaseClient.getInstance().query(query, [userId, roomId]);
+      return true;
+    } catch (e) {
+      console.error("Failed to insert favorite into database:", e);
+      return false;
+    }
   }
 
   static async delete(userId: string, roomId: string): Promise<boolean> {
-    const initialLength = this.MOCK_RECORDS.length;
-    this.MOCK_RECORDS = this.MOCK_RECORDS.filter(r => !(r.userId === userId && r.roomId === roomId));
-    return this.MOCK_RECORDS.length < initialLength;
+    const query = `DELETE FROM user_favorite_rooms WHERE user_email = $1 AND room_id = $2`;
+    try {
+      await DatabaseClient.getInstance().query(query, [userId, roomId]);
+      return true;
+    } catch (e) {
+      console.error("Failed to delete favorite from database:", e);
+      return false;
+    }
   }
 }

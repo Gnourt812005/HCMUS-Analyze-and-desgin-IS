@@ -24,10 +24,6 @@ export const CustomerSidebar = () => {
     { path: '/checkout-requests', icon: 'inventory_2', label: 'Yêu cầu trả phòng' },
   ];
 
-  if (userRole === UserRole.SALES_STAFF) {
-    menuItems.splice(3, 0, { path: '/client-preview-form-managements', icon: 'calendar_clock', label: 'Đơn xem phòng khách hàng' });
-  }
-
   return (
     <aside className="md:col-span-3 space-y-4">
       <div className="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-outline-variant/10">

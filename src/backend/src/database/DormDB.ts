@@ -1,4 +1,5 @@
 import { Dorm } from '../business/Dorm';
+import { DatabaseClient } from './DatabaseClient';
 
 export class DormDB {
   private static MOCK_DORMS: Partial<Dorm>[] = [
@@ -44,23 +45,74 @@ export class DormDB {
     },
   ];
 
+  private static mapRowToDorm(row: any): Dorm {
+    let mappedStatus = row.status || "Còn phòng";
+    if (row.status === 'AVAILABLE') mappedStatus = "Còn phòng";
+    else if (row.status === 'FULL') mappedStatus = "Hết phòng";
+    else if (row.status === 'NEARLY_FULL') mappedStatus = "Sắp đầy";
+
+    return new Dorm({
+      id: row.id,
+      name: row.name,
+      address: row.address,
+      phone: row.phone,
+      status: mappedStatus as any,
+      totalRooms: Number(row.total_rooms || 0),
+      availableRooms: Number(row.available_rooms || 0),
+      managerId: row.manager_id
+    });
+  }
+
   static async getAll(): Promise<Dorm[]> {
-    return this.MOCK_DORMS.map(d => new Dorm(d));
+    const db = DatabaseClient.getInstance();
+    const query = `
+      SELECT id, name, address, phone, status, total_rooms, available_rooms, manager_id
+      FROM dorms
+    `;
+    try {
+    const result = await db.query(query);
+    return result.rows.map(this.mapRowToDorm);
+    }
+    catch (e) {
+      console.error("Database fetch failed:", e);
+      return [];
+    }
   }
 
   static async fetchByKeyword(keyword: string): Promise<Dorm[]> {
-    const k = keyword.toLowerCase();
-    return this.MOCK_DORMS
-      .filter(d =>
-        d.name?.toLowerCase().includes(k) ||
-        d.address?.toLowerCase().includes(k)
-      )
-      .map(d => new Dorm(d));
+    const db = DatabaseClient.getInstance();
+    const query = `
+      SELECT id, name, address, phone, status, total_rooms, available_rooms, manager_id
+      FROM dorms 
+      WHERE name ILIKE $1 OR address ILIKE $1
+    `;
+
+    try {
+      const result = await db.query(query, [`%${keyword}%`]);
+      return result.rows.map(this.mapRowToDorm);
+    }
+    catch (e) {
+      console.error("Database fetch failed:", e);
+      return [];
+    }
   }
 
   static async fetchById(id: string): Promise<Dorm | null> {
-    const row = this.MOCK_DORMS.find(d => d.id === id);
-    return row ? new Dorm(row) : null;
+    const db = DatabaseClient.getInstance();
+    const query = `
+      SELECT id, name, address, phone, status, total_rooms, available_rooms, manager_id
+      FROM dorms 
+      WHERE id = $1
+    `;
+    try {
+      const result = await db.query(query, [id]);
+      if (result.rows.length === 0) return null;
+      return this.mapRowToDorm(result.rows[0]);
+    }
+    catch (e) {
+      console.error("Database fetch failed:", e);
+      return null;
+    }
   }
 
   static async insert(dorm: Dorm): Promise<boolean> {

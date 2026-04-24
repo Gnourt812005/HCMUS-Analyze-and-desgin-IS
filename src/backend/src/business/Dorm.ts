@@ -6,7 +6,7 @@ export class Dorm {
   name: string;
   address: string;
   phone: string;
-  status: "Còn phòng" | "Hết phòng" | "Sắp đầy" | "Đã ẩn";
+  status: "Còn phòng" | "Hết phòng" | "Sắp đầy";
   totalRooms: number;
   availableRooms: number;
   managerId: string;

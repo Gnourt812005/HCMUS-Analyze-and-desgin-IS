@@ -53,7 +53,6 @@ function App() {
             <Route path="profile" element={<ProfilePage />} />
             <Route path="favourites-management" element={<FavouriteManagement />} />
             <Route path="preview-forms-management" element={<PreviewFormManagement />} />
-            <Route path="client-preview-form-managements" element={<ClientPreviewFormManagement />} />
             <Route path="orders" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Đơn hàng sẽ sớm ra mắt</div>} />
             <Route path="contracts" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Hợp đồng sẽ sớm ra mắt</div>} />
             <Route path="checkout-requests" element={<ViewCheckoutRequest />} />
@@ -68,7 +67,7 @@ function App() {
           <Route path="dorms/new" element={<AdminDormDetail />} />
           <Route path="dorms/:id" element={<AdminDormDetail />} />
           <Route path="rooms" element={<AdminRooms />} />
-          <Route path="viewing" element={<AdminViewing />} />
+          <Route path="client-preview-forms-management" element={<ClientPreviewFormManagement />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="contracts" element={<AdminContracts />} />
           <Route path="handover" element={<AdminHandover />} />
