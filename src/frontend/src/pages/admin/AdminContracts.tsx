@@ -1,206 +1,120 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import {
+  ContractService,
+  ContractAdminRow,
+  RentalFormOption,
+  ContractStatus,
+} from '../../api/ContractService';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type ContractStatus = 'Hiệu lực' | 'Hết hạn' | 'Đã huỷ';
-type PaymentPeriod = 'monthly' | 'quarterly' | 'yearly';
-
-interface RentalForm {
-  id: string;
-  customerName: string;
-  phone: string;
-  cccd: string;
-  room: string;
-  beds: string[];
-}
-
-interface Contract {
-  id: string;
-  depositFormId: string;
-  customerName: string;
-  phone: string;
-  cccd: string;
-  room: string;
-  beds: string[];
-  startDate: string;
-  endDate: string;
-  paymentPeriod: PaymentPeriod;
-  status: ContractStatus;
-  createdDate: string;
-}
-
-// ─── Hardcoded Contract Terms ─────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const BASE_RENT_PER_BED = 1_500_000;
 
 const SERVICE_FEES = [
-  { name: 'Điện', price: '3.500 đ/kWh', note: 'Theo chỉ số công tơ, thanh toán cuối tháng' },
-  { name: 'Nước', price: '50.000 đ/người/tháng', note: 'Định mức 4m³/người, vượt tính thêm' },
-  { name: 'Internet & Wifi', price: '50.000 đ/phòng/tháng', note: 'Tốc độ tối thiểu 50 Mbps' },
-  { name: 'Vệ sinh chung', price: '30.000 đ/người/tháng', note: 'Bao gồm hành lang và khu vực sinh hoạt chung' },
-  { name: 'Bảo vệ & an ninh', price: 'Miễn phí', note: 'Hoạt động 24/7' },
+  { name: 'Điện',            price: '3.500 đ/kWh',              note: 'Theo chỉ số công tơ, thanh toán cuối tháng' },
+  { name: 'Nước',            price: '50.000 đ/người/tháng',     note: 'Định mức 4m³/người, vượt tính thêm' },
+  { name: 'Internet & Wifi', price: '50.000 đ/phòng/tháng',    note: 'Tốc độ tối thiểu 50 Mbps' },
+  { name: 'Vệ sinh chung',   price: '30.000 đ/người/tháng',    note: 'Bao gồm hành lang và khu vực sinh hoạt chung' },
+  { name: 'Bảo vệ & an ninh', price: 'Miễn phí',               note: 'Hoạt động 24/7' },
 ];
 
 const DEPOSIT_RULES = [
-  {
-    icon: 'check_circle',
-    color: 'text-emerald-600',
-    bg: 'bg-emerald-50 border-emerald-200',
-    title: 'Hoàn trả 100% tiền cọc',
-    detail: 'Không có hư hỏng tài sản, thanh toán đầy đủ các khoản phí, và thông báo chấm dứt hợp đồng trước ít nhất 30 ngày.',
-  },
-  {
-    icon: 'remove_circle',
-    color: 'text-amber-600',
-    bg: 'bg-amber-50 border-amber-200',
-    title: 'Khấu trừ chi phí sửa chữa',
-    detail: 'Trường hợp có hư hỏng tài sản được ghi nhận trong biên bản bàn giao, chi phí sửa chữa sẽ được khấu trừ trực tiếp vào tiền cọc.',
-  },
-  {
-    icon: 'cancel',
-    color: 'text-red-600',
-    bg: 'bg-red-50 border-red-200',
-    title: 'Không hoàn trả tiền cọc',
-    detail: 'Vi phạm hợp đồng nghiêm trọng, tự ý rời đi không báo trước, hoặc còn nợ phí chưa thanh toán sau khi trừ tiền cọc.',
-  },
+  { icon: 'check_circle',  color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200', title: 'Hoàn trả 100% tiền cọc', detail: 'Không có hư hỏng tài sản, thanh toán đầy đủ các khoản phí, và thông báo chấm dứt hợp đồng trước ít nhất 30 ngày.' },
+  { icon: 'remove_circle', color: 'text-amber-600',   bg: 'bg-amber-50 border-amber-200',     title: 'Khấu trừ chi phí sửa chữa', detail: 'Trường hợp có hư hỏng tài sản được ghi nhận trong biên bản bàn giao, chi phí sửa chữa sẽ được khấu trừ trực tiếp vào tiền cọc.' },
+  { icon: 'cancel',        color: 'text-red-600',     bg: 'bg-red-50 border-red-200',         title: 'Không hoàn trả tiền cọc', detail: 'Vi phạm hợp đồng nghiêm trọng, tự ý rời đi không báo trước, hoặc còn nợ phí chưa thanh toán sau khi trừ tiền cọc.' },
 ];
 
 const HOUSE_RULES = [
-  { icon: 'volume_off', text: 'Không gây tiếng ồn sau 22:00 và trước 06:00.' },
-  { icon: 'smoke_free', text: 'Cấm hút thuốc lá trong toàn bộ khuôn viên ký túc xá.' },
-  { icon: 'pets', text: 'Không nuôi thú cưng dưới mọi hình thức.' },
-  { icon: 'lock', text: 'Khoá cửa phòng khi ra ngoài và khi đi ngủ.' },
-  { icon: 'no_food', text: 'Không nấu ăn trong phòng, chỉ sử dụng bếp sinh hoạt chung.' },
-  { icon: 'people', text: 'Không cho người ngoài ở lại qua đêm khi chưa đăng ký.' },
-  { icon: 'cleaning_services', text: 'Giữ vệ sinh phòng và khu vực sinh hoạt chung sạch sẽ.' },
-  { icon: 'electrical_services', text: 'Không sử dụng thiết bị điện công suất lớn chưa được phê duyệt.' },
+  { icon: 'volume_off',           text: 'Không gây tiếng ồn sau 22:00 và trước 06:00.' },
+  { icon: 'smoke_free',           text: 'Cấm hút thuốc lá trong toàn bộ khuôn viên ký túc xá.' },
+  { icon: 'pets',                 text: 'Không nuôi thú cưng dưới mọi hình thức.' },
+  { icon: 'lock',                 text: 'Khoá cửa phòng khi ra ngoài và khi đi ngủ.' },
+  { icon: 'no_food',              text: 'Không nấu ăn trong phòng, chỉ sử dụng bếp sinh hoạt chung.' },
+  { icon: 'people',               text: 'Không cho người ngoài ở lại qua đêm khi chưa đăng ký.' },
+  { icon: 'cleaning_services',    text: 'Giữ vệ sinh phòng và khu vực sinh hoạt chung sạch sẽ.' },
+  { icon: 'electrical_services',  text: 'Không sử dụng thiết bị điện công suất lớn chưa được phê duyệt.' },
 ];
 
 const VIOLATION_TERMS = [
-  {
-    level: 'Lần 1',
-    badge: 'bg-yellow-100 text-yellow-800',
-    action: 'Nhắc nhở bằng văn bản',
-    detail: 'Ban quản lý gửi thông báo nhắc nhở và yêu cầu cam kết không tái phạm.',
-  },
-  {
-    level: 'Lần 2',
-    badge: 'bg-orange-100 text-orange-800',
-    action: 'Phạt tiền 500.000 đ',
-    detail: 'Áp dụng mức phạt theo quy định. Số tiền phạt được khấu trừ vào tiền cọc hoặc thanh toán trực tiếp.',
-  },
-  {
-    level: 'Lần 3',
-    badge: 'bg-red-100 text-red-800',
-    action: 'Chấm dứt hợp đồng',
-    detail: 'Ban quản lý có quyền đơn phương chấm dứt hợp đồng và yêu cầu bàn giao phòng trong vòng 7 ngày.',
-  },
+  { level: 'Lần 1', badge: 'bg-yellow-100 text-yellow-800', action: 'Nhắc nhở bằng văn bản',   detail: 'Ban quản lý gửi thông báo nhắc nhở và yêu cầu cam kết không tái phạm.' },
+  { level: 'Lần 2', badge: 'bg-orange-100 text-orange-800', action: 'Phạt tiền 500.000 đ',     detail: 'Áp dụng mức phạt theo quy định. Số tiền phạt được khấu trừ vào tiền cọc hoặc thanh toán trực tiếp.' },
+  { level: 'Lần 3', badge: 'bg-red-100 text-red-800',       action: 'Chấm dứt hợp đồng',      detail: 'Ban quản lý có quyền đơn phương chấm dứt hợp đồng và yêu cầu bàn giao phòng trong vòng 7 ngày.' },
 ];
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const MOCK_RENTAL_FORMS: RentalForm[] = [
-  { id: 'DC001', customerName: 'Nguyễn Văn An', phone: '0901234567', cccd: '079201012345', room: 'A101', beds: ['A101-1', 'A101-2'] },
-  { id: 'DC002', customerName: 'Trần Thị Bình', phone: '0912345678', cccd: '079202023456', room: 'B203', beds: ['B203-1'] },
-  { id: 'DC003', customerName: 'Lê Hoàng Cường', phone: '0923456789', cccd: '079203034567', room: 'C301', beds: ['C301-1', 'C301-2', 'C301-3'] },
-];
-
-const MOCK_CONTRACTS: Contract[] = [
-  {
-    id: 'HD001', depositFormId: 'DC001',
-    customerName: 'Nguyễn Văn An', phone: '0901234567', cccd: '079201012345',
-    room: 'A101', beds: ['A101-1', 'A101-2'],
-    startDate: '2025-01-01', endDate: '2025-12-31',
-    paymentPeriod: 'monthly', status: 'Hiệu lực', createdDate: '2024-12-28',
-  },
-  {
-    id: 'HD002', depositFormId: 'DC002',
-    customerName: 'Trần Thị Bình', phone: '0912345678', cccd: '079202023456',
-    room: 'B203', beds: ['B203-1'],
-    startDate: '2024-06-01', endDate: '2024-12-31',
-    paymentPeriod: 'quarterly', status: 'Hết hạn', createdDate: '2024-05-25',
-  },
-  {
-    id: 'HD003', depositFormId: 'DC003',
-    customerName: 'Lê Hoàng Cường', phone: '0923456789', cccd: '079203034567',
-    room: 'C301', beds: ['C301-1', 'C301-2'],
-    startDate: '2025-03-01', endDate: '2026-02-28',
-    paymentPeriod: 'yearly', status: 'Hiệu lực', createdDate: '2025-02-20',
-  },
-  {
-    id: 'HD004', depositFormId: 'DC001',
-    customerName: 'Phạm Thị Dung', phone: '0934567890', cccd: '079204045678',
-    room: 'D102', beds: ['D102-1'],
-    startDate: '2024-09-01', endDate: '2025-01-31',
-    paymentPeriod: 'monthly', status: 'Đã huỷ', createdDate: '2024-08-28',
-  },
-];
-
-const PAYMENT_PERIOD_LABEL: Record<PaymentPeriod, string> = {
-  monthly: 'Hàng tháng',
-  quarterly: 'Hàng quý',
-  yearly: 'Hàng năm',
-};
-
-const STATUS_STYLE: Record<ContractStatus, string> = {
-  'Hiệu lực': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  'Hết hạn': 'bg-slate-100 text-slate-500 border-slate-200',
-  'Đã huỷ': 'bg-red-50 text-red-600 border-red-200',
-};
-
-const STATUS_DOT: Record<ContractStatus, string> = {
-  'Hiệu lực': 'bg-emerald-500',
-  'Hết hạn': 'bg-slate-400',
-  'Đã huỷ': 'bg-red-500',
-};
-
-function fmtMoney(n: number) {
-  return n.toLocaleString('vi-VN') + ' đ';
+function fmtMoney(n: number) { return n.toLocaleString('vi-VN') + ' đ'; }
+function fmtDate(iso: string) {
+  try { return new Date(iso).toLocaleDateString('vi-VN'); } catch { return iso; }
 }
+function calcEndDate(startDate: string, stayDuration: number): string {
+  try {
+    const d = new Date(startDate);
+    d.setMonth(d.getMonth() + stayDuration);
+    return d.toISOString().split('T')[0];
+  } catch { return ''; }
+}
+
+type UIStatus = 'Hiệu lực' | 'Hết hạn' | 'Đã huỷ';
+function toUIStatus(s: ContractStatus): UIStatus {
+  if (s === 'ACTIVE' || s === 'PENDING_CHECKOUT') return 'Hiệu lực';
+  if (s === 'INACTIVE') return 'Hết hạn';
+  return 'Đã huỷ';
+}
+
+const STATUS_STYLE: Record<UIStatus, string> = {
+  'Hiệu lực': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  'Hết hạn':  'bg-slate-100  text-slate-500  border-slate-200',
+  'Đã huỷ':  'bg-red-50     text-red-600    border-red-200',
+};
+const STATUS_DOT: Record<UIStatus, string> = {
+  'Hiệu lực': 'bg-emerald-500',
+  'Hết hạn':  'bg-slate-400',
+  'Đã huỷ':  'bg-red-500',
+};
 
 // ─── Create Contract Modal ────────────────────────────────────────────────────
 
 const CreateContractModal = ({
-  onClose,
-  onCreate,
-}: {
-  onClose: () => void;
-  onCreate: (c: Contract) => void;
-}) => {
+  onClose, onCreated,
+}: { onClose: () => void; onCreated: () => void }) => {
+  const [forms, setForms] = useState<RentalFormOption[]>([]);
+  const [loadingForms, setLoadingForms] = useState(true);
   const [rentalFormId, setRentalFormId] = useState('');
   const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [paymentPeriod, setPaymentPeriod] = useState<PaymentPeriod>('monthly');
+  const [stayDuration, setStayDuration] = useState(6);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
-  const selected = MOCK_RENTAL_FORMS.find(d => d.id === rentalFormId);
+  useEffect(() => {
+    ContractService.getRentalForms()
+      .then(setForms)
+      .catch(() => setForms([]))
+      .finally(() => setLoadingForms(false));
+  }, []);
+
+  const selected = forms.find(f => f.id === rentalFormId);
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!rentalFormId) e.rentalForm = 'Vui lòng chọn phiếu đăng ký thuê';
-    if (!startDate) e.startDate = 'Vui lòng chọn ngày bắt đầu';
-    if (!endDate) e.endDate = 'Vui lòng chọn ngày kết thúc';
-    if (startDate && endDate && endDate <= startDate) e.endDate = 'Ngày kết thúc phải sau ngày bắt đầu';
+    if (!rentalFormId) e.form = 'Vui lòng chọn phiếu đăng ký thuê';
+    if (!startDate)   e.start = 'Vui lòng chọn ngày bắt đầu';
+    if (stayDuration < 1) e.duration = 'Thời hạn tối thiểu 1 tháng';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
-  const handleSave = () => {
-    if (!validate() || !selected) return;
-    onCreate({
-      id: `HD${String(Date.now()).slice(-3)}`,
-      depositFormId: rentalFormId,
-      customerName: selected.customerName,
-      phone: selected.phone,
-      cccd: selected.cccd,
-      room: selected.room,
-      beds: selected.beds,
-      startDate,
-      endDate,
-      paymentPeriod,
-      status: 'Hiệu lực',
-      createdDate: new Date().toISOString().split('T')[0],
-    });
+  const handleSave = async () => {
+    if (!validate()) return;
+    setSaving(true);
+    try {
+      await ContractService.create({ rentalFormId, startDate, stayDuration });
+      onCreated();
+    } catch (err: any) {
+      setErrors({ api: err.message || 'Lỗi khi tạo hợp đồng' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -218,23 +132,37 @@ const CreateContractModal = ({
         </div>
 
         <div className="flex-1 overflow-y-auto px-7 py-6 space-y-5">
+
+          {/* Phiếu đăng ký thuê */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
               Phiếu đăng ký thuê <span className="text-red-500">*</span>
             </label>
-            <select
-              value={rentalFormId}
-              onChange={e => { setRentalFormId(e.target.value); setErrors({}); }}
-              className="w-full bg-slate-50 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-            >
-              <option value="">-- Chọn phiếu đăng ký thuê --</option>
-              {MOCK_RENTAL_FORMS.map(d => (
-                <option key={d.id} value={d.id}>{d.id} — {d.customerName} (Phòng {d.room})</option>
-              ))}
-            </select>
-            {errors.rentalForm && <p className="text-red-500 text-xs mt-1">{errors.rentalForm}</p>}
+            {loadingForms ? (
+              <div className="flex items-center gap-2 text-slate-400 text-sm py-3">
+                <span className="material-symbols-outlined animate-spin text-base">progress_activity</span>
+                Đang tải...
+              </div>
+            ) : forms.length === 0 ? (
+              <p className="text-sm text-slate-400 italic py-2">Không có phiếu đăng ký nào chưa có hợp đồng.</p>
+            ) : (
+              <select
+                value={rentalFormId}
+                onChange={e => { setRentalFormId(e.target.value); setErrors({}); }}
+                className="w-full bg-slate-50 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              >
+                <option value="">-- Chọn phiếu đăng ký thuê --</option>
+                {forms.map(f => (
+                  <option key={f.id} value={f.id}>
+                    {f.id.slice(0, 8)}... — {f.customerName} {f.roomName ? `(Phòng ${f.roomName})` : ''}
+                  </option>
+                ))}
+              </select>
+            )}
+            {errors.form && <p className="text-red-500 text-xs mt-1">{errors.form}</p>}
           </div>
 
+          {/* Thông tin tự điền */}
           {selected && (
             <div className="bg-blue-50 rounded-xl p-4 grid grid-cols-3 gap-4 text-sm">
               <div>
@@ -243,75 +171,93 @@ const CreateContractModal = ({
               </div>
               <div>
                 <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">Số điện thoại</p>
-                <p className="font-bold text-slate-800">{selected.phone}</p>
+                <p className="font-bold text-slate-800">{selected.phone || '—'}</p>
               </div>
               <div>
                 <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">CCCD</p>
-                <p className="font-bold text-slate-800">{selected.cccd}</p>
+                <p className="font-bold text-slate-800">{selected.cccd || '—'}</p>
               </div>
               <div className="col-span-2">
                 <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">Phòng</p>
-                <p className="font-bold text-slate-800">Phòng {selected.room}</p>
+                <p className="font-bold text-slate-800">{selected.roomName || '—'}</p>
               </div>
               <div>
                 <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">Giường thuê</p>
                 <div className="flex flex-wrap gap-1 mt-0.5">
-                  {selected.beds.map(b => (
-                    <span key={b} className="px-2 py-0.5 bg-white border border-blue-200 rounded-full text-xs font-bold text-blue-700">{b}</span>
-                  ))}
+                  {selected.bedNumbers.length > 0
+                    ? selected.bedNumbers.map(b => (
+                        <span key={b} className="px-2 py-0.5 bg-white border border-blue-200 rounded-full text-xs font-bold text-blue-700">{b}</span>
+                      ))
+                    : <span className="text-xs text-slate-400">—</span>
+                  }
                 </div>
               </div>
               <div className="col-span-3 pt-1 border-t border-blue-200">
                 <p className="text-xs text-blue-600 font-semibold">
-                  Tiền thuê dự kiến: <span className="font-bold text-slate-800">{fmtMoney(BASE_RENT_PER_BED * selected.beds.length)}/tháng</span>
+                  Tiền thuê dự kiến:{' '}
+                  <span className="font-bold text-slate-800">
+                    {fmtMoney(BASE_RENT_PER_BED * selected.bedNumbers.length)}/tháng
+                  </span>
                 </p>
               </div>
             </div>
           )}
 
+          {/* Ngày bắt đầu & thời hạn */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
                 Ngày bắt đầu <span className="text-red-500">*</span>
               </label>
-              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
-                className="w-full bg-slate-50 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
-              {errors.startDate && <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>}
+              <input
+                type="date"
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                className="w-full bg-slate-50 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              />
+              {errors.start && <p className="text-red-500 text-xs mt-1">{errors.start}</p>}
             </div>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                Ngày kết thúc <span className="text-red-500">*</span>
+                Thời hạn thuê (tháng) <span className="text-red-500">*</span>
               </label>
-              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
-                className="w-full bg-slate-50 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
-              {errors.endDate && <p className="text-red-500 text-xs mt-1">{errors.endDate}</p>}
+              <input
+                type="number"
+                min={1}
+                max={24}
+                value={stayDuration}
+                onChange={e => setStayDuration(Number(e.target.value))}
+                className="w-full bg-slate-50 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              />
+              {startDate && stayDuration >= 1 && (
+                <p className="text-xs text-slate-400 mt-1">
+                  Kết thúc: <span className="font-medium text-slate-600">{fmtDate(calcEndDate(startDate, stayDuration))}</span>
+                </p>
+              )}
+              {errors.duration && <p className="text-red-500 text-xs mt-1">{errors.duration}</p>}
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Kỳ thanh toán</label>
-            <div className="flex gap-3">
-              {(['monthly', 'quarterly', 'yearly'] as PaymentPeriod[]).map(p => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setPaymentPeriod(p)}
-                  className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${
-                    paymentPeriod === p ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-200'
-                  }`}
-                >
-                  {PAYMENT_PERIOD_LABEL[p]}
-                </button>
-              ))}
+          {errors.api && (
+            <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
+              <span className="material-symbols-outlined text-base">error</span>
+              {errors.api}
             </div>
-          </div>
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-3 px-7 py-5 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
           <button onClick={onClose} className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition-all">Huỷ</button>
-          <button onClick={handleSave} className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-all active:scale-95">
-            <span className="material-symbols-outlined text-base">save</span>
-            Lưu hợp đồng
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold rounded-lg transition-all active:scale-95"
+          >
+            {saving
+              ? <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+              : <span className="material-symbols-outlined text-base">save</span>
+            }
+            {saving ? 'Đang lưu...' : 'Lưu hợp đồng'}
           </button>
         </div>
       </div>
@@ -332,31 +278,52 @@ const SectionTitle = ({ number, title }: { number: string; title: string }) => (
 );
 
 const ContractDetailModal = ({
-  contract,
-  onClose,
-  onUpdate,
-  onCancel,
+  contract, onClose, onUpdated, onCancelled,
 }: {
-  contract: Contract;
+  contract: ContractAdminRow;
   onClose: () => void;
-  onUpdate: (c: Contract) => void;
-  onCancel: (id: string) => void;
+  onUpdated: () => void;
+  onCancelled: () => void;
 }) => {
   const [tab, setTab] = useState<DetailTab>('info');
   const [editing, setEditing] = useState(false);
-  const [customerName, setCustomerName] = useState(contract.customerName);
-  const [cccd, setCccd] = useState(contract.cccd);
-  const [phone, setPhone] = useState(contract.phone);
-  const [startDate, setStartDate] = useState(contract.startDate);
-  const [endDate, setEndDate] = useState(contract.endDate);
+  const [startDate, setStartDate] = useState(String(contract.startDate).split('T')[0]);
+  const [stayDuration, setStayDuration] = useState(contract.stayDuration);
+  const [saving, setSaving] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [actionError, setActionError] = useState('');
 
-  const totalRent = BASE_RENT_PER_BED * contract.beds.length;
+  const uiStatus = toUIStatus(contract.status);
+  const totalRent = BASE_RENT_PER_BED * contract.bedNumbers.length;
   const deposit = totalRent * 2;
+  const endDate = calcEndDate(startDate, stayDuration);
 
-  const handleSave = () => {
-    onUpdate({ ...contract, customerName, cccd, phone, startDate, endDate });
-    setEditing(false);
+  const handleSave = async () => {
+    setSaving(true);
+    setActionError('');
+    try {
+      await ContractService.update(contract.id, { startDate, stayDuration });
+      onUpdated();
+      setEditing(false);
+    } catch (err: any) {
+      setActionError(err.message || 'Lỗi cập nhật');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    setSaving(true);
+    setActionError('');
+    try {
+      await ContractService.cancel(contract.id);
+      onCancelled();
+      onClose();
+    } catch (err: any) {
+      setActionError(err.message || 'Lỗi huỷ hợp đồng');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -364,25 +331,26 @@ const ContractDetailModal = ({
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col">
 
-        {/* ── Modal Header ── */}
+        {/* Header */}
         <div className="px-7 py-5 border-b border-slate-100">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <h2 className="text-xl font-bold text-slate-900">Hợp đồng {contract.id}</h2>
-                <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${STATUS_STYLE[contract.status]}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[contract.status]}`} />
-                  {contract.status}
+                <h2 className="text-xl font-bold text-slate-900 font-mono">{contract.id.slice(0, 8)}...</h2>
+                <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${STATUS_STYLE[uiStatus]}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[uiStatus]}`} />
+                  {uiStatus}
                 </span>
               </div>
-              <p className="text-slate-500 text-sm">Lập ngày {contract.createdDate} · Phiếu đăng ký {contract.depositFormId}</p>
+              <p className="text-slate-500 text-sm">
+                Lập ngày {fmtDate(contract.createdAt)}
+                {contract.rentalFormId && ` · Phiếu ${contract.rentalFormId.slice(0, 8)}...`}
+              </p>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors mt-1">
               <span className="material-symbols-outlined text-slate-500">close</span>
             </button>
           </div>
-
-          {/* Tabs */}
           <div className="flex gap-1 mt-4 bg-slate-100 p-1 rounded-lg w-fit">
             {([['info', 'Thông tin hợp đồng'], ['terms', 'Điều khoản & Nội quy']] as const).map(([key, label]) => (
               <button
@@ -398,70 +366,54 @@ const ContractDetailModal = ({
           </div>
         </div>
 
-        {/* ── Tab: Thông tin ── */}
+        {/* Tab: Thông tin */}
         {tab === 'info' && (
           <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
-
-            {/* Tiêu đề hợp đồng */}
             <div className="text-center py-4 border border-slate-200 rounded-xl bg-slate-50">
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Cộng hoà Xã hội Chủ nghĩa Việt Nam</p>
               <p className="text-xs text-slate-400 mb-3">Độc lập – Tự do – Hạnh phúc</p>
               <p className="text-lg font-black uppercase tracking-wide text-slate-800">Hợp đồng Thuê Phòng Ký túc xá</p>
-              <p className="text-sm text-slate-500 mt-1">Số: <span className="font-bold text-slate-700">{contract.id}</span></p>
+              <p className="text-sm text-slate-500 mt-1">Số: <span className="font-bold text-slate-700 font-mono">{contract.id.slice(0, 8)}...</span></p>
             </div>
 
-            {/* Thông tin bên thuê */}
             <div>
               <SectionTitle number="I" title="Thông tin bên thuê" />
               <div className="grid grid-cols-2 gap-x-8 gap-y-3 pl-10">
-                <div className="flex gap-2 items-center">
-                  <span className="text-sm text-slate-500 min-w-32">Họ và tên:</span>
-                  {editing
-                    ? <input value={customerName} onChange={e => setCustomerName(e.target.value)}
-                        className="bg-slate-100 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 flex-1" />
-                    : <span className="text-sm font-semibold text-slate-800">{customerName}</span>}
-                </div>
-                <div className="flex gap-2 items-center">
-                  <span className="text-sm text-slate-500 min-w-32">Số CCCD/CMND:</span>
-                  {editing
-                    ? <input value={cccd} onChange={e => setCccd(e.target.value)}
-                        className="bg-slate-100 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 flex-1" />
-                    : <span className="text-sm font-semibold text-slate-800">{cccd}</span>}
-                </div>
-                <div className="flex gap-2 items-center">
-                  <span className="text-sm text-slate-500 min-w-32">Số điện thoại:</span>
-                  {editing
-                    ? <input value={phone} onChange={e => setPhone(e.target.value)}
-                        className="bg-slate-100 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 flex-1" />
-                    : <span className="text-sm font-semibold text-slate-800">{phone}</span>}
-                </div>
-                <div className="flex gap-2 items-center">
-                  <span className="text-sm text-slate-500 min-w-32">Phiếu đăng ký:</span>
-                  <span className="text-sm font-semibold text-slate-800">{contract.depositFormId}</span>
-                </div>
+                {[
+                  ['Họ và tên',       contract.customerName],
+                  ['Số CCCD/CMND',    contract.cccd || '—'],
+                  ['Số điện thoại',   contract.phone || '—'],
+                  ['Email',           contract.userEmail],
+                ].map(([label, val]) => (
+                  <div key={label} className="flex gap-2 items-center">
+                    <span className="text-sm text-slate-500 min-w-32">{label}:</span>
+                    <span className="text-sm font-semibold text-slate-800">{val}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Đối tượng hợp đồng */}
             <div>
               <SectionTitle number="II" title="Đối tượng hợp đồng" />
               <div className="pl-10 space-y-3">
                 <div className="flex gap-2">
                   <span className="text-sm text-slate-500 min-w-32">Phòng:</span>
-                  <span className="text-sm font-semibold text-slate-800">Phòng {contract.room}</span>
+                  <span className="text-sm font-semibold text-slate-800">{contract.roomName || '—'}</span>
                 </div>
                 <div className="flex gap-2 items-start">
                   <span className="text-sm text-slate-500 min-w-32">Giường thuê:</span>
                   <div className="flex flex-wrap gap-1.5">
-                    {contract.beds.map(b => (
-                      <span key={b} className="px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs font-bold">{b}</span>
-                    ))}
+                    {contract.bedNumbers.length > 0
+                      ? contract.bedNumbers.map(b => (
+                          <span key={b} className="px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs font-bold">{b}</span>
+                        ))
+                      : <span className="text-sm text-slate-400">—</span>
+                    }
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Thời hạn & thanh toán */}
             <div>
               <SectionTitle number="III" title="Thời hạn & thanh toán" />
               <div className="pl-10 grid grid-cols-2 gap-x-8 gap-y-3">
@@ -470,30 +422,31 @@ const ContractDetailModal = ({
                   {editing
                     ? <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
                         className="bg-slate-100 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-                    : <span className="text-sm font-semibold text-slate-800">{contract.startDate}</span>}
+                    : <span className="text-sm font-semibold text-slate-800">{fmtDate(startDate)}</span>
+                  }
                 </div>
                 <div className="flex gap-2 items-center">
-                  <span className="text-sm text-slate-500 min-w-32">Ngày kết thúc:</span>
+                  <span className="text-sm text-slate-500 min-w-32">Thời hạn:</span>
                   {editing
-                    ? <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
-                        className="bg-slate-100 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-                    : <span className="text-sm font-semibold text-slate-800">{contract.endDate}</span>}
+                    ? <input type="number" min={1} max={24} value={stayDuration} onChange={e => setStayDuration(Number(e.target.value))}
+                        className="bg-slate-100 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 w-24" />
+                    : <span className="text-sm font-semibold text-slate-800">{stayDuration} tháng</span>
+                  }
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-sm text-slate-500 min-w-32">Kỳ thanh toán:</span>
-                  <span className="text-sm font-semibold text-slate-800">{PAYMENT_PERIOD_LABEL[contract.paymentPeriod]}</span>
+                  <span className="text-sm text-slate-500 min-w-32">Ngày kết thúc:</span>
+                  <span className="text-sm font-semibold text-slate-800">{fmtDate(endDate)}</span>
                 </div>
               </div>
             </div>
 
-            {/* Tài chính */}
             <div>
               <SectionTitle number="IV" title="Tài chính" />
               <div className="pl-10 space-y-2">
                 <div className="flex items-center justify-between py-2.5 border-b border-dashed border-slate-200">
                   <div>
                     <span className="text-sm text-slate-600">Giá thuê cơ bản</span>
-                    <span className="text-xs text-slate-400 ml-2">({contract.beds.length} giường × {fmtMoney(BASE_RENT_PER_BED)})</span>
+                    <span className="text-xs text-slate-400 ml-2">({contract.bedNumbers.length} giường × {fmtMoney(BASE_RENT_PER_BED)})</span>
                   </div>
                   <span className="text-sm font-bold text-slate-800">{fmtMoney(totalRent)}/tháng</span>
                 </div>
@@ -508,23 +461,25 @@ const ContractDetailModal = ({
               </div>
             </div>
 
-            {/* Confirm cancel */}
+            {actionError && (
+              <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
+                <span className="material-symbols-outlined text-base">error</span>
+                {actionError}
+              </div>
+            )}
+
             {confirmCancel && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                 <p className="text-sm font-semibold text-red-700 mb-3">
-                  Xác nhận huỷ hợp đồng {contract.id}? Thao tác này không thể hoàn tác.
+                  Xác nhận huỷ hợp đồng này? Thao tác này không thể hoàn tác.
                 </p>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => { onCancel(contract.id); onClose(); }}
-                    className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-all"
-                  >
+                  <button onClick={handleCancel} disabled={saving}
+                    className="flex-1 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white text-sm font-bold rounded-lg transition-all">
                     Xác nhận huỷ
                   </button>
-                  <button
-                    onClick={() => setConfirmCancel(false)}
-                    className="flex-1 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-semibold rounded-lg hover:bg-slate-50 transition-all"
-                  >
+                  <button onClick={() => setConfirmCancel(false)}
+                    className="flex-1 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-semibold rounded-lg hover:bg-slate-50 transition-all">
                     Quay lại
                   </button>
                 </div>
@@ -533,11 +488,9 @@ const ContractDetailModal = ({
           </div>
         )}
 
-        {/* ── Tab: Điều khoản ── */}
+        {/* Tab: Điều khoản */}
         {tab === 'terms' && (
           <div className="flex-1 overflow-y-auto px-7 py-6 space-y-8">
-
-            {/* Phí dịch vụ */}
             <div>
               <SectionTitle number="I" title="Các khoản phí dịch vụ" />
               <div className="pl-10 overflow-hidden rounded-xl border border-slate-200">
@@ -562,7 +515,6 @@ const ContractDetailModal = ({
               </div>
             </div>
 
-            {/* Hoàn cọc */}
             <div>
               <SectionTitle number="II" title="Quy định hoàn & khấu trừ tiền cọc" />
               <div className="pl-10 space-y-3">
@@ -578,7 +530,6 @@ const ContractDetailModal = ({
               </div>
             </div>
 
-            {/* Nội quy */}
             <div>
               <SectionTitle number="III" title="Nội quy ký túc xá" />
               <div className="pl-10 grid grid-cols-1 gap-2">
@@ -591,7 +542,6 @@ const ContractDetailModal = ({
               </div>
             </div>
 
-            {/* Xử lý vi phạm */}
             <div>
               <SectionTitle number="IV" title="Điều khoản xử lý vi phạm" />
               <div className="pl-10 space-y-3">
@@ -607,7 +557,6 @@ const ContractDetailModal = ({
               </div>
             </div>
 
-            {/* Điều khoản chung */}
             <div>
               <SectionTitle number="V" title="Điều khoản chung" />
               <div className="pl-10 space-y-2 text-sm text-slate-600">
@@ -620,25 +569,20 @@ const ContractDetailModal = ({
           </div>
         )}
 
-        {/* ── Footer actions ── */}
+        {/* Footer */}
         <div className="flex items-center justify-between px-7 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
-          {tab === 'info' && contract.status === 'Hiệu lực' && !confirmCancel && (
-            <button
-              onClick={() => setConfirmCancel(true)}
-              className="flex items-center gap-1.5 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-semibold transition-all"
-            >
+          {tab === 'info' && uiStatus === 'Hiệu lực' && !confirmCancel ? (
+            <button onClick={() => setConfirmCancel(true)}
+              className="flex items-center gap-1.5 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-semibold transition-all">
               <span className="material-symbols-outlined text-base">cancel</span>
               Huỷ hợp đồng
             </button>
-          )}
-          {!(tab === 'info' && contract.status === 'Hiệu lực' && !confirmCancel) && <div />}
+          ) : <div />}
 
           <div className="flex gap-2">
-            {tab === 'info' && contract.status === 'Hiệu lực' && !editing && !confirmCancel && (
-              <button
-                onClick={() => setEditing(true)}
-                className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-all"
-              >
+            {tab === 'info' && uiStatus === 'Hiệu lực' && !editing && !confirmCancel && (
+              <button onClick={() => setEditing(true)}
+                className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-all">
                 <span className="material-symbols-outlined text-base">edit</span>
                 Chỉnh sửa
               </button>
@@ -646,7 +590,10 @@ const ContractDetailModal = ({
             {editing && (
               <>
                 <button onClick={() => setEditing(false)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition-all">Huỷ</button>
-                <button onClick={handleSave} className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-all">Lưu</button>
+                <button onClick={handleSave} disabled={saving}
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold rounded-lg transition-all">
+                  {saving ? 'Đang lưu...' : 'Lưu'}
+                </button>
               </>
             )}
             {!editing && !confirmCancel && (
@@ -663,50 +610,71 @@ const ContractDetailModal = ({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
+type StatusFilter = 'all' | UIStatus;
+
 export const AdminContracts = () => {
-  const [contracts, setContracts] = useState<Contract[]>(MOCK_CONTRACTS);
+  const [contracts, setContracts] = useState<ContractAdminRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
   const [keyword, setKeyword] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ContractStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [showCreate, setShowCreate] = useState(false);
-  const [selected, setSelected] = useState<Contract | null>(null);
+  const [selected, setSelected] = useState<ContractAdminRow | null>(null);
   const [successMsg, setSuccessMsg] = useState('');
+
+  const fetchContracts = () => {
+    setLoading(true);
+    setLoadError('');
+    ContractService.getAll()
+      .then(setContracts)
+      .catch(err => setLoadError(err.message || 'Không thể tải danh sách hợp đồng'))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchContracts(); }, []);
 
   const showSuccess = (msg: string) => {
     setSuccessMsg(msg);
     setTimeout(() => setSuccessMsg(''), 3000);
   };
 
+  const handleCreated = () => {
+    setShowCreate(false);
+    showSuccess('Đã lập hợp đồng thành công!');
+    fetchContracts();
+  };
+
+  const handleUpdated = () => {
+    showSuccess('Đã cập nhật hợp đồng!');
+    fetchContracts();
+  };
+
+  const handleCancelled = () => {
+    showSuccess('Đã huỷ hợp đồng.');
+    fetchContracts();
+    setSelected(null);
+  };
+
   const filtered = useMemo(() => contracts.filter(c => {
     const kw = keyword.toLowerCase();
-    const matchKw = !keyword || c.id.toLowerCase().includes(kw) || c.customerName.toLowerCase().includes(kw)
-      || c.room.toLowerCase().includes(kw) || c.phone.includes(kw);
-    const matchStatus = statusFilter === 'all' || c.status === statusFilter;
+    const uiStatus = toUIStatus(c.status);
+    const matchKw = !keyword
+      || c.id.toLowerCase().includes(kw)
+      || c.customerName.toLowerCase().includes(kw)
+      || (c.roomName || '').toLowerCase().includes(kw)
+      || (c.phone || '').includes(kw)
+      || (c.cccd || '').includes(kw);
+    const matchStatus = statusFilter === 'all' || uiStatus === statusFilter;
     return matchKw && matchStatus;
   }), [contracts, keyword, statusFilter]);
 
   const stats = useMemo(() => ({
-    total: contracts.length,
-    active: contracts.filter(c => c.status === 'Hiệu lực').length,
-    expired: contracts.filter(c => c.status === 'Hết hạn').length,
-    cancelled: contracts.filter(c => c.status === 'Đã huỷ').length,
+    total:     contracts.length,
+    active:    contracts.filter(c => toUIStatus(c.status) === 'Hiệu lực').length,
+    expired:   contracts.filter(c => toUIStatus(c.status) === 'Hết hạn').length,
+    cancelled: contracts.filter(c => toUIStatus(c.status) === 'Đã huỷ').length,
   }), [contracts]);
-
-  const handleCreate = (c: Contract) => {
-    setContracts(prev => [c, ...prev]);
-    setShowCreate(false);
-    showSuccess(`Đã lập hợp đồng ${c.id} thành công!`);
-  };
-
-  const handleUpdate = (updated: Contract) => {
-    setContracts(prev => prev.map(c => c.id === updated.id ? updated : c));
-    setSelected(updated);
-    showSuccess(`Đã cập nhật hợp đồng ${updated.id}!`);
-  };
-
-  const handleCancel = (id: string) => {
-    setContracts(prev => prev.map(c => c.id === id ? { ...c, status: 'Đã huỷ' } : c));
-    showSuccess(`Đã huỷ hợp đồng ${id}.`);
-  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -734,10 +702,10 @@ export const AdminContracts = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Tổng hợp đồng', value: stats.total, icon: 'description', color: 'text-blue-600 bg-blue-50' },
-          { label: 'Đang hiệu lực', value: stats.active, icon: 'verified', color: 'text-emerald-600 bg-emerald-50' },
-          { label: 'Hết hạn', value: stats.expired, icon: 'schedule', color: 'text-slate-500 bg-slate-100' },
-          { label: 'Đã huỷ', value: stats.cancelled, icon: 'cancel', color: 'text-red-500 bg-red-50' },
+          { label: 'Tổng hợp đồng',  value: stats.total,     icon: 'description', color: 'text-blue-600 bg-blue-50' },
+          { label: 'Đang hiệu lực',  value: stats.active,    icon: 'verified',    color: 'text-emerald-600 bg-emerald-50' },
+          { label: 'Hết hạn',        value: stats.expired,   icon: 'schedule',    color: 'text-slate-500 bg-slate-100' },
+          { label: 'Đã huỷ',         value: stats.cancelled, icon: 'cancel',      color: 'text-red-500 bg-red-50' },
         ].map(s => (
           <div key={s.label} className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex items-center gap-4">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.color}`}>
@@ -756,7 +724,7 @@ export const AdminContracts = () => {
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
           <input
             type="text"
-            placeholder="Tìm theo mã hợp đồng, tên khách hàng, phòng, SĐT..."
+            placeholder="Tìm theo mã hợp đồng, tên khách hàng, phòng, SĐT, CCCD..."
             value={keyword}
             onChange={e => setKeyword(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-slate-50 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
@@ -778,7 +746,18 @@ export const AdminContracts = () => {
       </div>
 
       <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-3">
+            <span className="material-symbols-outlined text-4xl animate-spin">progress_activity</span>
+            <p className="text-sm">Đang tải dữ liệu...</p>
+          </div>
+        ) : loadError ? (
+          <div className="flex flex-col items-center justify-center py-20 text-red-400 gap-3">
+            <span className="material-symbols-outlined text-4xl">error</span>
+            <p className="text-sm">{loadError}</p>
+            <button onClick={fetchContracts} className="text-xs text-blue-600 hover:underline">Thử lại</button>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-400">
             <span className="material-symbols-outlined text-5xl mb-3">folder_open</span>
             <p className="font-medium">Không tìm thấy hợp đồng phù hợp</p>
@@ -797,55 +776,59 @@ export const AdminContracts = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filtered.map(c => (
-                <tr key={c.id} className="hover:bg-slate-50/70 transition-colors cursor-pointer" onClick={() => setSelected(c)}>
-                  <td className="px-5 py-4 font-bold text-blue-700">{c.id}</td>
-                  <td className="px-5 py-4">
-                    <p className="font-semibold text-slate-800">{c.customerName}</p>
-                    <p className="text-xs text-slate-400">{c.phone}</p>
-                  </td>
-                  <td className="px-5 py-4">
-                    <p className="font-medium text-slate-700">Phòng {c.room}</p>
-                    <p className="text-xs text-slate-400">{c.beds.join(', ')}</p>
-                  </td>
-                  <td className="px-5 py-4">
-                    <p className="font-bold text-slate-800">{fmtMoney(BASE_RENT_PER_BED * c.beds.length)}</p>
-                    <p className="text-xs text-slate-400">{PAYMENT_PERIOD_LABEL[c.paymentPeriod]}</p>
-                  </td>
-                  <td className="px-5 py-4">
-                    <p className="text-slate-700">{c.startDate}</p>
-                    <p className="text-xs text-slate-400">→ {c.endDate}</p>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className={`flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_STYLE[c.status]}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[c.status]}`} />
-                      {c.status}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-700">
-                      <span className="material-symbols-outlined text-base">chevron_right</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {filtered.map(c => {
+                const uiStatus = toUIStatus(c.status);
+                const endDate = calcEndDate(c.startDate, c.stayDuration);
+                return (
+                  <tr key={c.id} className="hover:bg-slate-50/70 transition-colors cursor-pointer" onClick={() => setSelected(c)}>
+                    <td className="px-5 py-4 font-bold text-blue-700 font-mono text-xs">{c.id.slice(0, 8)}...</td>
+                    <td className="px-5 py-4">
+                      <p className="font-semibold text-slate-800">{c.customerName}</p>
+                      <p className="text-xs text-slate-400">{c.phone || c.cccd || c.userEmail}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="font-medium text-slate-700">{c.roomName || '—'}</p>
+                      <p className="text-xs text-slate-400">{c.bedNumbers.join(', ') || '—'}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="font-bold text-slate-800">{fmtMoney(BASE_RENT_PER_BED * c.bedNumbers.length)}</p>
+                      <p className="text-xs text-slate-400">{c.stayDuration} tháng</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="text-slate-700">{fmtDate(c.startDate)}</p>
+                      <p className="text-xs text-slate-400">→ {fmtDate(endDate)}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_STYLE[uiStatus]}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[uiStatus]}`} />
+                        {uiStatus}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-700">
+                        <span className="material-symbols-outlined text-base">chevron_right</span>
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
-        {filtered.length > 0 && (
+        {!loading && !loadError && filtered.length > 0 && (
           <div className="px-5 py-3 border-t border-slate-100 text-xs text-slate-400">
             Hiển thị {filtered.length} / {contracts.length} hợp đồng
           </div>
         )}
       </div>
 
-      {showCreate && <CreateContractModal onClose={() => setShowCreate(false)} onCreate={handleCreate} />}
+      {showCreate && <CreateContractModal onClose={() => setShowCreate(false)} onCreated={handleCreated} />}
       {selected && (
         <ContractDetailModal
           contract={selected}
           onClose={() => setSelected(null)}
-          onUpdate={handleUpdate}
-          onCancel={handleCancel}
+          onUpdated={handleUpdated}
+          onCancelled={handleCancelled}
         />
       )}
     </div>
