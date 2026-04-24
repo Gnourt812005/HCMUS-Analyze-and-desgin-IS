@@ -44,3 +44,11 @@ export interface ChangePasswordDTO {
   oldPassword: string;
   newPassword: string;
 }
+export interface UpdateProfileDTO {
+  fullName?: string;
+  cccd?: string;
+  birthday?: string;
+  gender?: string;
+  phone?: string;
+  address?: string;
+}

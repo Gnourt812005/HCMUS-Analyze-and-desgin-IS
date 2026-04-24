@@ -65,7 +65,7 @@ export class Dorm {
     if (!exists) {
       throw new Error('Không tìm thấy ký túc xá');
     }
-    return await DormDB.update(id, data);
+    return await DormDB.update(id, data as Partial<Dorm>);
   }
 
   static async delete(id: string): Promise<boolean> {
