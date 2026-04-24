@@ -1,76 +1,92 @@
 import { CheckoutStatus } from '@dormarch/shared';
 import { CheckoutRequest } from '../business/CheckoutRequest';
+import { dbClient } from './DatabaseClient';
 
 export class CheckoutRequestDB {
-  private static MOCK_CHECKOUT_REQUESTS: Partial<CheckoutRequest>[] = [
-    {
-      requestId: 'req-001',
-      userEmail: 'test@gmail.com',
-      contractId: 'contract-001',
-      expectedDate: '2005-06-30',
-      status: CheckoutStatus.PENDING,
-      handoverId: 'handover-001',
-      createdAt: '2005-06-01'
-    },
-    {
-      requestId: 'req-002',
-      userEmail: 'test2@gmail.com',
-      contractId: 'contract-002',
-      expectedDate: '2005-07-15',
-      status: CheckoutStatus.PROCESSING,
-      createdAt: '2005-06-05',
-    },
-    {
-      requestId: 'req-003',
-      userEmail: 'test@gmail.com',
-      contractId: 'contract-001',
-      expectedDate: '2005-07-20',
-      status: CheckoutStatus.LIQUIDATED,
-      createdAt: '2005-06-10',
-    }
-  ];
+  private static mapRow(row: any): Partial<CheckoutRequest> {
+    return {
+      requestId: row.id,
+      userEmail: row.user_email,
+      contractId: row.contract_id,
+      expectedDate: row.expected_date,
+      status: row.status as CheckoutStatus,
+      handoverId: row.handover_id,
+      createdAt: row.created_at
+    };
+  }
 
   static async getAll(): Promise<Partial<CheckoutRequest>[]> {
-    return this.MOCK_CHECKOUT_REQUESTS;
+    const sql = `SELECT * FROM checkout_requests ORDER BY created_at DESC`;
+    const result = await dbClient.query(sql);
+    return result.rows.map(row => this.mapRow(row));
   }
 
   static async insert(request: CheckoutRequest): Promise<boolean> {
-    this.MOCK_CHECKOUT_REQUESTS.push(request);
-    return true;
+    const sql = `
+      INSERT INTO checkout_requests (id, user_email, contract_id, expected_date, status, handover_id, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `;
+    const values = [
+      request.requestId, request.userEmail, request.contractId, request.expectedDate,
+      request.status, request.handoverId, request.createdAt || new Date().toISOString()
+    ];
+    try {
+      await dbClient.query(sql, values);
+      return true;
+    } catch (e) {
+      console.error("Database insert failed:", e);
+      return false;
+    }
   }
 
   static async insertIfNoActiveRequest(request: CheckoutRequest, contractId: string, userEmail: string): Promise<{ success: boolean; error?: string }> {
-    // Atomic check-and-insert: check for active request, return error if exists
-    const existingActive = this.MOCK_CHECKOUT_REQUESTS.find(r =>
-      r.contractId === contractId &&
-      r.userEmail === userEmail &&
-      [CheckoutStatus.PENDING, CheckoutStatus.PROCESSING, CheckoutStatus.PENDING_LIQUIDATION].includes(r.status as CheckoutStatus)
-    );
+    const client = await dbClient.getClient();
+    try {
+      await client.query('BEGIN');
 
-    if (existingActive) {
-      return { success: false, error: 'Đã có yêu cầu trả phòng đang xử lý cho hợp đồng này.' };
+      const checkSql = `
+        SELECT 1 FROM checkout_requests 
+        WHERE contract_id = $1 AND user_email = $2 AND status IN ($3, $4, $5)
+      `;
+      const existingActive = await client.query(checkSql, [contractId, userEmail, CheckoutStatus.PENDING, CheckoutStatus.PROCESSING, CheckoutStatus.PENDING_LIQUIDATION]);
+
+      if (existingActive.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return { success: false, error: 'Đã có yêu cầu trả phòng đang xử lý cho hợp đồng này.' };
+      }
+
+      const insertSql = `
+        INSERT INTO checkout_requests (id, user_email, contract_id, expected_date, status, handover_id, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `;
+      const values = [request.requestId, request.userEmail, request.contractId, request.expectedDate, request.status, request.handoverId, request.createdAt || new Date().toISOString()];
+      await client.query(insertSql, values);
+      await client.query('COMMIT');
+      
+      return { success: true };
+    } catch (e) {
+      await client.query('ROLLBACK');
+      console.error(e);
+      return { success: false, error: 'Lỗi cơ sở dữ liệu khi tạo yêu cầu.' };
+    } finally {
+      client.release();
     }
-
-    this.MOCK_CHECKOUT_REQUESTS.push(request);
-    return { success: true };
   }
 
   static async getById(requestId: string): Promise<Partial<CheckoutRequest> | null> {
-    const request = this.MOCK_CHECKOUT_REQUESTS.find(r => r.requestId === requestId);
-    return request || null;
+    const sql = `SELECT * FROM checkout_requests WHERE id = $1 LIMIT 1`;
+    const result = await dbClient.query(sql, [requestId]);
+    return result.rows[0] ? this.mapRow(result.rows[0]) : null;
   }
 
   static async updateStatus(requestId: string, newStatus: CheckoutStatus, expectedStatus?: CheckoutStatus): Promise<boolean> {
-    const requestIndex = this.MOCK_CHECKOUT_REQUESTS.findIndex(r => r.requestId === requestId);
-    if (requestIndex === -1)
-      return false;
-
-    const existingRequest = this.MOCK_CHECKOUT_REQUESTS[requestIndex];
-    if (expectedStatus !== undefined && existingRequest.status !== expectedStatus) {
-      return false;
-    }
-
-    this.MOCK_CHECKOUT_REQUESTS[requestIndex].status = newStatus;
-    return true;
+    const sql = expectedStatus 
+      ? `UPDATE checkout_requests SET status = $1 WHERE id = $2 AND status = $3` 
+      : `UPDATE checkout_requests SET status = $1 WHERE id = $2`;
+    
+    const values = expectedStatus ? [newStatus, requestId, expectedStatus] : [newStatus, requestId];
+    const result = await dbClient.query(sql, values);
+    
+    return (result.rowCount ?? 0) > 0;
   }
 }
