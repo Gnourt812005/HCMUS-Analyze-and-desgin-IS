@@ -121,11 +121,12 @@ export class Rental {
       throw new Error('Không tìm thấy thông tin đăng ký thuê.');
     }
 
-    const depositAmount = Math.round(registration.roomPrice * 0.3);
+    // Deposit policy: 2 months of rent for selected beds.
+    const depositAmount = registration.roomPrice * 2;
 
     if (payload.action === 'DEPOSIT') {
       const items: SummaryItemDTO[] = [
-        { label: 'Tiền đặt cọc (30%)', amount: depositAmount }
+        { label: 'Tiền đặt cọc (2 tháng)', amount: depositAmount }
       ];
 
       return {
@@ -136,15 +137,18 @@ export class Rental {
       };
     }
 
+    const rentalMonths = Math.max(1, Number(registration.rentalMonths || 1));
+    const fullRentalAmount = registration.roomPrice * rentalMonths;
+
     const items: SummaryItemDTO[] = [
-      { label: 'Tiền phòng tháng đầu', amount: registration.roomPrice }
+      { label: `Tiền phòng (${rentalMonths} tháng)`, amount: fullRentalAmount }
     ];
 
     if (registration.alreadyDeposited) {
       items.push({ label: 'Đã trừ tiền cọc', amount: -depositAmount });
     }
 
-    const totalAmount = registration.roomPrice - (registration.alreadyDeposited
+    const totalAmount = fullRentalAmount - (registration.alreadyDeposited
       ? depositAmount
       : 0);
 

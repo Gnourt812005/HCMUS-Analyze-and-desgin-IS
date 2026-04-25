@@ -52,7 +52,7 @@ export class RoomDB {
       floor: Number(row.floor || 0),
       price: Number(row.lowest_price || 0),
       totalBeds: Number(row.total_beds || 0),
-      availableBeds: Number(row.available_beds || 0),
+      availableBeds: Number(row.available_beds_live ?? row.available_beds ?? 0),
       amenities: row.room_ultilities || [],
       imageUrl: row.image_url || '',
       favoriteCount: Number(row.favorite_count || 0)
@@ -69,9 +69,9 @@ export class RoomDB {
         r.floor,
         r.status,
         r.total_beds,
-        r.available_beds,
         r.image_url,
         COALESCE(MIN(b.price), 0) AS "lowest_price",
+        COUNT(b.id) FILTER (WHERE b.status = 'AVAILABLE') AS "available_beds_live",
         COALESCE(
           (SELECT json_agg(u.title) 
            FROM room_utilities ru 
@@ -95,7 +95,31 @@ export class RoomDB {
   }
 
   static async getBedsByRoomId(roomId: string): Promise<BedOptionDTO[]> {
-    return this.ROOM_BEDS.filter(bed => bed.roomId === roomId);
+    const query = `
+      SELECT
+        b.id,
+        b.room_id,
+        b.bed_number,
+        b.status,
+        b.price
+      FROM beds b
+      WHERE b.room_id = $1
+      ORDER BY b.bed_number ASC
+    `;
+
+    try {
+      const result = await dbClient.query(query, [roomId]);
+      return result.rows.map((row: any) => ({
+        id: row.id,
+        roomId: row.room_id,
+        bedNumber: row.bed_number,
+        status: row.status,
+        price: Number(row.price || 0)
+      }));
+    } catch (error) {
+      console.error('Error fetching beds by room ID:', error);
+      return [];
+    }
   }
 
   static async markBedsStatus(
@@ -103,19 +127,28 @@ export class RoomDB {
     bedIds: string[],
     status: BedOptionDTO['status']
   ): Promise<void> {
-    this.ROOM_BEDS = this.ROOM_BEDS.map((bed) => {
-      if (bed.roomId === roomId && bedIds.includes(bed.id)) {
-        return { ...bed, status };
-      }
-      return bed;
-    });
+    if (bedIds.length === 0) {
+      return;
+    }
 
-    const room = this.MOCK_ROOMS.find((item) => item.id === roomId);
-    if (room) {
-      const availableBeds = this.ROOM_BEDS.filter(
-        (bed) => bed.roomId === roomId && bed.status === 'AVAILABLE'
-      ).length;
-      room.availableBeds = availableBeds;
+    try {
+      await dbClient.query(
+        `UPDATE beds SET status = $1 WHERE room_id = $2 AND id = ANY($3::uuid[])`,
+        [status, roomId, bedIds]
+      );
+
+      const availableBedsResult = await dbClient.query(
+        `SELECT COUNT(*)::int AS available_beds FROM beds WHERE room_id = $1 AND status = 'AVAILABLE'`,
+        [roomId]
+      );
+
+      const availableBeds = Number(availableBedsResult.rows[0]?.available_beds || 0);
+      await dbClient.query(
+        `UPDATE rooms SET available_beds = $1 WHERE id = $2`,
+        [availableBeds, roomId]
+      );
+    } catch (error) {
+      console.error('Error updating bed status:', error);
     }
   }
 
@@ -152,8 +185,9 @@ export class RoomDB {
 
     const roomsQuery = `
       SELECT 
-        r.id, r.dorm_id, r.name, r.block, r.floor, r.status, r.total_beds, r.available_beds, r.image_url,
+        r.id, r.dorm_id, r.name, r.block, r.floor, r.status, r.total_beds, r.image_url,
         COALESCE(MIN(b.price), 0) AS "lowest_price",
+        COUNT(b.id) FILTER (WHERE b.status = 'AVAILABLE') AS "available_beds_live",
         COALESCE(
           (SELECT json_agg(u.title) 
            FROM room_utilities ru 
@@ -182,7 +216,7 @@ export class RoomDB {
         floor: row.floor,
         price: Number(row.lowest_price),
         totalBeds: row.total_beds,
-        availableBeds: row.available_beds,
+        availableBeds: Number(row.available_beds_live ?? row.available_beds ?? 0),
         amenities: row.room_utilities,
         status: row.status
       }));
@@ -200,7 +234,8 @@ export class RoomDB {
   static async fetchById(id: string): Promise<any | null> {
     const query = `
       SELECT 
-        r.id, r.dorm_id, r.name, r.block, r.floor, r.status, r.total_beds, r.available_beds, r.image_url,
+        r.id, r.dorm_id, r.name, r.block, r.floor, r.status, r.total_beds, r.image_url,
+        COUNT(b.id) FILTER (WHERE b.status = 'AVAILABLE') AS "available_beds_live",
         COALESCE(
           (SELECT json_agg(u.title) 
            FROM room_utilities ru 
@@ -223,7 +258,9 @@ export class RoomDB {
           )) FROM beds b WHERE b.room_id = r.id), '[]'
         ) AS "beds"
       FROM rooms r
+      LEFT JOIN beds b ON b.room_id = r.id
       WHERE r.id = $1
+      GROUP BY r.id
     `;
     try {
       const result = await dbClient.query(query, [id]);
