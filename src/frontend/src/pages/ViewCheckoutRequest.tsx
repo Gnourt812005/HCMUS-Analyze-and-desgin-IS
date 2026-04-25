@@ -174,13 +174,13 @@ export const ViewCheckoutRequest = () => {
  return (
     <div className="w-full space-y-6">
         {successMsg && (
-          <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
+          <div className="fixed top-6 right-6 z-[60] flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
             <span className="material-symbols-outlined text-lg">check_circle</span>
             <span className="text-sm font-semibold">{successMsg}</span>
           </div>
         )}
         {error && (
-          <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-red-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
+          <div className="fixed top-6 right-6 z-[60] flex items-center gap-3 bg-red-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
             <span className="material-symbols-outlined text-lg">error</span>
             <span className="text-sm font-semibold">{error}</span>
             <button onClick={() => setError(null)} className="ml-2 hover:text-red-200 transition-colors p-1 flex items-center justify-center">

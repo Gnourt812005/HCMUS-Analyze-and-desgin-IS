@@ -87,12 +87,12 @@ export class CheckoutRequest {
       requestData.userEmail
     );
 
-    if (result.success) {
-      if (result.requestId) newRequest.requestId = result.requestId;
-      return { success: true, request: newRequest.toDto() };
-    } else {
+    if (!result.success || !result.requestId) {
       return { success: false, error: result.error };
     }
+
+    const fullRequest = await this.getById(result.requestId);
+    return { success: true, request: fullRequest || undefined };
   }
 
   static async getById(requestId: string): Promise<CheckoutRequestDTO | null> {
