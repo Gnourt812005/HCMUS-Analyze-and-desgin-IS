@@ -19,6 +19,7 @@ export interface Room {
   specialNotes: string[];
   imageUrl: string;
   favoriteCount: number;
+  isFavorite: boolean;
 }
 interface FilterState {
   priceRange: [number, number];
@@ -76,7 +77,21 @@ export const RoomList = () => {
                 );
                 
                 if (response.status === 200) {
-                    setOriginalRooms(response.data.rooms);
+                    let fetchedRooms = response.data.rooms.map((r: Room) => ({ ...r, isFavorite: false }));
+
+                    if (AuthService.isLoggedIn()) {
+                        // Fetch the user's favorited items to identify `isFavorite`
+                        const favResponse = await ApiClient.get<{ status: number, data: Room[] }>(`/favourites`);
+
+                        if (favResponse.status === 200) {
+                            const favoritedIds = new Set(favResponse.data.map((r: Room) => r.id));
+                            fetchedRooms = fetchedRooms.map((room: Room) => ({
+                                ...room,
+                                isFavorite: favoritedIds.has(room.id)
+                            }));
+                        }
+                    }
+                    setOriginalRooms(fetchedRooms);
                 }
             } catch (error) {
                 console.error("Failed to fetch rooms", error);
@@ -133,7 +148,8 @@ export const RoomList = () => {
             amenities: selectedRoomData.amenities,
             // specialNotes: selectedRoomData.specialNotes,
             imageUrl: selectedRoomData.imageUrl,
-            favoriteCount: selectedRoomData.favoriteCount,
+            favoriteCount: selectedRoomData.favoriteCount || 0,
+            isFavorite: selectedRoomData.isFavorite || false,
         };
     }
 
@@ -146,7 +162,8 @@ export const RoomList = () => {
         // Optimistically update UI
         setOriginalRooms(prevRooms => prevRooms.map(r => {
             if (r.id === roomId) {
-                return { ...r, favoriteCount: increment ? r.favoriteCount + 1 : r.favoriteCount - 1, isFavorited: increment };
+                const count = r.favoriteCount || 0;
+                return { ...r, favoriteCount: increment ? count + 1 : Math.max(0, count - 1), isFavorite: increment };
             }
             return r;
         }));
@@ -162,7 +179,7 @@ export const RoomList = () => {
             // Revert on error
             setOriginalRooms(prevRooms => prevRooms.map(r => {
                 if (r.id === roomId) {
-                    return { ...r, favoriteCount: currentCount, isFavorited: !increment };
+                    return { ...r, favoriteCount: currentCount || 0, isFavorite: !increment };
                 }
                 return r;
             }));
@@ -625,22 +642,20 @@ export const RoomList = () => {
                                 <div className="flex gap-4">
                                     <button
                                         onClick={() => {
-                                            // Handle favorite purely structurally as requested via our function logic
-                                            const isFavorited = (selectedRoomData as any).isFavorited;
-                                            handleToggleFavorite(selectedRoomDetail!.id, selectedRoomDetail!.favoriteCount, !isFavorited);
+                                            handleToggleFavorite(selectedRoomDetail!.id, selectedRoomDetail!.favoriteCount, !selectedRoomDetail!.isFavorite);
                                         }}
                                         className={`flex items-center gap-2 rounded-xl border-2 px-6 py-3 transition-all ${
-                                            (selectedRoomData as any).isFavorited
+                                            selectedRoomDetail!.isFavorite
                                                 ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:border-red-300"
                                                 : "border-slate-200 bg-white text-slate-600 hover:border-red-300 hover:text-red-500"
                                         }`}
                                     >
                                         <Heart
                                             className={`h-5 w-5 transition-colors ${
-                                                (selectedRoomData as any).isFavorited ? "fill-red-600 text-red-600" : ""
+                                                selectedRoomDetail!.isFavorite ? "fill-red-600 text-red-600" : ""
                                             }`}
                                         />
-                                        <span className="font-semibold">{selectedRoomDetail.favoriteCount}</span>
+                                        <span className="font-semibold">{selectedRoomDetail!.favoriteCount}</span>
                                     </button>
 
                                     <button
