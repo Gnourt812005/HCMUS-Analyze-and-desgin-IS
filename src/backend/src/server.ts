@@ -7,6 +7,7 @@ import { rentalRoutes } from './routes/rentalRoutes';
 import { paymentRoutes } from './routes/paymentRoutes';
 import { roomRoutes } from './routes/roomRoutes';
 import { previewRoutes } from './routes/previewRoutes';
+import { utilityRoutes } from './routes/utilityRoutes';
 import { dbClient } from './database/DatabaseClient';
 
 dotenv.config();
@@ -24,6 +25,7 @@ app.use('/api/rentals', rentalRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/previews', previewRoutes);
+app.use('/api/utilities', utilityRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
@@ -36,7 +38,8 @@ app.listen(PORT, () => {
       const client = await dbClient.getClient();
       client.release();
     } catch (err) {
-      console.warn('⚠️  Database connection failed (Timeout). Proceeding with mock data for now...');
+      console.error('💥 Could not start server: Database connection failed');
+      process.exit(1);
     }
   }
   startServer();  
