@@ -259,9 +259,19 @@ export const AdminCheckout = () => {
     <div className="p-6 max-w-7xl mx-auto">
       
       {successMsg && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-xl">
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
           <span className="material-symbols-outlined text-lg">check_circle</span>
           <span className="text-sm font-semibold">{successMsg}</span>
+        </div>
+      )}
+
+      {error && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-red-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
+          <span className="material-symbols-outlined text-lg">error</span>
+          <span className="text-sm font-semibold">{error}</span>
+          <button onClick={() => setError(null)} className="ml-2 hover:text-red-200 transition-colors p-1 flex items-center justify-center">
+            <span className="material-symbols-outlined text-lg">close</span>
+          </button>
         </div>
       )}
 
@@ -278,13 +288,6 @@ export const AdminCheckout = () => {
           Tạo yêu cầu mới
         </button>
       </div>
-
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl flex justify-between items-center text-sm font-semibold">
-          <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 p-1"><span className="material-symbols-outlined text-lg">close</span></button>
-        </div>
-      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
@@ -347,8 +350,8 @@ export const AdminCheckout = () => {
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
                 <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Mã YC</th>
-              <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Khách hàng / Email</th>
-                <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Hợp đồng</th>
+                <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Khách hàng</th>
+                <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Phòng/Giường</th>
                 <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Tài chính</th>
                 <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Lịch trình</th>
                 <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Trạng thái</th>
@@ -364,10 +367,13 @@ export const AdminCheckout = () => {
                 >
                   <td className="px-5 py-4 font-bold text-blue-700">{request.requestId}</td>
                   <td className="px-5 py-4">
-                  <p className="font-semibold text-slate-800">{request.userEmail}</p>
+                    <p className="font-semibold text-slate-800">{request.userFullName || 'N/A'}</p>
+                    <p className="text-xs text-slate-500">{request.userEmail}</p>
                   </td>
                   <td className="px-5 py-4">
-                    <p className="font-medium text-slate-700">{request.contractId}</p>
+                    <p className="font-medium text-slate-700">{request.dormName} - Tầng {request.floor}</p>
+                    <p className="text-xs text-slate-500">Phòng: {request.roomName}</p>
+                    <p className="text-xs text-slate-500">HĐ: {request.contractId}</p>
                   </td>
                   <td className="px-5 py-4">
                     {refundMap[request.requestId] ? (
@@ -486,8 +492,12 @@ export const AdminCheckout = () => {
                           className="mt-1"
                         />
                         <div className="flex-1 text-sm text-slate-700">
-                          <p className="font-bold text-slate-900">{contract.contractId} — Phòng {contract.roomId}</p>
-                          <p className="text-xs mt-1">Hạn: {new Date(contract.startDate!).toLocaleDateString('vi-VN')}</p>
+                          <p className="font-bold text-slate-900">{contract.dormName} - Tầng {contract.floor} - Phòng {contract.roomId}</p>
+                          <p className="text-xs text-slate-600">Giường: {contract.bedNumbers}</p>
+                          <p className="text-xs mt-1">
+                            Hợp đồng: {contract.contractId}
+                          </p>
+                          <p className="text-xs">Hạn: {new Date(contract.startDate!).toLocaleDateString('vi-VN')}</p>
                         </div>
                       </label>
                     ))}
@@ -557,14 +567,30 @@ export const AdminCheckout = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
-              <div className="grid grid-cols-2 gap-x-8 gap-y-4 bg-slate-50 rounded-xl p-5 border border-slate-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 bg-slate-50 rounded-xl p-5 border border-slate-100">
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Khách hàng / Email</span>
-                  <span className="text-sm font-semibold text-slate-800">{selectedRequest.userEmail}</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Khách hàng</span>
+                  <span className="text-sm font-semibold text-slate-800">{selectedRequest.userFullName || selectedRequest.userEmail}</span>
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Hợp đồng</span>
                   <span className="text-sm font-semibold text-slate-800">{selectedRequest.contractId}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Ký túc xá</span>
+                  <span className="text-sm font-semibold text-slate-800">{selectedRequest.dormName}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Phòng</span>
+                  <span className="text-sm font-semibold text-slate-800">{selectedRequest.roomName}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Tầng</span>
+                  <span className="text-sm font-semibold text-slate-800">{selectedRequest.floor}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Giường</span>
+                  <span className="text-sm font-semibold text-slate-800">{selectedRequest.bedNumbers}</span>
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Ngày tạo</span>

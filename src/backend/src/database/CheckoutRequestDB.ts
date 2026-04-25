@@ -5,26 +5,47 @@ import { dbClient } from './DatabaseClient';
 export class CheckoutRequestDB {
   private static mapRow(row: any): Partial<CheckoutRequest> {
     return {
-      requestId: row.id,
+      requestId: row.request_id,
       userEmail: row.user_email,
+      userFullName: row.user_full_name,
       contractId: row.contract_id,
+      dormName: row.dorm_name,
+      roomName: row.room_name,
+      floor: row.floor,
+      bedNumbers: row.bed_numbers,
       expectedDate: row.expected_date,
       status: row.status as CheckoutStatus,
-      handoverId: row.handover_id,
       createdAt: row.created_at
     };
   }
 
+  private static readonly BASE_QUERY = `
+    SELECT
+      cr.id as request_id,
+      cr.user_email,
+      cr.contract_id,
+      cr.expected_date,
+      cr.status,
+      cr.created_at,
+      u.full_name as user_full_name,
+      (SELECT d.name FROM contracts c JOIN contract_beds cb ON c.id = cb.contract_id JOIN beds b ON cb.bed_id = b.id JOIN rooms r ON b.room_id = r.id JOIN dorms d ON r.dorm_id = d.id WHERE c.id = cr.contract_id LIMIT 1) as dorm_name,
+      (SELECT r.floor FROM contracts c JOIN contract_beds cb ON c.id = cb.contract_id JOIN beds b ON cb.bed_id = b.id JOIN rooms r ON b.room_id = r.id WHERE c.id = cr.contract_id LIMIT 1) as floor,
+      (SELECT r.name FROM contracts c JOIN contract_beds cb ON c.id = cb.contract_id JOIN beds b ON cb.bed_id = b.id JOIN rooms r ON b.room_id = r.id WHERE c.id = cr.contract_id LIMIT 1) as room_name,
+      (SELECT STRING_AGG(b.bed_number, ', ') FROM contracts c JOIN contract_beds cb ON c.id = cb.contract_id JOIN beds b ON cb.bed_id = b.id WHERE c.id = cr.contract_id) as bed_numbers
+    FROM checkout_requests cr
+    LEFT JOIN users u ON cr.user_email = u.email
+  `;
+
   static async getAll(): Promise<Partial<CheckoutRequest>[]> {
-    const sql = `SELECT * FROM checkout_requests ORDER BY created_at DESC`;
+    const sql = `${this.BASE_QUERY} ORDER BY cr.created_at DESC`;
     const result = await dbClient.query(sql);
     return result.rows.map(row => this.mapRow(row));
   }
 
   static async insert(request: CheckoutRequest): Promise<string | null> {
     const sql = `
-      INSERT INTO checkout_requests (user_email, contract_id, expected_date, status, handover_id, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO checkout_requests (user_email, contract_id, expected_date, status, created_at)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING id
     `;
     const values = [
@@ -32,7 +53,6 @@ export class CheckoutRequestDB {
       request.contractId ?? null, 
       request.expectedDate,
       request.status, 
-      request.handoverId ?? null, 
       request.createdAt || new Date().toISOString()
     ];
     try {
@@ -46,11 +66,11 @@ export class CheckoutRequestDB {
 
   static async insertIfNoActiveRequest(request: CheckoutRequest, contractId: string, userEmail: string): Promise<{ success: boolean; error?: string; requestId?: string }> {
     const sql = `
-      INSERT INTO checkout_requests (user_email, contract_id, expected_date, status, handover_id, created_at)
-      SELECT $1, $2, $3, $4, $5, $6
+      INSERT INTO checkout_requests (user_email, contract_id, expected_date, status, created_at)
+      SELECT $1, $2, $3, $4, $5
       WHERE NOT EXISTS (
         SELECT 1 FROM checkout_requests 
-        WHERE contract_id = $2 AND status::text IN ($7, $8)
+        WHERE contract_id = $2 AND status::text IN ($6, $7)
       )
       RETURNING id;
     `;
@@ -60,7 +80,6 @@ export class CheckoutRequestDB {
       request.contractId ?? null, 
       request.expectedDate, 
       request.status, 
-      request.handoverId ?? null, 
       request.createdAt || new Date().toISOString(),
       CheckoutStatus.PENDING,
       CheckoutStatus.PROCESSING
@@ -81,7 +100,7 @@ export class CheckoutRequestDB {
   }
 
   static async getById(requestId: string): Promise<Partial<CheckoutRequest> | null> {
-    const sql = `SELECT * FROM checkout_requests WHERE id = $1 LIMIT 1`;
+    const sql = `${this.BASE_QUERY} WHERE cr.id = $1 LIMIT 1`;
     const result = await dbClient.query(sql, [requestId]);
     return result.rows[0] ? this.mapRow(result.rows[0]) : null;
   }

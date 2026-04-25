@@ -4,19 +4,27 @@ import { CheckoutRequestDB } from '../database/CheckoutRequestDB';
 export class CheckoutRequest {
   requestId: string; // PK
   userEmail: string;
+  userFullName?: string;
   contractId?: string;
+  dormName?: string;
+  roomName?: string;
+  floor?: number;
+  bedNumbers?: string;
   expectedDate: string; // ISO Date String
   status: CheckoutStatus;
-  handoverId?: string;
   createdAt: string; // ISO Date String
 
   constructor(data: Partial<CheckoutRequest>) {
     this.requestId = data.requestId || '';
     this.userEmail = data.userEmail || '';
+    this.userFullName = data.userFullName;
     this.contractId = data.contractId;
+    this.dormName = data.dormName;
+    this.roomName = data.roomName;
+    this.floor = data.floor;
+    this.bedNumbers = data.bedNumbers;
     this.expectedDate = data.expectedDate || new Date().toISOString();
     this.status = data.status || CheckoutStatus.PENDING;
-    this.handoverId = data.handoverId;
     this.createdAt = data.createdAt || new Date().toISOString();
   }
 
@@ -24,10 +32,14 @@ export class CheckoutRequest {
     return {
       requestId: this.requestId,
       userEmail: this.userEmail,
+      userFullName: this.userFullName,
       contractId: this.contractId,
+      dormName: this.dormName,
+      roomName: this.roomName,
+      floor: this.floor,
+      bedNumbers: this.bedNumbers,
       expectedDate: this.expectedDate,
       status: this.status,
-      handoverId: this.handoverId,
       createdAt: this.createdAt,
     };
   }

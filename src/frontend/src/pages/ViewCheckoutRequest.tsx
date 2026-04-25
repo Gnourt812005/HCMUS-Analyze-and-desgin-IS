@@ -45,6 +45,7 @@ export const ViewCheckoutRequest = () => {
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState('');
   const detailAbortControllerRef = useRef<AbortController | null>(null);
 
   const stats = useMemo(() => ({
@@ -53,6 +54,11 @@ export const ViewCheckoutRequest = () => {
     processing: checkoutRequests.filter(r => r.status === CheckoutStatus.PROCESSING).length,
     completed: checkoutRequests.filter(r => r.status === CheckoutStatus.LIQUIDATED).length,
   }), [checkoutRequests]);
+
+  const showSuccess = (msg: string) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -156,6 +162,7 @@ export const ViewCheckoutRequest = () => {
           expectedStatus: request?.status
         })
       });
+      showSuccess('Đã hủy yêu cầu thành công!');
     } catch (err) {
       setCheckoutRequests(originalRequests);
       setSelectedRequest(originalSelectedRequest);
@@ -166,6 +173,22 @@ export const ViewCheckoutRequest = () => {
 
  return (
     <div className="w-full space-y-6">
+        {successMsg && (
+          <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
+            <span className="material-symbols-outlined text-lg">check_circle</span>
+            <span className="text-sm font-semibold">{successMsg}</span>
+          </div>
+        )}
+        {error && (
+          <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-red-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
+            <span className="material-symbols-outlined text-lg">error</span>
+            <span className="text-sm font-semibold">{error}</span>
+            <button onClick={() => setError(null)} className="ml-2 hover:text-red-200 transition-colors p-1 flex items-center justify-center">
+              <span className="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+        )}
+
         <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
             <div>
@@ -206,18 +229,6 @@ export const ViewCheckoutRequest = () => {
           ))}
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl flex justify-between items-center text-sm font-semibold">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-red-600 text-lg">error</span>
-              <span>{error}</span>
-            </div>
-            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 p-1">
-              <span className="material-symbols-outlined text-lg">close</span>
-            </button>
-          </div>
-        )}
-
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 text-slate-400">
@@ -230,14 +241,14 @@ export const ViewCheckoutRequest = () => {
               <p className="font-medium">Bạn chưa có yêu cầu trả phòng nào</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Mã YC</th>
-                  <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Hợp đồng</th>
-                  <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Lịch trình</th>
-                  <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Trạng thái</th>
-                  <th className="px-5 py-4"></th>
+                  <th className="w-[25%] text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Mã YC</th>
+                  <th className="w-[35%] text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Phòng/Giường</th>
+                  <th className="w-[15%] text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Lịch trình</th>
+                  <th className="w-[15%] text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Trạng thái</th>
+                  <th className="w-[10%] px-5 py-4"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -247,9 +258,11 @@ export const ViewCheckoutRequest = () => {
                     className="hover:bg-slate-50/70 transition-colors cursor-pointer"
                     onClick={() => loadDetail(request)}
                   >
-                    <td className="px-5 py-4 font-bold text-blue-700">{request.requestId}</td>
+                    <td className="px-5 py-4 font-bold text-blue-700 break-words">{request.requestId}</td>
                     <td className="px-5 py-4">
-                      <p className="font-semibold text-slate-800">{request.contractId}</p>
+                      <p className="font-semibold text-slate-800">{request.dormName} - Tầng {request.floor}</p>
+                      <p className="text-xs text-slate-500">Phòng: {request.roomName}</p>
+                      <p className="text-xs text-slate-500">Giường: {request.bedNumbers}</p>
                     </td>
                     <td className="px-5 py-4">
                       <p className="text-slate-700">{new Date(request.createdAt).toLocaleDateString('vi-VN')}</p>
@@ -301,14 +314,29 @@ export const ViewCheckoutRequest = () => {
               </div>
 
               <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
-                <div className="grid grid-cols-2 gap-x-8 gap-y-4 bg-slate-50 rounded-xl p-5 border border-slate-100">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 bg-slate-50 rounded-xl p-5 border border-slate-100">
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Hợp đồng</span>
-                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract ? requestDetail.contract.contractId : selectedRequest.contractId}</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Ký túc xá</span>
+                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract?.dormName || 'Đang tải...'}</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Phòng</span>
-                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract ? `Phòng ${requestDetail.contract.roomId}` : 'Đang tải...'}</span>
+                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract?.roomId || 'Đang tải...'}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Tầng</span>
+                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract?.floor || 'Đang tải...'}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Giường</span>
+                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract?.bedNumbers || 'Đang tải...'}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    {/* Contract ID is kept but less prominent as requested */}
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Mã hợp đồng</span>
+                    <span className="text-sm font-semibold text-slate-800">
+                      {requestDetail?.contract ? requestDetail.contract.contractId : selectedRequest.contractId}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Ngày dự kiến trả</span>

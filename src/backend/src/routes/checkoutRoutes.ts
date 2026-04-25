@@ -43,13 +43,7 @@ checkoutRouter.get('/:id/details', async (req: Request, res: Response) => {
     const contract = request.contractId ? await Contract.getByContractId(request.contractId) : null;
     const refund = await RefundCalculation.getByRequestId(request.requestId);
 
-    let depositAmount = 0;
-    if (contract && contract.rentalFormId) {
-      const formRes = await dbClient.query('SELECT total_amount FROM rental_forms WHERE id = $1 LIMIT 1', [contract.rentalFormId]);
-      if (formRes.rows[0] && formRes.rows[0].total_amount) {
-        depositAmount = parseFloat(formRes.rows[0].total_amount);
-      }
-    }
+    const depositAmount = contract?.depositAmount || 0;
 
     res.status(200).json({ request, contract, refund, depositAmount });
   } catch (error) {

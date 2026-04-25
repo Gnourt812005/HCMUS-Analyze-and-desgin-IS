@@ -183,9 +183,9 @@ export const CreateCheckoutRequest = () => {
             <div className="flex items-start gap-3">
               <span className="material-symbols-outlined text-amber-600 mt-0.5">info</span>
               <div>
-                <p className="font-semibold text-amber-900">Không có hợp đồng hoạt động</p>
+                <p className="font-semibold text-amber-900">Không có hợp đồng hợp lệ</p>
                 <p className="text-sm text-amber-700 mt-1">
-                  Khách hàng cần phải đã đăng nhập thành công và đang có hợp đồng thuê phòng/giường còn hiệu lực trên hệ thống để có thể tạo yêu cầu trả phòng.
+                  Khách hàng cần phải có hợp đồng còn hiệu lực/chưa kèm yêu cầu trả phòng trên hệ thống để có thể tạo yêu cầu trả phòng.
                 </p>
               </div>
             </div>
@@ -224,9 +224,15 @@ export const CreateCheckoutRequest = () => {
                     />
                     <div className="flex-1">
                       <p className="font-semibold text-slate-900">
-                        Hợp đồng {contract.contractId} - Phòng {contract.roomId}
+                        {contract.dormName} - Tầng {contract.floor} - Phòng {contract.roomId}
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        Giường: {contract.bedNumbers}
                       </p>
                       <p className="text-sm text-slate-600 mt-1">
+                        Hợp đồng: {contract.contractId}
+                      </p>
+                      <p className="text-sm text-slate-600">
                         Ngày bắt đầu: {new Date(contract.startDate!).toLocaleDateString('vi-VN')}
                       </p>
                       <p className="text-sm text-slate-600">
@@ -264,19 +270,31 @@ export const CreateCheckoutRequest = () => {
 
             {selectedContractDetails && (
               <div className="border-t border-slate-200 pt-6 space-y-4">
-                <h3 className="text-sm font-semibold text-slate-700">Thông tin chi tiết hợp đồng</h3>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <h3 className="text-sm font-bold text-slate-800">Thông tin chi tiết hợp đồng</h3>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Mã hợp đồng</p>
                     <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.contractId}</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs text-slate-500">Phòng/Giường</p>
+                    <p className="text-xs text-slate-500">Ký túc xá</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.dormName}</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs text-slate-500">Phòng</p>
                     <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.roomId}</p>
                   </div>
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs text-slate-500">Tầng</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.floor}</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs text-slate-500">Giường</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.bedNumbers}</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Thời hạn</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.stayDuration} tháng</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.stayDuration} tháng, từ {new Date(selectedContractDetails.startDate!).toLocaleDateString('vi-VN')}</p>
                   </div>
                 </div>
               </div>

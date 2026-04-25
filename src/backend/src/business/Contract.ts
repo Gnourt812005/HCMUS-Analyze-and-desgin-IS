@@ -6,7 +6,11 @@ export class Contract {
   userEmail: string;
   rentalFormId?: string;
   roomId?: string;
+  dormName?: string;
+  floor?: number;
+  bedNumbers?: string;
   startDate?: string;
+  depositAmount?: number;
   stayDuration?: number;
   signatureUrl?: string;
   createdAt?: string;
@@ -17,7 +21,11 @@ export class Contract {
     this.userEmail = data.userEmail || '';
     this.rentalFormId = data.rentalFormId;
     this.roomId = data.roomId;
+    this.dormName = data.dormName;
+    this.floor = data.floor;
+    this.bedNumbers = data.bedNumbers;
     this.startDate = data.startDate;
+    this.depositAmount = data.depositAmount;
     this.stayDuration = data.stayDuration || 0;
     this.signatureUrl = data.signatureUrl;
     this.createdAt = data.createdAt || new Date().toISOString();
@@ -30,7 +38,11 @@ export class Contract {
       userEmail: this.userEmail,
       rentalFormId: this.rentalFormId,
       roomId: this.roomId,
+      dormName: this.dormName,
+      floor: this.floor,
+      bedNumbers: this.bedNumbers,
       startDate: this.startDate,
+      depositAmount: this.depositAmount,
       stayDuration: this.stayDuration,
       status: this.status,
       signatureUrl: this.signatureUrl,

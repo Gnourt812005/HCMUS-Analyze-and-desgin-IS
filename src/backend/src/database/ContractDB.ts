@@ -1,5 +1,5 @@
 import { Contract } from '../business/Contract';
-import { ContractStatus } from '@dormarch/shared';
+import { ContractStatus, CheckoutStatus } from '@dormarch/shared';
 import { dbClient } from './DatabaseClient';
 
 export class ContractDB {
@@ -8,8 +8,12 @@ export class ContractDB {
       contractId: row.contract_id,
       userEmail: row.user_email,
       rentalFormId: row.rental_form_id,
-      roomId: row.room_id,
+      roomId: row.room_name, // Map room_name to roomId
+      dormName: row.dorm_name,
+      floor: row.floor,
+      bedNumbers: row.bed_numbers,
       startDate: row.start_date,
+      depositAmount: row.deposit_amount ? parseFloat(row.deposit_amount) : 0,
       stayDuration: row.stay_duration,
       signatureUrl: row.signature_url,
       status: row.status as ContractStatus,
@@ -24,7 +28,25 @@ export class ContractDB {
             JOIN beds b ON cb.bed_id = b.id 
             JOIN rooms r ON b.room_id = r.id 
             WHERE cb.contract_id = c.id 
-            LIMIT 1) as room_id
+            LIMIT 1) as room_name,
+           (SELECT r.floor
+            FROM contract_beds cb
+            JOIN beds b ON cb.bed_id = b.id
+            JOIN rooms r ON b.room_id = r.id
+            WHERE cb.contract_id = c.id
+            LIMIT 1) as floor,
+           (SELECT d.name
+            FROM contract_beds cb
+            JOIN beds b ON cb.bed_id = b.id
+            JOIN rooms r ON b.room_id = r.id
+            JOIN dorms d ON r.dorm_id = d.id
+            WHERE cb.contract_id = c.id
+            LIMIT 1) as dorm_name,
+           (SELECT STRING_AGG(b.bed_number, ', ')
+            FROM contract_beds cb
+            JOIN beds b ON cb.bed_id = b.id
+            WHERE cb.contract_id = c.id) as bed_numbers,
+           (SELECT rf.total_amount FROM rental_forms rf WHERE rf.id = c.rental_form_id) as deposit_amount
     FROM contracts c
   `;
 
@@ -41,8 +63,17 @@ export class ContractDB {
   }
 
   static async getActiveByUserEmail(userEmail: string): Promise<Partial<Contract>[]> {
-    const sql = `${this.BASE_QUERY} WHERE c.user_email = $1 AND c.status = $2`;
-    const result = await dbClient.query(sql, [userEmail, ContractStatus.ACTIVE]);
+    const sql = `
+      ${this.BASE_QUERY} 
+      WHERE c.user_email = $1 
+        AND c.status = $2
+        AND NOT EXISTS (
+          SELECT 1 FROM checkout_requests cr 
+          WHERE cr.contract_id = c.id AND cr.status IN ($3, $4)
+        )
+    `;
+    const values = [userEmail, ContractStatus.ACTIVE, CheckoutStatus.PENDING, CheckoutStatus.PROCESSING];
+    const result = await dbClient.query(sql, values);
     return result.rows.map(row => this.mapRow(row));
   }
 

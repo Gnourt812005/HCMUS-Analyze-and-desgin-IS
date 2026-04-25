@@ -188,14 +188,26 @@ export const AdminLiquidation = () => {
           <h2 className="text-lg font-bold text-slate-900">Thông tin hợp đồng</h2>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs text-slate-500 uppercase">Mã hợp đồng</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">{contract.contractId}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs text-slate-500 uppercase">Phòng / Giường</p>
+            <p className="text-xs text-slate-500 uppercase">Ký túc xá</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{contract.dormName}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs text-slate-500 uppercase">Phòng</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">{contract.roomId}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs text-slate-500 uppercase">Tầng</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{contract.floor}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs text-slate-500 uppercase">Giường</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{contract.bedNumbers}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs text-slate-500 uppercase">Số tiền cọc</p>
