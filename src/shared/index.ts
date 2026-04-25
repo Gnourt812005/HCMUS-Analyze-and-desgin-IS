@@ -5,3 +5,4 @@ export * from './DormDto';
 export * from './RoomDto';
 export * from './PreviewDto';
 export * from './RentalDto';
+export * from './UtilityDto';

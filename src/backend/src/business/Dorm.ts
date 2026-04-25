@@ -1,4 +1,4 @@
-import { DormDTO, CreateDormDTO, UpdateDormDTO } from '@dormarch/shared';
+import { DormDTO, CreateDormDTO, UpdateDormDTO, GetDormsDto } from '@dormarch/shared';
 import { DormDB } from '../database/DormDB';
 
 export class Dorm {
@@ -6,7 +6,7 @@ export class Dorm {
   name: string;
   address: string;
   phone: string;
-  status: "Còn phòng" | "Hết phòng" | "Sắp đầy" | "Đã ẩn";
+  status: "Còn phòng" | "Hết phòng" | "Sắp đầy";
   totalRooms: number;
   availableRooms: number;
   managerId: string;
@@ -35,14 +35,12 @@ export class Dorm {
     };
   }
 
-  static async getAll(keyword?: string): Promise<DormDTO[]> {
-    let dorms: Dorm[];
-    if (keyword) {
-      dorms = await DormDB.fetchByKeyword(keyword);
-    } else {
-      dorms = await DormDB.getAll();
-    }
-    return dorms.map(d => d.toDTO());
+  static async getAll(query: GetDormsDto): Promise<{ dorms: DormDTO[], total: number }> {
+    const { dorms, total } = await DormDB.fetchAll(query);
+    return {
+      dorms: dorms.map(d => d.toDTO()),
+      total
+    };
   }
 
   static async getById(id: string): Promise<DormDTO | null> {
@@ -65,7 +63,7 @@ export class Dorm {
     if (!exists) {
       throw new Error('Không tìm thấy ký túc xá');
     }
-    return await DormDB.update(id, data);
+    return await DormDB.update(id, data as Partial<Dorm>);
   }
 
   static async delete(id: string): Promise<boolean> {

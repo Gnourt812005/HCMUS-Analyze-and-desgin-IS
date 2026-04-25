@@ -11,7 +11,6 @@ export interface Room {
   dormId: string;
   name: string;
   block: string;
-  tower: string;
   floor: number;
   price: number;
   totalBeds: number;
@@ -72,12 +71,12 @@ export const RoomList = () => {
         const fetchRooms = async () => {
             try {
                 // Fetch all of the rooms' data from the backend via api
-                const response = await ApiClient.get<{ status: number; data: Room[] }>(
+                const response = await ApiClient.get<{ status: number; data: { rooms: Room[], total: number } }>(
                     `/rooms${dormId ? `?dormId=${dormId}` : ''}`
                 );
                 
                 if (response.status === 200) {
-                    setOriginalRooms(response.data);
+                    setOriginalRooms(response.data.rooms);
                 }
             } catch (error) {
                 console.error("Failed to fetch rooms", error);
@@ -127,13 +126,12 @@ export const RoomList = () => {
             dormId: selectedRoomData.dormId,
             name: selectedRoomData.name,
             block: selectedRoomData.block,
-            tower: selectedRoomData.tower,
             floor: selectedRoomData.floor,
             price: selectedRoomData.price,
             totalBeds: selectedRoomData.totalBeds,
             availableBeds: selectedRoomData.availableBeds,
             amenities: selectedRoomData.amenities,
-            specialNotes: selectedRoomData.specialNotes,
+            // specialNotes: selectedRoomData.specialNotes,
             imageUrl: selectedRoomData.imageUrl,
             favoriteCount: selectedRoomData.favoriteCount,
         };
@@ -154,9 +152,11 @@ export const RoomList = () => {
         }));
 
         try {
-            await ApiClient.post(`/rooms/${roomId}/favorite`, {
-                body: JSON.stringify({ action: increment ? 'increase' : 'decrease' }),
-            });
+            if (increment) {
+                await ApiClient.post(`/favourites/${roomId}`);
+            } else {
+                await ApiClient.delete(`/favourites/${roomId}`);
+            }
         } catch (error) {
             console.error("Failed to toggle favorite", error);
             // Revert on error
@@ -550,7 +550,7 @@ export const RoomList = () => {
                                         <h2 className="mb-2 text-2xl font-bold text-slate-800">Phòng {selectedRoomDetail.name}</h2>
                                         <div className="flex items-center gap-2 text-slate-600 font-medium">
                                             <Building2 className="h-4 w-4 text-blue-600" />
-                                            <span>Tòa {selectedRoomDetail.tower} - Block {selectedRoomDetail.block}</span>
+                                            <span>Block {selectedRoomDetail.block}</span>
                                         </div>
                                     </div>
                                     <div className="text-right">
@@ -605,22 +605,22 @@ export const RoomList = () => {
                                     </div>
                                 </div>
 
-                                {selectedRoomDetail.specialNotes.length > 0 && (
-                                    <div className="mb-8">
-                                        <h3 className="mb-3 font-bold text-lg text-slate-800">Lưu ý đặc biệt</h3>
-                                        <div className="space-y-3">
-                                            {selectedRoomDetail.specialNotes.map((note) => (
-                                                <div
-                                                    key={note}
-                                                    className="flex items-start gap-3 rounded-lg bg-blue-50 p-4 border border-blue-100"
-                                                >
-                                                    <AlertCircle className="h-5 w-5 shrink-0 text-blue-600 mt-0.5" />
-                                                    <span className="text-sm font-medium text-blue-900">{note}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
+                                {/* {selectedRoomDetail.specialNotes.length > 0 && (
+                                    // <div className="mb-8">
+                                    //     <h3 className="mb-3 font-bold text-lg text-slate-800">Lưu ý đặc biệt</h3>
+                                    //     <div className="space-y-3">
+                                    //         {selectedRoomDetail.specialNotes.map((note) => (
+                                    //             <div
+                                    //                 key={note}
+                                    //                 className="flex items-start gap-3 rounded-lg bg-blue-50 p-4 border border-blue-100"
+                                    //             >
+                                    //                 <AlertCircle className="h-5 w-5 shrink-0 text-blue-600 mt-0.5" />
+                                    //                 <span className="text-sm font-medium text-blue-900">{note}</span>
+                                    //             </div>
+                                    //         ))}
+                                    //     </div>
+                                    // </div>
+                                //)} */}
 
                                 <div className="flex gap-4">
                                     <button

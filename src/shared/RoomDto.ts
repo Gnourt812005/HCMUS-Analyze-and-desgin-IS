@@ -14,13 +14,60 @@ export interface RoomDetailDTO {
   dormId: string;
   name: string;
   block: string;
-  tower: string;
   floor: number;
   price: number;
   totalBeds: number;
   availableBeds: number;
   amenities: string[];
-  specialNotes: string[];
+  // specialNotes: string[];
   imageUrl: string;
   favoriteCount: number;
+}
+
+export interface GetRoomDto {
+  page?: number;
+  limit?: number;
+  search?: string;
+  dormId?: string;
+  status?: string;
+  totalBeds?: number;
+}
+
+export interface RoomDTO {
+  id: string;
+  dormId: string;
+  name: string;
+  block: string;
+  floor: number;
+  price: number;
+  totalBeds: number;
+  availableBeds: number;
+  amenities: string[];
+  status: string;
+  beds?: BedDTO[];
+}
+
+export interface CreateRoomDTO {
+  dormId: string;
+  name: string;
+  block: string;
+  floor: number;
+  totalBeds: number;
+  utilityIds?: string[];
+}
+
+export interface UpdateRoomDTO {
+  name?: string;
+  block?: string;
+  floor?: number;
+  status?: string;
+  utilityIds?: string[];
+}
+
+export interface BedDTO {
+  id: string;
+  roomId: string;
+  bedNumber: string;
+  status: string;
+  price: number;
 }

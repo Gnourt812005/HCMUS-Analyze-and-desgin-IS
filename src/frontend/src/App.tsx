@@ -21,6 +21,7 @@ import { AdminLayout } from './components/AdminLayout';
 import { AdminDorm } from './pages/admin/AdminDorm';
 import { AdminDormDetail } from './pages/admin/AdminDormDetail';
 import { AdminRooms } from './pages/admin/AdminRooms';
+import { AdminRoomDetail } from './pages/admin/AdminRoomDetail';
 import { AdminViewing } from './pages/admin/AdminViewing';
 import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminContracts } from './pages/admin/AdminContracts';
@@ -51,7 +52,6 @@ function App() {
             <Route path="profile" element={<ProfilePage />} />
             <Route path="favourites-management" element={<FavouriteManagement />} />
             <Route path="preview-forms-management" element={<PreviewFormManagement />} />
-            <Route path="client-preview-form-managements" element={<ClientPreviewFormManagement />} />
             <Route path="orders" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Đơn hàng sẽ sớm ra mắt</div>} />
             <Route path="contracts" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Hợp đồng sẽ sớm ra mắt</div>} />
             <Route path="checkout-requests" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Yêu cầu trả phòng sẽ sớm ra mắt</div>} />
@@ -65,7 +65,9 @@ function App() {
           <Route path="dorms/new" element={<AdminDormDetail />} />
           <Route path="dorms/:id" element={<AdminDormDetail />} />
           <Route path="rooms" element={<AdminRooms />} />
-          <Route path="viewing" element={<AdminViewing />} />
+          <Route path="rooms/create" element={<AdminRoomDetail />} />
+          <Route path="rooms/:id" element={<AdminRoomDetail />} />
+          <Route path="client-preview-forms-management" element={<ClientPreviewFormManagement />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="contracts" element={<AdminContracts />} />
           <Route path="handover" element={<AdminHandover />} />

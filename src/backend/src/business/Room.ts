@@ -1,31 +1,72 @@
+import { RoomDTO, CreateRoomDTO, UpdateRoomDTO, GetRoomDto, BedDTO } from '@dormarch/shared';
+import { RoomDB } from '../database/RoomDB';
+
 export class Room {
   id: string;
   dormId: string;
   name: string;
   block: string;
-  tower: string;
   floor: number;
   price: number;
   totalBeds: number;
   availableBeds: number;
   amenities: string[];
-  specialNotes: string[];
+  status: string;
   imageUrl: string;
   favoriteCount: number;
+  beds?: BedDTO[];
 
-  constructor(data: Partial<Room>) {
+  constructor(data: any) {
     this.id = data.id || '';
-    this.dormId = data.dormId || '';
+    this.dormId = data.dormId || data.dorm_id || '';
     this.name = data.name || '';
     this.block = data.block || '';
-    this.tower = data.tower || '';
     this.floor = data.floor || 0;
-    this.price = data.price || 0;
-    this.totalBeds = data.totalBeds || 0;
-    this.availableBeds = data.availableBeds || 0;
-    this.amenities = data.amenities || [];
-    this.specialNotes = data.specialNotes || [];
-    this.imageUrl = data.imageUrl || '';
-    this.favoriteCount = data.favoriteCount || 0;
+    this.price = data.price || data.lowest_price || 0;
+    this.totalBeds = data.totalBeds || data.total_beds || 0;
+    this.availableBeds = data.availableBeds || data.available_beds || 0;
+    this.amenities = data.amenities || data.room_utilities || [];
+    this.status = data.status || 'AVAILABLE';
+    this.imageUrl = data.imageUrl || data.image_url || '';
+    this.favoriteCount = data.favoriteCount || data.favorite_count || 0;
+    this.beds = data.beds || [];
+  }
+
+  static async fetchAll(query: GetRoomDto): Promise<{ rooms: RoomDTO[], total: number }> {
+    return await RoomDB.fetchAll(query);
+  }
+
+  static async getById(id: string): Promise<RoomDTO | null> {
+    const data = await RoomDB.fetchById(id);
+    if (!data) return null;
+    return new Room(data).toDTO();
+  }
+
+  static async create(data: CreateRoomDTO): Promise<boolean> {
+    return await RoomDB.insert(data);
+  }
+
+  static async update(id: string, data: UpdateRoomDTO): Promise<boolean> {
+    return await RoomDB.update(id, data);
+  }
+
+  static async delete(id: string): Promise<boolean> {
+    return await RoomDB.delete(id);
+  }
+
+  toDTO(): RoomDTO {
+    return {
+      id: this.id,
+      dormId: this.dormId,
+      name: this.name,
+      block: this.block,
+      floor: this.floor,
+      price: this.price,
+      totalBeds: this.totalBeds,
+      availableBeds: this.availableBeds,
+      amenities: this.amenities,
+      status: this.status,
+      beds: this.beds
+    };
   }
 }

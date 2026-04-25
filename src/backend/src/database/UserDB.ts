@@ -1,98 +1,146 @@
 import { User } from '../business/User';
-import { UserRole } from '@dormarch/shared';
+import { UserRole, UpdateProfileDTO } from '@dormarch/shared';
+import { DatabaseClient } from './DatabaseClient';
 
 export class UserDB {
-  private static MOCK_USERS: Partial<User>[] = [
-    {
-      email: 'test@gmail.com',
-      password: 'test@123',
-      fullName: 'Tran Van A',
-      cccd: '079201012345',
-      birthday: '1998-05-15',
-      gender: 'Nam',
-      phone: '0901234567',
-      address: 'Quận 1, TP.HCM',
-      role: UserRole.GUEST
-    },
-    {
-      email: 'admin@gmail.com',
-      password: 'admin',
-      fullName: 'System Admin',
-      cccd: '000000000000',
-      birthday: '1990-01-01',
-      gender: 'Nam',
-      phone: '1111111111',
-      address: 'Admin address',
-      role: UserRole.ADMIN
-    },
-    {
-      email: 'staff@gmail.com',
-      password: 'staff@123',
-      fullName: 'Sales Staff 1',
-      cccd: '079201012345',
-      birthday: '1998-05-15',
-      gender: 'Nam',
-      phone: '0901234567',
-      address: 'Quận 1, TP.HCM',
-      role: UserRole.SALES_STAFF
-    },
-    {
-      email: 'staff2@gmail.com',
-      password: 'staff@123',
-      fullName: 'Sales Staff 2',
-      cccd: '079201012346',
-      birthday: '1995-10-10',
-      gender: 'Nữ',
-      phone: '0907654321',
-      address: 'Quận 3, TP.HCM',
-      role: UserRole.SALES_STAFF
-    }
-  ];
+  private static mapRowToUser(row: any): User {
+    // Map DB enum 'SALE_STAFF' to TS enum 'SALES_STAFF' if necessary
+    let role = row.role as string;
+    if (role === 'SALE_STAFF') role = UserRole.SALES_STAFF;
+
+    return new User({
+      email: row.email,
+      fullName: row.full_name,
+      password: row.password,
+      cccd: row.cccd,
+      birthday: row.birthday ? new Date(row.birthday).toISOString().split('T')[0] : undefined,
+      gender: row.gender,
+      phone: row.phone,
+      address: row.address,
+      role: role as UserRole
+    });
+  }
 
   static async fetchCredentialByEmail(email: string): Promise<User | null> {
-    const row = this.MOCK_USERS.find(u => u.email === email);
-    if (!row) return null;
-    return new User(row);
+    const db = DatabaseClient.getInstance();
+    const query = 'SELECT * FROM users WHERE email = $1';
+    try {
+      const result = await db.query(query, [email]);
+      if (result.rows.length === 0) return null;
+      return this.mapRowToUser(result.rows[0]);
+    } catch (e) {
+      console.error('Database fetch failed (UserDB.fetchCredentialByEmail):', e);
+      return null;
+    }
   }
 
   static async fetchByCCCD(cccd: string): Promise<User | null> {
-    const row = this.MOCK_USERS.find(u => u.cccd === cccd);
-    if (!row) return null;
-    return new User(row);
+    const db = DatabaseClient.getInstance();
+    const query = 'SELECT * FROM users WHERE cccd = $1';
+    try {
+      const result = await db.query(query, [cccd]);
+      if (result.rows.length === 0) return null;
+      return this.mapRowToUser(result.rows[0]);
+    } catch (e) {
+      console.error('Database fetch failed (UserDB.fetchByCCCD):', e);
+      return null;
+    }
   }
 
   static async checkEmailExists(email: string): Promise<boolean> {
-    return this.MOCK_USERS.some(u => u.email === email);
+    const db = DatabaseClient.getInstance();
+    const query = 'SELECT 1 FROM users WHERE email = $1';
+    try {
+      const result = await db.query(query, [email]);
+      return result.rows.length > 0;
+    } catch (e) {
+      console.error('Database check failed (UserDB.checkEmailExists):', e);
+      return false;
+    }
   }
 
-  static async update(email: string, data: Partial<User>): Promise<boolean> {
-    const userIndex = this.MOCK_USERS.findIndex(u => u.email === email);
-    if (userIndex === -1) return false;
+  static async update(email: string, data: UpdateProfileDTO): Promise<boolean> {
+    const db = DatabaseClient.getInstance();
+    const fields: string[] = [];
+    const values: any[] = [];
+    let counter = 1;
 
-    // Spread old data and overwrite with new data
-    this.MOCK_USERS[userIndex] = { ...this.MOCK_USERS[userIndex], ...data };
-    return true;
+    if (data.fullName !== undefined) {
+      fields.push(`full_name = $${counter++}`);
+      values.push(data.fullName);
+    }
+    if (data.cccd !== undefined) {
+      fields.push(`cccd = $${counter++}`);
+      values.push(data.cccd);
+    }
+    if (data.birthday !== undefined) {
+      fields.push(`birthday = $${counter++}`);
+      values.push(data.birthday);
+    }
+    if (data.gender !== undefined) {
+      fields.push(`gender = $${counter++}`);
+      values.push(data.gender);
+    }
+    if (data.phone !== undefined) {
+      fields.push(`phone = $${counter++}`);
+      values.push(data.phone);
+    }
+    if (data.address !== undefined) {
+      fields.push(`address = $${counter++}`);
+      values.push(data.address);
+    }
+
+    if (fields.length === 0) return true;
+
+    values.push(email);
+    const query = `UPDATE users SET ${fields.join(', ')} WHERE email = $${counter}`;
+    try {
+      const result = await db.query(query, values);
+      return (result.rowCount ?? 0) > 0;
+    } catch (e) {
+      console.error('Database update failed (UserDB.update):', e);
+      return false;
+    }
   }
 
   static async updatePassword(email: string, newPassword: string): Promise<boolean> {
-    const userIndex = this.MOCK_USERS.findIndex(u => u.email === email);
-    if (userIndex === -1) return false;
-
-    this.MOCK_USERS[userIndex].password = newPassword;
-    return true;
+    const db = DatabaseClient.getInstance();
+    const query = 'UPDATE users SET password = $1 WHERE email = $2';
+    try {
+      const result = await db.query(query, [newPassword, email]);
+      return (result.rowCount ?? 0) > 0;
+    } catch (e) {
+      console.error('Database update failed (UserDB.updatePassword):', e);
+      return false;
+    }
   }
 
   static async insert(user: User): Promise<boolean> {
-    this.MOCK_USERS.push({
-      email: user.email,
-      password: user.password,
-      fullName: user.fullName,
-      cccd: user.cccd,
-      birthday: user.birthday,
-      gender: user.gender,
-      phone: user.phone,
-      address: user.address,
-    });
-    return true;
+    const db = DatabaseClient.getInstance();
+    // Map TS enum 'SALES_STAFF' back to DB enum 'SALE_STAFF'
+    const roleToSave = user.role === UserRole.SALES_STAFF ? 'SALE_STAFF' : user.role;
+    
+    const query = `
+      INSERT INTO users (email, password, full_name, cccd, birthday, gender, phone, address, role)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `;
+    const values = [
+      user.email,
+      user.password,
+      user.fullName,
+      user.cccd || null,
+      user.birthday || null,
+      user.gender || null,
+      user.phone || null,
+      user.address || null,
+      roleToSave || UserRole.GUEST
+    ];
+    try {
+      await db.query(query, values);
+      return true;
+    } catch (e) {
+      console.error('Database insert failed (UserDB.insert):', e);
+      return false;
+    }
   }
 }

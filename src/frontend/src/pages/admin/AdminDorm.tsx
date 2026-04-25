@@ -9,12 +9,18 @@ export const AdminDorm = () => {
     const [dorms, setDorms] = useState<DormDTO[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [page, setPage] = useState(1);
+    const [limit] = useState(6);
+    const [total, setTotal] = useState(0);
 
     const fetchDorms = async () => {
         try {
             setLoading(true);
-            const res = await ApiClient.get<{ data: DormDTO[] }>(`/dorms${searchQuery ? `?keyword=${searchQuery}` : ''}`);
-            setDorms(res.data);
+            const res = await ApiClient.get<{ data: { dorms: DormDTO[], total: number } }>(
+                `/dorms?page=${page}&limit=${limit}${searchQuery ? `&keyword=${searchQuery}` : ''}`
+            );
+            setDorms(res.data.dorms);
+            setTotal(res.data.total);
         } catch (error) {
             console.error('Failed to fetch dorms', error);
         } finally {
@@ -23,11 +29,15 @@ export const AdminDorm = () => {
     };
 
     useEffect(() => {
+        setPage(1);
+    }, [searchQuery]);
+
+    useEffect(() => {
         const timer = setTimeout(() => {
             fetchDorms();
         }, 300);
         return () => clearTimeout(timer);
-    }, [searchQuery]);
+    }, [searchQuery, page]);
 
     const handleDelete = async (id: string) => {
         if (!window.confirm('Bạn có chắc chắn muốn xóa ký túc xá này?')) return;
@@ -173,6 +183,38 @@ export const AdminDorm = () => {
                             </div>
                         </motion.div>
                     ))}
+                </div>
+            )}
+
+            {/* Pagination UI */}
+            {!loading && total > limit && (
+                <div className="flex items-center justify-between bg-white px-8 py-5 rounded-3xl border border-slate-200 shadow-sm">
+                    <p className="text-sm text-slate-500 font-medium">
+                        Hiển thị <span className="text-slate-900 font-bold">{(page - 1) * limit + 1}</span> - <span className="text-slate-900 font-bold">{Math.min(page * limit, total)}</span> của <span className="text-slate-900 font-bold">{total}</span> cơ sở
+                    </p>
+                    <div className="flex items-center gap-3">
+                        <button
+                            disabled={page === 1}
+                            onClick={() => setPage(page - 1)}
+                            className="flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-30 disabled:hover:bg-white"
+                        >
+                            <span className="material-symbols-outlined">chevron_left</span>
+                        </button>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-bold text-slate-400">Trang</span>
+                            <span className="flex items-center justify-center min-w-[2.5rem] h-10 px-3 rounded-xl bg-blue-50 text-blue-600 font-bold border border-blue-100">
+                                {page}
+                            </span>
+                            <span className="text-sm font-bold text-slate-400">của {Math.ceil(total / limit)}</span>
+                        </div>
+                        <button
+                            disabled={page * limit >= total}
+                            onClick={() => setPage(page + 1)}
+                            className="flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-30 disabled:hover:bg-white"
+                        >
+                            <span className="material-symbols-outlined">chevron_right</span>
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

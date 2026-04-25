@@ -7,29 +7,29 @@ skinparam {
     ClassBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
+    DefaultFontSize 18
     Padding 5
 }
 
 ' --- BOUNDARY LAYER ---
 class "AdminRooms" as ScreenRM <<boundary>> {
     - rooms: RoomDTO[]
-    - loading: boolean
+    - total: number
+    - page: number
+    - limit: number
     - searchQuery: string
     + fetchRooms(): Promise<void>
     + handleDelete(id: string): Promise<void>
 }
 
-class "AdminRoomDetail" as ScreenRD <<boundary>> {
     - room: RoomDTO | null
-    - beds: BedDTO[]
+    - dorms: DormDTO[]
+    - availableUtilities: UtilityDTO[]
     - loading: boolean
     - isEditing: boolean
     - editingBed: BedDTO | null
     - formData: any
-    + setRoom(data: RoomDTO): void
-    + setBeds(data: BedDTO[]): void
-    + setIsEditing(edit: boolean): void
+    + fetchData(): Promise<void>
     + handleSaveRoom(): Promise<void>
     + handleAddBed(): Promise<void>
     + handleUpdateBed(bedId: string): Promise<void>
@@ -42,32 +42,60 @@ interface "RoomDTO" {
     + dormId: string
     + name: string
     + block: string
-    + tower: string
     + floor: number
     + price: number
     + totalBeds: number
     + availableBeds: number
     + amenities: string[]
     + status: string
-    + beds: BedDTO[]
+    + beds?: BedDTO[]
+}
+
+interface "GetRoomDto" {
+    + page?: number
+    + limit?: number
+    + search?: string
+    + dormId?: string
+    + status?: string
+    + totalBeds?: number
 }
 
 interface "CreateRoomDTO" {
     + dormId: string
     + name: string
     + block: string
-    + tower: string
     + floor: number
-    + price: number
     + totalBeds: number
+    + utilityIds?: string[]
 }
 
 interface "UpdateRoomDTO" {
     + name?: string
     + block?: string
-    + tower?: string
     + floor?: number
-    + price?: number
+    + status?: string
+    + utilityIds?: string[]
+}
+
+interface "UtilityDTO" {
+    + id: string
+    + title: string
+    + type: string
+    + isLiable: boolean
+    + incurredPrice: number
+}
+
+interface "GetUtilityDto" {
+    + page?: number
+    + limit?: number
+    + search?: string
+    + type?: string
+}
+
+interface "GetDormsDto" {
+    + page?: number
+    + limit?: number
+    + keyword?: string
     + status?: string
 }
 
@@ -81,41 +109,35 @@ interface "BedDTO" {
 
 ' --- BUSINESS LAYER ---
 class "Room" as Room <<control>> {
-    - id: string
-    - dormId: string
-    - name: string
-    - block: string
-    - tower: string
-    - floor: number
-    - price: number
-    - status: string
-    - totalBeds: number
-    - availableBeds: number
-    + <<static>> getAll(dormId?: string, keyword?: string): Promise<RoomDTO[]>
-    + <<static>> getById(id: string): Promise<RoomDTO>
+    + <<static>> fetchAll(query: GetRoomDto): Promise<{rooms: RoomDTO[], total: number}>
+    + <<static>> getById(id: string): Promise<RoomDTO | null>
     + <<static>> create(data: CreateRoomDTO): Promise<boolean>
     + <<static>> update(id: string, data: UpdateRoomDTO): Promise<boolean>
     + <<static>> delete(id: string): Promise<boolean>
 }
 
+class "Dorm" as Dorm <<control>> {
+    + <<static>> getAll(query: GetDormsDto): Promise<{dorms: DormDTO[], total: number}>
+    + <<static>> getById(id: string): Promise<DormDTO | null>
+}
+
 class "Bed" as Bed <<control>> {
-    - id: string
-    - roomId: string
-    - bedNumber: string
-    - status: string
-    - price: number
     + <<static>> addBed(roomId: string, data: BedDTO): Promise<boolean>
-    + <<static>> updateBed(bedId: string, data: BedDTO): Promise<boolean>
+    + <<static>> updateBed(bedId: string, data: Partial<BedDTO>): Promise<boolean>
     + <<static>> deleteBed(bedId: string): Promise<boolean>
+}
+
+class "Utility" as Utility <<control>> {
+    + <<static>> fetchAll(query: GetUtilityDto): Promise<{utilities: UtilityDTO[], total: number}>
+    + <<static>> fetchById(id: string): Promise<UtilityDTO | null>
 }
 
 ' --- DATABASE LAYER ---
 class "RoomDB" as RoomDB <<entity>> {
-    + <<static>> fetchAll(dormId?: string): Promise<Room[]>
-    + <<static>> fetchByKeyword(keyword: string): Promise<Room[]>
-    + <<static>> fetchById(id: string): Promise<Room | null>
-    + <<static>> insert(data: any): Promise<boolean>
-    + <<static>> update(id: string, data: any): Promise<boolean>
+    + <<static>> fetchAll(query: GetRoomDto): Promise<{rooms: RoomDTO[], total: number}>
+    + <<static>> fetchById(id: string): Promise<any | null>
+    + <<static>> insert(data: CreateRoomDTO): Promise<boolean>
+    + <<static>> update(id: string, data: UpdateRoomDTO): Promise<boolean>
     + <<static>> delete(id: string): Promise<boolean>
     + <<static>> insertBed(data: any): Promise<boolean>
     + <<static>> updateBed(bedId: string, data: any): Promise<boolean>
@@ -123,19 +145,36 @@ class "RoomDB" as RoomDB <<entity>> {
     + <<static>> checkRoomIdExists(dormId: string, name: string): Promise<boolean>
 }
 
+class "DormDB" as DormDB <<entity>> {
+    + <<static>> fetchAll(query: GetDormsDto): Promise<{dorms: Dorm[], total: number}>
+    + <<static>> fetchById(id: string): Promise<Dorm | null>
+}
+
+class "UtilityDB" as UtilityDB <<entity>> {
+    + <<static>> fetchAll(query: GetUtilityDto): Promise<{utilities: UtilityDTO[], total: number}>
+    + <<static>> fetchById(id: string): Promise<UtilityDTO | null>
+}
+
 ' --- RELATIONSHIPS ---
-ScreenRM "1" --> "1" Room : Gọi xử lý
-ScreenRD "1" --> "1" Room : Gọi xử lý
-ScreenRD "1" --> "1" Bed : Quản lý giường
+ScreenRM "1" --> "1" Room
+ScreenRD "1" --> "1" Room
+ScreenRD "1" --> "1" Bed
+ScreenRD "1" --> "1" Utility
 
-Room "1" --> "1" RoomDB : Truy cập dữ liệu
-Bed "1" --> "1" RoomDB : Truy cập dữ liệu
+Room "1" --> "1" RoomDB 
+Bed "1" --> "1" RoomDB
+Utility "1" --> "1" UtilityDB
 
-Room ..> RoomDTO : Trả về
-Room ..> CreateRoomDTO : Nhận
-Room ..> UpdateRoomDTO : Nhận
-Bed ..> BedDTO : Trả về/Nhận
+Room ..> RoomDTO 
+Room ..> GetRoomDto 
+Room ..> CreateRoomDTO 
+Room ..> UpdateRoomDTO 
+Dorm ..> DormDTO
+Dorm ..> GetDormsDto
+Bed ..> BedDTO
+Utility ..> UtilityDTO
+Utility ..> GetUtilityDto
 
-ScreenRM ..> ScreenRD : Điều hướng (Chi tiết/Thêm mới)
+ScreenRM ..> ScreenRD
 
 @enduml

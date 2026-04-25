@@ -12,7 +12,7 @@ export const AdminSidebar = () => {
   const navItems = [
     { path: '/admin/dorms', icon: 'domain', label: 'Ký túc xá' },
     { path: '/admin/rooms', icon: 'bed', label: 'Phòng' },
-    { path: '/admin/viewing', icon: 'calendar_month', label: 'Lịch xem' },
+    { path: '/admin/client-preview-forms-management', icon: 'calendar_month', label: 'Lịch xem phòng khách hàng' },
     { path: '/admin/orders', icon: 'shopping_cart', label: 'Đơn hàng' },
     { path: '/admin/contracts', icon: 'description', label: 'Hợp đồng' },
     { path: '/admin/handover', icon: 'assignment_turned_in', label: 'Bàn giao phòng' },

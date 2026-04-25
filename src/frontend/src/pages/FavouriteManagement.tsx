@@ -73,13 +73,12 @@ export const FavouriteManagement = () => {
             dormId: selectedRoomData.dormId,
             name: selectedRoomData.name,
             block: selectedRoomData.block,
-            tower: selectedRoomData.tower,
             floor: selectedRoomData.floor,
             price: selectedRoomData.price,
             totalBeds: selectedRoomData.totalBeds,
             availableBeds: selectedRoomData.availableBeds,
             amenities: selectedRoomData.amenities,
-            specialNotes: selectedRoomData.specialNotes,
+            // specialNotes: selectedRoomData.specialNotes,
             imageUrl: selectedRoomData.imageUrl,
             favoriteCount: selectedRoomData.favoriteCount,
         };
@@ -311,7 +310,7 @@ export const FavouriteManagement = () => {
                                         <h2 className="mb-2 text-2xl font-bold text-slate-800">Phòng {selectedRoomDetail.name}</h2>
                                         <div className="flex items-center gap-2 text-slate-600 font-medium">
                                             <Building2 className="h-4 w-4 text-blue-600" />
-                                            <span>Tòa {selectedRoomDetail.tower} - Block {selectedRoomDetail.block}</span>
+                                            <span>Tòa {selectedRoomDetail.block} - Block {selectedRoomDetail.block}</span>
                                         </div>
                                     </div>
                                     <div className="text-right">
@@ -365,7 +364,7 @@ export const FavouriteManagement = () => {
                                         ))}
                                     </div>
                                 </div>
-
+                                {/* 
                                 {selectedRoomDetail.specialNotes.length > 0 && (
                                     <div className="mb-8">
                                         <h3 className="mb-3 font-bold text-lg text-slate-800">Lưu ý đặc biệt</h3>
@@ -382,6 +381,7 @@ export const FavouriteManagement = () => {
                                         </div>
                                     </div>
                                 )}
+                                    */}
 
                                 <div className="flex gap-4">
                                     <button

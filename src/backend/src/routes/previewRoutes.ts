@@ -11,7 +11,8 @@ async function getRoomAndDormInfo(roomId: string) {
   const dorms = await DormDB.getAll();
   for (const dorm of dorms) {
     if (!dorm.id) continue;
-    const rooms = await RoomDB.getByDormId(dorm.id);
+    const result = await RoomDB.fetchAll({ dormId: dorm.id });
+    const rooms = result.rooms;
     const match = rooms.find((r) => r.id === roomId);
     if (match) {
       return {
@@ -36,7 +37,7 @@ previewRoutes.post('/', async (req, res) => {
       roomId,
       userId,
       previewDatetime,
-      status: 'ongoing',
+      status: 'pending',
       staffId: null
     });
 
@@ -229,8 +230,8 @@ previewRoutes.put('/staff/:id/reschedule', authMiddleware, async (req: AuthReque
       return res.status(403).json({ message: 'Forbidden' });
     }
 
-    if (form.status !== 'ongoing') {
-      return res.status(400).json({ message: 'Chỉ có thể dời lịch đơn đang xử lý' });
+    if (form.status !== 'pending') {
+      return res.status(400).json({ message: 'Chỉ có thể dời lịch đơn đang chờ xử lý' });
     }
 
     const newDatetime = `${wantedPreviewDate}T${wantedPreviewTime}:00.000Z`;
@@ -263,12 +264,12 @@ previewRoutes.put('/:id/cancel', authMiddleware, async (req: AuthRequest, res) =
       return res.status(403).json({ message: 'Forbidden' });
     }
 
-    // Only allow canceling if status is ongoing
-    if (form.status !== 'ongoing') {
-      return res.status(400).json({ message: 'Only ongoing previews can be canceled' });
+    // Only allow canceling if status is pending
+    if (form.status !== 'pending') {
+      return res.status(400).json({ message: 'Only pending previews can be canceled' });
     }
 
-    const success = await PreviewFormDB.updateStatus(id, 'canceled');
+    const success = await PreviewFormDB.updateStatus(id, 'cancelled');
     if (!success) {
       return res.status(500).json({ message: 'Failed to update' });
     }

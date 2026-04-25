@@ -25,11 +25,10 @@ export const DormSelection = () => {
         const fetchDorms = async () => {
             try {
                 // Fetch dorms' data from the backend via api
-                const res = await ApiClient.get<{ status: number; data: Dorm[] }>('/dorms');
+                const res = await ApiClient.get<{ status: number; data: { dorms: Dorm[] } }>('/dorms');
                 
                 if (res.status === 200) {
-                    // store all of that information into interface Dorm
-                    setDorms(res.data);
+                    setDorms(res.data.dorms);
                 }
             } catch (error) {
                 console.error("Failed to fetch dorms", error);

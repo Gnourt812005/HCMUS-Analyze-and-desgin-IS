@@ -1,4 +1,4 @@
-import { UserDTO, SignInResponseDTO, SignInDTO, SignUpDTO, UserProfileDTO, ChangePasswordDTO, UserRole } from '@dormarch/shared';
+import { UserDTO, SignInResponseDTO, SignInDTO, SignUpDTO, UserProfileDTO, ChangePasswordDTO, UserRole, UpdateProfileDTO } from '@dormarch/shared';
 import { UserDB } from '../database/UserDB';
 import { JwtUtils } from '../utils/jwt';
 
@@ -99,7 +99,7 @@ export class User {
     return userModel.toUserProfileDTO();
   }
 
-  static async updateProfile(email: string, data: UserProfileDTO): Promise<boolean> {
+  static async updateProfile(email: string, data: UpdateProfileDTO): Promise<boolean> {
     return await UserDB.update(email, data);
   }
 

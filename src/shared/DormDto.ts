@@ -37,6 +37,9 @@ export interface UpdateDormDTO {
   managerId?: string;
 }
 
-export interface GetAllDormDto {
+export interface GetDormsDto {
+  page?: number;
+  limit?: number;
   keyword?: string;
+  status?: string;
 }
