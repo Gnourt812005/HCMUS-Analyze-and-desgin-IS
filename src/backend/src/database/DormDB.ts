@@ -2,49 +2,6 @@ import { Dorm } from '../business/Dorm';
 import { DatabaseClient } from './DatabaseClient';
 
 export class DormDB {
-  private static MOCK_DORMS: Partial<Dorm>[] = [
-    {
-      id: "1",
-      name: "Ký túc xá A",
-      address: "123 Đường Nguyễn Văn A, Quận 1, TP.HCM",
-      phone: "028 1234 5678",
-      status: "Còn phòng",
-      totalRooms: 120,
-      availableRooms: 45,
-      managerId: "staff@gmail.com"
-    },
-    {
-      id: "2",
-      name: "Ký túc xá B",
-      address: "456 Đường Lê Văn B, Quận 3, TP.HCM",
-      phone: "028 2345 6789",
-      status: "Sắp đầy",
-      totalRooms: 100,
-      availableRooms: 15,
-      managerId: "staff2@gmail.com"
-    },
-    {
-      id: "3",
-      name: "Ký túc xá C",
-      address: "789 Đường Trần Văn C, Quận 5, TP.HCM",
-      phone: "028 3456 7890",
-      status: "Còn phòng",
-      totalRooms: 150,
-      availableRooms: 80,
-      managerId: "staff@gmail.com"
-    },
-    {
-      id: "4",
-      name: "Ký túc xá D",
-      address: "321 Đường Phạm Văn D, Quận 7, TP.HCM",
-      phone: "028 4567 8901",
-      status: "Hết phòng",
-      totalRooms: 80,
-      availableRooms: 0,
-      managerId: "staff2@gmail.com"
-    },
-  ];
-
   private static mapRowToDorm(row: any): Dorm {
     let mappedStatus = row.status || "Còn phòng";
     if (row.status === 'AVAILABLE') mappedStatus = "Còn phòng";
@@ -63,37 +20,55 @@ export class DormDB {
     });
   }
 
-  static async getAll(): Promise<Dorm[]> {
-    const db = DatabaseClient.getInstance();
-    const query = `
-      SELECT id, name, address, phone, status, total_rooms, available_rooms, manager_id
-      FROM dorms
-    `;
-    try {
-    const result = await db.query(query);
-    return result.rows.map(this.mapRowToDorm);
-    }
-    catch (e) {
-      console.error("Database fetch failed:", e);
-      return [];
-    }
+  private static mapStatusToDB(status: string): string {
+    if (status === "Còn phòng") return 'AVAILABLE';
+    if (status === "Hết phòng") return 'FULL';
+    if (status === "Sắp đầy") return 'NEARLY_FULL';
+    return 'AVAILABLE';
   }
 
-  static async fetchByKeyword(keyword: string): Promise<Dorm[]> {
+  static async fetchAll(query: { page?: number, limit?: number, keyword?: string, status?: string }): Promise<{ dorms: Dorm[], total: number }> {
     const db = DatabaseClient.getInstance();
-    const query = `
+    const { page = 1, limit = 10, keyword, status } = query;
+    const offset = (page - 1) * limit;
+
+    let whereClause = 'WHERE 1=1';
+    const values: any[] = [];
+    let counter = 1;
+
+    if (keyword) {
+      whereClause += ` AND (name ILIKE $${counter} OR address ILIKE $${counter})`;
+      values.push(`%${keyword}%`);
+      counter++;
+    }
+
+    if (status) {
+      whereClause += ` AND status = $${counter}`;
+      values.push(this.mapStatusToDB(status));
+      counter++;
+    }
+
+    const listQuery = `
       SELECT id, name, address, phone, status, total_rooms, available_rooms, manager_id
-      FROM dorms 
-      WHERE name ILIKE $1 OR address ILIKE $1
+      FROM dorms
+      ${whereClause}
+      ORDER BY name ASC
+      LIMIT $${counter++} OFFSET $${counter++}
     `;
 
+    const countQuery = `SELECT COUNT(*) FROM dorms ${whereClause}`;
+
     try {
-      const result = await db.query(query, [`%${keyword}%`]);
-      return result.rows.map(this.mapRowToDorm);
-    }
-    catch (e) {
-      console.error("Database fetch failed:", e);
-      return [];
+      const listResult = await db.query(listQuery, [...values, limit, offset]);
+      const countResult = await db.query(countQuery, values);
+
+      return {
+        dorms: listResult.rows.map(this.mapRowToDorm),
+        total: parseInt(countResult.rows[0].count)
+      };
+    } catch (e) {
+      console.error("Database fetchAll failed (DormDB.fetchAll):", e);
+      return { dorms: [], total: 0 };
     }
   }
 
@@ -116,36 +91,102 @@ export class DormDB {
   }
 
   static async insert(dorm: Dorm): Promise<boolean> {
-    const newId = (this.MOCK_DORMS.length + 1).toString();
-    this.MOCK_DORMS.push({
-      ...dorm,
-      id: newId
-    });
-    return true;
+    const db = DatabaseClient.getInstance();
+    const query = `
+      INSERT INTO dorms (name, address, phone, status, total_rooms, available_rooms, manager_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `;
+    const values = [
+      dorm.name,
+      dorm.address,
+      dorm.phone,
+      this.mapStatusToDB(dorm.status),
+      dorm.totalRooms,
+      dorm.availableRooms,
+      dorm.managerId
+    ];
+    try {
+      await db.query(query, values);
+      return true;
+    } catch (e) {
+      console.error("Database insert failed (DormDB.insert):", e);
+      return false;
+    }
   }
 
   static async update(id: string, data: Partial<Dorm>): Promise<boolean> {
-    const index = this.MOCK_DORMS.findIndex(d => d.id === id);
-    if (index === -1) return false;
-    this.MOCK_DORMS[index] = { ...this.MOCK_DORMS[index], ...data };
-    return true;
+    const db = DatabaseClient.getInstance();
+    const fields: string[] = [];
+    const values: any[] = [];
+    let counter = 1;
+
+    if (data.name !== undefined) {
+      fields.push(`name = $${counter++}`);
+      values.push(data.name);
+    }
+    if (data.address !== undefined) {
+      fields.push(`address = $${counter++}`);
+      values.push(data.address);
+    }
+    if (data.phone !== undefined) {
+      fields.push(`phone = $${counter++}`);
+      values.push(data.phone);
+    }
+    if (data.status !== undefined) {
+      fields.push(`status = $${counter++}`);
+      values.push(this.mapStatusToDB(data.status));
+    }
+    if (data.totalRooms !== undefined) {
+      fields.push(`total_rooms = $${counter++}`);
+      values.push(data.totalRooms);
+    }
+    if (data.availableRooms !== undefined) {
+      fields.push(`available_rooms = $${counter++}`);
+      values.push(data.availableRooms);
+    }
+    if (data.managerId !== undefined) {
+      fields.push(`manager_id = $${counter++}`);
+      values.push(data.managerId);
+    }
+
+    if (fields.length === 0) return true;
+
+    values.push(id);
+    const query = `UPDATE dorms SET ${fields.join(', ')} WHERE id = $${counter}`;
+    try {
+      const result = await db.query(query, values);
+      return (result.rowCount ?? 0) > 0;
+    } catch (e) {
+      console.error("Database update failed (DormDB.update):", e);
+      return false;
+    }
   }
 
   static async updateStatus(id: string, status: string): Promise<boolean> {
-    const dorm = this.MOCK_DORMS.find(d => d.id === id);
-    if (!dorm) return false;
-    dorm.status = status as any;
-    return true;
+    return this.update(id, { status: status as any });
   }
 
   static async delete(id: string): Promise<boolean> {
-    const index = this.MOCK_DORMS.findIndex(d => d.id === id);
-    if (index === -1) return false;
-    this.MOCK_DORMS.splice(index, 1);
-    return true;
+    const db = DatabaseClient.getInstance();
+    const query = `DELETE FROM dorms WHERE id = $1`;
+    try {
+      const result = await db.query(query, [id]);
+      return (result.rowCount ?? 0) > 0;
+    } catch (e) {
+      console.error("Database delete failed (DormDB.delete):", e);
+      return false;
+    }
   }
 
   static async checkIdExists(id: string): Promise<boolean> {
-    return this.MOCK_DORMS.some(d => d.id === id);
+    const db = DatabaseClient.getInstance();
+    const query = `SELECT 1 FROM dorms WHERE id = $1`;
+    try {
+      const result = await db.query(query, [id]);
+      return result.rows.length > 0;
+    } catch (e) {
+      console.error("Database checkIdExists failed (DormDB.checkIdExists):", e);
+      return false;
+    }
   }
 }

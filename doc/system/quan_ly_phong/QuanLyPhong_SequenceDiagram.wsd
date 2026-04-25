@@ -16,35 +16,50 @@ participant "AdminRooms" as MainGUI <<boundary>>
 participant "AdminRoomDetail" as DetailGUI <<boundary>>
 participant "Room" as BUS_Room <<control>>
 participant "Bed" as BUS_Bed <<control>>
+participant "Utility" as BUS_Util <<control>>
+participant "Dorm" as BUS_Dorm <<control>>
 participant "RoomDB" as DB <<entity>>
+participant "UtilityDB" as DB_Util <<entity>>
+participant "DormDB" as DB_Dorm <<entity>>
 
 autonumber
 
 == Kịch bản 1: Xem danh sách phòng ==
 Actor -> MainGUI: Mở trang Quản lý Phòng
-MainGUI -> BUS_Room: getAll()
+MainGUI -> BUS_Room: fetchAll()
 BUS_Room -> DB: fetchAll()
 
 == Kịch bản 2: Xem chi tiết phòng ==
 Actor -> MainGUI: Chọn 1 phòng cụ thể
 MainGUI -> DetailGUI: Điều hướng (id)
+par 
+    DetailGUI -> BUS_Util: fetchAll({type: 'ROOM'})
+    BUS_Util -> DB_Util: fetchAll()
+    DetailGUI -> BUS_Dorm: fetchAll({limit: 100})
+    BUS_Dorm -> DB_Dorm: fetchAll()
+end
 DetailGUI -> BUS_Room: getById(id)
 BUS_Room -> DB: fetchById(id)
 
 == Kịch bản 3: Thêm phòng mới ==
 Actor -> MainGUI: Nhấn "Thêm phòng mới"
 MainGUI -> DetailGUI: Mở trang thêm mới (/new)
-Actor -> DetailGUI: Chọn KTX, nhập dữ liệu & Lưu
+DetailGUI -> BUS_Util: fetchAll({type: 'ROOM'})
+BUS_Util -> DB_Util: fetchAll()
+Actor -> DetailGUI: Chọn KTX, nhập dữ liệu, chọn tiện ích & Lưu
 DetailGUI -> BUS_Room: create(formData)
-BUS_Room -> DB: checkRoomIdExists(dormId, name)
-alt Hợp lệ
-    BUS_Room -> DB: insert(data)
-end
+BUS_Room -> DB: insert(data)
+Note right of DB: Phân tách 2 bước:\n1. Insert Room (RETURNING id)\n2. Upsert room_utilities
+DB -> DB: [Step 1] insert room
+DB -> DB: [Step 2] upsert utilityIds
 
 == Kịch bản 4: Cập nhật thông tin phòng ==
-Actor -> DetailGUI: Chỉnh sửa thông tin & Nhấn Lưu
+Actor -> DetailGUI: Chỉnh sửa thông tin, thay đổi tiện ích & Nhấn Lưu
 DetailGUI -> BUS_Room: update(id, formData)
 BUS_Room -> DB: update(id, data)
+Note right of DB: Surgical Sync:\n1. Delete absent utilities\n2. Upsert new utilities
+DB -> DB: [Step 1] delete removed utils
+DB -> DB: [Step 2] insert/upsert new utils
 
 == Kịch bản 5: Xóa phòng (Hard Delete) ==
 Actor -> DetailGUI: Nhấn "Xóa phòng"

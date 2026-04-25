@@ -7,11 +7,16 @@ export const dormRoutes = Router();
 // GET / - List dorms (supports ?keyword=...)
 dormRoutes.get('/', async (req, res) => {
   try {
-    const keyword = req.query.keyword as string;
-    const dorms = await Dorm.getAll(keyword);
-    res.json({ message: 'Success', status: 200, data: dorms });
+    const query = {
+      page: parseInt(req.query.page as string) || 1,
+      limit: parseInt(req.query.limit as string) || 10,
+      keyword: req.query.keyword as string,
+      status: req.query.status as string
+    };
+    const result = await Dorm.getAll(query);
+    res.json({ message: 'Success', status: 200, data: result });
   } catch (error: any) {
-    res.status(500).json({ message: error.message || 'Internal Server Error', status: 500, data: [] });
+    res.status(500).json({ message: error.message || 'Internal Server Error', status: 500, data: { dorms: [], total: 0 } });
   }
 });
 

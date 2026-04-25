@@ -78,7 +78,7 @@ export const FavouriteManagement = () => {
             totalBeds: selectedRoomData.totalBeds,
             availableBeds: selectedRoomData.availableBeds,
             amenities: selectedRoomData.amenities,
-            specialNotes: selectedRoomData.specialNotes,
+            // specialNotes: selectedRoomData.specialNotes,
             imageUrl: selectedRoomData.imageUrl,
             favoriteCount: selectedRoomData.favoriteCount,
         };
@@ -364,7 +364,7 @@ export const FavouriteManagement = () => {
                                         ))}
                                     </div>
                                 </div>
-
+                                {/* 
                                 {selectedRoomDetail.specialNotes.length > 0 && (
                                     <div className="mb-8">
                                         <h3 className="mb-3 font-bold text-lg text-slate-800">Lưu ý đặc biệt</h3>
@@ -381,6 +381,7 @@ export const FavouriteManagement = () => {
                                         </div>
                                     </div>
                                 )}
+                                    */}
 
                                 <div className="flex gap-4">
                                     <button

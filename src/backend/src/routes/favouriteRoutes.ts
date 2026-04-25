@@ -17,11 +17,12 @@ favouriteRoutes.get('/', authMiddleware, async (req: AuthRequest, res) => {
     const roomIds = await FavouriteRoomsDB.getRoomIdsByUserId(email);
     
     // Get all rooms and dorms
-    const rooms = await RoomDB.getAll();
-    const dorms = await DormDB.fetchAll();
+    const rooms = await RoomDB.fetchAll({});
+    const dorms = await DormDB.getAll();
+    const r = rooms.rooms;
 
     // Filter relevant rooms
-    const favoritedRooms = rooms.filter(r => roomIds.includes(r.id!));
+    const favoritedRooms = r.filter(r => roomIds.includes(r.id!));
 
     // Map to full detailed structure mimicking RoomList.tsx needs
     const data = favoritedRooms.map(r => {
