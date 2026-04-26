@@ -1,13 +1,11 @@
-import { useEffect, useState, FormEvent, ChangeEvent } from 'react';
+import { useEffect, useState, FormEvent} from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CustomerSidebar } from '../components/CustomerSidebar';
 import { ApiClient } from '../api/ApiClient';
 import { CheckoutRequestDTO, UserProfileDTO, ContractDTO } from '@dormarch/shared';
 
 interface CheckoutForm {
   contractId: string;
   expectedDate: string;
-  documentFile: File | null;
 }
 
 export const CreateCheckoutRequest = () => {
@@ -17,17 +15,19 @@ export const CreateCheckoutRequest = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [documentFileName, setDocumentFileName] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [selectedContractDetails, setSelectedContractDetails] = useState<ContractDTO | null>(null);
 
   const [form, setForm] = useState<CheckoutForm>({
     contractId: '',
     expectedDate: '',
-    documentFile: null,
   });
 
-  // Load profile and active contracts on mount
+  const showSuccess = (msg: string) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
+
   useEffect(() => {
     const abortController = new AbortController();
     loadProfileAndContracts(abortController);
@@ -49,20 +49,10 @@ export const CreateCheckoutRequest = () => {
       
       setProfile(profileData);
 
-      // Load all contracts for the customer
-      const allContracts = await ApiClient.get<ContractDTO[]>('/contracts');
+      const activeContracts = await ApiClient.get<ContractDTO[]>('/contracts');
       
       if (abortController.signal.aborted) return;
-      
-      // Filter active contracts for this customer
-      if (profileData.cccd) {
-        const customerContracts = allContracts.filter(
-          (contract: ContractDTO) => 
-            contract.userCCCD === profileData.cccd && 
-            contract.status === 'ACTIVE'
-        );
-        setActiveContracts(customerContracts);
-      }
+      setActiveContracts(activeContracts);
     } catch (err) {
       if (!abortController.signal.aborted) {
         setError(
@@ -89,28 +79,6 @@ export const CreateCheckoutRequest = () => {
     }
   }, [form.contractId, activeContracts]);
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    if (file) {
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        setError('Tệp quá lớn (tối đa 10MB). Vui lòng chọn tệp khác.');
-        return;
-      }
-
-      // Validate file type
-      const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      if (!validTypes.includes(file.type)) {
-        setError('Loại tệp không được hỗ trợ. Vui lòng chọn PDF, JPG, PNG, DOC hoặc DOCX.');
-        return;
-      }
-
-      setForm({ ...form, documentFile: file });
-      setDocumentFileName(file.name);
-      setError(null);
-    }
-  };
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -131,13 +99,9 @@ export const CreateCheckoutRequest = () => {
       return;
     }
 
-    if (!form.documentFile) {
-      setError('Vui lòng đính kèm hợp đồng hoặc phiếu đặt cọc.');
-      return;
-    }
-
     // Validate expected date is in the future
-    const selectedDate = new Date(form.expectedDate);
+    const [year, month, day] = form.expectedDate.split('-').map(Number);
+    const selectedDate = new Date(year, month - 1, day);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -149,39 +113,19 @@ export const CreateCheckoutRequest = () => {
     try {
       setSubmitting(true);
 
-      // Convert file to base64
-      let documentUrl = '';
-      if (form.documentFile) {
-        documentUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(form.documentFile!);
-        });
-      }
-
-      // Create checkout request
       await ApiClient.post<CheckoutRequestDTO>('/checkout-requests', {
         body: JSON.stringify({
-          userCCCD: profile.cccd,
+          userEmail: profile.email,
           contractId: form.contractId,
           expectedDate: form.expectedDate,
-          documentUrl,
         })
       });
 
-      setSuccess(true);
-      setForm({
-        contractId: '',
-        expectedDate: '',
-        documentFile: null,
-      });
-      setDocumentFileName('');
-
-      // Redirect to checkout requests page after 2 seconds
+      showSuccess('Gửi yêu cầu thành công!');
+      setForm({ contractId: '', expectedDate: '' });
       setTimeout(() => {
         navigate('/checkout-requests');
-      }, 2000);
+      }, 1500);
 
     } catch (err) {
       setError(
@@ -196,23 +140,32 @@ export const CreateCheckoutRequest = () => {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 px-6 py-8">
-        <CustomerSidebar />
-        <section className="md:col-span-9">
+        <section>
           <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
             <div className="text-center text-slate-500 py-16">Đang tải thông tin...</div>
           </div>
         </section>
-      </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 px-6 py-8">
-      <CustomerSidebar />
+    <section className="space-y-6">
+        {successMsg && (
+          <div className="fixed top-6 right-6 z-[60] flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
+            <span className="material-symbols-outlined text-lg">check_circle</span>
+            <span className="text-sm font-semibold">{successMsg}</span>
+          </div>
+        )}
+        {error && (
+          <div className="fixed top-6 right-6 z-[60] flex items-center gap-3 bg-red-600 text-white px-5 py-3.5 rounded-xl shadow-xl transition-all">
+            <span className="material-symbols-outlined text-lg">error</span>
+            <span className="text-sm font-semibold">{error}</span>
+            <button onClick={() => setError(null)} className="ml-2 hover:text-red-200 transition-colors p-1 flex items-center justify-center">
+              <span className="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+        )}
 
-      <section className="md:col-span-9 space-y-6">
-        {/* Header Section */}
         <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
           <div className="flex items-start justify-between gap-4 mb-2">
             <div>
@@ -225,52 +178,23 @@ export const CreateCheckoutRequest = () => {
           </p>
         </div>
 
-        {/* Success Message */}
-        {success && (
-          <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
-            <div className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-green-600 mt-0.5">check_circle</span>
-              <div>
-                <p className="font-semibold text-green-900">Gửi yêu cầu thành công!</p>
-                <p className="text-sm text-green-700 mt-1">Yêu cầu trả phòng của bạn đã được ghi nhận vào hệ thống. Bạn sẽ được chuyển hướng đến danh sách yêu cầu...</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && !success && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-            <div className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-red-600 mt-0.5">error</span>
-              <div>
-                <p className="font-semibold text-red-900">Có lỗi xảy ra</p>
-                <p className="text-sm text-red-700 mt-1">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Prerequisites Check */}
         {!loading && activeContracts.length === 0 && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
             <div className="flex items-start gap-3">
               <span className="material-symbols-outlined text-amber-600 mt-0.5">info</span>
               <div>
-                <p className="font-semibold text-amber-900">Không có hợp đồng hoạt động</p>
+                <p className="font-semibold text-amber-900">Không có hợp đồng hợp lệ</p>
                 <p className="text-sm text-amber-700 mt-1">
-                  Khách hàng cần phải đã đăng nhập thành công và đang có hợp đồng thuê phòng/giường còn hiệu lực trên hệ thống để có thể tạo yêu cầu trả phòng.
+                  Khách hàng cần phải có hợp đồng còn hiệu lực/chưa kèm yêu cầu trả phòng trên hệ thống để có thể tạo yêu cầu trả phòng.
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Main Form */}
         {activeContracts.length > 0 && (
           <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 border border-slate-200 space-y-6">
             
-            {/* Step 1: Select Room/Bed */}
             <div className="space-y-4">
               <div>
                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -284,7 +208,7 @@ export const CreateCheckoutRequest = () => {
                 {activeContracts.map((contract) => (
                   <label
                     key={contract.contractId}
-                    className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                    className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
                       form.contractId === contract.contractId
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-slate-200 bg-slate-50 hover:border-slate-300'
@@ -300,9 +224,15 @@ export const CreateCheckoutRequest = () => {
                     />
                     <div className="flex-1">
                       <p className="font-semibold text-slate-900">
-                        Hợp đồng {contract.contractId} - Phòng {contract.roomId}
+                        {contract.dormName} - Tầng {contract.floor} - Phòng {contract.roomId}
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        Giường: {contract.bedNumbers}
                       </p>
                       <p className="text-sm text-slate-600 mt-1">
+                        Hợp đồng: {contract.contractId}
+                      </p>
+                      <p className="text-sm text-slate-600">
                         Ngày bắt đầu: {new Date(contract.startDate!).toLocaleDateString('vi-VN')}
                       </p>
                       <p className="text-sm text-slate-600">
@@ -314,7 +244,6 @@ export const CreateCheckoutRequest = () => {
               </div>
             </div>
 
-            {/* Step 2: Expected Date */}
             <div className="border-t border-slate-200 pt-6 space-y-4">
               <div>
                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -332,97 +261,57 @@ export const CreateCheckoutRequest = () => {
                   type="date"
                   value={form.expectedDate}
                   onChange={(e) => setForm({ ...form, expectedDate: e.target.value })}
-                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all"
                   required
                 />
                 <p className="text-xs text-slate-500 mt-2">Ngày trả phòng phải là ngày trong tương lai</p>
               </div>
             </div>
 
-            {/* Step 3: Upload Document */}
-            <div className="border-t border-slate-200 pt-6 space-y-4">
-              <div>
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">3</span>
-                  Tải lên hợp đồng hoặc phiếu đặt cọc
-                </h2>
-                <p className="text-sm text-slate-500 mt-2">Đính kèm hợp đồng hoặc phiếu đặt cọc</p>
-              </div>
-
-              <div className="border-2 border-dashed border-slate-300 rounded-3xl p-6 text-center hover:border-blue-400 hover:bg-blue-50 transition-all">
-                <input
-                  id="checkout-document-upload"
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  required
-                />
-                <label
-                  htmlFor="checkout-document-upload"
-                  className="cursor-pointer inline-flex flex-col items-center gap-2 w-full"
-                >
-                  <span className="material-symbols-outlined text-5xl text-blue-500">cloud_upload</span>
-                  <span className="font-semibold text-slate-700">Chọn tệp để tải lên</span>
-                  <span className="text-sm text-slate-500">
-                    Hỗ trợ: PDF, JPG, PNG, DOC, DOCX (tối đa 10MB)
-                  </span>
-                </label>
-              </div>
-
-              {documentFileName && (
-                <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
-                  <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-green-600">check_circle</span>
-                    <div>
-                      <p className="text-sm font-semibold text-green-900">Tệp đã chọn</p>
-                      <p className="text-sm text-green-700 mt-1">{documentFileName}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Selected Contract Details */}
             {selectedContractDetails && (
               <div className="border-t border-slate-200 pt-6 space-y-4">
-                <h3 className="text-sm font-semibold text-slate-700">Thông tin chi tiết hợp đồng</h3>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <h3 className="text-sm font-bold text-slate-800">Thông tin chi tiết hợp đồng</h3>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Mã hợp đồng</p>
                     <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.contractId}</p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs text-slate-500">Phòng/Giường</p>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs text-slate-500">Ký túc xá</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.dormName}</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs text-slate-500">Phòng</p>
                     <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.roomId}</p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs text-slate-500">Số tiền cọc</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">
-                      {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedContractDetails.depositAmount || 0)}
-                    </p>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs text-slate-500">Tầng</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.floor}</p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs text-slate-500">Giường</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.bedNumbers}</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Thời hạn</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.stayDuration} tháng</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.stayDuration} tháng, từ {new Date(selectedContractDetails.startDate!).toLocaleDateString('vi-VN')}</p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Form Actions */}
             <div className="border-t border-slate-200 pt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={() => navigate('/checkout-requests')}
-                className="rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                className="rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 Hủy
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
+                className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
               >
                 {submitting ? 'Đang gửi yêu cầu...' : 'Gửi yêu cầu'}
               </button>
@@ -430,6 +319,5 @@ export const CreateCheckoutRequest = () => {
           </form>
         )}
       </section>
-    </div>
   );
 };

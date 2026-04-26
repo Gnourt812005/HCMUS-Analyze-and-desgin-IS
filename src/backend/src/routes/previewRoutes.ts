@@ -10,8 +10,8 @@ import { UserRole } from '@dormarch/shared';
 
 // Helper function to extract Room and Dorm details
 async function getRoomAndDormInfo(roomId: string) {
-  const dorms = await DormDB.getAll();
-  for (const dorm of dorms) {
+  const dorms = await DormDB.fetchAll({});
+  for (const dorm of dorms.dorms) {
     if (!dorm.id) continue;
     const result = await RoomDB.fetchAll({ dormId: dorm.id });
     const rooms = result.rooms;

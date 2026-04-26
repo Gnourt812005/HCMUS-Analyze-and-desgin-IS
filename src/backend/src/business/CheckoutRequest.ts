@@ -3,32 +3,44 @@ import { CheckoutRequestDB } from '../database/CheckoutRequestDB';
 
 export class CheckoutRequest {
   requestId: string; // PK
-  userCCCD: string;
+  userEmail: string;
+  userFullName?: string;
   contractId?: string;
+  dormName?: string;
+  roomName?: string;
+  floor?: number;
+  bedNumbers?: string;
   expectedDate: string; // ISO Date String
   status: CheckoutStatus;
   createdAt: string; // ISO Date String
-  documentUrl?: string;
 
   constructor(data: Partial<CheckoutRequest>) {
     this.requestId = data.requestId || '';
-    this.userCCCD = data.userCCCD || '';
+    this.userEmail = data.userEmail || '';
+    this.userFullName = data.userFullName;
     this.contractId = data.contractId;
+    this.dormName = data.dormName;
+    this.roomName = data.roomName;
+    this.floor = data.floor;
+    this.bedNumbers = data.bedNumbers;
     this.expectedDate = data.expectedDate || new Date().toISOString();
     this.status = data.status || CheckoutStatus.PENDING;
     this.createdAt = data.createdAt || new Date().toISOString();
-    this.documentUrl = data.documentUrl;
   }
 
   toDto(): CheckoutRequestDTO {
     return {
       requestId: this.requestId,
-      userCCCD: this.userCCCD,
+      userEmail: this.userEmail,
+      userFullName: this.userFullName,
       contractId: this.contractId,
+      dormName: this.dormName,
+      roomName: this.roomName,
+      floor: this.floor,
+      bedNumbers: this.bedNumbers,
       expectedDate: this.expectedDate,
       status: this.status,
       createdAt: this.createdAt,
-      documentUrl: this.documentUrl
     };
   }
 
@@ -38,34 +50,33 @@ export class CheckoutRequest {
   }
 
   static async create(requestData: Partial<CheckoutRequestDTO>): Promise<CheckoutRequestDTO> {
-    if (!requestData.userCCCD || !requestData.expectedDate || !requestData.contractId) {
-      throw new Error('userCCCD, contractId và expectedDate là bắt buộc.');
+    if (!requestData.userEmail || !requestData.expectedDate || !requestData.contractId) {
+      throw new Error('userEmail, contractId và expectedDate là bắt buộc.');
     }
 
     const newRequest = new CheckoutRequest({
-      userCCCD: requestData.userCCCD,
+      userEmail: requestData.userEmail,
       contractId: requestData.contractId,
       expectedDate: requestData.expectedDate,
-      documentUrl: requestData.documentUrl,
-      requestId: `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       createdAt: new Date().toISOString(),
       status: CheckoutStatus.PENDING
     });
-    await CheckoutRequestDB.insert(newRequest);
+    
+    const insertedId = await CheckoutRequestDB.insert(newRequest);
+    if (insertedId) newRequest.requestId = insertedId;
+    
     return newRequest.toDto();
   }
 
   static async createWithDuplicateCheck(requestData: Partial<CheckoutRequestDTO>): Promise<{ success: boolean; request?: CheckoutRequestDTO; error?: string }> {
-    if (!requestData.userCCCD || !requestData.expectedDate || !requestData.contractId) {
-      throw new Error('userCCCD, contractId và expectedDate là bắt buộc.');
+    if (!requestData.userEmail || !requestData.expectedDate || !requestData.contractId) {
+      throw new Error('userEmail, contractId và expectedDate là bắt buộc.');
     }
 
     const newRequest = new CheckoutRequest({
-      userCCCD: requestData.userCCCD,
+      userEmail: requestData.userEmail,
       contractId: requestData.contractId,
       expectedDate: requestData.expectedDate,
-      documentUrl: requestData.documentUrl,
-      requestId: `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       createdAt: new Date().toISOString(),
       status: CheckoutStatus.PENDING
     });
@@ -73,14 +84,15 @@ export class CheckoutRequest {
     const result = await CheckoutRequestDB.insertIfNoActiveRequest(
       newRequest,
       requestData.contractId,
-      requestData.userCCCD
+      requestData.userEmail
     );
 
-    if (result.success) {
-      return { success: true, request: newRequest.toDto() };
-    } else {
+    if (!result.success || !result.requestId) {
       return { success: false, error: result.error };
     }
+
+    const fullRequest = await this.getById(result.requestId);
+    return { success: true, request: fullRequest || undefined };
   }
 
   static async getById(requestId: string): Promise<CheckoutRequestDTO | null> {
@@ -96,20 +108,16 @@ export class CheckoutRequest {
 
     const currentStatus = currentRequest.status;
     if (expectedCurrentStatus !== undefined && currentStatus !== expectedCurrentStatus) {
-      throw new Error('Yêu cầu đã được cập nhật bởi quản trị viên khác. Vui lòng làm mới và thử lại.');
+      throw new Error('Yêu cầu đã được cập nhật. Vui lòng làm mới và thử lại.');
     }
 
-    // Define valid status transitions
     const validTransitions: Record<CheckoutStatus, CheckoutStatus[]> = {
-      [CheckoutStatus.PENDING]: [CheckoutStatus.PROCESSING, CheckoutStatus.REJECTED, CheckoutStatus.CANCELLED],
-      [CheckoutStatus.PROCESSING]: [CheckoutStatus.PENDING_LIQUIDATION, CheckoutStatus.REJECTED, CheckoutStatus.CANCELLED],
-      [CheckoutStatus.PENDING_LIQUIDATION]: [CheckoutStatus.LIQUIDATED, CheckoutStatus.CANCELLED],
+      [CheckoutStatus.PENDING]: [CheckoutStatus.PROCESSING, CheckoutStatus.CANCELLED],
+      [CheckoutStatus.PROCESSING]: [CheckoutStatus.LIQUIDATED, CheckoutStatus.CANCELLED],
       [CheckoutStatus.LIQUIDATED]: [], 
-      [CheckoutStatus.REJECTED]: [], 
       [CheckoutStatus.CANCELLED]: [] 
     };
 
-    // Check if the transition is valid
     const allowedTransitions = validTransitions[currentStatus!] || [];
     if (!allowedTransitions.includes(newStatus)) {
       throw new Error(

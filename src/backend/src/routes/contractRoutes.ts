@@ -68,32 +68,40 @@ contractRouter.get('/', authMiddleware, async (req: AuthRequest, res: Response) 
       return res.status(401).json({ message: 'Không thể định danh' });
     }
 
-    const profile = await User.getProfile(email);
-    if (!profile?.cccd) {
-      return res.status(404).json({ message: 'Không tìm thấy thông tin khách hàng' });
-    }
-
-    const contracts = await Contract.getActiveByUserCCCD(profile.cccd);
+    const contracts = await Contract.getActiveByUserEmail(email);
     res.status(200).json(contracts);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });
   }
 });
 
-contractRouter.get('/active-by-user/:cccd', authMiddleware, async (req: AuthRequest, res: Response) => {
+contractRouter.get('/active-by-user/:email', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const cccd = req.params.cccd;
-    if (!cccd) {
-      return res.status(400).json({ message: 'CCCD là bắt buộc.' });
+    const email = req.params.email;
+    if (!email) {
+      return res.status(400).json({ message: 'Email là bắt buộc.' });
     }
 
-    const user = await User.getProfileByCCCD(cccd);
+    const user = await User.getProfile(email);
     if (!user) {
       return res.status(404).json({ message: 'Không tìm thấy khách hàng' });
     }
 
-    const contracts = await Contract.getActiveByUserCCCD(cccd);
+    const contracts = await Contract.getActiveByUserEmail(email);
     res.status(200).json({ user, contracts });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error', error });
+  }
+});
+
+contractRouter.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const contract = await Contract.getByContractId(id);
+    if (!contract) {
+      return res.status(404).json({ message: 'Không tìm thấy hợp đồng' });
+    }
+    res.status(200).json(contract);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });
   }
