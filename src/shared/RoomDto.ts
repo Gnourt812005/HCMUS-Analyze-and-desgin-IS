@@ -32,6 +32,7 @@ export interface GetRoomDto {
   dormId?: string;
   status?: string;
   totalBeds?: number;
+  userIdCard?: string;
 }
 
 export interface RoomDTO {
@@ -45,6 +46,8 @@ export interface RoomDTO {
   availableBeds: number;
   amenities: string[];
   status: string;
+  hasUserDeposit?: boolean;
+  userRegistrationId?: string;
   beds?: BedDTO[];
 }
 

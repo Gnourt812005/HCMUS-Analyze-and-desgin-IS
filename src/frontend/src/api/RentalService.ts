@@ -21,8 +21,9 @@ import {
 import { ApiClient } from './ApiClient';
 
 export class RentalService {
-  static getLatestPolicy(): Promise<ApiEnvelopeDTO<PolicyContentDTO>> {
-    return ApiClient.get<ApiEnvelopeDTO<PolicyContentDTO>>('/rentals/policy/latest');
+  static getLatestPolicy(dormId?: string): Promise<ApiEnvelopeDTO<PolicyContentDTO>> {
+    const url = dormId ? `/rentals/policy/latest?dormId=${dormId}` : '/rentals/policy/latest';
+    return ApiClient.get<ApiEnvelopeDTO<PolicyContentDTO>>(url);
   }
 
   static confirmPolicyAgreement(payload: PolicyAgreementRequestDTO): Promise<ApiEnvelopeDTO<PolicyAgreementDTO>> {
