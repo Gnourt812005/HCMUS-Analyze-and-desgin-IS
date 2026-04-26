@@ -15,6 +15,13 @@ type RegisterFlowState = {
   acceptedConditions: boolean;
   alreadyDeposited: boolean;
   lockBedSelection: boolean;
+  profile?: {
+    fullName?: string;
+    phone?: string;
+    email?: string;
+  };
+  roomName?: string;
+  bedNumbers?: string[];
 };
 
 export const RentalRegister = () => {
@@ -22,9 +29,9 @@ export const RentalRegister = () => {
   const { state } = useLocation();
   const flowState = state as RegisterFlowState | null;
 
-  const [customerName, setCustomerName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
+  const [customerName, setCustomerName] = useState(flowState?.profile?.fullName || '');
+  const [phone, setPhone] = useState(flowState?.profile?.phone || '');
+  const [email, setEmail] = useState(flowState?.profile?.email || '');
   const [rentalMonths, setRentalMonths] = useState(6);
 
   const [registration, setRegistration] = useState<RentalRegistrationDTO | null>(null);
@@ -74,7 +81,7 @@ export const RentalRegister = () => {
 
       if (response.status === 201) {
         setRegistration(response.data);
-        alert('Đăng ký thuê thành công. Vui lòng chọn Đặt cọc hoặc Thanh toán.');
+        alert(`Đăng ký thuê ${rentalMonths} tháng thành công. Vui lòng chọn Đặt cọc hoặc Thanh toán trọn gói.`);
       }
     } catch (error: any) {
       alert(error.message || 'Không thể đăng ký thuê.');
@@ -120,7 +127,9 @@ export const RentalRegister = () => {
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
       <h1 className="text-3xl font-bold text-slate-800">Đăng ký thuê</h1>
-      <p className="mt-2 text-slate-600">Phòng {flowState.roomId} - Giường {flowState.bedIds.join(', ')}</p>
+      <p className="mt-2 text-slate-600">
+        Phòng {flowState.roomName || flowState.roomId} - Giường {flowState.bedNumbers?.join(', ') || flowState.bedIds.join(', ')}
+      </p>
 
       {flowState.lockBedSelection && (
         <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900">
@@ -134,21 +143,35 @@ export const RentalRegister = () => {
             <label className="text-sm font-semibold text-slate-700">Họ tên</label>
             <input
               value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
+              onChange={(e) => {
+                setCustomerName(e.target.value);
+                setRegistration(null);
+                setPreview(null);
+              }}
               required
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+              readOnly={!!flowState?.profile?.fullName}
+              className={`mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 ${
+                flowState?.profile?.fullName ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''
+              }`}
             />
           </div>
           <div>
             <label className="text-sm font-semibold text-slate-700">Số điện thoại</label>
             <input
               value={phone}
-              onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              onChange={(e) => {
+                setPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
+                setRegistration(null);
+                setPreview(null);
+              }}
               inputMode="numeric"
               pattern="\d{10}"
               maxLength={10}
               required
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+              readOnly={!!flowState?.profile?.phone}
+              className={`mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 ${
+                flowState?.profile?.phone ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''
+              }`}
             />
           </div>
           <div>
@@ -156,9 +179,16 @@ export const RentalRegister = () => {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setRegistration(null);
+                setPreview(null);
+              }}
               required
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+              readOnly={!!flowState?.profile?.email}
+              className={`mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 ${
+                flowState?.profile?.email ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''
+              }`}
             />
           </div>
           <div>
@@ -167,13 +197,17 @@ export const RentalRegister = () => {
               type="number"
               min={1}
               value={rentalMonths}
-              onChange={(e) => setRentalMonths(Number(e.target.value))}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+              onChange={(e) => {
+                setRentalMonths(Number(e.target.value));
+                setRegistration(null);
+                setPreview(null);
+              }}
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
           </div>
         </div>
 
-        <button type="submit" disabled={loadingRegister} className="rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white disabled:bg-slate-300">
+        <button type="submit" disabled={loadingRegister} className="rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white disabled:bg-slate-300 hover:bg-blue-800 transition-colors">
           {loadingRegister ? 'Đang xử lý...' : 'Xác nhận đăng ký thuê'}
         </button>
       </form>
@@ -183,22 +217,22 @@ export const RentalRegister = () => {
           <h2 className="text-xl font-bold text-slate-800">Chọn phương án thanh toán</h2>
           <p className="mt-1 text-sm text-slate-600">Sau khi chọn, hệ thống sẽ mở popup tóm tắt dịch vụ và chi phí.</p>
           <div className="mt-4 flex gap-3">
-            <button onClick={() => handleOpenPreview('DEPOSIT')} disabled={loadingPreview} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-300">
+            <button onClick={() => handleOpenPreview('DEPOSIT')} disabled={loadingPreview} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-300 hover:bg-slate-800 transition-colors">
               Đặt cọc
             </button>
-            <button onClick={() => handleOpenPreview('FULL_PAYMENT')} disabled={loadingPreview} className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-300">
-              Thanh toán
+            <button onClick={() => handleOpenPreview('FULL_PAYMENT')} disabled={loadingPreview} className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-300 hover:bg-blue-800 transition-colors">
+              Thanh toán trọn gói
             </button>
           </div>
         </div>
       )}
 
       {preview && currentAction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
-          <div className="w-full max-w-lg rounded-xl bg-white shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-xl bg-white shadow-2xl animate-in zoom-in duration-200">
             <div className="border-b border-slate-200 px-6 py-4">
               <h3 className="text-lg font-bold text-slate-800">
-                {currentAction === 'DEPOSIT' ? 'Xác nhận đặt cọc' : 'Xác nhận thanh toán'}
+                {currentAction === 'DEPOSIT' ? 'Xác nhận đặt cọc' : 'Xác nhận thanh toán trọn gói'}
               </h3>
             </div>
             <div className="space-y-2 px-6 py-4">

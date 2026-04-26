@@ -7,12 +7,14 @@ import {
 } from '@dormarch/shared';
 import { Rental } from '../business/Rental';
 import { Policy } from '../business/Policy';
+import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
 
 export const rentalRoutes = Router();
 
 rentalRoutes.get('/policy/latest', async (req, res) => {
   try {
-    const policy = await Policy.getLatestRegulations();
+    const dormId = req.query.dormId as string;
+    const policy = await Policy.getLatestRegulations(dormId);
     res.json({ message: 'Success', status: 200, data: policy });
   } catch (error: any) {
     res.status(500).json({ message: error.message || 'Cannot load policy', status: 500, data: null });
@@ -61,5 +63,26 @@ rentalRoutes.post('/payment-preview', async (req, res) => {
     res.json({ message: 'Success', status: 200, data: result });
   } catch (error: any) {
     res.status(400).json({ message: error.message || 'Preview failed', status: 400, data: null });
+  }
+});
+
+rentalRoutes.get('/orders/my', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const email = req.user?.email;
+    if (!email) return res.status(401).json({ message: 'Unauthorized' });
+
+    const orders = await Rental.getOrdersByUser(email);
+    res.json({ message: 'Success', status: 200, data: orders });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Failed to fetch orders', status: 500, data: [] });
+  }
+});
+
+rentalRoutes.get('/orders/all', authMiddleware, async (req, res) => {
+  try {
+    const orders = await Rental.getAllOrders();
+    res.json({ message: 'Success', status: 200, data: orders });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Failed to fetch all orders', status: 500, data: [] });
   }
 });
