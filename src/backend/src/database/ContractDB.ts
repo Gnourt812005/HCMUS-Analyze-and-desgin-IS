@@ -202,7 +202,6 @@ export class ContractDB {
       contractId: row.contract_id,
       userEmail: row.user_email,
       rentalFormId: row.rental_form_id,
-      roomId: row.room_id,
       roomName: row.room_name,
       dormName: row.dorm_name,
       floor: row.floor,
@@ -219,12 +218,6 @@ export class ContractDB {
 
   private static readonly BASE_QUERY = `
     SELECT c.id as contract_id, c.user_email, c.rental_form_id, c.start_date, c.stay_duration, c.status, c.signature_url, c.created_at,
-           (SELECT r.id
-            FROM contract_beds cb
-            JOIN beds b ON cb.bed_id = b.id
-            JOIN rooms r ON b.room_id = r.id
-            WHERE cb.contract_id = c.id
-            LIMIT 1) as room_id,
            (SELECT r.name 
             FROM contract_beds cb 
             JOIN beds b ON cb.bed_id = b.id 
