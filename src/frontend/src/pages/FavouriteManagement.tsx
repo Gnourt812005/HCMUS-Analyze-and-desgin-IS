@@ -41,7 +41,7 @@ export const FavouriteManagement = () => {
                 const response = await ApiClient.get<{ status: number, data: Room[] }>(`/favourites`);
                 
                 if (response.status === 200) {
-                    setOriginalRooms(response.data.map(r => ({...r, isFavorited: true})));
+                    setOriginalRooms(response.data.map(r => ({...r, isFavorite: true})));
                 }
             } catch (error) {
                 console.error("Failed to fetch rooms", error);
@@ -78,6 +78,7 @@ export const FavouriteManagement = () => {
             totalBeds: selectedRoomData.totalBeds,
             availableBeds: selectedRoomData.availableBeds,
             amenities: selectedRoomData.amenities,
+            isFavorite: selectedRoomData.isFavorite,
             // specialNotes: selectedRoomData.specialNotes,
             imageUrl: selectedRoomData.imageUrl,
             favoriteCount: selectedRoomData.favoriteCount,

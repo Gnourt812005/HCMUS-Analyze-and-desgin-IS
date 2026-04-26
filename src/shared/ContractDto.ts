@@ -1,17 +1,22 @@
 export enum ContractStatus {
   ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  PENDING_CHECKOUT = 'PENDING_CHECKOUT',
+  TERMINATED = 'TERMINATED',
   LIQUIDATED = 'LIQUIDATED'
 }
 
 export interface ContractDTO {
   contractId: string;
+  userEmail: string;
+  rentalFormId?: string;
   userCCCD?: string;
   roomId?: string;
+  dormName?: string;
+  floor?: number;
+  bedNumbers?: string;
   startDate?: string;
+  depositAmount?: number;
   stayDuration?: number;
-  depositAmount: number;
   status?: ContractStatus;
-  liquidationUrl?: string;
+  signatureUrl?: string;
+  createdAt?: string;
 }

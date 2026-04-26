@@ -3,40 +3,55 @@ import { ContractDTO , ContractStatus } from '@dormarch/shared';
 
 export class Contract {
   contractId: string;
-  userCCCD: string;
+  userEmail: string;
+  rentalFormId?: string;
   roomId?: string;
+  dormName?: string;
+  floor?: number;
+  bedNumbers?: string;
   startDate?: string;
+  depositAmount?: number;
   stayDuration?: number;
-  depositAmount: number;
-  liquidationUrl?: string;
+  signatureUrl?: string;
+  createdAt?: string;
   status: ContractStatus;
 
   constructor(data: Partial<Contract>) {
     this.contractId = data.contractId || '';
-    this.userCCCD = data.userCCCD || '';
+    this.userEmail = data.userEmail || '';
+    this.rentalFormId = data.rentalFormId;
     this.roomId = data.roomId;
+    this.dormName = data.dormName;
+    this.floor = data.floor;
+    this.bedNumbers = data.bedNumbers;
     this.startDate = data.startDate;
+    this.depositAmount = data.depositAmount;
     this.stayDuration = data.stayDuration || 0;
-    this.depositAmount = data.depositAmount || 0;
-    this.liquidationUrl = data.liquidationUrl;
+    this.signatureUrl = data.signatureUrl;
+    this.createdAt = data.createdAt || new Date().toISOString();
     this.status = data.status || ContractStatus.ACTIVE;
   }
   
   toDto(): ContractDTO {
     return {
       contractId: this.contractId,
-      userCCCD: this.userCCCD,
+      userEmail: this.userEmail,
+      rentalFormId: this.rentalFormId,
       roomId: this.roomId,
+      dormName: this.dormName,
+      floor: this.floor,
+      bedNumbers: this.bedNumbers,
       startDate: this.startDate,
-      stayDuration: this.stayDuration,
       depositAmount: this.depositAmount,
+      stayDuration: this.stayDuration,
       status: this.status,
-      liquidationUrl: this.liquidationUrl
+      signatureUrl: this.signatureUrl,
+      createdAt: this.createdAt
     };
   }
 
-  static async getByUserCCCD(userCCCD: string): Promise<ContractDTO | null> {
-    const contractModel = await ContractDB.getByUserCCCD(userCCCD);
+  static async getByUserEmail(userEmail: string): Promise<ContractDTO | null> {
+    const contractModel = await ContractDB.getByUserEmail(userEmail);
     return contractModel ? new Contract(contractModel).toDto() : null;
   }
 
@@ -45,8 +60,8 @@ export class Contract {
     return contractModel ? new Contract(contractModel).toDto() : null;
   }
 
-  static async getActiveByUserCCCD(userCCCD: string): Promise<ContractDTO[]> {
-    const contractModels = await ContractDB.getActiveByUserCCCD(userCCCD);
+  static async getActiveByUserEmail(userEmail: string): Promise<ContractDTO[]> {
+    const contractModels = await ContractDB.getActiveByUserEmail(userEmail);
     return contractModels.map(model => new Contract(model).toDto());
   }
 }

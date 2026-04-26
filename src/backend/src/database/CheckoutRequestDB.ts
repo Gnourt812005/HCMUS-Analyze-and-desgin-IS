@@ -1,86 +1,118 @@
 import { CheckoutStatus } from '@dormarch/shared';
 import { CheckoutRequest } from '../business/CheckoutRequest';
+import { dbClient } from './DatabaseClient';
 
 export class CheckoutRequestDB {
-  private static MOCK_CHECKOUT_REQUESTS: Partial<CheckoutRequest>[] = [
-    {
-      requestId: 'req-001',
-      userCCCD: '0123456789',
-      contractId: 'contract-001',
-      expectedDate: '2005-06-30',
-      status: CheckoutStatus.PENDING,
-      createdAt: '2005-06-01'
-    },
-    {
-      requestId: 'req-002',
-      userCCCD: '0987654321',
-      contractId: 'contract-002',
-      expectedDate: '2005-07-15',
-      status: CheckoutStatus.PROCESSING,
-      createdAt: '2005-06-05',
-      documentUrl: 'https://example.com/contract/req-002.pdf'
-    },
-    {
-      requestId: 'req-003',
-      userCCCD: '0123456789',
-      contractId: 'contract-001',
-      expectedDate: '2005-07-20',
-      status: CheckoutStatus.LIQUIDATED,
-      createdAt: '2005-06-10',
-      documentUrl: 'https://example.com/contract/req-003.pdf'
-    }
-  ];
+  private static mapRow(row: any): Partial<CheckoutRequest> {
+    return {
+      requestId: row.request_id,
+      userEmail: row.user_email,
+      userFullName: row.user_full_name,
+      contractId: row.contract_id,
+      dormName: row.dorm_name,
+      roomName: row.room_name,
+      floor: row.floor,
+      bedNumbers: row.bed_numbers,
+      expectedDate: row.expected_date,
+      status: row.status as CheckoutStatus,
+      createdAt: row.created_at
+    };
+  }
+
+  private static readonly BASE_QUERY = `
+    SELECT
+      cr.id as request_id,
+      cr.user_email,
+      cr.contract_id,
+      cr.expected_date,
+      cr.status,
+      cr.created_at,
+      u.full_name as user_full_name,
+      (SELECT d.name FROM contracts c JOIN contract_beds cb ON c.id = cb.contract_id JOIN beds b ON cb.bed_id = b.id JOIN rooms r ON b.room_id = r.id JOIN dorms d ON r.dorm_id = d.id WHERE c.id = cr.contract_id LIMIT 1) as dorm_name,
+      (SELECT r.floor FROM contracts c JOIN contract_beds cb ON c.id = cb.contract_id JOIN beds b ON cb.bed_id = b.id JOIN rooms r ON b.room_id = r.id WHERE c.id = cr.contract_id LIMIT 1) as floor,
+      (SELECT r.name FROM contracts c JOIN contract_beds cb ON c.id = cb.contract_id JOIN beds b ON cb.bed_id = b.id JOIN rooms r ON b.room_id = r.id WHERE c.id = cr.contract_id LIMIT 1) as room_name,
+      (SELECT STRING_AGG(b.bed_number, ', ') FROM contracts c JOIN contract_beds cb ON c.id = cb.contract_id JOIN beds b ON cb.bed_id = b.id WHERE c.id = cr.contract_id) as bed_numbers
+    FROM checkout_requests cr
+    LEFT JOIN users u ON cr.user_email = u.email
+  `;
 
   static async getAll(): Promise<Partial<CheckoutRequest>[]> {
-    return this.MOCK_CHECKOUT_REQUESTS;
+    const sql = `${this.BASE_QUERY} ORDER BY cr.created_at DESC`;
+    const result = await dbClient.query(sql);
+    return result.rows.map((row: any) => this.mapRow(row));
   }
 
-  static async insert(request: CheckoutRequest): Promise<boolean> {
-    this.MOCK_CHECKOUT_REQUESTS.push(request);
-    return true;
-  }
-
-  static async insertIfNoActiveRequest(request: CheckoutRequest, contractId: string, userCCCD: string): Promise<{ success: boolean; error?: string }> {
-    // Atomic check-and-insert: check for active request, return error if exists
-    const existingActive = this.MOCK_CHECKOUT_REQUESTS.find(r =>
-      r.contractId === contractId &&
-      r.userCCCD === userCCCD &&
-      [CheckoutStatus.PENDING, CheckoutStatus.PROCESSING, CheckoutStatus.PENDING_LIQUIDATION].includes(r.status as CheckoutStatus)
-    );
-
-    if (existingActive) {
-      return { success: false, error: 'Đã có yêu cầu trả phòng đang xử lý cho hợp đồng này.' };
+  static async insert(request: CheckoutRequest): Promise<string | null> {
+    const sql = `
+      INSERT INTO checkout_requests (user_email, contract_id, expected_date, status, created_at)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id
+    `;
+    const values = [
+      request.userEmail, 
+      request.contractId ?? null, 
+      request.expectedDate,
+      request.status, 
+      request.createdAt || new Date().toISOString()
+    ];
+    try {
+      const result = await dbClient.query(sql, values);
+      return result.rows[0]?.id || null;
+    } catch (e) {
+      console.error("Database insert failed:", e);
+      return null;
     }
+  }
 
-    this.MOCK_CHECKOUT_REQUESTS.push(request);
-    return { success: true };
+  static async insertIfNoActiveRequest(request: CheckoutRequest, contractId: string, userEmail: string): Promise<{ success: boolean; error?: string; requestId?: string }> {
+    const sql = `
+      INSERT INTO checkout_requests (user_email, contract_id, expected_date, status, created_at)
+      SELECT $1, $2, $3, $4, $5
+      WHERE NOT EXISTS (
+        SELECT 1 FROM checkout_requests 
+        WHERE contract_id = $2 AND status::text IN ($6, $7)
+      )
+      RETURNING id;
+    `;
+    
+    const values = [
+      request.userEmail, 
+      request.contractId ?? null, 
+      request.expectedDate, 
+      request.status, 
+      request.createdAt || new Date().toISOString(),
+      CheckoutStatus.PENDING,
+      CheckoutStatus.PROCESSING
+    ];
+
+    try {
+      const result = await dbClient.query(sql, values);
+      
+      if ((result.rowCount ?? 0) === 0) {
+        return { success: false, error: 'Đã có yêu cầu trả phòng đang xử lý cho hợp đồng này.' };
+      }
+      
+      return { success: true, requestId: result.rows[0].id };
+    } catch (e: any) {
+      console.error(e);
+      return { success: false, error: `Lỗi cơ sở dữ liệu khi tạo yêu cầu. ${e.message}` };
+    }
   }
 
   static async getById(requestId: string): Promise<Partial<CheckoutRequest> | null> {
-    const request = this.MOCK_CHECKOUT_REQUESTS.find(r => r.requestId === requestId);
-    return request || null;
+    const sql = `${this.BASE_QUERY} WHERE cr.id = $1 LIMIT 1`;
+    const result = await dbClient.query(sql, [requestId]);
+    return result.rows[0] ? this.mapRow(result.rows[0]) : null;
   }
 
   static async updateStatus(requestId: string, newStatus: CheckoutStatus, expectedStatus?: CheckoutStatus): Promise<boolean> {
-    const requestIndex = this.MOCK_CHECKOUT_REQUESTS.findIndex(r => r.requestId === requestId);
-    if (requestIndex === -1)
-      return false;
-
-    const existingRequest = this.MOCK_CHECKOUT_REQUESTS[requestIndex];
-    if (expectedStatus !== undefined && existingRequest.status !== expectedStatus) {
-      return false;
-    }
-
-    this.MOCK_CHECKOUT_REQUESTS[requestIndex].status = newStatus;
-    return true;
-  }
-
-  static async updateDocuments(requestId: string, documentUrl: string): Promise<boolean> {
-    const requestIndex = this.MOCK_CHECKOUT_REQUESTS.findIndex(r => r.requestId === requestId);
-    if (requestIndex === -1)
-      return false;
-    this.MOCK_CHECKOUT_REQUESTS[requestIndex].documentUrl = documentUrl;
+    const sql = expectedStatus 
+      ? `UPDATE checkout_requests SET status = $1 WHERE id = $2 AND status = $3` 
+      : `UPDATE checkout_requests SET status = $1 WHERE id = $2`;
     
-    return true;
+    const values = expectedStatus ? [newStatus, requestId, expectedStatus] : [newStatus, requestId];
+    const result = await dbClient.query(sql, values);
+    
+    return (result.rowCount ?? 0) > 0;
   }
 }

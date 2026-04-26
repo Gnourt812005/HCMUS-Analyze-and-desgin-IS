@@ -4,7 +4,7 @@ export class PreviewForm {
   userId: string;
   previewDatetime: string;
   createdDatetime: string;
-  status: 'pending' | 'rejected' | 'approved' | 'canceled';
+  status: 'pending' | 'rejected' | 'approved' | 'cancelled';
   staffId: string | null;
 
   constructor(data: Partial<PreviewForm>) {

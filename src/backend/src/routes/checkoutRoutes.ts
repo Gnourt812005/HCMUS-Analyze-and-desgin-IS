@@ -6,6 +6,7 @@ import { ContractDB } from '../database/ContractDB';
 import { Room } from '../business/Room';
 import { RefundCalculation } from '../business/RefundCalculation';
 import { CheckoutStatus, ContractStatus } from '@dormarch/shared';
+import { dbClient } from '../database/DatabaseClient';
 
 export const checkoutRouter = Router();
 
@@ -42,7 +43,9 @@ checkoutRouter.get('/:id/details', async (req: Request, res: Response) => {
     const contract = request.contractId ? await Contract.getByContractId(request.contractId) : null;
     const refund = await RefundCalculation.getByRequestId(request.requestId);
 
-    res.status(200).json({ request, contract, refund });
+    const depositAmount = contract?.depositAmount || 0;
+
+    res.status(200).json({ request, contract, refund, depositAmount });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });
   }
@@ -50,10 +53,10 @@ checkoutRouter.get('/:id/details', async (req: Request, res: Response) => {
 
 checkoutRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const { userCCCD, contractId, expectedDate, documentUrl } = req.body;
+    const { userEmail, contractId, expectedDate} = req.body;
 
-    if (!userCCCD || !contractId || !expectedDate) {
-      res.status(400).json({ message: 'userCCCD, contractId và expectedDate là bắt buộc.' });
+    if (!userEmail || !contractId || !expectedDate) {
+      res.status(400).json({ message: 'userEmail, contractId và expectedDate là bắt buộc.' });
       return;
     }
 
@@ -63,32 +66,26 @@ checkoutRouter.post('/', async (req: Request, res: Response) => {
       return;
     }
 
-    if (contract.status !== 'ACTIVE') {
+    if (contract.status !== ContractStatus.ACTIVE) {
       res.status(400).json({ message: 'Hợp đồng không còn hiệu lực. Không thể tạo yêu cầu trả phòng.' });
       return;
     }
 
-    if (contract.userCCCD !== userCCCD) {
+    if (contract.userEmail !== userEmail) {
       res.status(400).json({ message: 'Hợp đồng không thuộc về khách hàng này.' });
       return;
     }
 
     // Use atomic insert-with-check to prevent race condition with concurrent requests
     const createResult = await CheckoutRequest.createWithDuplicateCheck({
-      userCCCD,
+      userEmail,
       contractId,
-      expectedDate,
-      documentUrl
+      expectedDate
     });
 
     if (!createResult.success) {
       res.status(400).json({ message: createResult.error || 'Không thể tạo yêu cầu' });
       return;
-    }
-
-    // Update associated contract status to PENDING_CHECKOUT only after successful request creation
-    if (contractId && createResult.request) {
-      await ContractDB.updateStatus(contractId, ContractStatus.PENDING_CHECKOUT);
     }
 
     res.status(201).json(createResult.request);
@@ -115,13 +112,6 @@ checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
       throw new Error('Yêu cầu đã được cập nhật bởi quản trị viên khác. Vui lòng làm mới và thử lại.');
     }
 
-    if (currentRequest.contractId) {
-      // If the checkout request is cancelled or rejected, revert contract status to ACTIVE
-      if ([CheckoutStatus.CANCELLED, CheckoutStatus.REJECTED].includes(newStatus)) {
-        await ContractDB.updateStatus(currentRequest.contractId, ContractStatus.ACTIVE);
-      }
-    }
-
     const updated = await CheckoutRequest.getById(requestId);
     res.status(200).json(updated);
   } catch (error) {
@@ -137,7 +127,7 @@ checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
 
 checkoutRouter.patch('/:id/complete-liquidation', async (req: Request, res: Response) => {
   try {
-    const { checkoutDocumentUrl, liquidationDocumentUrl, status, expectedStatus } = req.body;
+    const { status, expectedStatus } = req.body;
 
     const request = await CheckoutRequest.getById(req.params.id);
     if (!request) {
@@ -151,14 +141,7 @@ checkoutRouter.patch('/:id/complete-liquidation', async (req: Request, res: Resp
       throw new Error('Yêu cầu đã được cập nhật bởi quản trị viên khác. Vui lòng làm mới và thử lại.');
     }
 
-    if (checkoutDocumentUrl) {
-      await CheckoutRequestDB.updateDocuments(req.params.id, checkoutDocumentUrl);
-    }
-
     if (request.contractId) {
-      if (liquidationDocumentUrl) {
-        await ContractDB.updateLiquidationUrl(request.contractId, liquidationDocumentUrl);
-      }
       await ContractDB.updateStatus(request.contractId, ContractStatus.LIQUIDATED);
       const contract = await Contract.getByContractId(request.contractId);
       // if (contract?.roomId) {

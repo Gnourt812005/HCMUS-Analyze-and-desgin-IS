@@ -27,6 +27,22 @@ export class DormDB {
     return 'AVAILABLE';
   }
 
+  static async getAll(): Promise<Dorm[]> {
+    const db = DatabaseClient.getInstance();
+    const query = `
+      SELECT id, name, address, phone, status, total_rooms, available_rooms, manager_id
+      FROM dorms
+      ORDER BY name ASC
+    `;
+    try {
+      const result = await db.query(query);
+      return result.rows.map(this.mapRowToDorm);
+    } catch (e) {
+      console.error("Database getAll failed (DormDB.getAll):", e);
+      return [];
+    }
+  }
+
   static async fetchAll(query: { page?: number, limit?: number, keyword?: string, status?: string }): Promise<{ dorms: Dorm[], total: number }> {
     const db = DatabaseClient.getInstance();
     const { page = 1, limit = 10, keyword, status } = query;

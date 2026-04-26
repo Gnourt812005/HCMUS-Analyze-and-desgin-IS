@@ -35,7 +35,7 @@ export class PreviewFormDB {
   private static mapRowToPreviewForm(row: any): PreviewForm {
     let mappedStatus = row.status || "pending";
     if (row.status === 'PENDING') mappedStatus = "pending";
-    else if (row.status === 'CANCELLED' || row.status === 'CANCELED') mappedStatus = "canceled";
+    else if (row.status === 'CANCELLED' || row.status === 'CANCELLED') mappedStatus = "cancelled";
     else if (row.status === 'APPROVED') mappedStatus = "approved";
     else if (row.status === 'REJECTED') mappedStatus = "rejected";
     
@@ -89,7 +89,7 @@ export class PreviewFormDB {
         data.roomId,
         new Date(data.previewDatetime),
         data.status.toUpperCase(),
-        null, // may auto add here when staff assign, for now just insert null
+        data.staffId || null,
         new Date(data.createdDatetime)
       ]);
       

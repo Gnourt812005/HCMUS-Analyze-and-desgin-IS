@@ -16,8 +16,8 @@ favouriteRoutes.get('/', authMiddleware, async (req: AuthRequest, res) => {
     // Find favorited room IDs
     const roomIds = await FavouriteRoomsDB.getRoomIdsByUserId(email);
     
-    // Get all rooms and dorms
-    const rooms = await RoomDB.fetchAll({});
+    // Get all rooms and dorms (large limit to ensure favorites aren't cut off by pagination)
+    const rooms = await RoomDB.fetchAll({ limit: 1000 });
     const dorms = await DormDB.getAll();
     const r = rooms.rooms;
 
@@ -29,6 +29,7 @@ favouriteRoutes.get('/', authMiddleware, async (req: AuthRequest, res) => {
         const dormMatch = dorms.find(d => d.id === r.dormId);
         return {
             ...r,
+            isFavorite: true,
             dormName: dormMatch?.name || 'Không xác định',
             dormAddress: dormMatch?.address || 'Không có địa chỉ'
         };
