@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ApiClient } from '../../api/ApiClient';
-import { DormDTO, CreateDormDTO, UpdateDormDTO } from '@dormarch/shared';
+import { DormDTO, CreateDormDTO, UpdateDormDTO, UtilityDTO } from '@dormarch/shared';
 import { motion } from 'framer-motion';
 
 export const AdminDormDetail = () => {
@@ -18,6 +18,7 @@ export const AdminDormDetail = () => {
     const [loading, setLoading] = useState(!isNew);
     const [isEditing, setIsEditing] = useState(initialEdit);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [availableUtilities, setAvailableUtilities] = useState<UtilityDTO[]>([]);
 
     // Form states
     const [formData, setFormData] = useState<CreateDormDTO | UpdateDormDTO>({
@@ -26,29 +27,38 @@ export const AdminDormDetail = () => {
         phone: '',
         totalRooms: 0,
         managerId: '',
-        status: 'Còn phòng'
+        status: 'Còn phòng',
+        utilityIds: []
     });
 
     const fetchData = async () => {
-        if (isNew) return;
         try {
             setLoading(true);
-            const dormRes = await ApiClient.get<{ data: DormDTO }>(`/dorms/${id}`);
-            const roomsRes = await ApiClient.get<{ data: any[] }>(`/dorms/${id}/rooms`);
-            setDorm(dormRes.data);
-            setRooms(roomsRes.data);
-            
-            // Prefill form
-            setFormData({
-                name: dormRes.data.name,
-                address: dormRes.data.address,
-                phone: dormRes.data.phone,
-                totalRooms: dormRes.data.totalRooms,
-                managerId: dormRes.data.managerId,
-                status: dormRes.data.status
-            });
+            const [dormRes, roomsRes, utilsRes] = await Promise.all([
+                isNew ? Promise.resolve({ data: null }) : ApiClient.get<{ data: DormDTO }>(`/dorms/${id}`),
+                isNew ? Promise.resolve({ data: [] }) : ApiClient.get<{ data: any[] }>(`/dorms/${id}/rooms`),
+                ApiClient.get<{ data: { utilities: UtilityDTO[] } }>('/utilities?limit=100')
+            ]);
+
+            setAvailableUtilities(utilsRes.data.utilities);
+
+            if (dormRes.data) {
+                setDorm(dormRes.data);
+                setRooms(roomsRes.data);
+                
+                // Prefill form
+                setFormData({
+                    name: dormRes.data.name,
+                    address: dormRes.data.address,
+                    phone: dormRes.data.phone,
+                    totalRooms: dormRes.data.totalRooms,
+                    managerId: dormRes.data.managerId,
+                    status: dormRes.data.status,
+                    utilityIds: dormRes.data.utilityIds || []
+                });
+            }
         } catch (error) {
-            console.error('Failed to fetch dorm details', error);
+            console.error('Failed to fetch data', error);
         } finally {
             setLoading(false);
         }
@@ -213,6 +223,45 @@ export const AdminDormDetail = () => {
                                     />
                                 </div>
 
+                                <div className="space-y-3">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Tiện ích KTX</label>
+                                    <div className="flex flex-wrap gap-2 p-4 bg-slate-50 rounded-2xl border border-slate-100 min-h-[60px]">
+                                        {formData.utilityIds?.map((utilId: string) => {
+                                            const utility = availableUtilities.find(u => u.id === utilId);
+                                            return (
+                                                <span key={utilId} className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-blue-200">
+                                                    {utility?.title || '...'}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, utilityIds: formData.utilityIds?.filter(id => id !== utilId) })}
+                                                        className="hover:text-blue-900 transition-colors"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[14px]">close</span>
+                                                    </button>
+                                                </span>
+                                            );
+                                        })}
+                                        {formData.utilityIds?.length === 0 && <span className="text-slate-400 text-xs italic">Chưa chọn tiện ích nào</span>}
+                                    </div>
+                                    <select
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium outline-none appearance-none"
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val && !formData.utilityIds?.includes(val)) {
+                                                setFormData({ ...formData, utilityIds: [...(formData.utilityIds || []), val] });
+                                            }
+                                            e.target.value = '';
+                                        }}
+                                    >
+                                        <option value="">+ Thêm tiện ích</option>
+                                        {availableUtilities.map(u => (
+                                            <option key={u.id} value={u.id} disabled={formData.utilityIds?.includes(u.id)}>
+                                                {u.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
                                 <motion.button
                                     whileTap={{ scale: 0.98 }}
                                     type="submit"
@@ -250,6 +299,25 @@ export const AdminDormDetail = () => {
                                     <div>
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Người quản lý</p>
                                         <p className="font-bold text-slate-700">{dorm?.managerId}</p>
+                                    </div>
+                                </div>
+
+                                {/* View Mode Utilities */}
+                                <div className="space-y-4 pt-4 border-t border-slate-100">
+                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tiện ích cơ sở</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {dorm?.utilityIds?.map(utilId => {
+                                            const utility = availableUtilities.find(u => u.id === utilId);
+                                            return (
+                                                <div key={utilId} className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-600">
+                                                    <span className="material-symbols-outlined text-[18px] text-blue-500">task_alt</span>
+                                                    <span className="text-sm font-medium">{utility?.title}</span>
+                                                </div>
+                                            );
+                                        })}
+                                        {(!dorm?.utilityIds || dorm.utilityIds.length === 0) && (
+                                            <p className="text-sm text-slate-400 italic">Chưa có tiện ích nào</p>
+                                        )}
                                     </div>
                                 </div>
                             </div>

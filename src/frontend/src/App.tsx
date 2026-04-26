@@ -29,6 +29,7 @@ import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminContracts } from './pages/admin/AdminContracts';
 import { AdminHandover } from './pages/admin/AdminHandover';
 import { AdminStaff } from './pages/admin/AdminStaff';
+import { AdminStaffDetail } from './pages/admin/AdminStaffDetail';
 import { AdminCheckout } from './pages/admin/AdminCheckout';
 import { AdminRefundCalculation } from './pages/admin/AdminRefundCalculation';
 import { AdminLiquidation } from './pages/admin/AdminLiquidation';
@@ -75,6 +76,8 @@ function App() {
           <Route path="contracts" element={<AdminContracts />} />
           <Route path="handover" element={<AdminHandover />} />
           <Route path="staff" element={<AdminStaff />} />
+          <Route path="staff/:email" element={<AdminStaffDetail />} />
+          <Route path="staff/new" element={<AdminStaffDetail />} />
           <Route path="checkout" element={<AdminCheckout />} />
           <Route path="checkout/:requestId/refund-calculation" element={<AdminRefundCalculation />} />
           <Route path="checkout/:requestId/liquidation" element={<AdminLiquidation />} />

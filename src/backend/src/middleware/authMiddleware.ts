@@ -28,3 +28,10 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     return res.status(401).json({ message: 'Token không hợp lệ hoặc đã hết hạn' });
   }
 };
+
+export const adminMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (req.user?.role !== 'ADMIN') {
+    return res.status(403).json({ message: 'Bạn không có quyền thực hiện hành động này' });
+  }
+  next();
+};

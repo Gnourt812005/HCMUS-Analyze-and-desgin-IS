@@ -34,6 +34,7 @@ export class User {
       gender: this.gender,
       phone: this.phone,
       address: this.address,
+      role: this.role
     };
   }
 
@@ -112,5 +113,49 @@ export class User {
     }
 
     return await UserDB.updatePassword(email, data.newPassword);
+  }
+
+  static async getAllEmployees(query: { keyword?: string }): Promise<UserProfileDTO[]> {
+    const list = await UserDB.fetchAllStaff(query);
+    return list.map(u => u.toUserProfileDTO());
+  }
+
+  static async getEmployeeByEmail(email: string): Promise<UserProfileDTO | null> {
+    const userModel = await UserDB.fetchCredentialByEmail(email);
+    if (!userModel || userModel.role === UserRole.GUEST) return null;
+    return userModel.toUserProfileDTO();
+  }
+
+  static async upsertEmployee(data: UserDTO): Promise<boolean> {
+    if (!data.email) throw new Error('Email là bắt buộc');
+    const exists = await UserDB.checkEmailExists(data.email);
+    
+    if (exists) {
+      // Update
+      const updateData: UpdateProfileDTO & { role?: UserRole } = { ...data };
+      delete (updateData as any).email;
+      delete (updateData as any).password;
+      
+      const success = await UserDB.update(data.email, updateData);
+      
+      // Update role if changed
+      if (data.role) {
+        const db = require('../database/DatabaseClient').DatabaseClient.getInstance();
+        await db.query('UPDATE users SET role = $1 WHERE email = $2', [data.role, data.email]);
+      }
+      
+      return success;
+    } else {
+      // Create
+      const newUser = new User({
+        ...data,
+        password: data.password || '123456' // Default password
+      });
+      return await UserDB.insert(newUser);
+    }
+  }
+
+  static async deleteEmployee(email: string): Promise<boolean> {
+    return await UserDB.delete(email);
   }
 }

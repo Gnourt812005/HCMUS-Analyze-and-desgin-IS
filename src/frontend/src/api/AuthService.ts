@@ -51,6 +51,6 @@ export class AuthService {
 
   static canAccessAdmin(): boolean {
     const role = this.getRole();
-    return role === UserRole.ADMIN || role === UserRole.SALES_STAFF;
+    return role === UserRole.ADMIN || role === UserRole.SALE_STAFF || role === UserRole.MANAGER;
   }
 }

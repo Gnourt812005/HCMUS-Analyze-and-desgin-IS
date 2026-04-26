@@ -17,6 +17,7 @@ export interface DormDTO {
   totalRooms: number;
   availableRooms: number;
   managerId: string;
+  utilityIds: string[];
 }
 
 export interface CreateDormDTO {
@@ -25,6 +26,7 @@ export interface CreateDormDTO {
   phone: string;
   totalRooms: number;
   managerId: string;
+  utilityIds: string[];
 }
 
 export interface UpdateDormDTO {
@@ -35,6 +37,7 @@ export interface UpdateDormDTO {
   totalRooms?: number;
   availableRooms?: number;
   managerId?: string;
+  utilityIds?: string[];
 }
 
 export interface GetDormsDto {
