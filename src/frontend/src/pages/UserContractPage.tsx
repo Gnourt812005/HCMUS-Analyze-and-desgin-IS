@@ -188,7 +188,7 @@ const ContractDetail = ({
               </div>
               <div className="flex gap-2">
                 <span className="text-sm text-slate-500 min-w-32">Phòng:</span>
-                <span className="text-sm font-semibold text-slate-800">{contract.roomId || '—'}</span>
+                <span className="text-sm font-semibold text-slate-800">{contract.roomName || '—'}</span>
               </div>
               <div className="flex gap-2">
                 <span className="text-sm text-slate-500 min-w-32">Tầng:</span>
@@ -521,7 +521,7 @@ export const UserContractPage = () => {
                   </span>
                 </div>
                 <p className="text-sm font-semibold text-slate-800">{c.dormName ?? '—'}</p>
-                <p className="text-xs text-slate-500">{c.roomId}{c.bedNumbers ? ` · Giường ${c.bedNumbers}` : ''}</p>
+                <p className="text-xs text-slate-500">{c.roomName}{c.bedNumbers ? ` · Giường ${c.bedNumbers}` : ''}</p>
                 <p className="text-xs text-slate-400 mt-1">{fmtDate(c.startDate)}</p>
               </button>
             );

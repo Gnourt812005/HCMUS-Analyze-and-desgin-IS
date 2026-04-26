@@ -224,7 +224,7 @@ export const CreateCheckoutRequest = () => {
                     />
                     <div className="flex-1">
                       <p className="font-semibold text-slate-900">
-                        {contract.dormName} - Tầng {contract.floor} - Phòng {contract.roomId}
+                        {contract.dormName} - Tầng {contract.floor} - Phòng {contract.roomName}
                       </p>
                       <p className="text-sm text-slate-600">
                         Giường: {contract.bedNumbers}
@@ -282,7 +282,7 @@ export const CreateCheckoutRequest = () => {
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Phòng</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.roomId}</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.roomName}</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Tầng</p>

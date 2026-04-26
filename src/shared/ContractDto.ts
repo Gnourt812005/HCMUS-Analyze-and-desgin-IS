@@ -9,7 +9,7 @@ export interface ContractDTO {
   userEmail: string;
   rentalFormId?: string;
   userCCCD?: string;
-  roomId?: string;
+  roomName?: string;
   dormName?: string;
   floor?: number;
   bedNumbers?: string;
