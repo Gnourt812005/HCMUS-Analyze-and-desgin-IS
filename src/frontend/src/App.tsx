@@ -16,6 +16,7 @@ import {PreviewFormManagement} from "./pages/PreviewFormManagement";
 import {ClientPreviewFormManagement} from "./pages/ClientPreviewFormManagement";
 import { ViewCheckoutRequest } from './pages/ViewCheckoutRequest';
 import { CreateCheckoutRequest } from './pages/CreateCheckoutRequest';
+import { UserContractPage } from './pages/UserContractPage';
 
 import { UserLayout } from './components/UserLayout';
 import { AccountLayout } from './components/AccountLayout';
@@ -55,7 +56,7 @@ function App() {
             <Route path="favourites-management" element={<FavouriteManagement />} />
             <Route path="preview-forms-management" element={<PreviewFormManagement />} />
             <Route path="orders" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Đơn hàng sẽ sớm ra mắt</div>} />
-            <Route path="contracts" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Hợp đồng sẽ sớm ra mắt</div>} />
+            <Route path="contracts" element={<UserContractPage />} />
             <Route path="checkout-requests" element={<ViewCheckoutRequest />} />
             <Route path="create-checkout-request" element={<CreateCheckoutRequest />} />
           </Route>

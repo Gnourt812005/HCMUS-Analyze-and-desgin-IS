@@ -9,6 +9,10 @@ export class Handover {
     return HandoverDB.getById(id);
   }
 
+  static async getByContractId(contractId: string) {
+    return HandoverDB.getByContractId(contractId);
+  }
+
   static async getActiveContracts() {
     return HandoverDB.getActiveContracts();
   }

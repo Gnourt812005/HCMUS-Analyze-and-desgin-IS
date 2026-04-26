@@ -13,6 +13,15 @@ handoverRoutes.get('/', async (req: Request, res: Response) => {
 });
 
 // Must be registered before /:id to avoid conflict
+handoverRoutes.get('/by-contract/:contractId', async (req: Request, res: Response) => {
+  try {
+    const data = await Handover.getByContractId(req.params.contractId);
+    res.json({ message: 'Success', status: 200, data });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Internal Server Error', status: 500 });
+  }
+});
+
 handoverRoutes.get('/active-contracts', async (req: Request, res: Response) => {
   try {
     const data = await Handover.getActiveContracts();
