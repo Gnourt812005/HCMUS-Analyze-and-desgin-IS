@@ -9,7 +9,7 @@ export interface ContractDTO {
   userEmail: string;
   rentalFormId?: string;
   userCCCD?: string;
-  roomId?: string;
+  roomName?: string;
   dormName?: string;
   floor?: number;
   bedNumbers?: string;
@@ -20,20 +20,3 @@ export interface ContractDTO {
   signatureUrl?: string;
   createdAt?: string;
 }
-
-// export interface ContractDTO {
-//   contractId: string;
-//   userEmail: string;
-//   rentalFormId?: string;
-//   userCCCD?: string;
-//   roomId?: string;
-//   dormName?: string;
-//   floor?: number;
-//   bedNumbers?: string;
-//   startDate?: string;
-//   depositAmount?: number;
-//   stayDuration?: number;
-//   status?: ContractStatus;
-//   signatureUrl?: string;
-//   createdAt?: string;
-// }

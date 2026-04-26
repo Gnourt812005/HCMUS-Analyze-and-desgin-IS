@@ -334,19 +334,17 @@ export const AdminCheckout = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-            <span className="material-symbols-outlined animate-spin text-4xl mb-3">autorenew</span>
-            <p className="font-medium">Đang tải dữ liệu...</p>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-            <span className="material-symbols-outlined text-5xl mb-3">assignment_return</span>
-            <p className="font-medium">Không tìm thấy yêu cầu phù hợp</p>
-          </div>
-        ) : (
-          <table className="w-full text-sm">
+      <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-x-auto">
+        <table className="w-full min-w-[1024px] text-sm table-fixed">
+            <colgroup>
+              <col className="w-[10%]" />
+              <col className="w-[20%]" />
+              <col className="w-[20%]" />
+              <col className="w-[12%]" />
+              <col className="w-[15%]" />
+              <col className="w-[15%]" />
+              <col className="w-[8%]" />
+            </colgroup>
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
                 <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Mã YC</th>
@@ -359,56 +357,63 @@ export const AdminCheckout = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filtered.map((request) => (
-                <tr
-                  key={request.requestId}
-                  className="hover:bg-slate-50/70 transition-colors cursor-pointer"
-                  onClick={() => handleViewDetail(request)}
-                >
-                  <td className="px-5 py-4 font-bold text-blue-700">{request.requestId}</td>
-                  <td className="px-5 py-4">
-                    <p className="font-semibold text-slate-800">{request.userFullName || 'N/A'}</p>
-                    <p className="text-xs text-slate-500">{request.userEmail}</p>
-                  </td>
-                  <td className="px-5 py-4">
-                    <p className="font-medium text-slate-700">{request.dormName} - Tầng {request.floor}</p>
-                    <p className="text-xs text-slate-500">Phòng: {request.roomName}</p>
-                    <p className="text-xs text-slate-500">HĐ: {request.contractId}</p>
-                  </td>
-                  <td className="px-5 py-4">
-                    {refundMap[request.requestId] ? (
-                      <p className="font-bold text-slate-800">
-                        {formatMoney(refundMap[request.requestId].finalRefundAmount)}
-                      </p>
-                    ) : (
-                      <p className="text-slate-400 text-xs italic">Chưa đối soát</p>
-                    )}
-                  </td>
-                  <td className="px-5 py-4">
-                    <p className="text-slate-700">{new Date(request.createdAt).toLocaleDateString('vi-VN')}</p>
-                    <p className="text-xs text-slate-400">→ {new Date(request.expectedDate).toLocaleDateString('vi-VN')}</p>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className={`flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_STYLE[request.status]}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[request.status]}`} />
-                      {STATUS_LABEL[request.status]}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-700">
-                      <span className="material-symbols-outlined text-base">chevron_right</span>
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-20 text-slate-400"><div className="flex flex-col items-center justify-center"><span className="material-symbols-outlined animate-spin text-4xl mb-3">autorenew</span><p className="font-medium">Đang tải dữ liệu...</p></div></td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-20 text-slate-400"><div className="flex flex-col items-center justify-center"><span className="material-symbols-outlined text-5xl mb-3">assignment_return</span><p className="font-medium">Không tìm thấy yêu cầu phù hợp</p></div></td>
+                </tr>
+              ) : (
+                filtered.map((request) => (
+                  <tr key={request.requestId} className="hover:bg-slate-50/70 transition-colors cursor-pointer" onClick={() => handleViewDetail(request)}>
+                    <td className="px-5 py-4 font-bold text-blue-700 break-words">{request.requestId}</td>
+                    <td className="px-5 py-4">
+                      <p className="font-semibold text-slate-800 truncate">{request.userFullName || 'N/A'}</p>
+                      <p className="text-xs text-slate-500 truncate">{request.userEmail}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="font-medium text-slate-700 truncate">{request.dormName} - Tầng {request.floor}</p>
+                      <p className="text-xs text-slate-500 truncate">Phòng: {request.roomName}</p>
+                      <p className="text-xs text-slate-500 break-words">HĐ: {request.contractId}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      {refundMap[request.requestId] ? (
+                        <p className="font-bold text-slate-800">{formatMoney(refundMap[request.requestId].finalRefundAmount)}</p>
+                      ) : (
+                        <p className="text-slate-400 text-xs italic">Chưa đối soát</p>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="text-slate-700">{new Date(request.createdAt).toLocaleDateString('vi-VN')}</p>
+                      <p className="text-xs text-slate-400">→ {new Date(request.expectedDate).toLocaleDateString('vi-VN')}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_STYLE[request.status]}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[request.status]}`} />
+                        {STATUS_LABEL[request.status]}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-700">
+                        <span className="material-symbols-outlined text-base">chevron_right</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+            {!loading && filtered.length > 0 && (
+              <tfoot>
+                <tr className="bg-white">
+                  <td colSpan={7} className="px-5 py-3 border-t border-slate-100 text-xs text-slate-400">
+                    Hiển thị {filtered.length} / {checkoutRequests.length} yêu cầu
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        {filtered.length > 0 && (
-          <div className="px-5 py-3 border-t border-slate-100 text-xs text-slate-400">
-            Hiển thị {filtered.length} / {checkoutRequests.length} yêu cầu
-          </div>
-        )}
+              </tfoot>
+            )}
+        </table>
       </div>
 
       {showCreateModal && (
@@ -492,7 +497,7 @@ export const AdminCheckout = () => {
                           className="mt-1"
                         />
                         <div className="flex-1 text-sm text-slate-700">
-                          <p className="font-bold text-slate-900">{contract.dormName} - Tầng {contract.floor} - Phòng {contract.roomId}</p>
+                          <p className="font-bold text-slate-900">{contract.dormName} - Tầng {contract.floor} - Phòng {contract.roomName}</p>
                           <p className="text-xs text-slate-600">Giường: {contract.bedNumbers}</p>
                           <p className="text-xs mt-1">
                             Hợp đồng: {contract.contractId}
