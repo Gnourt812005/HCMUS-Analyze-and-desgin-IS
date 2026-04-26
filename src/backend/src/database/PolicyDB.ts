@@ -1,36 +1,50 @@
 import { PolicyAgreementDTO, PolicyContentDTO } from '@dormarch/shared';
+import { dbClient } from './DatabaseClient';
 
 export class PolicyDB {
-  private static ACTIVE_POLICY: PolicyContentDTO = {
-    policyId: 'POLICY-2026-01',
-    title: 'Quy định thuê phòng ký túc xá',
-    content: 'Người thuê phải tuân thủ nội quy, thanh toán đúng hạn và bảo quản tài sản chung.',
-    updatedAt: new Date().toISOString()
-  };
-
-  private static AGREEMENTS: PolicyAgreementDTO[] = [];
+  private static AGREEMENT_HISTORY = new Map<string, string>();
 
   static async findActivePolicy(): Promise<PolicyContentDTO> {
-    return this.ACTIVE_POLICY;
+    const result = await dbClient.query(
+      `
+        SELECT id, title, content, created_at
+        FROM policies
+        WHERE is_active = TRUE
+        ORDER BY created_at DESC
+        LIMIT 1
+      `
+    );
+
+    if (result.rows.length === 0) {
+      return {
+        policyId: 'NO_POLICY',
+        title: 'Chưa có quy định',
+        content: 'Hệ thống chưa cấu hình quy định đang áp dụng.',
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    const row = result.rows[0];
+    return {
+      policyId: row.id,
+      title: row.title,
+      content: row.content,
+      updatedAt: row.created_at
+    };
   }
 
   static async saveAgreement(customerId: string): Promise<PolicyAgreementDTO> {
-    const existing = this.AGREEMENTS.find(item => item.customerId === customerId);
-    if (existing) {
-      existing.agreedAt = new Date().toISOString();
-      return existing;
-    }
+    await this.findActivePolicy();
+    const agreedAt = new Date().toISOString();
+    this.AGREEMENT_HISTORY.set(customerId, agreedAt);
 
-    const newAgreement: PolicyAgreementDTO = {
+    return {
       customerId,
-      agreedAt: new Date().toISOString()
+      agreedAt
     };
-
-    this.AGREEMENTS.push(newAgreement);
-    return newAgreement;
   }
 
   static async hasAgreement(customerId: string): Promise<boolean> {
-    return this.AGREEMENTS.some(item => item.customerId === customerId);
+    return this.AGREEMENT_HISTORY.has(customerId);
   }
 }
