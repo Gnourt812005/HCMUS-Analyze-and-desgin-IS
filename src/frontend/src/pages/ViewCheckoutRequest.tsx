@@ -229,66 +229,71 @@ export const ViewCheckoutRequest = () => {
           ))}
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-              <span className="material-symbols-outlined animate-spin text-4xl mb-3">autorenew</span>
-              <p className="font-medium">Đang tải dữ liệu...</p>
-            </div>
-          ) : checkoutRequests.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-              <span className="material-symbols-outlined text-5xl mb-3">assignment_return</span>
-              <p className="font-medium">Bạn chưa có yêu cầu trả phòng nào</p>
-            </div>
-          ) : (
-            <table className="w-full text-sm table-fixed">
+        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-x-auto">
+          <table className="w-full min-w-[768px] text-sm table-fixed">
+              <colgroup>
+                <col className="w-[20%]" />
+                <col className="w-[35%]" />
+                <col className="w-[15%]" />
+                <col className="w-[20%]" />
+                <col className="w-[10%]" />
+              </colgroup>
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="w-[25%] text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Mã YC</th>
-                  <th className="w-[35%] text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Phòng/Giường</th>
-                  <th className="w-[15%] text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Lịch trình</th>
-                  <th className="w-[15%] text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Trạng thái</th>
-                  <th className="w-[10%] px-5 py-4"></th>
+                  <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Mã YC</th>
+                  <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Phòng/Giường</th>
+                  <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Lịch trình</th>
+                  <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-4">Trạng thái</th>
+                  <th className="px-5 py-4"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {checkoutRequests.map((request) => (
-                  <tr
-                    key={request.requestId}
-                    className="hover:bg-slate-50/70 transition-colors cursor-pointer"
-                    onClick={() => loadDetail(request)}
-                  >
-                    <td className="px-5 py-4 font-bold text-blue-700 break-words">{request.requestId}</td>
-                    <td className="px-5 py-4">
-                      <p className="font-semibold text-slate-800">{request.dormName} - Tầng {request.floor}</p>
-                      <p className="text-xs text-slate-500">Phòng: {request.roomName}</p>
-                      <p className="text-xs text-slate-500">Giường: {request.bedNumbers}</p>
-                    </td>
-                    <td className="px-5 py-4">
-                      <p className="text-slate-700">{new Date(request.createdAt).toLocaleDateString('vi-VN')}</p>
-                      <p className="text-xs text-slate-400">→ {new Date(request.expectedDate).toLocaleDateString('vi-VN')}</p>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className={`flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_STYLE[request.status]}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[request.status]}`} />
-                        {STATUS_LABEL[request.status]}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-700">
-                        <span className="material-symbols-outlined text-base">chevron_right</span>
-                      </button>
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-20 text-slate-400"><div className="flex flex-col items-center justify-center"><span className="material-symbols-outlined animate-spin text-4xl mb-3">autorenew</span><p className="font-medium">Đang tải dữ liệu...</p></div></td>
+                  </tr>
+                ) : checkoutRequests.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-20 text-slate-400"><div className="flex flex-col items-center justify-center"><span className="material-symbols-outlined text-5xl mb-3">assignment_return</span><p className="font-medium">Bạn chưa có yêu cầu trả phòng nào</p></div></td>
+                  </tr>
+                ) : (
+                  checkoutRequests.map((request) => (
+                    <tr key={request.requestId} className="hover:bg-slate-50/70 transition-colors cursor-pointer" onClick={() => loadDetail(request)}>
+                      <td className="px-5 py-4 font-bold text-blue-700 break-words">{request.requestId}</td>
+                      <td className="px-5 py-4">
+                        <p className="font-semibold text-slate-800 truncate">{request.dormName} - Tầng {request.floor}</p>
+                        <p className="text-xs text-slate-500 truncate">Phòng: {request.roomName}</p>
+                        <p className="text-xs text-slate-500 truncate">Giường: {request.bedNumbers}</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <p className="text-slate-700">{new Date(request.createdAt).toLocaleDateString('vi-VN')}</p>
+                        <p className="text-xs text-slate-400">→ {new Date(request.expectedDate).toLocaleDateString('vi-VN')}</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={`flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_STYLE[request.status]}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[request.status]}`} />
+                          {STATUS_LABEL[request.status]}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-700">
+                          <span className="material-symbols-outlined text-base">chevron_right</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+              {!loading && checkoutRequests.length > 0 && (
+                <tfoot>
+                  <tr className="bg-white">
+                    <td colSpan={5} className="px-5 py-3 border-t border-slate-100 text-xs text-slate-400">
+                      Hiển thị {checkoutRequests.length} yêu cầu
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          {checkoutRequests.length > 0 && (
-            <div className="px-5 py-3 border-t border-slate-100 text-xs text-slate-400">
-              Hiển thị {checkoutRequests.length} yêu cầu
-            </div>
-          )}
+                </tfoot>
+              )}
+          </table>
         </div>
 
         {selectedRequest && (
@@ -321,7 +326,7 @@ export const ViewCheckoutRequest = () => {
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Phòng</span>
-                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract?.roomId || 'Đang tải...'}</span>
+                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract?.roomName || 'Đang tải...'}</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Tầng</span>

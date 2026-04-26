@@ -58,4 +58,9 @@ export class HandoverService {
     const res = await ApiClient.post('/handovers', { body: JSON.stringify(payload) });
     return res.data;
   }
+
+  static async getByContractId(contractId: string): Promise<HandoverReport[]> {
+    const res = await ApiClient.get(`/handovers/by-contract/${contractId}`);
+    return res.data;
+  }
 }

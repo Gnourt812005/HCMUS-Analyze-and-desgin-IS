@@ -1,5 +1,5 @@
 import { DatabaseClient } from './DatabaseClient';
-import { UtilityDTO, GetUtilityDto } from '@dormarch/shared';
+import { UtilityDTO, GetUtilityDto, CreateUtilityDto } from '@dormarch/shared';
 
 const dbClient = DatabaseClient.getInstance();
 
@@ -71,5 +71,45 @@ export class UtilityDB {
             console.error("Error in UtilityDB.fetchById:", error);
             return null;
         }
+    }
+
+    static async create(data: CreateUtilityDto): Promise<UtilityDTO> {
+        const query = `
+            INSERT INTO utilities (title, type, is_liable, incurred_price)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id, title, type, is_liable, incurred_price
+        `;
+        const values = [data.title, data.type, data.isLiable, data.incurredPrice];
+        const result = await dbClient.query(query, values);
+        const row = result.rows[0];
+        return {
+            id: row.id,
+            title: row.title,
+            type: row.type,
+            isLiable: row.is_liable,
+            incurredPrice: Number(row.incurred_price || 0)
+        };
+    }
+
+    static async update(id: string, title: string): Promise<boolean> {
+        const query = `UPDATE utilities SET title = $1 WHERE id = $2`;
+        const result = await dbClient.query(query, [title, id]);
+        return (result.rowCount ?? 0) > 0;
+    }
+
+    static async delete(id: string): Promise<boolean> {
+        const query = `DELETE FROM utilities WHERE id = $1`;
+        const result = await dbClient.query(query, [id]);
+        return (result.rowCount ?? 0) > 0;
+    }
+
+    static async isAttached(id: string): Promise<boolean> {
+        const query = `
+            SELECT 
+                (SELECT COUNT(*) FROM room_utilities WHERE utility_id = $1) +
+                (SELECT COUNT(*) FROM dorm_utilities WHERE utility_id = $1) as count
+        `;
+        const result = await dbClient.query(query, [id]);
+        return parseInt(result.rows[0].count) > 0;
     }
 }

@@ -44,6 +44,6 @@ app.listen(PORT, () => {
       process.exit(1);
     }
   }
-  startServer();  
+  startServer();
   console.log(`🚀 DormArch Backend running at http://localhost:${PORT}`);
 });

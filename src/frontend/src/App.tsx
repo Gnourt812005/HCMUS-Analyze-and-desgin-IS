@@ -17,6 +17,7 @@ import {ClientPreviewFormManagement} from "./pages/ClientPreviewFormManagement";
 import { CustomerOrders } from './pages/CustomerOrders';
 import { ViewCheckoutRequest } from './pages/ViewCheckoutRequest';
 import { CreateCheckoutRequest } from './pages/CreateCheckoutRequest';
+import { UserContractPage } from './pages/UserContractPage';
 
 import { UserLayout } from './components/UserLayout';
 import { AccountLayout } from './components/AccountLayout';
@@ -30,9 +31,11 @@ import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminContracts } from './pages/admin/AdminContracts';
 import { AdminHandover } from './pages/admin/AdminHandover';
 import { AdminStaff } from './pages/admin/AdminStaff';
+import { AdminStaffDetail } from './pages/admin/AdminStaffDetail';
 import { AdminCheckout } from './pages/admin/AdminCheckout';
 import { AdminRefundCalculation } from './pages/admin/AdminRefundCalculation';
 import { AdminLiquidation } from './pages/admin/AdminLiquidation';
+import { AdminUtilities } from './pages/admin/AdminUtilities';
 
 function App() {
   return (
@@ -56,7 +59,7 @@ function App() {
             <Route path="favourites-management" element={<FavouriteManagement />} />
             <Route path="preview-forms-management" element={<PreviewFormManagement />} />
             <Route path="orders" element={<CustomerOrders />} />
-            <Route path="contracts" element={<div className="p-8 bg-white rounded-xl border border-outline-variant/10 text-center text-slate-500 italic">Tính năng Hợp đồng sẽ sớm ra mắt</div>} />
+            <Route path="contracts" element={<UserContractPage />} />
             <Route path="checkout-requests" element={<ViewCheckoutRequest />} />
             <Route path="create-checkout-request" element={<CreateCheckoutRequest />} />
           </Route>
@@ -76,9 +79,12 @@ function App() {
           <Route path="contracts" element={<AdminContracts />} />
           <Route path="handover" element={<AdminHandover />} />
           <Route path="staff" element={<AdminStaff />} />
+          <Route path="staff/:email" element={<AdminStaffDetail />} />
+          <Route path="staff/new" element={<AdminStaffDetail />} />
           <Route path="checkout" element={<AdminCheckout />} />
           <Route path="checkout/:requestId/refund-calculation" element={<AdminRefundCalculation />} />
           <Route path="checkout/:requestId/liquidation" element={<AdminLiquidation />} />
+          <Route path="utilities" element={<AdminUtilities />} />
         </Route>
       </Routes>
     </Router>

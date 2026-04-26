@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ApiClient } from '../../api/ApiClient';
-import { DormDTO, CreateDormDTO, UpdateDormDTO } from '@dormarch/shared';
+import { DormDTO, CreateDormDTO, UpdateDormDTO, UtilityDTO } from '@dormarch/shared';
 import { motion } from 'framer-motion';
 
 export const AdminDormDetail = () => {
@@ -18,6 +18,7 @@ export const AdminDormDetail = () => {
     const [loading, setLoading] = useState(!isNew);
     const [isEditing, setIsEditing] = useState(initialEdit);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [availableUtilities, setAvailableUtilities] = useState<UtilityDTO[]>([]);
 
     // Form states
     const [formData, setFormData] = useState<CreateDormDTO | UpdateDormDTO>({
@@ -26,29 +27,38 @@ export const AdminDormDetail = () => {
         phone: '',
         totalRooms: 0,
         managerId: '',
-        status: 'Còn phòng'
+        status: 'Còn phòng',
+        utilityIds: []
     });
 
     const fetchData = async () => {
-        if (isNew) return;
         try {
             setLoading(true);
-            const dormRes = await ApiClient.get<{ data: DormDTO }>(`/dorms/${id}`);
-            const roomsRes = await ApiClient.get<{ data: any[] }>(`/dorms/${id}/rooms`);
-            setDorm(dormRes.data);
-            setRooms(roomsRes.data);
-            
-            // Prefill form
-            setFormData({
-                name: dormRes.data.name,
-                address: dormRes.data.address,
-                phone: dormRes.data.phone,
-                totalRooms: dormRes.data.totalRooms,
-                managerId: dormRes.data.managerId,
-                status: dormRes.data.status
-            });
+            const [dormRes, roomsRes, utilsRes] = await Promise.all([
+                isNew ? Promise.resolve({ data: null }) : ApiClient.get<{ data: DormDTO }>(`/dorms/${id}`),
+                isNew ? Promise.resolve({ data: { rooms: [], total: 0 } }) : ApiClient.get<{ data: { rooms: any[], total: number } }>(`/rooms?dormId=${id}&limit=100`),
+                ApiClient.get<{ data: { utilities: UtilityDTO[] } }>('/utilities?limit=100')
+            ]);
+
+            setAvailableUtilities(utilsRes.data.utilities);
+
+            if (dormRes.data) {
+                setDorm(dormRes.data);
+                setRooms(roomsRes.data.rooms || []);
+                
+                // Prefill form
+                setFormData({
+                    name: dormRes.data.name,
+                    address: dormRes.data.address,
+                    phone: dormRes.data.phone,
+                    totalRooms: dormRes.data.totalRooms,
+                    managerId: dormRes.data.managerId,
+                    status: dormRes.data.status,
+                    utilityIds: dormRes.data.utilityIds || []
+                });
+            }
         } catch (error) {
-            console.error('Failed to fetch dorm details', error);
+            console.error('Failed to fetch data', error);
         } finally {
             setLoading(false);
         }
@@ -213,6 +223,74 @@ export const AdminDormDetail = () => {
                                     />
                                 </div>
 
+                                <div className="space-y-4">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Danh sách tiện ích tại cơ sở</label>
+                                    
+                                    <div className="overflow-hidden bg-white border border-slate-100 rounded-2xl">
+                                        <table className="w-full text-left">
+                                            <thead className="bg-slate-50 border-b border-slate-100">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tiện ích</th>
+                                                    <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tình trạng</th>
+                                                    <th className="px-4 py-3"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-50">
+                                                {formData.utilityIds?.map((utilId: string) => {
+                                                    const utility = availableUtilities.find(u => u.id === utilId);
+                                                    const detail = dorm?.utilities?.find(ud => ud.id === utilId);
+                                                    const status = detail?.status || 'GOOD';
+
+                                                    return (
+                                                        <tr key={utilId} className="hover:bg-slate-50/50 transition-colors">
+                                                            <td className="px-4 py-3 text-sm font-bold text-slate-700">{utility?.title || '...'}</td>
+                                                            <td className="px-4 py-3">
+                                                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
+                                                                    status === 'GOOD' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                                                                }`}>
+                                                                    {status === 'GOOD' ? 'Hoạt động tốt' : 'Cần bảo trì'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setFormData({ ...formData, utilityIds: formData.utilityIds?.filter(id => id !== utilId) })}
+                                                                    className="p-1 hover:bg-rose-50 text-slate-300 hover:text-rose-500 rounded-lg transition-colors"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-[18px]">close</span>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                                {(formData.utilityIds?.length === 0) && (
+                                                    <tr>
+                                                        <td colSpan={3} className="px-4 py-6 text-center text-slate-400 text-xs italic">Chưa chọn tiện ích</td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <select
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium outline-none appearance-none font-bold"
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val && !formData.utilityIds?.includes(val)) {
+                                                setFormData({ ...formData, utilityIds: [...(formData.utilityIds || []), val] });
+                                            }
+                                            e.target.value = '';
+                                        }}
+                                    >
+                                        <option value="">+ Thêm tiện ích cơ sở</option>
+                                        {availableUtilities.filter(u => u.type === 'DORM').map(u => (
+                                            <option key={u.id} value={u.id} disabled={formData.utilityIds?.includes(u.id)}>
+                                                {u.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
                                 <motion.button
                                     whileTap={{ scale: 0.98 }}
                                     type="submit"
@@ -252,6 +330,40 @@ export const AdminDormDetail = () => {
                                         <p className="font-bold text-slate-700">{dorm?.managerId}</p>
                                     </div>
                                 </div>
+
+                                {/* View Mode Utilities Table */}
+                                <div className="space-y-4 pt-4 border-t border-slate-100">
+                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Bảng kê tiện ích cơ sở</h4>
+                                    <div className="overflow-hidden bg-white border border-slate-100 rounded-2xl">
+                                        <table className="w-full text-left">
+                                            <thead className="bg-slate-50 border-b border-slate-100">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tiện ích</th>
+                                                    <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Trạng thái</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-50">
+                                                {dorm?.utilities?.map(u => (
+                                                    <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
+                                                        <td className="px-4 py-3 text-sm font-bold text-slate-700">{u.title}</td>
+                                                        <td className="px-4 py-3 text-right">
+                                                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase ${
+                                                                u.status === 'GOOD' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                                                            }`}>
+                                                                {u.status === 'GOOD' ? 'Hoạt động tốt' : 'Hỏng / Cần sửa'}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {(!dorm?.utilities || dorm.utilities.length === 0) && (
+                                                    <tr>
+                                                        <td colSpan={2} className="px-4 py-8 text-center text-slate-400 text-xs italic">Không có dữ liệu</td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -284,7 +396,7 @@ export const AdminDormDetail = () => {
                                         {rooms.map((room, idx) => (
                                             <tr key={idx} className="hover:bg-slate-50/50 transition-colors cursor-pointer">
                                                 <td className="px-8 py-5">
-                                                    <p className="font-bold text-slate-700">{room.roomName}</p>
+                                                    <p className="font-bold text-slate-700">{room.name}</p>
                                                     <p className="text-xs text-slate-400">Tầng {Math.floor(idx / 10) + 1}</p>
                                                 </td>
                                                 <td className="px-8 py-5">

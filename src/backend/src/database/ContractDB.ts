@@ -175,64 +175,6 @@ export class ContractDB {
     return (result.rowCount ?? 0) > 0;
   }
 
-  // ── Legacy methods (used by Contract business class & checkout routes) ──────
-
-  static async getByUserCCCD(userCCCD: string): Promise<Partial<Contract> | null> {
-    const result = await dbClient.query(
-      `SELECT c.id AS "contractId", u.cccd AS "userCCCD",
-              c.start_date AS "startDate", c.stay_duration AS "stayDuration",
-              c.status, c.signature_url AS "liquidationUrl"
-       FROM contracts c
-       JOIN users u ON c.user_email = u.email
-       WHERE u.cccd = $1
-       LIMIT 1`,
-      [userCCCD],
-    );
-    return result.rows[0] || null;
-  }
-
-  static async getByContractId(contractId: string): Promise<Partial<Contract> | null> {
-    const result = await dbClient.query(
-      `SELECT c.id AS "contractId", u.cccd AS "userCCCD",
-              c.start_date AS "startDate", c.stay_duration AS "stayDuration",
-              c.status, c.signature_url AS "liquidationUrl"
-       FROM contracts c
-       JOIN users u ON c.user_email = u.email
-       WHERE c.id = $1`,
-      [contractId],
-    );
-    return result.rows[0] || null;
-  }
-
-  static async getActiveByUserCCCD(userCCCD: string): Promise<Partial<Contract>[]> {
-    const result = await dbClient.query(
-      `SELECT c.id AS "contractId", u.cccd AS "userCCCD",
-              c.start_date AS "startDate", c.stay_duration AS "stayDuration",
-              c.status, c.signature_url AS "liquidationUrl"
-       FROM contracts c
-       JOIN users u ON c.user_email = u.email
-       WHERE u.cccd = $1 AND c.status IN ('ACTIVE', 'PENDING_CHECKOUT')`,
-      [userCCCD],
-    );
-    return result.rows;
-  }
-
-  static async updateLiquidationUrl(contractId: string, liquidationUrl: string): Promise<boolean> {
-    const result = await dbClient.query(
-      'UPDATE contracts SET signature_url = $1 WHERE id = $2',
-      [liquidationUrl, contractId],
-    );
-    return (result.rowCount ?? 0) > 0;
-  }
-
-  static async updateStatus(contractId: string, status: ContractStatus): Promise<boolean> {
-    const result = await dbClient.query(
-      'UPDATE contracts SET status = $1 WHERE id = $2',
-      [status, contractId],
-    );
-    return (result.rowCount ?? 0) > 0;
-  }
-
   // ── Private helpers ────────────────────────────────────────────────────────
 
   private static mapAdminRow(row: any): ContractAdminRow {
@@ -255,12 +197,12 @@ export class ContractDB {
     };
   }
 
-  private static mapRow(row: any): Partial<Contract> {
-    return {
+  private static mapRow(row: any): Contract {
+    return new Contract({
       contractId: row.contract_id,
       userEmail: row.user_email,
       rentalFormId: row.rental_form_id,
-      roomId: row.room_name, // Map room_name to roomId
+      roomName: row.room_name,
       dormName: row.dorm_name,
       floor: row.floor,
       bedNumbers: row.bed_numbers,
@@ -270,7 +212,7 @@ export class ContractDB {
       signatureUrl: row.signature_url,
       status: row.status as ContractStatus,
       createdAt: row.created_at,
-    };
+    });
   }
 
 
@@ -300,16 +242,30 @@ export class ContractDB {
             JOIN beds b ON cb.bed_id = b.id
             WHERE cb.contract_id = c.id) as bed_numbers,
            (SELECT rf.total_amount FROM rental_forms rf WHERE rf.id = c.rental_form_id) as deposit_amount
-    FROM contracts c
+    FROM contracts c 
   `;
 
-  static async getByUserEmail(userEmail: string): Promise<Partial<Contract> | null> {
+  // ── Methods for business logic and other services ──────────────────────────
+
+  static async getByContractId(contractId: string): Promise<Contract | null> {
+    const sql = `${this.BASE_QUERY} WHERE c.id = $1 LIMIT 1`;
+    const result = await dbClient.query(sql, [contractId]);
+    return result.rows[0] ? this.mapRow(result.rows[0]) : null;
+  }
+
+  static async getByUserEmail(userEmail: string): Promise<Contract | null> {
     const sql = `${this.BASE_QUERY} WHERE c.user_email = $1 LIMIT 1`;
     const result = await dbClient.query(sql, [userEmail]);
     return result.rows[0] ? this.mapRow(result.rows[0]) : null;
   }
 
-  static async getActiveByUserEmail(userEmail: string): Promise<Partial<Contract>[]> {
+  static async getAllByUserEmail(userEmail: string): Promise<Contract[]> {
+    const sql = `${this.BASE_QUERY} WHERE c.user_email = $1 ORDER BY c.created_at DESC`;
+    const result = await dbClient.query(sql, [userEmail]);
+    return result.rows.map((row: any) => this.mapRow(row));
+  }
+
+  static async getActiveByUserEmail(userEmail: string): Promise<Contract[]> {
     const sql = `
       ${this.BASE_QUERY} 
       WHERE c.user_email = $1 
@@ -324,9 +280,11 @@ export class ContractDB {
     return result.rows.map((row: any) => this.mapRow(row));
   }  
 
-  // static async getByContractId(contractId: string): Promise<Partial<Contract> | null> {
-  //   const sql = `${this.BASE_QUERY} WHERE c.id = $1 LIMIT 1`;
-  //   const result = await dbClient.query(sql, [contractId]);
-  //   return result.rows[0] ? this.mapRow(result.rows[0]) : null;
-  // }
+  static async updateStatus(contractId: string, status: ContractStatus): Promise<boolean> {
+    const result = await dbClient.query(
+      'UPDATE contracts SET status = $1 WHERE id = $2',
+      [status, contractId],
+    );
+    return (result.rowCount ?? 0) > 0;
+  }
 }

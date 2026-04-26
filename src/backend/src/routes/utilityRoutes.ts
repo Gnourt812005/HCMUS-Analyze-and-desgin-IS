@@ -30,3 +30,33 @@ utilityRoutes.get('/:id', async (req, res) => {
         res.status(500).json({ message: error.message || 'Internal Server Error', status: 500 });
     }
 });
+
+// POST /utilities - Create utility
+utilityRoutes.post('/', async (req, res) => {
+    try {
+        const result = await Utility.create(req.body);
+        res.json({ message: 'Thêm mới thành công', status: 201, data: result });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Internal Server Error', status: 500 });
+    }
+});
+
+// PUT /utilities/:id - Update utility (title only)
+utilityRoutes.put('/:id', async (req, res) => {
+    try {
+        const success = await Utility.update(req.params.id, req.body.title);
+        res.json({ message: 'Cập nhật thành công', status: 200, data: success });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Internal Server Error', status: 500 });
+    }
+});
+
+// DELETE /utilities/:id - Delete utility
+utilityRoutes.delete('/:id', async (req, res) => {
+    try {
+        const success = await Utility.delete(req.params.id);
+        res.json({ message: 'Xóa thành công', status: 200, data: success });
+    } catch (error: any) {
+        res.status(400).json({ message: error.message || 'Internal Server Error', status: 400 });
+    }
+});

@@ -92,6 +92,7 @@ CREATE TABLE rooms (
 CREATE TABLE room_utilities (
     room_id UUID REFERENCES rooms(id) ON DELETE CASCADE,
     utility_id UUID REFERENCES utilities(id) ON DELETE CASCADE,
+    status utility_status_type DEFAULT 'GOOD',
     PRIMARY KEY (room_id, utility_id)
 );
 
@@ -102,6 +103,13 @@ CREATE TABLE beds (
     bed_number VARCHAR(10) NOT NULL,
     status bed_status_type DEFAULT 'AVAILABLE',
     price NUMERIC(12, 2) DEFAULT 0
+);
+
+CREATE TABLE bed_utilities (
+    bed_id UUID REFERENCES beds(id) ON DELETE CASCADE,
+    utility_id UUID REFERENCES utilities(id) ON DELETE CASCADE,
+    status utility_status_type DEFAULT 'GOOD',
+    PRIMARY KEY (bed_id, utility_id)
 );
 
 -- 7. USER FAVORITES

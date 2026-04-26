@@ -270,15 +270,14 @@ export class RoomDB {
     const query = `
       SELECT 
         r.id, r.dorm_id, r.name, r.block, r.floor, r.status, r.total_beds, r.image_url,
-        COUNT(b.id) FILTER (WHERE b.status = 'AVAILABLE') AS "available_beds_live",
-        r.id, r.dorm_id, r.name, r.block, r.floor, r.status, r.total_beds, r.available_beds, r.image_url,
+        (SELECT COUNT(*) FROM beds b_count WHERE b_count.room_id = r.id AND b_count.status = 'AVAILABLE') AS "available_beds_live",
         (SELECT COUNT(*) FROM user_favorite_rooms uf WHERE uf.room_id = r.id) AS "favorite_count",
         COALESCE(
-          (SELECT json_agg(u.title) 
+          (SELECT json_agg(json_build_object('id', u.id, 'title', u.title, 'status', ru.status)) 
            FROM room_utilities ru 
            JOIN utilities u ON ru.utility_id = u.id 
            WHERE ru.room_id = r.id), '[]'
-        ) AS "room_utilities",
+        ) AS "room_utilities_details",
         COALESCE(
           (SELECT json_agg(u.id) 
            FROM room_utilities ru 
@@ -291,7 +290,14 @@ export class RoomDB {
             'roomId', b.room_id,
             'bedNumber', b.bed_number,
             'status', b.status,
-            'price', b.price
+            'price', b.price,
+            'utilities', (
+              SELECT COALESCE(json_agg(json_build_object('id', u.id, 'title', u.title, 'status', bu.status)), '[]')
+              FROM bed_utilities bu
+              JOIN utilities u ON bu.utility_id = u.id
+              WHERE bu.bed_id = b.id
+            ),
+            'utilityIds', (SELECT COALESCE(json_agg(bu.utility_id), '[]') FROM bed_utilities bu WHERE bu.bed_id = b.id)
           )) FROM beds b WHERE b.room_id = r.id), '[]'
         ) AS "beds"
       FROM rooms r
@@ -308,7 +314,7 @@ export class RoomDB {
     }
   }
 
-// No updateFavoriteCount anymore
+  // No updateFavoriteCount anymore
 
   static async insert(data: CreateRoomDTO): Promise<boolean> {
     const query = `
@@ -358,7 +364,7 @@ export class RoomDB {
         } else {
           await dbClient.query('DELETE FROM room_utilities WHERE room_id = $1', [id]);
         }
-        
+
         // 2. Upsert new utilities
         if (data.utilityIds.length > 0) {
           for (const utilId of data.utilityIds) {
@@ -388,9 +394,17 @@ export class RoomDB {
     const query = `
       INSERT INTO beds (room_id, bed_number, price, status)
       VALUES ($1, $2, $3, $4)
+      RETURNING id
     `;
     try {
-      await dbClient.query(query, [data.roomId, data.bedNumber, data.price, data.status || 'AVAILABLE']);
+      const result = await dbClient.query(query, [data.roomId, data.bedNumber, data.price, data.status || 'AVAILABLE']);
+      const bedId = result.rows[0].id;
+
+      if (data.utilityIds && data.utilityIds.length > 0) {
+        for (const utilId of data.utilityIds) {
+          await dbClient.query('INSERT INTO bed_utilities (bed_id, utility_id) VALUES ($1, $2)', [bedId, utilId]);
+        }
+      }
       return true;
     } catch (error) {
       console.error("Error in RoomDB.insertBed:", error);
@@ -407,12 +421,28 @@ export class RoomDB {
     if (data.price) { fields.push(`price = $${counter++}`); values.push(data.price); }
     if (data.status) { fields.push(`status = $${counter++}`); values.push(data.status); }
 
-    if (fields.length === 0) return true;
-
-    values.push(bedId);
-    const query = `UPDATE beds SET ${fields.join(', ')} WHERE id = $${counter}`;
     try {
-      await dbClient.query(query, values);
+      if (fields.length > 0) {
+        values.push(bedId);
+        const query = `UPDATE beds SET ${fields.join(', ')} WHERE id = $${counter}`;
+        await dbClient.query(query, values);
+      }
+
+      if (data.utilityIds) {
+        // 1. Delete removed utilities
+        if (data.utilityIds.length > 0) {
+          const placeholders = data.utilityIds.map((_: any, i: any) => `$${i + 2}`).join(', ');
+          await dbClient.query(`DELETE FROM bed_utilities WHERE bed_id = $1 AND utility_id NOT IN (${placeholders})`, [bedId, ...data.utilityIds]);
+        } else {
+          await dbClient.query('DELETE FROM bed_utilities WHERE bed_id = $1', [bedId]);
+        }
+
+        // 2. Upsert new utilities
+        for (const utilId of data.utilityIds) {
+          await dbClient.query('INSERT INTO bed_utilities (bed_id, utility_id) VALUES ($1, $2) ON CONFLICT (bed_id, utility_id) DO NOTHING', [bedId, utilId]);
+        }
+      }
+
       return true;
     } catch (error) {
       console.error("Error in RoomDB.updateBed:", error);

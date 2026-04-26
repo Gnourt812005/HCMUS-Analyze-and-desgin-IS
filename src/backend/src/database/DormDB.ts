@@ -16,7 +16,8 @@ export class DormDB {
       status: mappedStatus as any,
       totalRooms: Number(row.total_rooms || 0),
       availableRooms: Number(row.available_rooms || 0),
-      managerId: row.manager_id
+      managerId: row.manager_id,
+      utilityIds: row.utility_ids || []
     });
   }
 
@@ -98,7 +99,23 @@ export class DormDB {
     try {
       const result = await db.query(query, [id]);
       if (result.rows.length === 0) return null;
-      return this.mapRowToDorm(result.rows[0]);
+
+      // Fetch utilities with status separately
+      const utilQuery = `
+        SELECT u.id, u.title, du.status 
+        FROM dorm_utilities du 
+        JOIN utilities u ON du.utility_id = u.id 
+        WHERE du.dorm_id = $1
+      `;
+      const utilResult = await db.query(utilQuery, [id]);
+      const utilityDetails = utilResult.rows.map((r: any) => ({
+        id: r.id,
+        title: r.title,
+        status: r.status
+      }));
+      const utilityIds = utilityDetails.map((u: any) => u.id);
+
+      return this.mapRowToDorm({ ...result.rows[0], utility_ids: utilityIds, utilityDetails });
     }
     catch (e) {
       console.error("Database fetch failed:", e);
@@ -111,6 +128,7 @@ export class DormDB {
     const query = `
       INSERT INTO dorms (name, address, phone, status, total_rooms, available_rooms, manager_id)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING id
     `;
     const values = [
       dorm.name,
@@ -122,7 +140,20 @@ export class DormDB {
       dorm.managerId
     ];
     try {
-      await db.query(query, values);
+      const result = await db.query(query, values);
+      const newId = result.rows[0].id;
+
+      // sync utilities
+      if (dorm.utilityIds && dorm.utilityIds.length > 0) {
+        const utilValues = dorm.utilityIds.map(uid => `('${newId}', '${uid}')`).join(',');
+        const utilSyncQuery = `
+          INSERT INTO dorm_utilities (dorm_id, utility_id)
+          VALUES ${utilValues}
+          ON CONFLICT (dorm_id, utility_id) DO NOTHING
+        `;
+        await db.query(utilSyncQuery);
+      }
+
       return true;
     } catch (e) {
       console.error("Database insert failed (DormDB.insert):", e);
@@ -165,13 +196,37 @@ export class DormDB {
       values.push(data.managerId);
     }
 
-    if (fields.length === 0) return true;
-
-    values.push(id);
-    const query = `UPDATE dorms SET ${fields.join(', ')} WHERE id = $${counter}`;
     try {
-      const result = await db.query(query, values);
-      return (result.rowCount ?? 0) > 0;
+      if (fields.length > 0) {
+        values.push(id);
+        const query = `UPDATE dorms SET ${fields.join(', ')} WHERE id = $${counter}`;
+        await db.query(query, values);
+      }
+
+      // Sync utilities if provided
+      if (data.utilityIds !== undefined) {
+        // 1. Delete utilities no longer in the list
+        if (data.utilityIds.length === 0) {
+          await db.query(`DELETE FROM dorm_utilities WHERE dorm_id = $1`, [id]);
+        } else {
+          const placeholders = data.utilityIds.map((_, i) => `$${i + 2}`).join(',');
+          await db.query(
+            `DELETE FROM dorm_utilities WHERE dorm_id = $1 AND utility_id NOT IN (${placeholders})`,
+            [id, ...data.utilityIds]
+          );
+
+          // 2. Insert new utilities (ignore duplicates)
+          const utilValues = data.utilityIds.map(uid => `('${id}', '${uid}')`).join(',');
+          const utilSyncQuery = `
+            INSERT INTO dorm_utilities (dorm_id, utility_id)
+            VALUES ${utilValues}
+            ON CONFLICT (dorm_id, utility_id) DO NOTHING
+          `;
+          await db.query(utilSyncQuery);
+        }
+      }
+
+      return true;
     } catch (e) {
       console.error("Database update failed (DormDB.update):", e);
       return false;

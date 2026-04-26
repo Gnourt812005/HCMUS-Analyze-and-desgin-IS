@@ -6,6 +6,7 @@ export class Contract {
   userEmail: string;
   rentalFormId?: string;
   roomId?: string;
+  roomName?: string;
   dormName?: string;
   floor?: number;
   bedNumbers?: string;
@@ -21,6 +22,7 @@ export class Contract {
     this.userEmail = data.userEmail || '';
     this.rentalFormId = data.rentalFormId;
     this.roomId = data.roomId;
+    this.roomName = data.roomName;
     this.dormName = data.dormName;
     this.floor = data.floor;
     this.bedNumbers = data.bedNumbers;
@@ -62,6 +64,11 @@ export class Contract {
 
   static async getActiveByUserEmail(userEmail: string): Promise<ContractDTO[]> {
     const contractModels = await ContractDB.getActiveByUserEmail(userEmail);
+    return contractModels.map(model => new Contract(model).toDto());
+  }
+
+  static async getAllByUserEmail(userEmail: string): Promise<ContractDTO[]> {
+    const contractModels = await ContractDB.getAllByUserEmail(userEmail);
     return contractModels.map(model => new Contract(model).toDto());
   }
 }

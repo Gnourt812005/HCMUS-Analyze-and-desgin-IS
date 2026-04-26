@@ -18,6 +18,7 @@ export const AdminSidebar = () => {
     { path: '/admin/handover', icon: 'assignment_turned_in', label: 'Bàn giao phòng' },
     { path: '/admin/staff', icon: 'badge', label: 'Nhân viên' },
     { path: '/admin/checkout', icon: 'logout', label: 'Trả phòng' },
+    { path: '/admin/utilities', icon: 'settings_accessibility', label: 'Tiện ích' },
   ];
 
   return (

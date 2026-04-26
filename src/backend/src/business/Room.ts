@@ -17,6 +17,8 @@ export class Room {
   hasUserDeposit?: boolean;
   userRegistrationId?: string;
   beds?: BedDTO[];
+  utilities?: { id: string, title: string, status: string }[];
+  utilityIds?: string[];
 
   constructor(data: any) {
     this.id = data.id || '';
@@ -28,9 +30,11 @@ export class Room {
     this.totalBeds = data.totalBeds || data.total_beds || 0;
     this.availableBeds = data.availableBeds || data.available_beds || 0;
     this.amenities = data.amenities || data.room_utilities || [];
+    this.utilities = data.utilities || data.room_utilities_details || [];
     this.status = data.status || 'AVAILABLE';
     this.imageUrl = data.imageUrl || data.image_url || '';
     this.favoriteCount = data.favoriteCount || data.favorite_count || 0;
+    this.utilityIds = data.utilityIds || data.utility_ids || [];
     this.hasUserDeposit = data.hasUserDeposit || false;
     this.userRegistrationId = data.userRegistrationId || '';
     this.beds = data.beds || [];
@@ -72,7 +76,9 @@ export class Room {
       status: this.status,
       hasUserDeposit: this.hasUserDeposit,
       userRegistrationId: this.userRegistrationId,
-      beds: this.beds
+      beds: this.beds,
+      utilities: this.utilities,
+      utilityIds: this.utilityIds
     };
   }
 }
