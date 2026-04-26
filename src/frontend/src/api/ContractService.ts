@@ -1,4 +1,5 @@
 import { ApiClient } from './ApiClient';
+import { ContractDTO } from '@dormarch/shared';
 
 export type ContractStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING_CHECKOUT' | 'LIQUIDATED';
 
@@ -55,5 +56,9 @@ export class ContractService {
 
   static async cancel(id: string): Promise<void> {
     await ApiClient.patch(`/contracts/admin/${id}/cancel`);
+  }
+
+  static async getMyContracts(): Promise<ContractDTO[]> {
+    return ApiClient.get<ContractDTO[]>('/contracts/');
   }
 }

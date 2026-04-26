@@ -75,6 +75,43 @@ export class HandoverDB {
     return result.rows.map((row: any) => this.mapRow(row));
   }
 
+  static async getByContractId(contractId: string): Promise<HandoverRow[]> {
+    const result = await dbClient.query(`
+      SELECT
+        h.id,
+        h.contract_id,
+        h.type,
+        h.created_at,
+        u.full_name  AS customer_name,
+        (
+          SELECT MIN(r2.name)
+          FROM contract_beds cb2
+          JOIN beds b2  ON b2.id  = cb2.bed_id
+          JOIN rooms r2 ON r2.id  = b2.room_id
+          WHERE cb2.contract_id = h.contract_id
+        ) AS room_name,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'bedId',     hb.bed_id,
+              'bedNumber', b.bed_number,
+              'note',      hb.note
+            ) ORDER BY b.bed_number
+          ) FILTER (WHERE hb.bed_id IS NOT NULL),
+          '[]'::json
+        ) AS beds
+      FROM handovers h
+      JOIN contracts c           ON h.contract_id  = c.id
+      JOIN users u               ON c.user_email   = u.email
+      LEFT JOIN handover_beds hb ON hb.handover_id = h.id
+      LEFT JOIN beds b           ON b.id           = hb.bed_id
+      WHERE h.contract_id = $1
+      GROUP BY h.id, u.full_name
+      ORDER BY h.created_at ASC
+    `, [contractId]);
+    return result.rows.map((row: any) => this.mapRow(row));
+  }
+
   static async getById(id: string): Promise<HandoverRow | null> {
     const result = await dbClient.query(`
       SELECT
