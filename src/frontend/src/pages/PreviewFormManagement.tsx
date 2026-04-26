@@ -146,7 +146,7 @@ export const PreviewFormManagement = () => {
 
     const formatStatus = (st: string) => {
         if (st === 'approved' || st === 'complete') return { label: 'Đã hoàn thành', class: 'bg-green-100 text-green-700' };
-        if (st === 'canceled' || st === 'CANCELLED') return { label: 'Đã hủy', class: 'bg-red-100 text-red-700' };
+        if (st === 'cancelled' || st === 'CANCELLED') return { label: 'Đã hủy', class: 'bg-red-100 text-red-700' };
         if (st === 'rejected' || st === 'REJECTED') return { label: 'Đã từ chối', class: 'bg-red-100 text-red-700' };
         return { label: 'Đang xử lý', class: 'bg-blue-100 text-blue-700' };
     };
@@ -161,7 +161,7 @@ export const PreviewFormManagement = () => {
         try {
             const res = await ApiClient.put<{ message: string; status: number }>(`/previews/${cancelConfirmId}/cancel`);
             if (res.status === 200) {
-                setForms(prev => prev.map(f => f.id === cancelConfirmId ? { ...f, status: 'canceled' } : f));
+                setForms(prev => prev.map(f => f.id === cancelConfirmId ? { ...f, status: 'cancelled' } : f));
             } else {
                 alert(res.message || 'Lỗi khi hủy lịch');
             }
@@ -239,7 +239,7 @@ export const PreviewFormManagement = () => {
                                         </div>
                                     </div>
                                     
-                                    {form.status !== 'canceled' && form.status !== 'complete' && (
+                                    {form.status !== 'cancelled' && form.status !== 'complete' && (
                                         <button 
                                             onClick={(e) => handleCancel(e, form.id)}
                                             className="mt-2 text-error hover:bg-error/10 px-4 py-1.5 rounded-lg border border-error text-sm font-medium transition-colors w-full"

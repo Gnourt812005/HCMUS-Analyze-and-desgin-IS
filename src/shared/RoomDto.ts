@@ -22,6 +22,7 @@ export interface RoomDetailDTO {
   // specialNotes: string[];
   imageUrl: string;
   favoriteCount: number;
+  isFavorite: boolean;
 }
 
 export interface GetRoomDto {

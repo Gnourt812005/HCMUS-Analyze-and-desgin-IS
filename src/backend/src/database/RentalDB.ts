@@ -1,11 +1,5 @@
 import { RentalRegistrationRequestDTO } from '@dormarch/shared';
-
-interface BedRecord {
-  roomId: string;
-  bedId: string;
-  price: number;
-  status: 'AVAILABLE' | 'DEPOSITED' | 'BOOKED';
-}
+import { dbClient } from './DatabaseClient';
 
 export interface RoomBedOption {
   roomId: string;
@@ -27,46 +21,42 @@ export interface RentalRecord extends RentalRegistrationRequestDTO {
 }
 
 export class RentalDB {
-  private static ROOM_DORM_MAP: Record<string, string> = {
-    '101': '1',
-    '102': '1',
-    '201': '1',
-    '301': '1',
-    '302': '1',
-    '401': '1'
-  };
-
-  private static BED_DATA: BedRecord[] = [
-    { roomId: '101', bedId: '101-B1', price: 1500000, status: 'AVAILABLE' },
-    { roomId: '101', bedId: '101-B2', price: 1500000, status: 'AVAILABLE' },
-    { roomId: '101', bedId: '101-B3', price: 1500000, status: 'BOOKED' },
-    { roomId: '101', bedId: '101-B4', price: 1500000, status: 'BOOKED' },
-    { roomId: '102', bedId: '102-B1', price: 2000000, status: 'AVAILABLE' },
-    { roomId: '102', bedId: '102-B2', price: 2000000, status: 'BOOKED' },
-    { roomId: '201', bedId: '201-B1', price: 1800000, status: 'AVAILABLE' },
-    { roomId: '201', bedId: '201-B2', price: 1800000, status: 'AVAILABLE' },
-    { roomId: '201', bedId: '201-B3', price: 1800000, status: 'AVAILABLE' },
-    { roomId: '201', bedId: '201-B4', price: 1800000, status: 'BOOKED' },
-    { roomId: '301', bedId: '301-B1', price: 1200000, status: 'AVAILABLE' },
-    { roomId: '301', bedId: '301-B2', price: 1200000, status: 'AVAILABLE' },
-    { roomId: '301', bedId: '301-B3', price: 1200000, status: 'AVAILABLE' },
-    { roomId: '301', bedId: '301-B4', price: 1200000, status: 'AVAILABLE' },
-    { roomId: '301', bedId: '301-B5', price: 1200000, status: 'BOOKED' },
-    { roomId: '301', bedId: '301-B6', price: 1200000, status: 'BOOKED' },
-    { roomId: '302', bedId: '302-B1', price: 2500000, status: 'BOOKED' },
-    { roomId: '302', bedId: '302-B2', price: 2500000, status: 'BOOKED' },
-    { roomId: '401', bedId: '401-B1', price: 1600000, status: 'AVAILABLE' },
-    { roomId: '401', bedId: '401-B2', price: 1600000, status: 'AVAILABLE' },
-    { roomId: '401', bedId: '401-B3', price: 1600000, status: 'AVAILABLE' },
-    { roomId: '401', bedId: '401-B4', price: 1600000, status: 'AVAILABLE' }
-  ];
-
   private static DEPOSIT_HISTORY: DepositRecord[] = [];
   private static REGISTRATIONS: RentalRecord[] = [];
 
+  private static async getBedsByRoomId(roomId: string): Promise<Array<{ id: string; roomId: string; bedNumber: string; status: string; price: number }>> {
+    const query = `
+      SELECT id, room_id, bed_number, status, price
+      FROM beds
+      WHERE room_id = $1
+      ORDER BY bed_number ASC
+    `;
+
+    const result = await dbClient.query(query, [roomId]);
+    return result.rows.map((row: any) => ({
+      id: row.id,
+      roomId: row.room_id,
+      bedNumber: row.bed_number,
+      status: row.status,
+      price: Number(row.price || 0)
+    }));
+  }
+
+  private static async syncRoomAvailableBeds(roomId: string): Promise<void> {
+    const result = await dbClient.query(
+      `SELECT COUNT(*)::int AS available_beds FROM beds WHERE room_id = $1 AND status = 'AVAILABLE'`,
+      [roomId]
+    );
+
+    await dbClient.query(
+      `UPDATE rooms SET available_beds = $1 WHERE id = $2`,
+      [Number(result.rows[0]?.available_beds || 0), roomId]
+    );
+  }
+
   static async hasDeposit(roomId: string, idCard: string, bedIds?: string[]): Promise<boolean> {
-    const roomBeds = this.BED_DATA.filter(bed => bed.roomId === roomId).map(bed => bed.bedId);
-    const targetBeds = bedIds && bedIds.length > 0 ? bedIds : roomBeds;
+    const roomBeds = await this.getBedsByRoomId(roomId);
+    const targetBeds = bedIds && bedIds.length > 0 ? bedIds : roomBeds.map(bed => bed.id);
 
     return this.DEPOSIT_HISTORY.some(
       item => targetBeds.includes(item.bedId) && item.idCard === idCard
@@ -74,16 +64,29 @@ export class RentalDB {
   }
 
   static async listRoomBedsByDorm(dormId: string): Promise<RoomBedOption[]> {
-    const beds = this.BED_DATA.filter(bed => this.ROOM_DORM_MAP[bed.roomId] === dormId);
+    const query = `
+      SELECT
+        r.id AS room_id,
+        b.id AS bed_id,
+        b.bed_number,
+        b.status,
+        b.price
+      FROM rooms r
+      JOIN beds b ON b.room_id = r.id
+      WHERE r.dorm_id = $1
+      ORDER BY r.name ASC, b.bed_number ASC
+    `;
 
-    return beds.map(bed => {
-      const isDepositedBySomeone = this.DEPOSIT_HISTORY.some(item => item.bedId === bed.bedId);
+    const result = await dbClient.query(query, [dormId]);
+
+    return result.rows.map((row: any) => {
+      const isDepositedBySomeone = this.DEPOSIT_HISTORY.some(item => item.bedId === row.bed_id);
       return {
-        roomId: bed.roomId,
-        bedId: bed.bedId,
-        title: `Phòng ${bed.roomId} - Giường ${bed.bedId}`,
-        price: bed.price,
-        available: !isDepositedBySomeone && bed.status === 'AVAILABLE' ? 1 : 0
+        roomId: row.room_id,
+        bedId: row.bed_id,
+        title: `Phòng ${row.room_id} - Giường ${row.bed_number}`,
+        price: Number(row.price || 0),
+        available: !isDepositedBySomeone && row.status === 'AVAILABLE' ? 1 : 0
       };
     });
   }
@@ -91,18 +94,27 @@ export class RentalDB {
   static async areBedsAvailable(roomId: string, bedIds: string[]): Promise<boolean> {
     if (bedIds.length === 0) return false;
 
-    const selected = this.BED_DATA.filter(bed => bed.roomId === roomId && bedIds.includes(bed.bedId));
-    if (selected.length !== bedIds.length) return false;
+    const query = `
+      SELECT id, status
+      FROM beds
+      WHERE room_id = $1 AND id = ANY($2::uuid[])
+    `;
 
-    return selected.every(bed => {
-      const depositedBySomeone = this.DEPOSIT_HISTORY.some(item => item.bedId === bed.bedId);
-      return bed.status === 'AVAILABLE' && !depositedBySomeone;
-    });
+    const result = await dbClient.query(query, [roomId, bedIds]);
+    if (result.rows.length !== bedIds.length) return false;
+
+    return result.rows.every((row: any) => row.status === 'AVAILABLE');
   }
 
   static async getBedsTotalPrice(roomId: string, bedIds: string[]): Promise<number> {
-    const selected = this.BED_DATA.filter(bed => bed.roomId === roomId && bedIds.includes(bed.bedId));
-    return selected.reduce((sum, bed) => sum + bed.price, 0);
+    const query = `
+      SELECT COALESCE(SUM(price), 0) AS total_price
+      FROM beds
+      WHERE room_id = $1 AND id = ANY($2::uuid[])
+    `;
+
+    const result = await dbClient.query(query, [roomId, bedIds]);
+    return Number(result.rows[0]?.total_price || 0);
   }
 
   static async markDeposited(roomId: string, idCard: string, bedIds: string[]): Promise<void> {
@@ -113,21 +125,23 @@ export class RentalDB {
       if (!exists) {
         this.DEPOSIT_HISTORY.push({ bedId, idCard });
       }
-
-      const bed = this.BED_DATA.find(item => item.roomId === roomId && item.bedId === bedId);
-      if (bed && bed.status === 'AVAILABLE') {
-        bed.status = 'DEPOSITED';
-      }
     }
+
+    await dbClient.query(
+      `UPDATE beds SET status = 'DEPOSITED' WHERE room_id = $1 AND id = ANY($2::uuid[])`,
+      [roomId, bedIds]
+    );
+
+    await this.syncRoomAvailableBeds(roomId);
   }
 
   static async markBooked(roomId: string, bedIds: string[]): Promise<void> {
-    for (const bedId of bedIds) {
-      const bed = this.BED_DATA.find(item => item.roomId === roomId && item.bedId === bedId);
-      if (bed) {
-        bed.status = 'BOOKED';
-      }
-    }
+    await dbClient.query(
+      `UPDATE beds SET status = 'BOOKED' WHERE room_id = $1 AND id = ANY($2::uuid[])`,
+      [roomId, bedIds]
+    );
+
+    await this.syncRoomAvailableBeds(roomId);
   }
 
   static async createRegistration(record: RentalRecord): Promise<void> {
