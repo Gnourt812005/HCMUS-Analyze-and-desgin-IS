@@ -6,6 +6,8 @@ import { UserDB } from '../database/UserDB';
 import { PreviewForm } from '../business/PreviewForm';
 import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
 
+import { UserRole } from '@dormarch/shared';
+
 // Helper function to extract Room and Dorm details
 async function getRoomAndDormInfo(roomId: string) {
   const dorms = await DormDB.getAll();
@@ -31,6 +33,55 @@ export const previewRoutes = Router();
 previewRoutes.post('/', async (req, res) => {
   try {
     const { roomId, userId, previewDatetime } = req.body;
+
+    const allForms = await PreviewFormDB.getAll();
+    const newFormDate = new Date(previewDatetime);
+
+    // Helper: check if two dates are functionally identically close (e.g. within an hour or exactly same date to avoid double booking)
+    const isSameDate = (d1: Date, d2: Date) => d1.toDateString() === d2.toDateString() && d1.getHours() === d2.getHours();
+
+    // 1. Check room availability
+    const roomConflict = allForms.find(f => 
+      f.roomId === roomId && 
+      isSameDate(new Date(f.previewDatetime), newFormDate) && 
+      f.status === 'pending'
+    );
+
+    if (roomConflict) {
+      return res.status(400).json({ message: 'Phòng đã có lịch hẹn xem vào thời gian này', status: 400, data: null });
+    }
+
+    // 2. Check guest availability
+    const userConflict = allForms.find(f => 
+      f.userId === userId && 
+      isSameDate(new Date(f.previewDatetime), newFormDate) && 
+      f.status === 'pending'
+    );
+
+    if (userConflict) {
+      return res.status(400).json({ message: 'Bạn đã có một lịch hẹn xem phòng khác vào thời gian này', status: 400, data: null });
+    }
+
+    // 3. Automatic Employee Assignment
+    const staffs = await UserDB.fetchEmployeesByRole(UserRole.SALES_STAFF);
+    let assignedStaffId = null;
+
+    // Find a staff member that does NOT have a scheduling conflict
+    for (const staff of staffs) {
+      const staffConflict = allForms.find(f => 
+        f.staffId === staff.email && 
+        isSameDate(new Date(f.previewDatetime), newFormDate) && 
+        f.status === 'pending'
+      );
+      if (!staffConflict) {
+        assignedStaffId = staff.email;
+        break;
+      }
+    }
+
+    if (!assignedStaffId) {
+      return res.status(400).json({ message: 'Không có nhân viên trống vào khung giờ này', status: 400, data: null });
+    }
     
     const newForm = new PreviewForm({
       formId: `prev-${Date.now()}`,
@@ -38,7 +89,7 @@ previewRoutes.post('/', async (req, res) => {
       userId,
       previewDatetime,
       status: 'pending',
-      staffId: null
+      staffId: assignedStaffId
     });
 
     await PreviewFormDB.insert(newForm);
@@ -266,7 +317,7 @@ previewRoutes.put('/:id/cancel', authMiddleware, async (req: AuthRequest, res) =
 
     // Only allow canceling if status is pending
     if (form.status !== 'pending') {
-      return res.status(400).json({ message: 'Only pending previews can be canceled' });
+      return res.status(400).json({ message: 'Only pending previews can be cancelled' });
     }
 
     const success = await PreviewFormDB.updateStatus(id, 'cancelled');

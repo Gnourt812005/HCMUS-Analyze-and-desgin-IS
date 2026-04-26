@@ -34,6 +34,19 @@ export class UserDB {
     }
   }
 
+  static async fetchEmployeesByRole(role: UserRole | string): Promise<User[]> {
+    const db = DatabaseClient.getInstance();
+    const dbRole = role === UserRole.SALES_STAFF ? 'SALE_STAFF' : role;
+    const query = 'SELECT * FROM users WHERE role = $1';
+    try {
+      const result = await db.query(query, [dbRole]);
+      return result.rows.map(this.mapRowToUser.bind(this));
+    } catch (e) {
+      console.error('Database fetch failed (UserDB.fetchEmployeesByRole):', e);
+      return [];
+    }
+  }
+
   static async fetchByCCCD(cccd: string): Promise<User | null> {
     const db = DatabaseClient.getInstance();
     const query = 'SELECT * FROM users WHERE cccd = $1';

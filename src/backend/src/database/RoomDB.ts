@@ -52,7 +52,7 @@ export class RoomDB {
       floor: Number(row.floor || 0),
       price: Number(row.lowest_price || 0),
       totalBeds: Number(row.total_beds || 0),
-      availableBeds: Number(row.available_beds_live ?? row.available_beds ?? 0),
+      availableBeds: Number(row.available_beds_live || 0),
       amenities: row.room_ultilities || [],
       imageUrl: row.image_url || '',
       favoriteCount: Number(row.favorite_count || 0)
@@ -188,6 +188,7 @@ export class RoomDB {
         r.id, r.dorm_id, r.name, r.block, r.floor, r.status, r.total_beds, r.image_url,
         COALESCE(MIN(b.price), 0) AS "lowest_price",
         COUNT(b.id) FILTER (WHERE b.status = 'AVAILABLE') AS "available_beds_live",
+        (SELECT COUNT(*) FROM user_favorite_rooms uf WHERE uf.room_id = r.id) AS "favorite_count",
         COALESCE(
           (SELECT json_agg(u.title) 
            FROM room_utilities ru 
@@ -216,8 +217,9 @@ export class RoomDB {
         floor: row.floor,
         price: Number(row.lowest_price),
         totalBeds: row.total_beds,
-        availableBeds: Number(row.available_beds_live ?? row.available_beds ?? 0),
+        availableBeds: Number(row.available_beds_live || 0),
         amenities: row.room_utilities,
+        favoriteCount: Number(row.favorite_count || 0),
         status: row.status
       }));
 
@@ -236,6 +238,8 @@ export class RoomDB {
       SELECT 
         r.id, r.dorm_id, r.name, r.block, r.floor, r.status, r.total_beds, r.image_url,
         COUNT(b.id) FILTER (WHERE b.status = 'AVAILABLE') AS "available_beds_live",
+        r.id, r.dorm_id, r.name, r.block, r.floor, r.status, r.total_beds, r.available_beds, r.image_url,
+        (SELECT COUNT(*) FROM user_favorite_rooms uf WHERE uf.room_id = r.id) AS "favorite_count",
         COALESCE(
           (SELECT json_agg(u.title) 
            FROM room_utilities ru 
@@ -270,6 +274,8 @@ export class RoomDB {
       return null;
     }
   }
+
+// No updateFavoriteCount anymore
 
   static async insert(data: CreateRoomDTO): Promise<boolean> {
     const query = `
