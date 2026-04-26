@@ -7,6 +7,7 @@ import { rentalRoutes } from './routes/rentalRoutes';
 import { paymentRoutes } from './routes/paymentRoutes';
 import { roomRoutes } from './routes/roomRoutes';
 import { previewRoutes } from './routes/previewRoutes';
+import { handoverRoutes } from './routes/handoverRoutes';
 import { utilityRoutes } from './routes/utilityRoutes';
 import { dbClient } from './database/DatabaseClient';
 
@@ -25,6 +26,7 @@ app.use('/api/rentals', rentalRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/previews', previewRoutes);
+app.use('/api/handovers', handoverRoutes);
 app.use('/api/utilities', utilityRoutes);
 
 app.get('/health', (req, res) => {

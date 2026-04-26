@@ -10,6 +10,7 @@ export class RefundCalculation {
   extraFee: number;
   finalRefundAmount: number;
   notes?: string;
+  createdAt: string;
 
   constructor(data: Partial<RefundCalculation>) {
     this.calculationId = data.calculationId || '';
@@ -20,18 +21,20 @@ export class RefundCalculation {
     this.extraFee = data.extraFee || 0;
     this.finalRefundAmount = data.finalRefundAmount || 0;
     this.notes = data.notes;
+    this.createdAt = data.createdAt || new Date().toISOString();
   }
 
   toDto(): RefundCalculationDTO {
     return {
       calculationId: this.calculationId,
       requestId: this.requestId,
-      // contractId: this.contractId,
+      contractId: this.contractId,
       depositAmount: this.depositAmount,
       damageFee: this.damageFee,
       extraFee: this.extraFee,
       finalRefundAmount: this.finalRefundAmount,
-      notes: this.notes
+      notes: this.notes,
+      createdAt: this.createdAt
     };
   }
 
