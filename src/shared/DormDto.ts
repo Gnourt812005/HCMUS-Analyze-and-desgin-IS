@@ -18,6 +18,7 @@ export interface DormDTO {
   availableRooms: number;
   managerId: string;
   utilityIds: string[];
+  utilities?: { id: string, title: string, status: string }[];
 }
 
 export interface CreateDormDTO {

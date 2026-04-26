@@ -11,6 +11,7 @@ export class Dorm {
   availableRooms: number;
   managerId: string;
   utilityIds: string[];
+  utilities?: { id: string, title: string, status: string }[];
 
   constructor(data: Partial<Dorm>) {
     this.id = data.id || '';
@@ -22,6 +23,7 @@ export class Dorm {
     this.availableRooms = data.availableRooms || 0;
     this.managerId = data.managerId || '';
     this.utilityIds = data.utilityIds || [];
+    this.utilities = (data as any).utilityDetails || [];
   }
 
   toDTO(): DormDTO {
@@ -34,7 +36,8 @@ export class Dorm {
       totalRooms: this.totalRooms,
       availableRooms: this.availableRooms,
       managerId: this.managerId,
-      utilityIds: this.utilityIds
+      utilityIds: this.utilityIds,
+      utilities: this.utilities
     };
   }
 

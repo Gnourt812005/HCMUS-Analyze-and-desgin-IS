@@ -217,7 +217,7 @@ export const AdminRooms = () => {
                                                     className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
                                                     title="Chi tiết / Quản lý giường"
                                                 >
-                                                    <span className="material-symbols-outlined text-xl">settings</span>
+                                                    <span className="material-symbols-outlined text-xl">edit</span>
                                                 </button>
                                                 <button 
                                                     onClick={() => handleDelete(room.id)}

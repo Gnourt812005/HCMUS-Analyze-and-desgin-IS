@@ -63,7 +63,7 @@ previewRoutes.post('/', async (req, res) => {
     }
 
     // 3. Automatic Employee Assignment
-    const staffs = await UserDB.fetchEmployeesByRole(UserRole.SALES_STAFF);
+    const staffs = await UserDB.fetchEmployeesByRole(UserRole.SALE_STAFF);
     let assignedStaffId = null;
 
     // Find a staff member that does NOT have a scheduling conflict

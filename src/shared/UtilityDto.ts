@@ -12,3 +12,14 @@ export interface GetUtilityDto {
     search?: string;
     type?: 'ROOM' | 'DORM' | 'BED';
 }
+
+export interface CreateUtilityDto {
+    title: string;
+    type: 'ROOM' | 'DORM' | 'BED';
+    isLiable: boolean;
+    incurredPrice: number;
+}
+
+export interface UpdateUtilityDto {
+    title: string;
+}

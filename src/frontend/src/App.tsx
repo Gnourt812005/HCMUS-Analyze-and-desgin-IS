@@ -34,6 +34,7 @@ import { AdminStaffDetail } from './pages/admin/AdminStaffDetail';
 import { AdminCheckout } from './pages/admin/AdminCheckout';
 import { AdminRefundCalculation } from './pages/admin/AdminRefundCalculation';
 import { AdminLiquidation } from './pages/admin/AdminLiquidation';
+import { AdminUtilities } from './pages/admin/AdminUtilities';
 
 function App() {
   return (
@@ -82,6 +83,7 @@ function App() {
           <Route path="checkout" element={<AdminCheckout />} />
           <Route path="checkout/:requestId/refund-calculation" element={<AdminRefundCalculation />} />
           <Route path="checkout/:requestId/liquidation" element={<AdminLiquidation />} />
+          <Route path="utilities" element={<AdminUtilities />} />
         </Route>
       </Routes>
     </Router>

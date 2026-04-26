@@ -46,6 +46,8 @@ export interface RoomDTO {
   amenities: string[];
   status: string;
   beds?: BedDTO[];
+  utilities?: { id: string, title: string, status: string }[];
+  utilityIds?: string[];
 }
 
 export interface CreateRoomDTO {
@@ -71,4 +73,6 @@ export interface BedDTO {
   bedNumber: string;
   status: string;
   price: number;
+  utilityIds?: string[];
+  utilities?: { id: string, title: string, status: string }[];
 }

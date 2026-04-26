@@ -40,7 +40,6 @@ export class Contract {
       userEmail: this.userEmail,
       rentalFormId: this.rentalFormId,
       roomId: this.roomId,
-      roomName: this.roomName,
       dormName: this.dormName,
       floor: this.floor,
       bedNumbers: this.bedNumbers,

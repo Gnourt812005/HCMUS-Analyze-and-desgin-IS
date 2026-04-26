@@ -99,13 +99,23 @@ export class DormDB {
     try {
       const result = await db.query(query, [id]);
       if (result.rows.length === 0) return null;
-      
-      // Fetch utilities separately
-      const utilQuery = `SELECT utility_id FROM dorm_utilities WHERE dorm_id = $1`;
-      const utilResult = await db.query(utilQuery, [id]);
-      const utilityIds = utilResult.rows.map((r: any) => r.utility_id);
 
-      return this.mapRowToDorm({ ...result.rows[0], utility_ids: utilityIds });
+      // Fetch utilities with status separately
+      const utilQuery = `
+        SELECT u.id, u.title, du.status 
+        FROM dorm_utilities du 
+        JOIN utilities u ON du.utility_id = u.id 
+        WHERE du.dorm_id = $1
+      `;
+      const utilResult = await db.query(utilQuery, [id]);
+      const utilityDetails = utilResult.rows.map((r: any) => ({
+        id: r.id,
+        title: r.title,
+        status: r.status
+      }));
+      const utilityIds = utilityDetails.map((u: any) => u.id);
+
+      return this.mapRowToDorm({ ...result.rows[0], utility_ids: utilityIds, utilityDetails });
     }
     catch (e) {
       console.error("Database fetch failed:", e);

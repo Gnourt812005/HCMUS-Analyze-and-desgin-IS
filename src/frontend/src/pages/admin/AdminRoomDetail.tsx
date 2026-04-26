@@ -32,7 +32,8 @@ export const AdminRoomDetail = () => {
     const [bedFormData, setBedFormData] = useState({
         bedNumber: '',
         price: 0,
-        status: 'AVAILABLE'
+        status: 'AVAILABLE',
+        utilityIds: [] as string[]
     });
 
     const [availableUtilities, setAvailableUtilities] = useState<UtilityDTO[]>([]);
@@ -41,7 +42,7 @@ export const AdminRoomDetail = () => {
         try {
             const [dormRes, utilRes] = await Promise.all([
                 ApiClient.get<{ data: { dorms: DormDTO[] } }>('/dorms?limit=100'),
-                ApiClient.get<{ data: { utilities: UtilityDTO[] } }>('/utilities?type=ROOM')
+                ApiClient.get<{ data: { utilities: UtilityDTO[] } }>('/utilities?limit=200')
             ]);
             console.log(utilRes.data)
             setDorms(dormRes.data.dorms);
@@ -51,7 +52,7 @@ export const AdminRoomDetail = () => {
                 setLoading(true);
                 const res = await ApiClient.get<{ data: RoomDTO }>(`/rooms/${id}`);
                 setRoom(res.data);
-                const initialUtilityIds = res.data.amenities?.map(title => 
+                const initialUtilityIds = res.data.utilityIds || res.data.amenities?.map(title =>
                     utilRes.data.utilities.find(u => u.title === title)?.id
                 ).filter(id => !!id) as string[];
 
@@ -126,10 +127,20 @@ export const AdminRoomDetail = () => {
     const openBedModal = (bed?: BedDTO) => {
         if (bed) {
             setEditingBed(bed);
-            setBedFormData({ bedNumber: bed.bedNumber, price: bed.price, status: bed.status });
+            setBedFormData({
+                bedNumber: bed.bedNumber,
+                price: bed.price,
+                status: bed.status,
+                utilityIds: bed.utilityIds || []
+            });
         } else {
             setEditingBed(null);
-            setBedFormData({ bedNumber: '', price: 0, status: 'AVAILABLE' });
+            setBedFormData({
+                bedNumber: '',
+                price: 0,
+                status: 'AVAILABLE',
+                utilityIds: []
+            });
         }
         setIsBedModalOpen(true);
     };
@@ -237,26 +248,54 @@ export const AdminRoomDetail = () => {
                             </div>
 
                             <div className="space-y-3">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Tiện ích</label>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Tiện ích trong phòng</label>
                                 {isEditing ? (
-                                    <div className="space-y-3">
-                                        <div className="flex flex-wrap gap-2 p-4 bg-slate-50 rounded-2xl border border-slate-100 min-h-[60px]">
-                                            {formData.utilityIds.map((utilId: string) => {
-                                                const utility = availableUtilities.find(u => u.id === utilId);
-                                                return (
-                                                    <span key={utilId} className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-blue-200">
-                                                        {utility?.title || 'Đang tải...'}
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setFormData({ ...formData, utilityIds: formData.utilityIds.filter((id: string) => id !== utilId) })}
-                                                            className="hover:bg-blue-200 p-0.5 rounded transition-colors"
-                                                        >
-                                                            <span className="material-symbols-outlined text-[14px]">close</span>
-                                                        </button>
-                                                    </span>
-                                                );
-                                            })}
-                                            {formData.utilityIds.length === 0 && <span className="text-slate-400 text-xs italic py-1">Chưa chọn tiện ích nào</span>}
+                                    <div className="space-y-4">
+                                        <div className="overflow-hidden bg-white border border-slate-100 rounded-2xl">
+                                            <table className="w-full text-left">
+                                                <thead className="bg-slate-50 border-b border-slate-100">
+                                                    <tr>
+                                                        <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tiện ích</th>
+                                                        <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tình trạng</th>
+                                                        <th className="px-4 py-3"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-50">
+                                                    {formData.utilityIds.map((utilId: string) => {
+                                                        const utility = availableUtilities.find(u => u.id === utilId);
+                                                        // Find status from room.utilities if present
+                                                        const detail = room?.utilities?.find(ud => ud.id === utilId);
+                                                        const status = detail?.status || 'GOOD';
+                                                        
+                                                        return (
+                                                            <tr key={utilId} className="hover:bg-slate-50/50 transition-colors">
+                                                                <td className="px-4 py-3 text-sm font-bold text-slate-700">{utility?.title || '...'}</td>
+                                                                <td className="px-4 py-3">
+                                                                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
+                                                                        status === 'GOOD' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                                                                    }`}>
+                                                                        {status === 'GOOD' ? 'Hoạt động tốt' : 'Cần bảo trì'}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-4 py-3 text-right">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setFormData({ ...formData, utilityIds: formData.utilityIds.filter((id: string) => id !== utilId) })}
+                                                                        className="p-1 hover:bg-rose-50 text-slate-300 hover:text-rose-500 rounded-lg transition-colors"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-[18px]">close</span>
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                    {formData.utilityIds.length === 0 && (
+                                                        <tr>
+                                                            <td colSpan={3} className="px-4 py-8 text-center text-slate-400 text-xs italic">Chưa có tiện ích nào</td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
                                         </div>
                                         <select
                                             className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium text-sm appearance-none"
@@ -268,26 +307,41 @@ export const AdminRoomDetail = () => {
                                                 }
                                             }}
                                         >
-                                            <option value="" disabled>+ Thêm tiện ích từ danh sách...</option>
-                                            {availableUtilities.filter(u => !formData.utilityIds.includes(u.id)).map(u => (
+                                            <option value="" disabled>+ Thêm tiện ích phòng...</option>
+                                            {availableUtilities.filter(u => u.type === 'ROOM' && !formData.utilityIds.includes(u.id)).map(u => (
                                                 <option key={u.id} value={u.id}>{u.title}</option>
                                             ))}
                                         </select>
                                     </div>
                                 ) : (
-                                    <div className="flex flex-wrap gap-2 py-1">
-                                        {formData.utilityIds.length > 0 ? (
-                                            formData.utilityIds.map((utilId: string) => {
-                                                const utility = availableUtilities.find(u => u.id === utilId);
-                                                return (
-                                                    <span key={utilId} className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold border border-slate-200">
-                                                        {utility?.title || 'Đang tải...'}
-                                                    </span>
-                                                );
-                                            })
-                                        ) : (
-                                            <span className="text-slate-400 text-sm italic">Không có tiện ích</span>
-                                        )}
+                                    <div className="overflow-hidden bg-white border border-slate-100 rounded-2xl">
+                                        <table className="w-full text-left">
+                                            <thead className="bg-slate-50 border-b border-slate-100">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tiện ích</th>
+                                                    <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Trạng thái</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-50">
+                                                {room?.utilities?.map(u => (
+                                                    <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
+                                                        <td className="px-4 py-3 text-sm font-bold text-slate-700">{u.title}</td>
+                                                        <td className="px-4 py-3 text-right">
+                                                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
+                                                                u.status === 'GOOD' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                                                            }`}>
+                                                                {u.status === 'GOOD' ? 'Hoạt động tốt' : 'Cần bảo trì'}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {(!room?.utilities || room.utilities.length === 0) && (
+                                                    <tr>
+                                                        <td colSpan={2} className="px-4 py-8 text-center text-slate-400 text-xs italic">Không có tiện ích</td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 )}
                             </div>
@@ -344,8 +398,8 @@ export const AdminRoomDetail = () => {
                                                 </td>
                                                 <td className="px-8 py-5">
                                                     <span className={`px-3 py-1 rounded-full text-[11px] font-bold border ${bed.status === 'AVAILABLE' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                            bed.status === 'BOOKED' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                                                                'bg-amber-50 text-amber-600 border-amber-100'
+                                                        bed.status === 'BOOKED' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                                            'bg-amber-50 text-amber-600 border-amber-100'
                                                         }`}>
                                                         {bed.status === 'AVAILABLE' ? 'TRỐNG' : bed.status === 'BOOKED' ? 'ĐÃ THUÊ' : 'ĐẶT CỌC'}
                                                     </span>
@@ -423,6 +477,75 @@ export const AdminRoomDetail = () => {
                                         <option value="AVAILABLE">CÒN TRỐNG</option>
                                         <option value="BOOKED">ĐÃ THUÊ</option>
                                         <option value="RESERVED">ĐÃ ĐẶT CỌC</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Danh sách tiện ích tại giường</label>
+                                    
+                                    <div className="overflow-hidden bg-white border border-slate-100 rounded-2xl">
+                                        <table className="w-full text-left">
+                                            <thead className="bg-slate-50 border-b border-slate-100">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tiện ích</th>
+                                                    <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tình trạng</th>
+                                                    <th className="px-4 py-3"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-50">
+                                                {bedFormData.utilityIds.map((utilId: string) => {
+                                                    const utility = availableUtilities.find(u => u.id === utilId);
+                                                    const detail = editingBed?.utilities?.find(ud => ud.id === utilId);
+                                                    const status = detail?.status || 'GOOD';
+
+                                                    return (
+                                                        <tr key={utilId} className="hover:bg-slate-50/50 transition-colors">
+                                                            <td className="px-4 py-3 text-sm font-bold text-slate-700">{utility?.title || '...'}</td>
+                                                            <td className="px-4 py-3">
+                                                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
+                                                                    status === 'GOOD' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                                                                }`}>
+                                                                    {status === 'GOOD' ? 'Hoạt động tốt' : 'Cần bảo trì'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setBedFormData({ ...bedFormData, utilityIds: bedFormData.utilityIds.filter(id => id !== utilId) })}
+                                                                    className="p-1 hover:bg-rose-50 text-slate-300 hover:text-rose-500 rounded-lg transition-colors"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-[18px]">close</span>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                                {bedFormData.utilityIds.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan={3} className="px-4 py-6 text-center text-slate-400 text-xs italic">Chưa chọn tiện ích</td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {/* Dropdown Selector */}
+                                    <select
+                                        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 font-bold appearance-none"
+                                        value=""
+                                        onChange={(e) => {
+                                            const id = e.target.value;
+                                            if (id && !bedFormData.utilityIds.includes(id)) {
+                                                setBedFormData({ ...bedFormData, utilityIds: [...bedFormData.utilityIds, id] });
+                                            }
+                                        }}
+                                    >
+                                        <option value="">+ Thêm tiện ích giường</option>
+                                        {availableUtilities.filter(u => u.type === 'BED').map(u => (
+                                            <option key={u.id} value={u.id} disabled={bedFormData.utilityIds.includes(u.id)}>
+                                                {u.title}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="flex gap-4 pt-6">
