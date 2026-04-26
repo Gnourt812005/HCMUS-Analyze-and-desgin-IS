@@ -7,7 +7,11 @@ import { rentalRoutes } from './routes/rentalRoutes';
 import { paymentRoutes } from './routes/paymentRoutes';
 import { roomRoutes } from './routes/roomRoutes';
 import { previewRoutes } from './routes/previewRoutes';
+<<<<<<< HEAD
+import { handoverRoutes } from './routes/handoverRoutes';
+=======
 import { utilityRoutes } from './routes/utilityRoutes';
+>>>>>>> origin/dev
 import { dbClient } from './database/DatabaseClient';
 
 dotenv.config();
@@ -25,7 +29,11 @@ app.use('/api/rentals', rentalRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/previews', previewRoutes);
+<<<<<<< HEAD
+app.use('/api/handovers', handoverRoutes);
+=======
 app.use('/api/utilities', utilityRoutes);
+>>>>>>> origin/dev
 
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
