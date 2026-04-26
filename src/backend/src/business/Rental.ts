@@ -8,6 +8,7 @@ import {
   RentalRegistrationRequestDTO,
   SummaryItemDTO
 } from '@dormarch/shared';
+import { randomUUID } from 'crypto';
 import { RentalDB } from '../database/RentalDB';
 import { Policy } from './Policy';
 
@@ -92,7 +93,7 @@ export class Rental {
     }
 
     const roomPrice = await RentalDB.getBedsTotalPrice(payload.roomId, payload.bedIds);
-    const registrationId = `REG-${Date.now()}`;
+    const registrationId = randomUUID();
 
     await RentalDB.createRegistration({
       ...payload,

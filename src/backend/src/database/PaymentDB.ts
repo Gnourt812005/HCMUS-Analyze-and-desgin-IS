@@ -1,4 +1,5 @@
 import { PaymentAction, PaymentMethod, PaymentSessionDTO, PaymentSessionStatus } from '@dormarch/shared';
+import { dbClient } from './DatabaseClient';
 
 export interface PaymentInvoice {
   invoiceId: string;
@@ -12,14 +13,28 @@ export class PaymentDB {
   private static INVOICES: PaymentInvoice[] = [];
   private static SESSIONS: PaymentSessionDTO[] = [];
 
+  private static mapActionToRentalType(action: PaymentAction): 'DEPOSIT' | 'FULL' {
+    return action === 'DEPOSIT' ? 'DEPOSIT' : 'FULL';
+  }
+
   static async createInvoice(registrationId: string, amount: number, action: PaymentAction): Promise<string> {
-    const invoiceId = `INV-${Date.now()}`;
+    const method: 'QR' | 'TRANSFER' = action === 'DEPOSIT' ? 'QR' : 'TRANSFER';
+    const result = await dbClient.query(
+      `
+        INSERT INTO payments (rental_form_id, method, amount, status)
+        VALUES ($1::uuid, $2::payment_method_type, $3, 'SUCCESS')
+        RETURNING id, created_at
+      `,
+      [registrationId, method, amount]
+    );
+
+    const invoiceId = result.rows[0].id;
     this.INVOICES.push({
       invoiceId,
       registrationId,
       amount,
       action,
-      createdAt: new Date().toISOString()
+      createdAt: result.rows[0].created_at || new Date().toISOString()
     });
     return invoiceId;
   }
