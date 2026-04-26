@@ -78,6 +78,7 @@ export const FavouriteManagement = () => {
             totalBeds: selectedRoomData.totalBeds,
             availableBeds: selectedRoomData.availableBeds,
             amenities: selectedRoomData.amenities,
+            isFavorite: selectedRoomData.isFavorite,
             // specialNotes: selectedRoomData.specialNotes,
             imageUrl: selectedRoomData.imageUrl,
             favoriteCount: selectedRoomData.favoriteCount,
