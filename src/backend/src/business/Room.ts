@@ -62,6 +62,10 @@ export class Room {
     return await RoomDB.delete(id);
   }
 
+  static async updateBedStatus(roomId: string, bedIds: string[], status: string): Promise<boolean> {
+    return await RoomDB.markBedsStatus(roomId, bedIds, status);
+  }
+
   toDTO(): RoomDTO {
     return {
       id: this.id,

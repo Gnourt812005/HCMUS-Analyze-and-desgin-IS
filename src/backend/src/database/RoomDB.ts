@@ -126,9 +126,9 @@ export class RoomDB {
     roomId: string,
     bedIds: string[],
     status: BedOptionDTO['status']
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (bedIds.length === 0) {
-      return;
+      return false;
     }
 
     try {
@@ -138,8 +138,10 @@ export class RoomDB {
       );
 
       await this.syncRoomAvailability(roomId);
+      return true;
     } catch (error) {
       console.error('Error updating bed status:', error);
+      return false
     }
   }
 

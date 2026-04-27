@@ -143,10 +143,10 @@ checkoutRouter.patch('/:id/complete-liquidation', async (req: Request, res: Resp
 
     if (request.contractId) {
       await ContractDB.updateStatus(request.contractId, ContractStatus.LIQUIDATED);
-      const contract = await Contract.getByContractId(request.contractId);
-      // if (contract?.roomId) {
-      //   await Room.updateStatus(contract.roomId, RoomStatus.AVAILABLE);
-      // }
+      const bedsInfo = await ContractDB.getBedsInfoByContractId(request.contractId);
+      if (bedsInfo && bedsInfo.roomId && bedsInfo.bedIds.length > 0) {
+        await Room.updateBedStatus(bedsInfo.roomId, bedsInfo.bedIds, 'AVAILABLE');
+      }
     }
 
     const finalRequest = await CheckoutRequest.getById(req.params.id);

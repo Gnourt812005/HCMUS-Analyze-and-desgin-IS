@@ -284,6 +284,27 @@ export class ContractDB {
     return result.rows.map((row: any) => this.mapRow(row));
   }  
 
+  static async getBedsInfoByContractId(contractId: string): Promise<{ roomId: string, bedIds: string[] } | null> {
+    const result = await dbClient.query(`
+        SELECT
+            b.room_id,
+            array_agg(b.id) as bed_ids
+        FROM contract_beds cb
+        JOIN beds b ON cb.bed_id = b.id
+        WHERE cb.contract_id = $1
+        GROUP BY b.room_id
+    `, [contractId]);
+
+    if (result.rows.length === 0) {
+        return null;
+    }
+
+    return {
+        roomId: result.rows[0].room_id,
+        bedIds: result.rows[0].bed_ids,
+    };
+  }
+
   static async updateStatus(contractId: string, status: ContractStatus): Promise<boolean> {
     const result = await dbClient.query(
       'UPDATE contracts SET status = $1 WHERE id = $2',
