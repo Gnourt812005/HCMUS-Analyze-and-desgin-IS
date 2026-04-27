@@ -2,7 +2,10 @@ import { PolicyAgreementDTO, PolicyContentDTO } from '@dormarch/shared';
 import { PolicyDB } from '../database/PolicyDB';
 
 export class Policy {
-  static async getLatestRegulations(): Promise<PolicyContentDTO> {
+  static async getLatestRegulations(dormId?: string): Promise<PolicyContentDTO> {
+    if (dormId) {
+      return PolicyDB.findPolicyByDormId(dormId);
+    }
     return PolicyDB.findActivePolicy();
   }
 

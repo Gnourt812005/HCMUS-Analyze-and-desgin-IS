@@ -15,7 +15,8 @@ roomRoutes.get('/', async (req, res) => {
       search: req.query.search as string,
       dormId: req.query.dormId as string,
       status: req.query.status as string,
-      totalBeds: req.query.totalBeds ? parseInt(req.query.totalBeds as string) : undefined
+      totalBeds: req.query.totalBeds ? parseInt(req.query.totalBeds as string) : undefined,
+      userIdCard: req.query.userIdCard as string
     };
     const result = await Room.fetchAll(query);
     res.json({ message: 'Success', status: 200, data: result });

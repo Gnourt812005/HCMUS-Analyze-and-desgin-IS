@@ -33,6 +33,30 @@ export class PolicyDB {
     };
   }
 
+  static async findPolicyByDormId(dormId: string): Promise<PolicyContentDTO> {
+    const result = await dbClient.query(
+      `
+        SELECT p.id, p.title, p.content, p.created_at
+        FROM dorms d
+        JOIN policies p ON d.policy_id = p.id
+        WHERE d.id = $1
+      `,
+      [dormId]
+    );
+
+    if (result.rows.length === 0) {
+      return this.findActivePolicy();
+    }
+
+    const row = result.rows[0];
+    return {
+      policyId: row.id,
+      title: row.title,
+      content: row.content,
+      updatedAt: row.created_at
+    };
+  }
+
   static async saveAgreement(customerId: string): Promise<PolicyAgreementDTO> {
     await this.findActivePolicy();
     const agreedAt = new Date().toISOString();

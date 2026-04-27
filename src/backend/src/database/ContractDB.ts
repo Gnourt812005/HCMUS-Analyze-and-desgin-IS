@@ -6,6 +6,7 @@ import { dbClient } from './DatabaseClient';
 
 export interface ContractAdminRow {
   id: string;
+  contractCode: string | null;
   userEmail: string;
   rentalFormId: string | null;
   startDate: string;
@@ -41,6 +42,7 @@ export class ContractDB {
     const result = await dbClient.query(`
       SELECT
         c.id,
+        c.contract_code,
         c.user_email,
         c.rental_form_id,
         c.start_date,
@@ -180,6 +182,7 @@ export class ContractDB {
   private static mapAdminRow(row: any): ContractAdminRow {
     return {
       id: row.id,
+      contractCode: row.contract_code || null,
       userEmail: row.user_email,
       rentalFormId: row.rental_form_id,
       startDate: row.start_date instanceof Date
@@ -200,6 +203,7 @@ export class ContractDB {
   private static mapRow(row: any): Contract {
     return new Contract({
       contractId: row.contract_id,
+      contractCode: row.contract_code || undefined,
       userEmail: row.user_email,
       rentalFormId: row.rental_form_id,
       roomName: row.room_name,
@@ -217,7 +221,7 @@ export class ContractDB {
 
 
   private static readonly BASE_QUERY = `
-    SELECT c.id as contract_id, c.user_email, c.rental_form_id, c.start_date, c.stay_duration, c.status, c.signature_url, c.created_at,
+    SELECT c.id as contract_id, c.contract_code, c.user_email, c.rental_form_id, c.start_date, c.stay_duration, c.status, c.signature_url, c.created_at,
            (SELECT r.name 
             FROM contract_beds cb 
             JOIN beds b ON cb.bed_id = b.id 

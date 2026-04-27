@@ -43,6 +43,7 @@ export interface RentalEligibilityDTO {
   reasons: string[];
   alreadyDeposited: boolean;
   lockBedSelection: boolean;
+  existingRegistrationId?: string;
 }
 
 export interface ServiceItemDTO {

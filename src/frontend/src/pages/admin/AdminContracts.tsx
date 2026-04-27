@@ -5,40 +5,24 @@ import {
   RentalFormOption,
   ContractStatus,
 } from '../../api/ContractService';
+import { ApiClient } from '../../api/ApiClient';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const BASE_RENT_PER_BED = 1_500_000;
 
 const SERVICE_FEES = [
-  { name: 'Điện',            price: '3.500 đ/kWh',              note: 'Theo chỉ số công tơ, thanh toán cuối tháng' },
-  { name: 'Nước',            price: '50.000 đ/người/tháng',     note: 'Định mức 4m³/người, vượt tính thêm' },
-  { name: 'Internet & Wifi', price: '50.000 đ/phòng/tháng',    note: 'Tốc độ tối thiểu 50 Mbps' },
-  { name: 'Vệ sinh chung',   price: '30.000 đ/người/tháng',    note: 'Bao gồm hành lang và khu vực sinh hoạt chung' },
-  { name: 'Bảo vệ & an ninh', price: 'Miễn phí',               note: 'Hoạt động 24/7' },
+  { name: 'Điện', price: '3.500 đ/kWh', note: 'Theo chỉ số công tơ, thanh toán cuối tháng' },
+  { name: 'Nước', price: '50.000 đ/người/tháng', note: 'Định mức 4m³/người, vượt tính thêm' },
+  { name: 'Internet & Wifi', price: '50.000 đ/phòng/tháng', note: 'Tốc độ tối thiểu 50 Mbps' },
+  { name: 'Vệ sinh chung', price: '30.000 đ/người/tháng', note: 'Bao gồm hành lang và khu vực sinh hoạt chung' },
+  { name: 'Bảo vệ & an ninh', price: 'Miễn phí', note: 'Hoạt động 24/7' },
 ];
 
 const DEPOSIT_RULES = [
-  { icon: 'check_circle',  color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200', title: 'Hoàn trả 100% tiền cọc', detail: 'Không có hư hỏng tài sản, thanh toán đầy đủ các khoản phí, và thông báo chấm dứt hợp đồng trước ít nhất 30 ngày.' },
-  { icon: 'remove_circle', color: 'text-amber-600',   bg: 'bg-amber-50 border-amber-200',     title: 'Khấu trừ chi phí sửa chữa', detail: 'Trường hợp có hư hỏng tài sản được ghi nhận trong biên bản bàn giao, chi phí sửa chữa sẽ được khấu trừ trực tiếp vào tiền cọc.' },
-  { icon: 'cancel',        color: 'text-red-600',     bg: 'bg-red-50 border-red-200',         title: 'Không hoàn trả tiền cọc', detail: 'Vi phạm hợp đồng nghiêm trọng, tự ý rời đi không báo trước, hoặc còn nợ phí chưa thanh toán sau khi trừ tiền cọc.' },
-];
-
-const HOUSE_RULES = [
-  { icon: 'volume_off',           text: 'Không gây tiếng ồn sau 22:00 và trước 06:00.' },
-  { icon: 'smoke_free',           text: 'Cấm hút thuốc lá trong toàn bộ khuôn viên ký túc xá.' },
-  { icon: 'pets',                 text: 'Không nuôi thú cưng dưới mọi hình thức.' },
-  { icon: 'lock',                 text: 'Khoá cửa phòng khi ra ngoài và khi đi ngủ.' },
-  { icon: 'no_food',              text: 'Không nấu ăn trong phòng, chỉ sử dụng bếp sinh hoạt chung.' },
-  { icon: 'people',               text: 'Không cho người ngoài ở lại qua đêm khi chưa đăng ký.' },
-  { icon: 'cleaning_services',    text: 'Giữ vệ sinh phòng và khu vực sinh hoạt chung sạch sẽ.' },
-  { icon: 'electrical_services',  text: 'Không sử dụng thiết bị điện công suất lớn chưa được phê duyệt.' },
-];
-
-const VIOLATION_TERMS = [
-  { level: 'Lần 1', badge: 'bg-yellow-100 text-yellow-800', action: 'Nhắc nhở bằng văn bản',   detail: 'Ban quản lý gửi thông báo nhắc nhở và yêu cầu cam kết không tái phạm.' },
-  { level: 'Lần 2', badge: 'bg-orange-100 text-orange-800', action: 'Phạt tiền 500.000 đ',     detail: 'Áp dụng mức phạt theo quy định. Số tiền phạt được khấu trừ vào tiền cọc hoặc thanh toán trực tiếp.' },
-  { level: 'Lần 3', badge: 'bg-red-100 text-red-800',       action: 'Chấm dứt hợp đồng',      detail: 'Ban quản lý có quyền đơn phương chấm dứt hợp đồng và yêu cầu bàn giao phòng trong vòng 7 ngày.' },
+  { icon: 'check_circle', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200', title: 'Hoàn trả 100% tiền cọc', detail: 'Không có hư hỏng tài sản, thanh toán đầy đủ các khoản phí, và thông báo chấm dứt hợp đồng trước ít nhất 30 ngày.' },
+  { icon: 'remove_circle', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200', title: 'Khấu trừ chi phí sửa chữa', detail: 'Trường hợp có hư hỏng tài sản được ghi nhận trong biên bản bàn giao, chi phí sửa chữa sẽ được khấu trừ trực tiếp vào tiền cọc.' },
+  { icon: 'cancel', color: 'text-red-600', bg: 'bg-red-50 border-red-200', title: 'Không hoàn trả tiền cọc', detail: 'Vi phạm hợp đồng nghiêm trọng, tự ý rời đi không báo trước, hoặc còn nợ phí chưa thanh toán sau khi trừ tiền cọc.' },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -64,13 +48,13 @@ function toUIStatus(s: ContractStatus): UIStatus {
 
 const STATUS_STYLE: Record<UIStatus, string> = {
   'Hiệu lực': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  'Hết hạn':  'bg-slate-100  text-slate-500  border-slate-200',
-  'Đã huỷ':  'bg-red-50     text-red-600    border-red-200',
+  'Hết hạn': 'bg-slate-100  text-slate-500  border-slate-200',
+  'Đã huỷ': 'bg-red-50     text-red-600    border-red-200',
 };
 const STATUS_DOT: Record<UIStatus, string> = {
   'Hiệu lực': 'bg-emerald-500',
-  'Hết hạn':  'bg-slate-400',
-  'Đã huỷ':  'bg-red-500',
+  'Hết hạn': 'bg-slate-400',
+  'Đã huỷ': 'bg-red-500',
 };
 
 // ─── Create Contract Modal ────────────────────────────────────────────────────
@@ -97,8 +81,10 @@ const CreateContractModal = ({
 
   const validate = () => {
     const e: Record<string, string> = {};
+    const today = new Date().toISOString().split('T')[0];
     if (!rentalFormId) e.form = 'Vui lòng chọn phiếu đăng ký thuê';
-    if (!startDate)   e.start = 'Vui lòng chọn ngày bắt đầu';
+    if (!startDate) e.start = 'Vui lòng chọn ngày bắt đầu';
+    else if (startDate < today) e.start = 'Ngày bắt đầu không được nhỏ hơn ngày hiện tại';
     if (stayDuration < 1) e.duration = 'Thời hạn tối thiểu 1 tháng';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -186,8 +172,8 @@ const CreateContractModal = ({
                 <div className="flex flex-wrap gap-1 mt-0.5">
                   {selected.bedNumbers.length > 0
                     ? selected.bedNumbers.map(b => (
-                        <span key={b} className="px-2 py-0.5 bg-white border border-blue-200 rounded-full text-xs font-bold text-blue-700">{b}</span>
-                      ))
+                      <span key={b} className="px-2 py-0.5 bg-white border border-blue-200 rounded-full text-xs font-bold text-blue-700">{b}</span>
+                    ))
                     : <span className="text-xs text-slate-400">—</span>
                   }
                 </div>
@@ -213,6 +199,7 @@ const CreateContractModal = ({
                 type="date"
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
                 className="w-full bg-slate-50 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               />
               {errors.start && <p className="text-red-500 text-xs mt-1">{errors.start}</p>}
@@ -292,6 +279,13 @@ const ContractDetailModal = ({
   const [saving, setSaving] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [actionError, setActionError] = useState('');
+  const [policyContent, setPolicyContent] = useState<string>('');
+
+  useEffect(() => {
+    ApiClient.get<{ data: { content: string } }>('/rentals/policy/latest')
+      .then(res => setPolicyContent(res.data?.content ?? ''))
+      .catch(() => setPolicyContent(''));
+  }, []);
 
   const uiStatus = toUIStatus(contract.status);
   const totalRent = BASE_RENT_PER_BED * contract.bedNumbers.length;
@@ -299,6 +293,11 @@ const ContractDetailModal = ({
   const endDate = calcEndDate(startDate, stayDuration);
 
   const handleSave = async () => {
+    const today = new Date().toISOString().split('T')[0];
+    if (startDate < today) {
+      setActionError('Ngày bắt đầu không được nhỏ hơn ngày hiện tại');
+      return;
+    }
     setSaving(true);
     setActionError('');
     try {
@@ -329,14 +328,14 @@ const ContractDetailModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl h-[92vh] flex flex-col">
 
         {/* Header */}
         <div className="px-7 py-5 border-b border-slate-100">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <h2 className="text-xl font-bold text-slate-900 font-mono">{contract.id.slice(0, 8)}...</h2>
+                <h2 className="text-xl font-bold text-slate-900 font-mono">{contract.contractCode || contract.id.slice(0, 8) + '...'}</h2>
                 <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${STATUS_STYLE[uiStatus]}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[uiStatus]}`} />
                   {uiStatus}
@@ -344,7 +343,6 @@ const ContractDetailModal = ({
               </div>
               <p className="text-slate-500 text-sm">
                 Lập ngày {fmtDate(contract.createdAt)}
-                {contract.rentalFormId && ` · Phiếu ${contract.rentalFormId.slice(0, 8)}...`}
               </p>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors mt-1">
@@ -356,9 +354,8 @@ const ContractDetailModal = ({
               <button
                 key={key}
                 onClick={() => setTab(key)}
-                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
-                  tab === key ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                }`}
+                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${tab === key ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  }`}
               >
                 {label}
               </button>
@@ -373,17 +370,17 @@ const ContractDetailModal = ({
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Cộng hoà Xã hội Chủ nghĩa Việt Nam</p>
               <p className="text-xs text-slate-400 mb-3">Độc lập – Tự do – Hạnh phúc</p>
               <p className="text-lg font-black uppercase tracking-wide text-slate-800">Hợp đồng Thuê Phòng Ký túc xá</p>
-              <p className="text-sm text-slate-500 mt-1">Số: <span className="font-bold text-slate-700 font-mono">{contract.id.slice(0, 8)}...</span></p>
+              <p className="text-sm text-slate-500 mt-1">Số: <span className="font-bold text-slate-700 font-mono">{contract.contractCode || contract.id.slice(0, 8) + '...'}</span></p>
             </div>
 
             <div>
               <SectionTitle number="I" title="Thông tin bên thuê" />
               <div className="grid grid-cols-2 gap-x-8 gap-y-3 pl-10">
                 {[
-                  ['Họ và tên',       contract.customerName],
-                  ['Số CCCD/CMND',    contract.cccd || '—'],
-                  ['Số điện thoại',   contract.phone || '—'],
-                  ['Email',           contract.userEmail],
+                  ['Họ và tên', contract.customerName],
+                  ['Số CCCD/CMND', contract.cccd || '—'],
+                  ['Số điện thoại', contract.phone || '—'],
+                  ['Email', contract.userEmail],
                 ].map(([label, val]) => (
                   <div key={label} className="flex gap-2 items-center">
                     <span className="text-sm text-slate-500 min-w-32">{label}:</span>
@@ -405,8 +402,8 @@ const ContractDetailModal = ({
                   <div className="flex flex-wrap gap-1.5">
                     {contract.bedNumbers.length > 0
                       ? contract.bedNumbers.map(b => (
-                          <span key={b} className="px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs font-bold">{b}</span>
-                        ))
+                        <span key={b} className="px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs font-bold">{b}</span>
+                      ))
                       : <span className="text-sm text-slate-400">—</span>
                     }
                   </div>
@@ -421,7 +418,8 @@ const ContractDetailModal = ({
                   <span className="text-sm text-slate-500 min-w-32">Ngày bắt đầu:</span>
                   {editing
                     ? <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
-                        className="bg-slate-100 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                      min={new Date().toISOString().split('T')[0]}
+                      className="bg-slate-100 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                     : <span className="text-sm font-semibold text-slate-800">{fmtDate(startDate)}</span>
                   }
                 </div>
@@ -429,7 +427,7 @@ const ContractDetailModal = ({
                   <span className="text-sm text-slate-500 min-w-32">Thời hạn:</span>
                   {editing
                     ? <input type="number" min={1} max={24} value={stayDuration} onChange={e => setStayDuration(Number(e.target.value))}
-                        className="bg-slate-100 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 w-24" />
+                      className="bg-slate-100 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 w-24" />
                     : <span className="text-sm font-semibold text-slate-800">{stayDuration} tháng</span>
                   }
                 </div>
@@ -532,38 +530,23 @@ const ContractDetailModal = ({
 
             <div>
               <SectionTitle number="III" title="Nội quy ký túc xá" />
-              <div className="pl-10 grid grid-cols-1 gap-2">
-                {HOUSE_RULES.map((rule, i) => (
-                  <div key={i} className="flex items-start gap-3 py-2.5 border-b border-slate-100 last:border-0">
-                    <span className="material-symbols-outlined text-blue-500 text-base mt-0.5 flex-shrink-0">{rule.icon}</span>
-                    <span className="text-sm text-slate-700">{rule.text}</span>
+              <div className="pl-10">
+                {policyContent ? (
+                  <div>
+                    {policyContent
+                      .split('\n')
+                      .map(line => line.replace(/^[•\-]\s*/, '').trim())
+                      .filter(Boolean)
+                      .map((line, i) => (
+                        <div key={i} className="flex items-start gap-3 py-2.5 border-b border-slate-100 last:border-0">
+                          <span className="text-sm text-slate-700">{line}</span>
+                        </div>
+                      ))
+                    }
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <SectionTitle number="IV" title="Điều khoản xử lý vi phạm" />
-              <div className="pl-10 space-y-3">
-                {VIOLATION_TERMS.map(v => (
-                  <div key={v.level} className="flex gap-4 items-start p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-black ${v.badge} flex-shrink-0 mt-0.5`}>{v.level}</span>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800 mb-1">{v.action}</p>
-                      <p className="text-sm text-slate-500">{v.detail}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <SectionTitle number="V" title="Điều khoản chung" />
-              <div className="pl-10 space-y-2 text-sm text-slate-600">
-                <p>• Hợp đồng có hiệu lực kể từ ngày ký và được lập thành 02 bản, mỗi bên giữ 01 bản.</p>
-                <p>• Mọi tranh chấp phát sinh được giải quyết trên tinh thần thương lượng hoà giải. Trường hợp không đạt được thoả thuận, tranh chấp sẽ được giải quyết theo quy định của pháp luật hiện hành.</p>
-                <p>• Bên thuê không được tự ý chuyển nhượng, cho thuê lại hoặc cho mượn phòng dưới bất kỳ hình thức nào.</p>
-                <p>• Mọi thay đổi, bổ sung nội dung hợp đồng phải được lập thành văn bản và có chữ ký của cả hai bên.</p>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">Chưa có nội quy được cấu hình.</p>
+                )}
               </div>
             </div>
           </div>
@@ -664,20 +647,21 @@ export const AdminContracts = () => {
       || c.customerName.toLowerCase().includes(kw)
       || (c.roomName || '').toLowerCase().includes(kw)
       || (c.phone || '').includes(kw)
-      || (c.cccd || '').includes(kw);
+      || (c.cccd || '').includes(kw)
+      || (c.contractCode || '').toLowerCase().includes(kw);
     const matchStatus = statusFilter === 'all' || uiStatus === statusFilter;
     return matchKw && matchStatus;
   }), [contracts, keyword, statusFilter]);
 
   const stats = useMemo(() => ({
-    total:     contracts.length,
-    active:    contracts.filter(c => toUIStatus(c.status) === 'Hiệu lực').length,
-    expired:   contracts.filter(c => toUIStatus(c.status) === 'Hết hạn').length,
+    total: contracts.length,
+    active: contracts.filter(c => toUIStatus(c.status) === 'Hiệu lực').length,
+    expired: contracts.filter(c => toUIStatus(c.status) === 'Hết hạn').length,
     cancelled: contracts.filter(c => toUIStatus(c.status) === 'Đã huỷ').length,
   }), [contracts]);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="space-y-6 pb-10">
 
       {successMsg && (
         <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-xl">
@@ -702,10 +686,10 @@ export const AdminContracts = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Tổng hợp đồng',  value: stats.total,     icon: 'description', color: 'text-blue-600 bg-blue-50' },
-          { label: 'Đang hiệu lực',  value: stats.active,    icon: 'verified',    color: 'text-emerald-600 bg-emerald-50' },
-          { label: 'Hết hạn',        value: stats.expired,   icon: 'schedule',    color: 'text-slate-500 bg-slate-100' },
-          { label: 'Đã huỷ',         value: stats.cancelled, icon: 'cancel',      color: 'text-red-500 bg-red-50' },
+          { label: 'Tổng hợp đồng', value: stats.total, icon: 'description', color: 'text-blue-600 bg-blue-50' },
+          { label: 'Đang hiệu lực', value: stats.active, icon: 'verified', color: 'text-emerald-600 bg-emerald-50' },
+          { label: 'Hết hạn', value: stats.expired, icon: 'schedule', color: 'text-slate-500 bg-slate-100' },
+          { label: 'Đã huỷ', value: stats.cancelled, icon: 'cancel', color: 'text-red-500 bg-red-50' },
         ].map(s => (
           <div key={s.label} className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex items-center gap-4">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.color}`}>
@@ -735,9 +719,8 @@ export const AdminContracts = () => {
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                statusFilter === s ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${statusFilter === s ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
             >
               {s === 'all' ? 'Tất cả' : s}
             </button>
@@ -781,7 +764,7 @@ export const AdminContracts = () => {
                 const endDate = calcEndDate(c.startDate, c.stayDuration);
                 return (
                   <tr key={c.id} className="hover:bg-slate-50/70 transition-colors cursor-pointer" onClick={() => setSelected(c)}>
-                    <td className="px-5 py-4 font-bold text-blue-700 font-mono text-xs">{c.id.slice(0, 8)}...</td>
+                    <td className="px-5 py-4 font-bold text-blue-700 font-mono text-xs">{c.contractCode || c.id.slice(0, 8) + '...'}</td>
                     <td className="px-5 py-4">
                       <p className="font-semibold text-slate-800">{c.customerName}</p>
                       <p className="text-xs text-slate-400">{c.phone || c.cccd || c.userEmail}</p>

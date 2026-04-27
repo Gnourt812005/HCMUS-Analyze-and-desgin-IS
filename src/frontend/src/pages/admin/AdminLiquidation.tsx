@@ -199,7 +199,7 @@ export const AdminLiquidation = () => {
           </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs text-slate-500 uppercase">Phòng</p>
-            <p className="mt-2 text-sm font-semibold text-slate-900">{contract.roomName}</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{contract.roomId}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs text-slate-500 uppercase">Tầng</p>

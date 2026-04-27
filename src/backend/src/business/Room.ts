@@ -14,6 +14,8 @@ export class Room {
   status: string;
   imageUrl: string;
   favoriteCount: number;
+  hasUserDeposit?: boolean;
+  userRegistrationId?: string;
   beds?: BedDTO[];
   utilities?: { id: string, title: string, status: string }[];
   utilityIds?: string[];
@@ -33,6 +35,8 @@ export class Room {
     this.imageUrl = data.imageUrl || data.image_url || '';
     this.favoriteCount = data.favoriteCount || data.favorite_count || 0;
     this.utilityIds = data.utilityIds || data.utility_ids || [];
+    this.hasUserDeposit = data.hasUserDeposit || false;
+    this.userRegistrationId = data.userRegistrationId || '';
     this.beds = data.beds || [];
   }
 
@@ -70,6 +74,8 @@ export class Room {
       availableBeds: this.availableBeds,
       amenities: this.amenities,
       status: this.status,
+      hasUserDeposit: this.hasUserDeposit,
+      userRegistrationId: this.userRegistrationId,
       beds: this.beds,
       utilities: this.utilities,
       utilityIds: this.utilityIds

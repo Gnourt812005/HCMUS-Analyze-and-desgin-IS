@@ -1,5 +1,6 @@
 import { RentalRegistrationRequestDTO } from '@dormarch/shared';
 import { dbClient } from './DatabaseClient';
+import { RoomDB } from './RoomDB';
 
 export interface RoomBedOption {
   roomId: string;
@@ -35,15 +36,7 @@ export class RentalDB {
   }
 
   private static async syncRoomAvailableBeds(roomId: string): Promise<void> {
-    const result = await dbClient.query(
-      `SELECT COUNT(*)::int AS available_beds FROM beds WHERE room_id = $1 AND status = 'AVAILABLE'`,
-      [roomId]
-    );
-
-    await dbClient.query(
-      `UPDATE rooms SET available_beds = $1 WHERE id = $2`,
-      [Number(result.rows[0]?.available_beds || 0), roomId]
-    );
+    await RoomDB.syncRoomAvailability(roomId);
   }
 
   private static async resolveUserEmail(email: string, idCard: string): Promise<string | null> {
@@ -70,37 +63,62 @@ export class RentalDB {
     return null;
   }
 
-  static async hasDeposit(roomId: string, idCard: string, bedIds?: string[]): Promise<boolean> {
-    const roomBeds = await this.getBedsByRoomId(roomId);
-    const targetBeds = bedIds && bedIds.length > 0 ? bedIds : roomBeds.map((bed) => bed.id);
-
-    if (targetBeds.length === 0) {
-      return false;
-    }
-
+  static async hasDeposit(roomId: string, idCard: string, bedIds?: string[]): Promise<{ alreadyDeposited: boolean, registrationId?: string }> {
+    // We check if the user has ANY successful deposit for ANY bed in this room
     const result = await dbClient.query(
       `
-        SELECT 1
+        SELECT rf.id
         FROM payments p
         JOIN rental_forms rf ON rf.id = p.rental_form_id
         JOIN rental_form_beds rfb ON rfb.rental_form_id = rf.id
+        JOIN beds b ON b.id = rfb.bed_id
         JOIN users u ON u.email = rf.user_email
         WHERE p.status = 'SUCCESS'
           AND rf.type = 'DEPOSIT'
           AND u.cccd = $1
-          AND rfb.bed_id = ANY($2::uuid[])
+          AND b.room_id = $2
         LIMIT 1
       `,
-      [idCard, targetBeds]
+      [idCard, roomId]
     );
+    return {
+      alreadyDeposited: result.rows.length > 0,
+      registrationId: result.rows[0]?.id
+    };
+  }
 
-    return result.rows.length > 0;
+  static async getDepositedRoomMap(idCard: string): Promise<Map<string, string>> {
+    const result = await dbClient.query(
+      `
+        SELECT DISTINCT b.room_id, rf.id as registration_id
+        FROM payments p
+        JOIN rental_forms rf ON rf.id = p.rental_form_id
+        JOIN rental_form_beds rfb ON rfb.rental_form_id = rf.id
+        JOIN beds b ON b.id = rfb.bed_id
+        JOIN users u ON u.email = rf.user_email
+        WHERE p.status = 'SUCCESS'
+          AND rf.type = 'DEPOSIT'
+          AND u.cccd = $1
+      `,
+      [idCard]
+    );
+    const map = new Map<string, string>();
+    result.rows.forEach((row: any) => {
+      map.set(row.room_id, row.registration_id);
+    });
+    return map;
+  }
+
+  static async getDepositedRoomIds(idCard: string): Promise<string[]> {
+    const map = await this.getDepositedRoomMap(idCard);
+    return Array.from(map.keys());
   }
 
   static async listRoomBedsByDorm(dormId: string): Promise<RoomBedOption[]> {
     const query = `
       SELECT
         r.id AS room_id,
+        r.name AS room_name,
         b.id AS bed_id,
         b.bed_number,
         b.status,
@@ -117,7 +135,7 @@ export class RentalDB {
       return {
         roomId: row.room_id,
         bedId: row.bed_id,
-        title: `Phòng ${row.room_id} - Giường ${row.bed_number}`,
+        title: `Phòng ${row.room_name} - Giường ${row.bed_number}`,
         price: Number(row.price || 0),
         available: row.status === 'AVAILABLE' ? 1 : 0
       };
@@ -150,13 +168,52 @@ export class RentalDB {
     return Number(result.rows[0]?.total_price || 0);
   }
 
-  static async markDeposited(roomId: string, idCard: string, bedIds: string[]): Promise<void> {
-    await dbClient.query(
-      `UPDATE beds SET status = 'DEPOSITED' WHERE room_id = $1 AND id = ANY($2::uuid[])`,
-      [roomId, bedIds]
-    );
+  static async markDeposited(registrationId: string, roomId: string, bedIds: string[]): Promise<void> {
+    const client = await dbClient.getClient();
+    try {
+      await client.query('BEGIN');
+      
+      // Update beds status
+      await client.query(
+        `UPDATE beds SET status = 'DEPOSITED' WHERE room_id = $1 AND id = ANY($2::uuid[])`,
+        [roomId, bedIds]
+      );
+
+      // Update rental form type to DEPOSIT
+      await client.query(
+        `UPDATE rental_forms SET type = 'DEPOSIT' WHERE id = $1::uuid`,
+        [registrationId]
+      );
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
 
     await this.syncRoomAvailableBeds(roomId);
+  }
+
+  static async markFullyPaid(registrationId: string): Promise<void> {
+    const client = await dbClient.getClient();
+    try {
+      await client.query('BEGIN');
+      
+      // Update rental form type to FULL
+      await client.query(
+        `UPDATE rental_forms SET type = 'FULL' WHERE id = $1::uuid`,
+        [registrationId]
+      );
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   static async markBooked(roomId: string, bedIds: string[]): Promise<void> {
@@ -208,17 +265,21 @@ export class RentalDB {
         SELECT rf.id,
                rf.user_email,
                rf.deadline,
+               rf.created_at,
                rf.total_amount,
                u.cccd AS id_card,
+               u.full_name AS customer_name,
+               u.phone,
+               u.email,
                COALESCE(array_agg(rfb.bed_id::text ORDER BY rfb.bed_id::text), ARRAY[]::text[]) AS bed_ids,
                COALESCE(SUM(b.price), 0) AS room_price,
-           (array_agg(b.room_id::text ORDER BY b.room_id::text))[1] AS room_id
+               (array_agg(b.room_id::text ORDER BY b.room_id::text))[1] AS room_id
         FROM rental_forms rf
         LEFT JOIN users u ON u.email = rf.user_email
         LEFT JOIN rental_form_beds rfb ON rfb.rental_form_id = rf.id
         LEFT JOIN beds b ON b.id = rfb.bed_id
         WHERE rf.id = $1::uuid
-        GROUP BY rf.id, rf.user_email, rf.deadline, rf.total_amount, u.cccd
+        GROUP BY rf.id, rf.user_email, rf.deadline, rf.created_at, rf.total_amount, u.cccd, u.full_name, u.phone, u.email
       `,
       [registrationId]
     );
@@ -230,6 +291,13 @@ export class RentalDB {
     const row = formResult.rows[0];
     const bedIds: string[] = row.bed_ids || [];
     const roomId: string = row.room_id || '';
+
+    // Calculate rental months from deadline and created_at
+    const deadline = new Date(row.deadline);
+    const createdAt = new Date(row.created_at);
+    const rentalMonths = Math.max(1, 
+      (deadline.getFullYear() - createdAt.getFullYear()) * 12 + (deadline.getMonth() - createdAt.getMonth())
+    );
 
     let alreadyDeposited = false;
     if (row.user_email && bedIds.length > 0) {
@@ -254,14 +322,14 @@ export class RentalDB {
       registrationId: row.id,
       roomId,
       bedIds,
-      customerName: '',
+      customerName: row.customer_name || '',
       idCard: row.id_card || '',
-      phone: '',
-      email: row.user_email || '',
-      rentalMonths: 1,
+      phone: row.phone || '',
+      email: row.email || '',
+      rentalMonths,
       acceptedConditions: true,
       services: [],
-      roomPrice: Number(row.room_price || row.total_amount || 0),
+      roomPrice: Number(row.room_price),
       alreadyDeposited
     };
   }

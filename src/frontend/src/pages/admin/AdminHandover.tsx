@@ -12,24 +12,24 @@ import {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const EQUIPMENT_KEYS: { key: keyof HandoverBed; label: string; icon: string }[] = [
-  { key: 'bedStatus',      label: 'Giường',     icon: 'bed' },
-  { key: 'mattressStatus', label: 'Nệm',         icon: 'rectangle' },
-  { key: 'cabinetStatus',  label: 'Tủ',          icon: 'door_open' },
-  { key: 'keyStatus',      label: 'Chìa khóa',  icon: 'key' },
+  { key: 'bedStatus', label: 'Giường', icon: 'bed' },
+  { key: 'mattressStatus', label: 'Nệm', icon: 'rectangle' },
+  { key: 'cabinetStatus', label: 'Tủ', icon: 'door_open' },
+  { key: 'keyStatus', label: 'Chìa khóa', icon: 'key' },
 ];
 
 const STATUS_OPTIONS: EquipmentStatus[] = ['Tốt', 'Hư hỏng', 'Mất'];
 
 const STATUS_STYLE: Record<EquipmentStatus, string> = {
-  'Tốt':     'bg-emerald-50 text-emerald-700 border-emerald-200',
+  'Tốt': 'bg-emerald-50 text-emerald-700 border-emerald-200',
   'Hư hỏng': 'bg-amber-50  text-amber-700  border-amber-200',
-  'Mất':     'bg-red-50    text-red-600    border-red-200',
+  'Mất': 'bg-red-50    text-red-600    border-red-200',
 };
 
 const STATUS_DOT: Record<EquipmentStatus, string> = {
-  'Tốt':     'bg-emerald-500',
+  'Tốt': 'bg-emerald-500',
   'Hư hỏng': 'bg-amber-500',
-  'Mất':     'bg-red-500',
+  'Mất': 'bg-red-500',
 };
 
 function isBedGood(bed: HandoverBed) {
@@ -58,11 +58,10 @@ const StatusSelector = ({
         key={opt}
         type="button"
         onClick={() => onChange(opt)}
-        className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-          value === opt
+        className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all ${value === opt
             ? STATUS_STYLE[opt] + ' border'
             : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
-        }`}
+          }`}
       >
         {opt}
       </button>
@@ -88,9 +87,8 @@ const BedChecklist = ({
           <span className="text-sm font-bold text-slate-800">{bed.bedNumber}</span>
         </div>
         {!editable && (
-          <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-            good ? STATUS_STYLE['Tốt'] : STATUS_STYLE['Hư hỏng']
-          }`}>
+          <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${good ? STATUS_STYLE['Tốt'] : STATUS_STYLE['Hư hỏng']
+            }`}>
             <span className={`w-1.5 h-1.5 rounded-full ${good ? STATUS_DOT['Tốt'] : STATUS_DOT['Hư hỏng']}`} />
             {good ? 'Tốt' : 'Có vấn đề'}
           </span>
@@ -180,11 +178,11 @@ const CreateReportModal = ({
       contractId,
       type: reportType,
       beds: beds.map(b => ({
-        bedId:          b.bedId,
-        bedStatus:      b.bedStatus,
+        bedId: b.bedId,
+        bedStatus: b.bedStatus,
         mattressStatus: b.mattressStatus,
-        cabinetStatus:  b.cabinetStatus,
-        keyStatus:      b.keyStatus,
+        cabinetStatus: b.cabinetStatus,
+        keyStatus: b.keyStatus,
       })),
       note,
     };
@@ -203,7 +201,7 @@ const CreateReportModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl h-[90vh] flex flex-col">
 
         <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100">
           <div>
@@ -226,11 +224,10 @@ const CreateReportModal = ({
                   key={val}
                   type="button"
                   onClick={() => setReportType(val)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-bold transition-all ${
-                    reportType === val
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-bold transition-all ${reportType === val
                       ? 'bg-blue-600 text-white border-blue-600'
                       : 'bg-white text-slate-600 border-slate-200 hover:border-blue-200'
-                  }`}
+                    }`}
                 >
                   <span className="material-symbols-outlined text-base">{icon}</span>
                   {lbl}
@@ -258,7 +255,7 @@ const CreateReportModal = ({
                 <option value="">-- Chọn hợp đồng --</option>
                 {contracts.map(c => (
                   <option key={c.contractId} value={c.contractId}>
-                    {c.contractId.slice(0, 8)}... — {c.customerName} (Phòng {c.roomName})
+                    {c.contractCode || c.contractId.slice(0, 8) + '...'} — {c.customerName} (Phòng {c.roomName})
                   </option>
                 ))}
               </select>
@@ -356,17 +353,16 @@ const ReportDetailModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl h-[90vh] flex flex-col">
 
         <div className="flex items-start justify-between px-7 py-5 border-b border-slate-100">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h2 className="text-xl font-bold text-slate-900">Biên bản {report.id.slice(0, 8)}...</h2>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-                report.type === 'IN'
+              <h2 className="text-xl font-bold text-slate-900">Biên bản {report.handoverCode || report.id.slice(0, 8) + '...'}</h2>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${report.type === 'IN'
                   ? 'bg-blue-50 text-blue-700 border-blue-200'
                   : 'bg-purple-50 text-purple-700 border-purple-200'
-              }`}>
+                }`}>
                 {report.type === 'IN' ? 'Nhận phòng' : 'Trả phòng'}
               </span>
             </div>
@@ -380,10 +376,10 @@ const ReportDetailModal = ({
         <div className="flex-1 overflow-y-auto px-7 py-6 space-y-5">
           <div className="grid grid-cols-2 gap-4">
             {([
-              ['Hợp đồng',   report.contractId.slice(0, 8) + '...'],
+              ['Hợp đồng', report.contractCode || report.contractId.slice(0, 8) + '...'],
               ['Khách hàng', report.customerName],
-              ['Phòng',      report.roomName],
-              ['Số giường',  `${report.beds.length} giường`],
+              ['Phòng', report.roomName],
+              ['Số giường', `${report.beds.length} giường`],
             ] as [string, string][]).map(([label, value]) => (
               <div key={label}>
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
@@ -469,20 +465,22 @@ export const AdminHandover = () => {
       || r.id.toLowerCase().includes(kw)
       || r.customerName.toLowerCase().includes(kw)
       || r.contractId.toLowerCase().includes(kw)
-      || r.roomName.toLowerCase().includes(kw);
+      || r.roomName.toLowerCase().includes(kw)
+      || r.handoverCode?.toLowerCase().includes(kw)
+      || r.contractCode?.toLowerCase().includes(kw);
     const matchType = typeFilter === 'all' || r.type === typeFilter;
     return matchKw && matchType;
   }), [reports, keyword, typeFilter]);
 
   const stats = useMemo(() => ({
-    total:     reports.length,
-    checkIn:   reports.filter(r => r.type === 'IN').length,
-    checkOut:  reports.filter(r => r.type === 'OUT').length,
+    total: reports.length,
+    checkIn: reports.filter(r => r.type === 'IN').length,
+    checkOut: reports.filter(r => r.type === 'OUT').length,
     hasDamage: reports.filter(r => !isReportGood(r)).length,
   }), [reports]);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="space-y-6 pb-10">
 
       {/* Toast */}
       {successMsg && (
@@ -510,10 +508,10 @@ export const AdminHandover = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Tổng biên bản', value: stats.total,     icon: 'description',   color: 'text-blue-600 bg-blue-50' },
-          { label: 'Nhận phòng',    value: stats.checkIn,   icon: 'login',          color: 'text-emerald-600 bg-emerald-50' },
-          { label: 'Trả phòng',     value: stats.checkOut,  icon: 'logout',         color: 'text-purple-600 bg-purple-50' },
-          { label: 'Có hư hỏng',   value: stats.hasDamage, icon: 'report_problem', color: 'text-amber-600 bg-amber-50' },
+          { label: 'Tổng biên bản', value: stats.total, icon: 'description', color: 'text-blue-600 bg-blue-50' },
+          { label: 'Nhận phòng', value: stats.checkIn, icon: 'login', color: 'text-emerald-600 bg-emerald-50' },
+          { label: 'Trả phòng', value: stats.checkOut, icon: 'logout', color: 'text-purple-600 bg-purple-50' },
+          { label: 'Có hư hỏng', value: stats.hasDamage, icon: 'report_problem', color: 'text-amber-600 bg-amber-50' },
         ].map(s => (
           <div key={s.label} className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex items-center gap-4">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.color}`}>
@@ -544,9 +542,8 @@ export const AdminHandover = () => {
             <button
               key={val}
               onClick={() => setTypeFilter(val)}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                typeFilter === val ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${typeFilter === val ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
             >
               {lbl}
             </button>
@@ -595,40 +592,37 @@ export const AdminHandover = () => {
                     className="hover:bg-slate-50/70 transition-colors cursor-pointer"
                     onClick={() => setSelected(report)}
                   >
-                    <td className="px-5 py-4 font-bold text-blue-700 font-mono text-xs">{report.id.slice(0, 8)}...</td>
+                    <td className="px-5 py-4 font-bold text-blue-700 font-mono text-xs">{report.handoverCode || report.id.slice(0, 8) + '...'}</td>
                     <td className="px-5 py-4">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
-                        report.type === 'IN'
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${report.type === 'IN'
                           ? 'bg-blue-50 text-blue-700 border-blue-200'
                           : 'bg-purple-50 text-purple-700 border-purple-200'
-                      }`}>
+                        }`}>
                         {report.type === 'IN' ? 'Nhận phòng' : 'Trả phòng'}
                       </span>
                     </td>
                     <td className="px-5 py-4">
                       <p className="font-semibold text-slate-800">{report.customerName}</p>
-                      <p className="text-xs text-slate-400 font-mono">{report.contractId.slice(0, 8)}...</p>
+                      <p className="text-xs text-slate-400 font-mono">{report.contractCode || report.contractId.slice(0, 8) + '...'}</p>
                     </td>
                     <td className="px-5 py-4 font-medium text-slate-700">{report.roomName}</td>
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-1">
                         {report.beds.map(b => (
-                          <span key={b.bedId} className={`px-2 py-0.5 rounded-full text-xs font-medium border ${
-                            isBedGood(b)
+                          <span key={b.bedId} className={`px-2 py-0.5 rounded-full text-xs font-medium border ${isBedGood(b)
                               ? 'bg-slate-100 text-slate-600 border-slate-200'
                               : 'bg-amber-50 text-amber-700 border-amber-200'
-                          }`}>
+                            }`}>
                             {b.bedNumber}
                           </span>
                         ))}
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      <span className={`flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-full text-xs font-bold border ${
-                        allGood
+                      <span className={`flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-full text-xs font-bold border ${allGood
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                           : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }`}>
+                        }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${allGood ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                         {allGood ? 'Tốt' : 'Có hư hỏng'}
                       </span>

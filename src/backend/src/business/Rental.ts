@@ -10,30 +10,12 @@ import {
 } from '@dormarch/shared';
 import { randomUUID } from 'crypto';
 import { RentalDB } from '../database/RentalDB';
+import { OrderDB } from '../database/OrderDB';
 import { Policy } from './Policy';
 
 export class Rental {
   static getConditions(): RentalConditionDTO[] {
-    return [
-      {
-        id: 'legal',
-        title: 'Điều kiện pháp lý',
-        description: 'Người thuê cần cung cấp CCCD hợp lệ và thông tin chính xác.',
-        required: true
-      },
-      {
-        id: 'rule',
-        title: 'Nội quy ký túc xá',
-        description: 'Người thuê cam kết tuân thủ nội quy trong suốt thời gian thuê.',
-        required: true
-      },
-      {
-        id: 'payment',
-        title: 'Cam kết thanh toán',
-        description: 'Người thuê thanh toán đúng hạn theo quy định.',
-        required: true
-      }
-    ];
+    return [];
   }
 
   static async checkEligibility(payload: RentalEligibilityRequestDTO): Promise<RentalEligibilityDTO> {
@@ -47,15 +29,17 @@ export class Rental {
       reasons.push('CCCD không hợp lệ.');
     }
 
-    const alreadyDeposited = await RentalDB.hasDeposit(
+    const { alreadyDeposited, registrationId } = await RentalDB.hasDeposit(
       payload.roomId,
       payload.idCard,
       payload.bedIds
     );
 
+    console.log(`[EligibilityCheck] Room: ${payload.roomId}, ID: ${payload.idCard}, FoundDeposit: ${alreadyDeposited}, ID: ${registrationId}`);
+
     if (payload.roomId && payload.bedIds && payload.bedIds.length > 0) {
       const bedsAvailable = await RentalDB.areBedsAvailable(payload.roomId, payload.bedIds);
-      if (!bedsAvailable) {
+      if (!bedsAvailable && !alreadyDeposited) {
         reasons.push('Một hoặc nhiều giường đã được giữ chỗ hoặc không khả dụng.');
       }
     }
@@ -64,7 +48,8 @@ export class Rental {
       eligible: reasons.length === 0,
       reasons,
       alreadyDeposited,
-      lockBedSelection: alreadyDeposited
+      lockBedSelection: alreadyDeposited,
+      existingRegistrationId: registrationId
     };
   }
 
@@ -159,5 +144,13 @@ export class Rental {
       items,
       totalAmount
     };
+  }
+
+  static async getOrdersByUser(email: string) {
+    return OrderDB.getOrdersByUser(email);
+  }
+
+  static async getAllOrders() {
+    return OrderDB.getAllOrders();
   }
 }

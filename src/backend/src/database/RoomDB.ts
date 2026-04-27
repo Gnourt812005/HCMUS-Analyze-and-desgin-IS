@@ -137,18 +137,43 @@ export class RoomDB {
         [status, roomId, bedIds]
       );
 
-      const availableBedsResult = await dbClient.query(
-        `SELECT COUNT(*)::int AS available_beds FROM beds WHERE room_id = $1 AND status = 'AVAILABLE'`,
-        [roomId]
-      );
-
-      const availableBeds = Number(availableBedsResult.rows[0]?.available_beds || 0);
-      await dbClient.query(
-        `UPDATE rooms SET available_beds = $1 WHERE id = $2`,
-        [availableBeds, roomId]
-      );
+      await this.syncRoomAvailability(roomId);
     } catch (error) {
       console.error('Error updating bed status:', error);
+    }
+  }
+
+  public static async syncRoomAvailability(roomId: string): Promise<void> {
+    // 1. Update available_beds in the room
+    const bedCountResult = await dbClient.query(
+      `SELECT COUNT(*)::int AS available_beds FROM beds WHERE room_id = $1 AND status = 'AVAILABLE'`,
+      [roomId]
+    );
+    const availableBeds = Number(bedCountResult.rows[0]?.available_beds || 0);
+
+    await dbClient.query(
+      `UPDATE rooms SET available_beds = $1 WHERE id = $2`,
+      [availableBeds, roomId]
+    );
+
+    // 2. Update available_rooms in the dorm
+    const roomResult = await dbClient.query(
+      `SELECT dorm_id FROM rooms WHERE id = $1`,
+      [roomId]
+    );
+    const dormId = roomResult.rows[0]?.dorm_id;
+
+    if (dormId) {
+      const availableRoomsResult = await dbClient.query(
+        `SELECT COUNT(*)::int AS available_rooms FROM rooms WHERE dorm_id = $1 AND available_beds > 0`,
+        [dormId]
+      );
+      const availableRooms = Number(availableRoomsResult.rows[0]?.available_rooms || 0);
+
+      await dbClient.query(
+        `UPDATE dorms SET available_rooms = $1 WHERE id = $2`,
+        [availableRooms, dormId]
+      );
     }
   }
 
@@ -209,6 +234,12 @@ export class RoomDB {
       const roomResult = await dbClient.query(roomsQuery, [...values, limit, offset]);
       const countResult = await dbClient.query(countQuery, values);
 
+      let depositedRoomMap = new Map<string, string>();
+      if (query.userIdCard) {
+        const { RentalDB } = require('./RentalDB');
+        depositedRoomMap = await RentalDB.getDepositedRoomMap(query.userIdCard);
+      }
+
       const rooms = roomResult.rows.map((row: any) => ({
         id: row.id,
         dormId: row.dorm_id,
@@ -220,7 +251,9 @@ export class RoomDB {
         availableBeds: Number(row.available_beds_live || 0),
         amenities: row.room_utilities,
         favoriteCount: Number(row.favorite_count || 0),
-        status: row.status
+        status: row.status,
+        hasUserDeposit: depositedRoomMap.has(row.id),
+        userRegistrationId: depositedRoomMap.get(row.id)
       }));
 
       return {

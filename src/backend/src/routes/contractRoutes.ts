@@ -31,6 +31,7 @@ contractRouter.post('/admin', async (req: Request, res: Response) => {
     const { rentalFormId, startDate, stayDuration } = req.body;
     if (!rentalFormId) return res.status(400).json({ message: 'rentalFormId là bắt buộc' });
     if (!startDate)    return res.status(400).json({ message: 'startDate là bắt buộc' });
+    if (startDate < new Date().toISOString().split('T')[0]) return res.status(400).json({ message: 'Ngày bắt đầu không được nhỏ hơn ngày hiện tại' });
     if (!stayDuration || stayDuration < 1) return res.status(400).json({ message: 'stayDuration phải >= 1 tháng' });
     const id = await ContractDB.insert(rentalFormId, startDate, stayDuration);
     res.status(201).json({ message: 'Lập hợp đồng thành công', status: 201, data: { id } });
@@ -43,6 +44,7 @@ contractRouter.put('/admin/:id', async (req: Request, res: Response) => {
   try {
     const { startDate, stayDuration } = req.body;
     if (!startDate || !stayDuration) return res.status(400).json({ message: 'startDate và stayDuration là bắt buộc' });
+    if (startDate < new Date().toISOString().split('T')[0]) return res.status(400).json({ message: 'Ngày bắt đầu không được nhỏ hơn ngày hiện tại' });
     const ok = await ContractDB.adminUpdate(req.params.id, startDate, stayDuration);
     if (!ok) return res.status(404).json({ message: 'Không tìm thấy hợp đồng' });
     res.json({ message: 'Cập nhật thành công', status: 200 });
@@ -69,6 +71,18 @@ contractRouter.get('/', authMiddleware, async (req: AuthRequest, res: Response) 
     }
 
     const contracts = await Contract.getActiveByUserEmail(email);
+    res.status(200).json(contracts);
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error', error });
+  }
+});
+
+// All contracts for logged-in user (all statuses, for user contract view page)
+contractRouter.get('/mine', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const email = req.user?.email;
+    if (!email) return res.status(401).json({ message: 'Không thể định danh' });
+    const contracts = await Contract.getAllByUserEmail(email);
     res.status(200).json(contracts);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });

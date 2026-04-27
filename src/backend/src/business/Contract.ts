@@ -3,6 +3,7 @@ import { ContractDTO , ContractStatus } from '@dormarch/shared';
 
 export class Contract {
   contractId: string;
+  contractCode?: string;
   userEmail: string;
   rentalFormId?: string;
   roomId?: string;
@@ -19,6 +20,7 @@ export class Contract {
 
   constructor(data: Partial<Contract>) {
     this.contractId = data.contractId || '';
+    this.contractCode = data.contractCode;
     this.userEmail = data.userEmail || '';
     this.rentalFormId = data.rentalFormId;
     this.roomId = data.roomId;
@@ -37,6 +39,7 @@ export class Contract {
   toDto(): ContractDTO {
     return {
       contractId: this.contractId,
+      contractCode: this.contractCode,
       userEmail: this.userEmail,
       rentalFormId: this.rentalFormId,
       dormName: this.dormName,

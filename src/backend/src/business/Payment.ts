@@ -107,14 +107,15 @@ export class Payment {
 
     if (session.action === 'DEPOSIT') {
       await RentalDB.markDeposited(
+        session.registrationId,
         registration.roomId,
-        registration.idCard,
         registration.bedIds
       );
       await RoomDB.markBedsStatus(registration.roomId, registration.bedIds, 'DEPOSITED');
     }
 
     if (session.action === 'FULL_PAYMENT') {
+      await RentalDB.markFullyPaid(session.registrationId);
       await RentalDB.markBooked(registration.roomId, registration.bedIds);
       await RoomDB.markBedsStatus(registration.roomId, registration.bedIds, 'BOOKED');
     }
@@ -137,14 +138,15 @@ export class Payment {
 
     if (payload.action === 'DEPOSIT') {
       await RentalDB.markDeposited(
+        payload.registrationId,
         registration.roomId,
-        registration.idCard,
         registration.bedIds
       );
       await RoomDB.markBedsStatus(registration.roomId, registration.bedIds, 'DEPOSITED');
     }
 
     if (payload.action === 'FULL_PAYMENT') {
+      await RentalDB.markFullyPaid(payload.registrationId);
       await RentalDB.markBooked(registration.roomId, registration.bedIds);
       await RoomDB.markBedsStatus(registration.roomId, registration.bedIds, 'BOOKED');
     }
