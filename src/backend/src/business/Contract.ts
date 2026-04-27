@@ -73,4 +73,34 @@ export class Contract {
     const contractModels = await ContractDB.getAllByUserEmail(userEmail);
     return contractModels.map(model => new Contract(model).toDto());
   }
+  
+  static async updateStatus(contractId: string, status: ContractStatus): Promise<boolean> {
+    return await ContractDB.updateStatus(contractId, status);
+  }
+
+  static async getBedsInfoByContractId(contractId: string): Promise<{ roomId: string, bedIds: string[] } | null> {
+    return await ContractDB.getBedsInfoByContractId(contractId);
+  }
+
+  static async getAll(): Promise<ContractDTO[]> {
+    const contractModels = await ContractDB.getAll();
+    return contractModels.map(model => new Contract(model).toDto());
+  }
+
+  static async getRentalFormsWithoutContract(): Promise<ContractDTO[]> {
+    const rentalFormModels = await ContractDB.getRentalFormsWithoutContract();
+    return rentalFormModels.map(model => new Contract(model).toDto());
+  }
+
+  static async insert(rentalFormId: string, startDate: string, stayDuration: number): Promise<string> {
+    return await ContractDB.insert(rentalFormId, startDate, stayDuration);
+  }
+
+  static async adminUpdate(contractId: string, startDate: string, stayDuration: number): Promise<boolean> {
+    return await ContractDB.adminUpdate(contractId, startDate, stayDuration);
+  }
+
+  static async cancel(contractId: string): Promise<boolean> {
+    return await ContractDB.cancel(contractId);
+  }
 }
