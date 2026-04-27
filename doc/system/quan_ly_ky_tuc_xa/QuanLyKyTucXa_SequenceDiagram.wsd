@@ -12,46 +12,56 @@ skinparam {
 }
 
 actor "Nhân viên quản lý" as Actor
-participant "AdminDorm" as MainGUI
-participant "AdminDormDetail" as DetailGUI
-participant "Dorm" as BUS <<control>>
-participant "DormDB" as DB <<entity>>
+boundary "AdminDorm" as MainGUI <<boundary>>
+boundary "AdminDormDetail" as DetailGUI <<boundary>>
+control "Dorm" as BUS <<control>>
+control "Room" as ROOM <<control>>
+control "Utility" as UTIL <<control>>
+database "DormDB" as DB <<database>>
+database "RoomDB" as RDB <<database>>
+database "UtilityDB" as UDB <<database>>
+
+autonumber
+
 
 == Kịch bản 1: Xem danh sách KTX ==
-Actor -> MainGUI: Mở trang Quản lý KTX
-MainGUI -> BUS: getAll()
-BUS -> DB: fetchAll()
+Actor -> MainGUI: Mở trang Quản lý KTX / Tìm kiếm
+MainGUI -> MainGUI: fetchDorms()
+MainGUI -> BUS: getAll(query)
+BUS -> DB: fetchAll(query)
+DB --> BUS: { dorms, total }
+BUS --> MainGUI: { dorms, total }
 
-== Kịch bản 2: Tìm kiếm KTX ==
-Actor -> MainGUI: Nhập từ khóa & Tìm kiếm
-MainGUI -> BUS: getAll(keyword)
-BUS -> DB: fetchByKeyword(keyword)
-
-== Kịch bản 3: Xem chi tiết KTX ==
+== Kịch bản 2: Xem chi tiết KTX ==
 Actor -> MainGUI: Chọn 1 KTX
-MainGUI -> DetailGUI: Hiển thị chi tiết (id)
+MainGUI -> DetailGUI: Chuyển hướng (/admin/dorms/:id)
+DetailGUI -> DetailGUI: fetchData()
 DetailGUI -> BUS: getById(id)
 BUS -> DB: fetchById(id)
+DetailGUI -> ROOM: fetchAll(query)
+ROOM -> RDB: fetchAll(query)
+DetailGUI -> UTIL: fetchAll(query)
+UTIL -> UDB: fetchAll(query)
 
-== Kịch bản 4: Thêm mới KTX ==
+== Kịch bản 3: Thêm mới KTX ==
 Actor -> MainGUI: Nhấn "Thêm cơ sở mới"
-MainGUI -> DetailGUI: Mở trang thêm mới (/new)
+MainGUI -> DetailGUI: Mở trang (/admin/dorms/new)
 Actor -> DetailGUI: Nhập thông tin & Nhấn Lưu
+DetailGUI -> DetailGUI: handleSave()
 DetailGUI -> BUS: create(formData)
-BUS -> DB: insert(newDorm)
+BUS -> DB: insert(dormModel)
 
-== Kịch bản 5: Cập nhật KTX ==
-Actor -> MainGUI: Nhấn "Sửa" trên Card (hoặc vào chi tiết rồi nhấn Sửa)
-MainGUI -> DetailGUI: Mở trang chi tiết ở chế độ Edit
-Actor -> DetailGUI: Chỉnh sửa thông tin & Nhấn Lưu
+== Kịch bản 4: Cập nhật KTX ==
+Actor -> DetailGUI: Chỉnh sửa & Nhấn Lưu
+DetailGUI -> DetailGUI: handleSave()
 DetailGUI -> BUS: update(id, formData)
 BUS -> DB: update(id, data)
 
-== Kịch bản 6: Xóa KTX (Hard Delete) ==
-Actor -> MainGUI: Nhấn nút Xóa
-MainGUI -> Actor: Hiển thị xác nhận xóa?
-Actor -> MainGUI: Xác nhận
+== Kịch bản 5: Xóa KTX ==
+Actor -> MainGUI: Nhấn nút Xóa & Xác nhận
+MainGUI -> MainGUI: handleDelete(id)
 MainGUI -> BUS: delete(id)
 BUS -> DB: delete(id)
 
 @enduml
+

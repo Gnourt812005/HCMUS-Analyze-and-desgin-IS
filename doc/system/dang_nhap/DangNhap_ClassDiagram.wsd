@@ -12,20 +12,19 @@ skinparam {
 }
 
 ' --- BOUNDARY LAYER ---
-class "ScreenLogin" as ScreenLogin <<boundary>> {
-    - txtEmail: TextBox
-    - txtPassword: TextBox
-    - btnLogin: Button
-    + btnLoginClick(): void
+class "Login" as Login <<boundary>> {
+    - showPassword: boolean
+    - setShowPassword: void
+    + handleLogin(): void
 }
 
 ' --- DTO LAYER ---
-class "SignInDTO" as SignInDTO <<dto>> {
+interface "SignInDTO" as SignInDTO <<dto>> {
     + email: string
     + password: string
 }
 
-class "SignInResponseDTO" as SignInResponseDTO <<dto>> {
+interface "SignInResponseDTO" as SignInResponseDTO <<dto>> {
     + token: string
 }
 
@@ -39,6 +38,7 @@ class "User" as User <<control>> {
     - gender: string
     - phone: string
     - address: string
+    - role: UserRole
     + <<static>> signIn(data: SignInDTO): SignInResponseDTO
     + toDTO(): UserDTO
 }
@@ -49,9 +49,9 @@ class "UserDB" as UserDB <<entity>> {
 }
 
 ' --- RELATIONSHIPS ---
-ScreenLogin ..> SignInDTO : <<creates>>
-ScreenLogin "1" --> "1" User
-User ..> SignInResponseDTO : <<creates>>
+Login ..> SignInDTO
+Login "1" --> "1" User
+User ..> SignInResponseDTO
 User "1" --> "1" UserDB
 
 @enduml

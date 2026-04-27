@@ -12,7 +12,7 @@ skinparam {
 }
 
 actor "Khách hàng / Nhân viên" as Actor
-boundary "ScreenLogin" as GUI <<boundary>>
+boundary "Login" as GUI <<boundary>>
 participant "SignInDTO" as DTO <<dto>>
 control "User" as BUS <<control>>
 database "UserDB" as DB <<database>>
@@ -21,7 +21,7 @@ participant "SignInResponseDTO" as RES <<dto>>
 autonumber
 
 Actor -> GUI: Nhập thông tin & Click "Đăng nhập"
-GUI -> GUI: validate()
+GUI -> GUI: handleLogin()
 GUI -> DTO **: new SignInDTO(email, password)
 GUI -> BUS: signIn(signInDTO)
 BUS -> DB: fetchCredentialByEmail(signInDTO.email)
@@ -32,7 +32,6 @@ alt Mật khẩu hợp lệ
     BUS -> RES **: new SignInResponseDTO(token)
     BUS --> GUI: SignInResponseDTO
     GUI -> GUI: Lưu Token vào LocalStorage
-    GUI --> Actor: Thông báo thành công
     GUI -> GUI: Chuyển hướng đến trang chủ
 else Mật khẩu không hợp lệ
     BUS --> GUI: null
@@ -41,3 +40,4 @@ end
 deactivate GUI
 
 @enduml
+

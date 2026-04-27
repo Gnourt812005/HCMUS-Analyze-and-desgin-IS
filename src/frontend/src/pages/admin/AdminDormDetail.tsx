@@ -37,7 +37,7 @@ export const AdminDormDetail = () => {
             const [dormRes, roomsRes, utilsRes] = await Promise.all([
                 isNew ? Promise.resolve({ data: null }) : ApiClient.get<{ data: DormDTO }>(`/dorms/${id}`),
                 isNew ? Promise.resolve({ data: { rooms: [], total: 0 } }) : ApiClient.get<{ data: { rooms: any[], total: number } }>(`/rooms?dormId=${id}&limit=100`),
-                ApiClient.get<{ data: { utilities: UtilityDTO[] } }>('/utilities?limit=100')
+                ApiClient.get<{ data: { utilities: UtilityDTO[] } }>('/utilities?limit=100?type=DORM')
             ]);
 
             setAvailableUtilities(utilsRes.data.utilities);
@@ -194,6 +194,7 @@ export const AdminDormDetail = () => {
                                         <input
                                             required
                                             type="number"
+                                            readOnly
                                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
                                             value={formData.totalRooms}
                                             onChange={e => setFormData({ ...formData, totalRooms: parseInt(e.target.value) || 0 })}

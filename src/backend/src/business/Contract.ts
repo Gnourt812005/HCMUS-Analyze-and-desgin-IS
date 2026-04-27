@@ -39,7 +39,6 @@ export class Contract {
       contractId: this.contractId,
       userEmail: this.userEmail,
       rentalFormId: this.rentalFormId,
-      roomId: this.roomId,
       dormName: this.dormName,
       floor: this.floor,
       bedNumbers: this.bedNumbers,

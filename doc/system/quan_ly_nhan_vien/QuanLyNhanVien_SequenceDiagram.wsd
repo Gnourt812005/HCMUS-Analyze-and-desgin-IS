@@ -1,5 +1,5 @@
 @startuml QuanLyNhanVien_SequenceDiagram
-title Sequence Diagram - UC17: Quản lý nhân viên (UC17)
+title Sequence Diagram - UC17: Quản lý nhân viên
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -12,83 +12,44 @@ skinparam {
 }
 
 actor "Nhân viên quản lý" as Actor
-boundary "ScreenEmployeeManagement" as MainGUI <<boundary>>
-boundary "ScreenEmployeeDetail" as DetailGUI <<boundary>>
-boundary "PopupConfirm" as Popup <<boundary>>
-control "Employee" as BUS <<control>>
-database "EmployeeDB" as DB <<database>>
+boundary "AdminStaff" as MainGUI <<boundary>>
+boundary "AdminStaffDetail" as DetailGUI <<boundary>>
+control "User" as BUS <<control>>
+database "UserDB" as DB <<database>>
 
 autonumber
 
 == Kịch bản 1: Xem danh sách nhân viên ==
-Actor -> MainGUI: Chọn tab "Nhân viên"
-MainGUI -> BUS: getEmployees()
-BUS -> DB: fetchAll()
-DB --> BUS: Danh sách nhân viên
-BUS --> MainGUI: Dữ liệu
-MainGUI --> Actor: Hiển thị danh sách
+Actor -> MainGUI: Mở trang Quản lý Nhân viên
+MainGUI -> MainGUI: fetchStaff()
+MainGUI -> BUS: getAllEmployees(query)
+BUS -> DB: fetchAllStaff(query)
 
-== Kịch bản 2: Thêm mới nhân viên ==
-Actor -> MainGUI: Nhấn "Thêm nhân viên"
-MainGUI -> DetailGUI: showForm("Thêm mới")
-
-Actor -> DetailGUI: Nhập thông tin (Email, Mật khẩu, Tên...)
-Actor -> DetailGUI: Nhấn "Lưu" (btnSaveClick)
-
-DetailGUI -> DetailGUI: validate()
-alt Dữ liệu không hợp lệ
-    DetailGUI --> Actor: Hiển thị thông báo lỗi
-else Hợp lệ
-    DetailGUI -> BUS: createEmployee(data)
-    BUS -> DB: checkEmailExists(email)
-    alt Email đã tồn tại
-        DB --> BUS: Trả về true
-        BUS --> DetailGUI: Thông báo lỗi ("Email đã tồn tại")
-    else Email chưa tồn tại
-        DB --> BUS: Trả về false
-        BUS -> DB: insert(data)
-        DB --> BUS: Thành công
-        BUS --> DetailGUI: Trả về kết quả (Thành công)
-        DetailGUI --> Actor: Thông báo thành công
-        DetailGUI -> MainGUI: refreshList()
-    end
-end
-
-== Kịch bản 3: Cập nhật thông tin nhân viên ==
+== Kịch bản 2: Xem chi tiết nhân viên ==
 Actor -> MainGUI: Nhấn biểu tượng "Sửa"
-MainGUI -> BUS: getEmployeeDetail(id)
-BUS -> DB: fetchById(id)
-DB --> BUS: Dữ liệu nhân viên
-BUS --> MainGUI: Trả về kết quả
-MainGUI -> DetailGUI: showForm("Cập nhật", data)
+MainGUI -> DetailGUI: Chuyển hướng (/admin/staff/:email)
+DetailGUI -> DetailGUI: fetchStaff()
+DetailGUI -> BUS: getEmployeeByEmail(email)
+BUS -> DB: fetchCredentialByEmail(email)
 
-Actor -> DetailGUI: Chỉnh sửa thông tin
-Actor -> DetailGUI: Nhấn "Cập nhật" (btnUpdateClick)
-DetailGUI -> DetailGUI: validate()
-
-alt Dữ liệu không hợp lệ
-    DetailGUI --> Actor: Hiển thị thông báo lỗi
-else Hợp lệ
-    DetailGUI -> BUS: updateEmployee(id, data)
-    BUS -> DB: update(id, data)
-    DB --> BUS: Thành công
-    BUS --> DetailGUI: Thành công
-    DetailGUI --> Actor: Thông báo thành công
-    DetailGUI -> MainGUI: refreshRow()
+== Kịch bản 3: Thêm mới / Cập nhật nhân viên ==
+Actor -> MainGUI: Nhấn "Thêm nhân viên mới"
+MainGUI -> DetailGUI: Mở trang (/admin/staff/new)
+Actor -> DetailGUI: Nhập thông tin & Nhấn Lưu
+DetailGUI -> DetailGUI: handleSubmit()
+DetailGUI -> BUS: upsertEmployee(formData)
+BUS -> DB: fetchCredentialByEmail(email)
+alt Email đã tồn tại (Update)
+    BUS -> DB: update(email, data)
+else Email mới (Create)
+    BUS -> DB: insert(userData)
 end
 
 == Kịch bản 4: Xóa nhân viên ==
 Actor -> MainGUI: Nhấn biểu tượng "Xóa"
-MainGUI -> Popup: showConfirm()
-Actor -> Popup: Nhấn "Xác nhận" (btnConfirmClick)
-
-Popup -> BUS: deleteEmployee(id)
-BUS -> DB: remove(id)
-DB --> BUS: Thành công
-BUS --> Popup: Thành công
-
-Popup --> Actor: Hiển thị thông báo thành công
-Popup -> MainGUI: removeRow()
-
+MainGUI -> MainGUI: handleDelete(email)
+MainGUI -> BUS: deleteEmployee(email)
+BUS -> DB: delete(email)
 
 @enduml
+

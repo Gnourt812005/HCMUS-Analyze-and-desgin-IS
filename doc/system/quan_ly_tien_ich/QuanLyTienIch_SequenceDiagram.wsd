@@ -1,0 +1,55 @@
+@startuml QuanLyTienIch_SequenceDiagram
+title Sequence Diagram - UC20: Quản lý tiện ích
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    ParticipantPadding 20
+    BoxPadding 10
+}
+
+actor "Nhân viên quản lý" as Actor
+boundary "AdminUtilities" as GUI <<boundary>>
+control "Utility" as BUS <<control>>
+database "UtilityDB" as DB <<database>>
+
+autonumber
+
+== Kịch bản 1: Xem danh sách tiện ích ==
+Actor -> GUI: Mở trang Quản lý Tiện ích
+GUI -> GUI: fetchUtilities()
+GUI -> BUS: fetchAll({ search: searchQuery })
+BUS -> DB: fetchAll(query)
+
+== Kịch bản 2: Thêm mới tiện ích ==
+Actor -> GUI: Nhấn "Thêm tiện ích mới"
+GUI -> GUI: handleOpenModal()
+Actor -> GUI: Nhập thông tin & Nhấn Lưu
+GUI -> GUI: handleSave()
+GUI -> BUS: create(formData)
+BUS -> DB: create(data)
+
+== Kịch bản 3: Chỉnh sửa tiện ích ==
+Actor -> GUI: Nhấn biểu tượng "Sửa"
+GUI -> GUI: handleOpenModal(util)
+Actor -> GUI: Thay đổi tên & Nhấn Lưu
+GUI -> GUI: handleSave()
+GUI -> BUS: update(id, title)
+BUS -> DB: update(id, title)
+
+== Kịch bản 4: Xóa tiện ích ==
+Actor -> GUI: Nhấn biểu tượng "Xóa" & Xác nhận
+GUI -> GUI: handleDelete(id)
+GUI -> BUS: delete(id)
+BUS -> DB: isAttached(id)
+alt Chưa được gán
+    BUS -> DB: delete(id)
+else Đã được gán
+    BUS --> GUI: Trả về lỗi (Không thể xóa)
+    GUI --> Actor: Hiển thị thông báo lỗi
+end
+
+@enduml

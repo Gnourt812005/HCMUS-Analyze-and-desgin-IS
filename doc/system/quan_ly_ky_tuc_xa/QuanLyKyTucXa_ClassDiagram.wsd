@@ -12,36 +12,89 @@ skinparam {
 }
 
 ' --- BOUNDARY LAYER ---
-class "AdminDorm" as ScreenDM <<boundary>> {
-    ' --- React States ---
+class "AdminDorm" <<boundary>> {
     - dorms: DormDTO[]
+    - setDorms: void
     - loading: boolean
+    - setLoading: void
+    - page: number
+    - setPage: void
+    - limit: number
+    - setLimit: void
+    - total: number
+    - setTotal: void
     - searchQuery: string
-    ' --- State Setters ---
-    + setDorms(data: DormDTO[]): void
-    + setLoading(status: boolean): void
-    + setSearchQuery(query: string): void
-    ' --- Methods ---
-    + fetchDorms(): Promise<void>
-    + handleDelete(id: string): Promise<void>
+    - setSearchQuery: void
+    + fetchDorms(): void
+    + handleDelete(id: string): void
 }
 
-class "AdminDormDetail" as ScreenDD <<boundary>> {
+class "AdminDormDetail" <<boundary>> {
     - dorm: DormDTO | null
+    - setDorm: void
     - rooms: RoomDTO[]
+    - setRooms: void
+    - availableUtilities: UtilityDTO[]
+    - setAvailableUtilities: void
     - loading: boolean
+    - setLoading: void
     - isEditing: boolean
+    - setIsEditing: void
     - formData: CreateDormDTO | UpdateDormDTO
-    + setDorm(data: DormDTO): void
-    + setRooms(data: RoomDTO[]): void
-    + setIsEditing(edit: boolean): void
-    + setFormData(data: any): void
-    + screenDormDetailLoad(): Promise<void>
-    + handleSave(): Promise<void>
+    - setFormData: void
+    + fetchData(): void
+    + handleSave(): void
+}
+
+' --- DTO LAYER ---
+interface "DormDTO" <<dto>> {
+    + id: string
+    + name: string
+    + address: string
+    + phone: string
+    + status: string
+    + totalRooms: number
+    + availableRooms: number
+    + managerId: string
+    + utilityIds: string[]
+    + utilities: { id: string, title: string, status: string }[]
+}
+
+interface "RoomDTO" <<dto>> {
+    + id: string
+    + name: string
+    + type: string
+    + price: number
+    + status: string
+}
+
+interface "UtilityDTO" <<dto>> {
+    + id: string
+    + title: string
+    + type: string
+    + status?: string
+}
+
+interface "GetDormsDto" <<dto>> {
+    + page: number
+    + limit: number
+    + keyword?: string
+}
+
+interface "GetRoomDto" <<dto>> {
+    + page: number
+    + limit: number
+    + dormId?: string
+}
+
+interface "GetUtilityDto" <<dto>> {
+    + page: number
+    + limit: number
+    + type?: string
 }
 
 ' --- BUSINESS LAYER ---
-class "Dorm" as Dorm <<control>> {
+class "Dorm" <<control>> {
     - id: string
     - name: string
     - address: string
@@ -50,29 +103,41 @@ class "Dorm" as Dorm <<control>> {
     - totalRooms: number
     - availableRooms: number
     - managerId: string
-    + <<static>> getAll(keyword?: string): Promise<DormDTO[]>
-    + <<static>> getById(id: string): Promise<DormDTO>
-    + <<static>> create(data: CreateDormDTO): Promise<boolean>
-    + <<static>> update(id: string, data: UpdateDormDTO): Promise<boolean>
-    + <<static>> delete(id: string): Promise<boolean>
+    - utilityIds: string[]
+    + <<static>> getAll(query: GetDormsDto): { dorms: DormDTO[], total: number }
+    + <<static>> getById(id: string): DormDTO
+    + <<static>> create(data: CreateDormDTO): boolean
+    + <<static>> update(id: string, data: UpdateDormDTO): boolean
+    + <<static>> delete(id: string): boolean
+    + toDTO(): DormDTO
 }
 
+class "Room" <<control>> {
+    + <<static>> fetchAll(query: GetRoomDto): { rooms: RoomDTO[], total: number }
+}
+
+class "Utility" <<control>> {
+    + <<static>> fetchAll(query: GetUtilityDto): { utilities: UtilityDTO[], total: number }
+}
+
+
 ' --- DATABASE LAYER ---
-class "DormDB" as DormDB <<entity>> {
-    + <<static>> fetchAll(): Promise<Dorm[]>
-    + <<static>> fetchByKeyword(keyword: string): Promise<Dorm[]>
-    + <<static>> fetchById(id: string): Promise<Dorm | null>
-    + <<static>> insert(data: Dorm): Promise<boolean>
-    + <<static>> update(id: string, data: any): Promise<boolean>
-    + <<static>> delete(id: string): Promise<boolean>
-    + <<static>> updateStatus(id: string, status: string): Promise<boolean>
-    + <<static>> checkIdExists(id: string): Promise<boolean>
+class "DormDB" <<database>> {
+    + <<static>> fetchAll(query: GetDormsDto): { dorms: Dorm[], total: number }
+    + <<static>> fetchById(id: string): Dorm
+    + <<static>> insert(data: Dorm): boolean
+    + <<static>> update(id: string, data: any): boolean
+    + <<static>> delete(id: string): boolean
 }
 
 ' --- RELATIONSHIPS ---
-ScreenDM "1" --> "1" Dorm : Gọi xử lý
-ScreenDD "1" --> "1" Dorm : Gọi xử lý
-Dorm "1" --> "1" DormDB : Truy cập dữ liệu
-ScreenDM ..> ScreenDD : Điều hướng (Chi tiết/Thêm mới)
+AdminDorm --> Dorm
+AdminDormDetail --> Dorm
+AdminDormDetail --> Room
+AdminDormDetail --> Utility
+Dorm --> DormDB
+AdminDorm ..> AdminDormDetail
 
 @enduml
+
+

@@ -42,7 +42,7 @@ export const AdminRoomDetail = () => {
         try {
             const [dormRes, utilRes] = await Promise.all([
                 ApiClient.get<{ data: { dorms: DormDTO[] } }>('/dorms?limit=100'),
-                ApiClient.get<{ data: { utilities: UtilityDTO[] } }>('/utilities?limit=200')
+                ApiClient.get<{ data: { utilities: UtilityDTO[] } }>('/utilities?limit=200&type=ROOM')
             ]);
             console.log(utilRes.data)
             setDorms(dormRes.data.dorms);

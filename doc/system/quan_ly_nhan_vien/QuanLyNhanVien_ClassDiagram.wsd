@@ -12,69 +12,74 @@ skinparam {
 }
 
 ' --- BOUNDARY LAYER ---
-class "ScreenEmployeeManagement" as ScreenEM <<boundary>> {
-    - dgvEmployee: GridView
-    - txtSearch: TextBox
-    - btnAddNew: Button
-    - btnEdit: Button
-    - btnDelete: Button
-    + dgvEmployeeLoad(): void
-    + btnSearchClick(): void
-    + btnAddNewClick(): void
-    + btnEditClick(): void
-    + btnDeleteClick(): void
+class "AdminStaff" <<boundary>> {
+    - staff: UserProfileDTO[]
+    - setStaff: void
+    - loading: boolean
+    - setLoading: void
+    - searchQuery: string
+    - setSearchQuery: void
+    + fetchStaff(): void
+    + handleDelete(email: string): void
 }
 
-class "ScreenEmployeeDetail" as ScreenED <<boundary>> {
-    - txtEmail: TextBox
-    - txtPassword: TextBox
-    - txtName: TextBox
-    - txtRole: TextBox
-    - txtPhone: TextBox
-    - btnSave: Button
-    - btnCancel: Button
-    + btnSaveClick(): void
-    + btnCancelClick(): void
+class "AdminStaffDetail" <<boundary>> {
+    - formData: UserDTO
+    - setFormData: void
+    - loading: boolean
+    - setLoading: void
+    - isSubmitting: boolean
+    - setIsSubmitting: void
+    + fetchStaff(): void
+    + handleSubmit(): void
 }
 
-class "PopupConfirm" as Popup <<boundary>> {
-    - lblMessage: Label
-    - btnConfirm: Button
-    - btnCancel: Button
-    + btnConfirmClick(): void
+' --- DTO LAYER ---
+interface "UserProfileDTO" <<dto>> {
+    + email: string
+    + fullName: string
+    + phone: string
+    + role: string
+    + address: string
+}
+
+interface "UserDTO" <<dto>> {
+    + email: string
+    + fullName: string
+    + role: string
+    + phone?: string
+    + address?: string
+    + cccd?: string
+    + gender?: string
+    + birthday?: string
+    + password?: string
 }
 
 ' --- BUSINESS LAYER ---
-class "Employee" as Employee <<control>> {
-    - id: string
-    - fullName: string
-    - phone: string
-    - role: string
+class "User" <<control>> {
     - email: string
-    - status: string
-    + <<static>> getEmployees(keyword: string): List<Employee>
-    + <<static>> getEmployeeDetail(id: string): Employee
-    + <<static>> createEmployee(data: Employee): boolean
-    + <<static>> updateEmployee(id: string, data: Employee): boolean
-    + <<static>> deleteEmployee(id: string): boolean
+    - fullName: string
+    - role: string
+    + <<static>> getAllEmployees(query: any): UserProfileDTO[]
+    + <<static>> getEmployeeByEmail(email: string): UserProfileDTO
+    + <<static>> upsertEmployee(data: UserDTO): boolean
+    + <<static>> deleteEmployee(email: string): boolean
 }
 
 ' --- DATABASE LAYER ---
-class "EmployeeDB" as EmployeeDB <<entity>> {
-    + <<static>> fetchAll(): List
-    + <<static>> fetchByKeyword(keyword: string): List
-    + <<static>> fetchById(id: string): Employee
-    + <<static>> insert(data: Employee): boolean
-    + <<static>> update(id: string, data: Employee): boolean
-    + <<static>> delete(id: string): boolean
-    + <<static>> checkEmailExists(email: string): boolean
+class "UserDB" <<entity>> {
+    + <<static>> fetchAllStaff(query: any): User[]
+    + <<static>> fetchCredentialByEmail(email: string): User
+    + <<static>> delete(email: string): boolean
+    + <<static>> update(email: string, data: any): boolean
+    + <<static>> insert(data: User): boolean
 }
 
 ' --- RELATIONSHIPS ---
-ScreenEM "1" --> "1" Employee
-ScreenED "1" --> "1" Employee
-Employee "1" --> "1" EmployeeDB
-ScreenEM ..> ScreenED : Mở Form 
-ScreenEM ..> Popup : Mở Popup 
+AdminStaff --> User
+AdminStaffDetail --> User
+User --> UserDB
+AdminStaff ..> AdminStaffDetail
 
 @enduml
+

@@ -12,16 +12,14 @@ skinparam {
 }
 
 ' --- BOUNDARY LAYER ---
-class "ScreenRegister" as ScreenRegister <<boundary>> {
-    - txtEmail: TextBox
-    - txtPassword: TextBox
-    - txtConfirmPassword: TextBox
-    - btnRegister: Button
-    + btnRegisterClick(): void
+class "Register" as Register <<boundary>> {
+    - showPassword: boolean
+    - setShowPassword: void
+    + handleRegister(): void
 }
 
 ' --- DTO LAYER ---
-class "SignUpDTO" as SignUpDTO <<dto>> {
+interface "SignUpDTO" as SignUpDTO <<dto>> {
     + email: string
     + password: string
 }
@@ -36,6 +34,7 @@ class "User" as User <<control>> {
     - gender: string
     - phone: string
     - address: string
+    - role: UserRole
     + <<static>> signUp(data: SignUpDTO): boolean
 }
 
@@ -46,8 +45,9 @@ class "UserDB" as UserDB <<entity>> {
 }
 
 ' --- RELATIONSHIPS ---
-ScreenRegister ..> SignUpDTO : <<creates>>
-ScreenRegister "1" --> "1" User
+Register ..> SignUpDTO
+Register "1" --> "1" User
 User "1" --> "1" UserDB
 
 @enduml
+

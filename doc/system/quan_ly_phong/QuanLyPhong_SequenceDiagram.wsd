@@ -12,75 +12,69 @@ skinparam {
 }
 
 actor "Nhân viên quản lý" as Actor
-participant "AdminRooms" as MainGUI <<boundary>>
-participant "AdminRoomDetail" as DetailGUI <<boundary>>
-participant "Room" as BUS_Room <<control>>
-participant "Bed" as BUS_Bed <<control>>
-participant "Utility" as BUS_Util <<control>>
-participant "Dorm" as BUS_Dorm <<control>>
-participant "RoomDB" as DB <<entity>>
-participant "UtilityDB" as DB_Util <<entity>>
-participant "DormDB" as DB_Dorm <<entity>>
+boundary "AdminRooms" as MainGUI <<boundary>>
+boundary "AdminRoomDetail" as DetailGUI <<boundary>>
+control "Room" as BUS_Room <<control>>
+control "Bed" as BUS_Bed <<control>>
+control "Dorm" as BUS_Dorm <<control>>
+control "Utility" as BUS_Util <<control>>
+database "RoomDB" as RDB <<database>>
+database "DormDB" as DDB <<database>>
+database "UtilityDB" as UDB <<database>>
 
 autonumber
 
-== Kịch bản 1: Xem danh sách phòng ==
+== Kịch bản 1: Xem danh sách phòng (bao gồm Tìm kiếm & Phân trang) ==
 Actor -> MainGUI: Mở trang Quản lý Phòng
-MainGUI -> BUS_Room: fetchAll()
-BUS_Room -> DB: fetchAll()
+MainGUI -> MainGUI: fetchRooms()
+MainGUI -> BUS_Room: fetchAll(query)
+BUS_Room -> RDB: fetchAll(query)
 
 == Kịch bản 2: Xem chi tiết phòng ==
-Actor -> MainGUI: Chọn 1 phòng cụ thể
-MainGUI -> DetailGUI: Điều hướng (id)
+Actor -> MainGUI: Chọn 1 phòng
+MainGUI -> DetailGUI: Chuyển hướng (/admin/rooms/:id)
+DetailGUI -> DetailGUI: fetchData()
 par 
     DetailGUI -> BUS_Util: fetchAll({type: 'ROOM'})
-    BUS_Util -> DB_Util: fetchAll()
-    DetailGUI -> BUS_Dorm: fetchAll({limit: 100})
-    BUS_Dorm -> DB_Dorm: fetchAll()
+    BUS_Util -> UDB: fetchAll()
+    DetailGUI -> BUS_Dorm: getAll({limit: 100})
+    BUS_Dorm -> DDB: fetchAll()
 end
 DetailGUI -> BUS_Room: getById(id)
-BUS_Room -> DB: fetchById(id)
+BUS_Room -> RDB: fetchById(id)
 
 == Kịch bản 3: Thêm phòng mới ==
 Actor -> MainGUI: Nhấn "Thêm phòng mới"
-MainGUI -> DetailGUI: Mở trang thêm mới (/new)
-DetailGUI -> BUS_Util: fetchAll({type: 'ROOM'})
-BUS_Util -> DB_Util: fetchAll()
-Actor -> DetailGUI: Chọn KTX, nhập dữ liệu, chọn tiện ích & Lưu
+MainGUI -> DetailGUI: Mở trang (/admin/rooms/new)
+DetailGUI -> DetailGUI: fetchData()
+Actor -> DetailGUI: Nhập dữ liệu & Lưu
+DetailGUI -> DetailGUI: handleSaveRoom()
 DetailGUI -> BUS_Room: create(formData)
-BUS_Room -> DB: insert(data)
-Note right of DB: Phân tách 2 bước:\n1. Insert Room (RETURNING id)\n2. Upsert room_utilities
-DB -> DB: [Step 1] insert room
-DB -> DB: [Step 2] upsert utilityIds
+BUS_Room -> RDB: insert(data)
 
 == Kịch bản 4: Cập nhật thông tin phòng ==
-Actor -> DetailGUI: Chỉnh sửa thông tin, thay đổi tiện ích & Nhấn Lưu
+Actor -> DetailGUI: Chỉnh sửa & Nhấn Lưu
+DetailGUI -> DetailGUI: handleSaveRoom()
 DetailGUI -> BUS_Room: update(id, formData)
-BUS_Room -> DB: update(id, data)
-Note right of DB: Surgical Sync:\n1. Delete absent utilities\n2. Upsert new utilities
-DB -> DB: [Step 1] delete removed utils
-DB -> DB: [Step 2] insert/upsert new utils
+BUS_Room -> RDB: update(id, data)
 
-== Kịch bản 5: Xóa phòng (Hard Delete) ==
-Actor -> DetailGUI: Nhấn "Xóa phòng"
-DetailGUI -> Actor: Xác nhận xóa?
-Actor -> DetailGUI: Xác nhận
-DetailGUI -> BUS_Room: delete(id)
-BUS_Room -> DB: delete(id)
+== Kịch bản 5: Xóa phòng ==
+Actor -> MainGUI: Nhấn Xóa & Xác nhận
+MainGUI -> MainGUI: handleDelete(id)
+MainGUI -> BUS_Room: delete(id)
+BUS_Room -> RDB: delete(id)
 
 == Kịch bản 6 & 7: Quản lý Giường (Thêm/Sửa) ==
-Actor -> DetailGUI: Nhấn Thêm giường (hoặc Sửa giường)
-DetailGUI -> DetailGUI: Hiển thị form giường (Inline/Modal)
-Actor -> DetailGUI: Nhập thông tin giường & Lưu
+Actor -> DetailGUI: Nhấn Thêm/Sửa giường & Lưu
+DetailGUI -> DetailGUI: handleAddBed() / handleUpdateBed()
 DetailGUI -> BUS_Bed: addBed() / updateBed()
-BUS_Bed -> DB: insertBed() / updateBed()
+BUS_Bed -> RDB: insertBed() / updateBed()
 
-== Kịch bản 8: Xóa giường (Có ràng buộc) ==
+== Kịch bản 8: Xóa giường ==
 Actor -> DetailGUI: Nhấn "Xóa" giường
+DetailGUI -> DetailGUI: handleDeleteBed(id)
 DetailGUI -> BUS_Bed: deleteBed(id)
-BUS_Bed -> DB: checkBedInEffect(id)
-alt Hợp lệ
-    BUS_Bed -> DB: removeBed(id)
-end
+BUS_Bed -> RDB: removeBed(id)
 
 @enduml
+

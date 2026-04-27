@@ -1,0 +1,82 @@
+@startuml QuanLyTienIch_ClassDiagram
+title Class Diagram - UC20: Quản lý tiện ích
+
+' --- STYLE CONFIGURATION ---
+skinparam {
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 24
+    Padding 5
+}
+
+' --- BOUNDARY LAYER ---
+class "AdminUtilities" <<boundary>> {
+    - utilities: UtilityDTO[]
+    - setUtilities: void
+    - loading: boolean
+    - setLoading: void
+    - searchQuery: string
+    - setSearchQuery: void
+    - showModal: boolean
+    - setShowModal: void
+    - editingId: string | null
+    - setEditingId: void
+    - isSubmitting: boolean
+    - setIsSubmitting: void
+    - formData: CreateUtilityDto
+    - setFormData: void
+    + fetchUtilities(): void
+    + handleOpenModal(util?: UtilityDTO): void
+    + handleSave(): void
+    + handleDelete(id: string): void
+}
+
+' --- DTO LAYER ---
+interface "UtilityDTO" <<dto>> {
+    + id: string
+    + title: string
+    + type: string
+    + isLiable: boolean
+    + incurredPrice: number
+}
+
+interface "CreateUtilityDto" <<dto>> {
+    + title: string
+    + type: 'ROOM' | 'DORM' | 'BED'
+    + isLiable: boolean
+    + incurredPrice: number
+}
+
+interface "GetUtilityDto" <<dto>> {
+    + page?: number
+    + limit?: number
+    + search?: string
+    + type?: string
+}
+
+' --- BUSINESS LAYER ---
+class "Utility" <<control>> {
+    + <<static>> fetchAll(query: GetUtilityDto): { utilities: UtilityDTO[], total: number }
+    + <<static>> fetchById(id: string): UtilityDTO
+    + <<static>> create(data: CreateUtilityDto): UtilityDTO
+    + <<static>> update(id: string, title: string): boolean
+    + <<static>> delete(id: string): boolean
+}
+
+' --- DATABASE LAYER ---
+class "UtilityDB" <<entity>> {
+    + <<static>> fetchAll(query: GetUtilityDto): { utilities: Utility[], total: number }
+    + <<static>> fetchById(id: string): Utility
+    + <<static>> create(data: CreateUtilityDto): Utility
+    + <<static>> update(id: string, title: string): boolean
+    + <<static>> delete(id: string): boolean
+    + <<static>> isAttached(id: string): boolean
+}
+
+' --- RELATIONSHIPS ---
+AdminUtilities --> Utility
+Utility --> UtilityDB
+
+@enduml

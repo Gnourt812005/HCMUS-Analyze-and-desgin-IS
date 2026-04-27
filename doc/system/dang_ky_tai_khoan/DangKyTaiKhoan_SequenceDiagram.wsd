@@ -12,7 +12,7 @@ skinparam {
 }
 
 actor "Khách hàng" as Actor
-boundary "ScreenRegister" as GUI <<boundary>>
+boundary "Register" as GUI <<boundary>>
 participant "SignUpDTO" as DTO <<dto>>
 control "User" as BUS <<control>>
 database "UserDB" as DB <<database>>
@@ -20,7 +20,7 @@ database "UserDB" as DB <<database>>
 autonumber
 
 Actor -> GUI: Nhập thông tin & Click "Đăng ký"
-GUI -> GUI: validate()
+GUI -> GUI: handleRegister()
 GUI -> DTO **: new SignUpDTO(email, password)
 GUI -> BUS: signUp(signUpDTO)
 BUS -> DB: checkEmailExists(signUpDTO.email)
@@ -39,3 +39,4 @@ end
 deactivate GUI
 
 @enduml
+
