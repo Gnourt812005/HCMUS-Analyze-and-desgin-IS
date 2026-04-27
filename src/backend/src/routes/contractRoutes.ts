@@ -2,7 +2,6 @@ import { Router, Request, Response } from 'express';
 import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
 import { User } from '../business/User';
 import { Contract } from '../business/Contract';
-import { ContractDB } from '../database/ContractDB';
 
 export const contractRouter = Router();
 
@@ -10,7 +9,7 @@ export const contractRouter = Router();
 
 contractRouter.get('/admin/all', async (_req: Request, res: Response) => {
   try {
-    const data = await ContractDB.getAll();
+    const data = await Contract.getAll();
     res.json({ message: 'Success', status: 200, data });
   } catch (error: any) {
     res.status(500).json({ message: error.message || 'Internal Server Error', status: 500 });
@@ -19,7 +18,7 @@ contractRouter.get('/admin/all', async (_req: Request, res: Response) => {
 
 contractRouter.get('/admin/rental-forms', async (_req: Request, res: Response) => {
   try {
-    const data = await ContractDB.getRentalFormsWithoutContract();
+    const data = await Contract.getRentalFormsWithoutContract();
     res.json({ message: 'Success', status: 200, data });
   } catch (error: any) {
     res.status(500).json({ message: error.message || 'Internal Server Error', status: 500 });
@@ -33,7 +32,7 @@ contractRouter.post('/admin', async (req: Request, res: Response) => {
     if (!startDate)    return res.status(400).json({ message: 'startDate là bắt buộc' });
     if (startDate < new Date().toISOString().split('T')[0]) return res.status(400).json({ message: 'Ngày bắt đầu không được nhỏ hơn ngày hiện tại' });
     if (!stayDuration || stayDuration < 1) return res.status(400).json({ message: 'stayDuration phải >= 1 tháng' });
-    const id = await ContractDB.insert(rentalFormId, startDate, stayDuration);
+    const id = await Contract.insert(rentalFormId, startDate, stayDuration);
     res.status(201).json({ message: 'Lập hợp đồng thành công', status: 201, data: { id } });
   } catch (error: any) {
     res.status(400).json({ message: error.message || 'Lỗi tạo hợp đồng', status: 400 });
@@ -45,7 +44,7 @@ contractRouter.put('/admin/:id', async (req: Request, res: Response) => {
     const { startDate, stayDuration } = req.body;
     if (!startDate || !stayDuration) return res.status(400).json({ message: 'startDate và stayDuration là bắt buộc' });
     if (startDate < new Date().toISOString().split('T')[0]) return res.status(400).json({ message: 'Ngày bắt đầu không được nhỏ hơn ngày hiện tại' });
-    const ok = await ContractDB.adminUpdate(req.params.id, startDate, stayDuration);
+    const ok = await Contract.adminUpdate(req.params.id, startDate, stayDuration);
     if (!ok) return res.status(404).json({ message: 'Không tìm thấy hợp đồng' });
     res.json({ message: 'Cập nhật thành công', status: 200 });
   } catch (error: any) {
@@ -55,7 +54,7 @@ contractRouter.put('/admin/:id', async (req: Request, res: Response) => {
 
 contractRouter.patch('/admin/:id/cancel', async (req: Request, res: Response) => {
   try {
-    const ok = await ContractDB.cancel(req.params.id);
+    const ok = await Contract.cancel(req.params.id);
     if (!ok) return res.status(404).json({ message: 'Không tìm thấy hợp đồng' });
     res.json({ message: 'Đã huỷ hợp đồng', status: 200 });
   } catch (error: any) {
