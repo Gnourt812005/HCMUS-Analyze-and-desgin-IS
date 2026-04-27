@@ -6,10 +6,11 @@ export enum ContractStatus {
 
 export interface ContractDTO {
   contractId: string;
+  contractCode?: string;
   userEmail: string;
   rentalFormId?: string;
   userCCCD?: string;
-  roomName?: string;
+  roomId?: string;
   dormName?: string;
   floor?: number;
   bedNumbers?: string;

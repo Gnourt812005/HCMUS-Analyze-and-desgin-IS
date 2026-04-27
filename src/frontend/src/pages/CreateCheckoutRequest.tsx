@@ -224,13 +224,13 @@ export const CreateCheckoutRequest = () => {
                     />
                     <div className="flex-1">
                       <p className="font-semibold text-slate-900">
-                        {contract.dormName} - Tầng {contract.floor} - Phòng {contract.roomName}
+                        {contract.dormName} - Tầng {contract.floor} - Phòng {contract.roomId}
                       </p>
                       <p className="text-sm text-slate-600">
                         Giường: {contract.bedNumbers}
                       </p>
                       <p className="text-sm text-slate-600 mt-1">
-                        Hợp đồng: {contract.contractId}
+                        Hợp đồng: {contract.contractCode || contract.contractId}
                       </p>
                       <p className="text-sm text-slate-600">
                         Ngày bắt đầu: {new Date(contract.startDate!).toLocaleDateString('vi-VN')}
@@ -274,7 +274,7 @@ export const CreateCheckoutRequest = () => {
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Mã hợp đồng</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.contractId}</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.contractCode || selectedContractDetails.contractId}</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Ký túc xá</p>
@@ -282,7 +282,7 @@ export const CreateCheckoutRequest = () => {
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Phòng</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.roomName}</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.roomId}</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Tầng</p>

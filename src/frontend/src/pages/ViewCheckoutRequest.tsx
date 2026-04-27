@@ -326,7 +326,7 @@ export const ViewCheckoutRequest = () => {
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Phòng</span>
-                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract?.roomName || 'Đang tải...'}</span>
+                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract?.roomId || 'Đang tải...'}</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Tầng</span>
@@ -340,7 +340,9 @@ export const ViewCheckoutRequest = () => {
                     {/* Contract ID is kept but less prominent as requested */}
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Mã hợp đồng</span>
                     <span className="text-sm font-semibold text-slate-800">
-                      {requestDetail?.contract ? requestDetail.contract.contractId : selectedRequest.contractId}
+                      {requestDetail?.contract
+                        ? (requestDetail.contract.contractCode || requestDetail.contract.contractId)
+                        : selectedRequest.contractId}
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
