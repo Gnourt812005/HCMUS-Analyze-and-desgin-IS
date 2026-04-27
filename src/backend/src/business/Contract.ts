@@ -1,4 +1,4 @@
-import { ContractDB } from '../database/ContractDB';
+import { ContractDB, ContractAdminRow, RentalFormOption } from '../database/ContractDB';
 import { ContractDTO , ContractStatus } from '@dormarch/shared';
 
 export class Contract {
@@ -82,14 +82,12 @@ export class Contract {
     return await ContractDB.getBedsInfoByContractId(contractId);
   }
 
-  static async getAll(): Promise<ContractDTO[]> {
-    const contractModels = await ContractDB.getAll();
-    return contractModels.map(model => new Contract(model).toDto());
+  static async getAll(): Promise<ContractAdminRow[]> {
+    return ContractDB.getAll();
   }
 
-  static async getRentalFormsWithoutContract(): Promise<ContractDTO[]> {
-    const rentalFormModels = await ContractDB.getRentalFormsWithoutContract();
-    return rentalFormModels.map(model => new Contract(model).toDto());
+  static async getRentalFormsWithoutContract(): Promise<RentalFormOption[]> {
+    return ContractDB.getRentalFormsWithoutContract();
   }
 
   static async insert(rentalFormId: string, startDate: string, stayDuration: number): Promise<string> {
