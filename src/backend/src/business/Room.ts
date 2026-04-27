@@ -66,6 +66,10 @@ export class Room {
     return await RoomDB.markBedsStatus(roomId, bedIds, status);
   }
 
+  static async getBedsByRoomId(roomId: string): Promise<BedDTO[]> { 
+    return await RoomDB.getBedsByRoomId(roomId);
+  }
+
   toDTO(): RoomDTO {
     return {
       id: this.id,

@@ -1,12 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { CheckoutRequest } from '../business/CheckoutRequest';
-import { CheckoutRequestDB } from '../database/CheckoutRequestDB';
 import { Contract } from '../business/Contract';
-import { ContractDB } from '../database/ContractDB';
 import { Room } from '../business/Room';
 import { RefundCalculation } from '../business/RefundCalculation';
 import { CheckoutStatus, ContractStatus } from '@dormarch/shared';
-import { dbClient } from '../database/DatabaseClient';
 
 export const checkoutRouter = Router();
 
@@ -142,8 +139,8 @@ checkoutRouter.patch('/:id/complete-liquidation', async (req: Request, res: Resp
     }
 
     if (request.contractId) {
-      await ContractDB.updateStatus(request.contractId, ContractStatus.LIQUIDATED);
-      const bedsInfo = await ContractDB.getBedsInfoByContractId(request.contractId);
+      await Contract.updateStatus(request.contractId, ContractStatus.LIQUIDATED);
+      const bedsInfo = await Contract.getBedsInfoByContractId(request.contractId);
       if (bedsInfo && bedsInfo.roomId && bedsInfo.bedIds.length > 0) {
         await Room.updateBedStatus(bedsInfo.roomId, bedsInfo.bedIds, 'AVAILABLE');
       }
