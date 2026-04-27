@@ -103,7 +103,7 @@ export class RentalDB {
       [idCard]
     );
     const map = new Map<string, string>();
-    result.rows.forEach(row => {
+    result.rows.forEach((row: any) => {
       map.set(row.room_id, row.registration_id);
     });
     return map;

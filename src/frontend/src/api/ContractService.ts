@@ -5,6 +5,7 @@ export type ContractStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING_CHECKOUT' | 'LIQUI
 
 export interface ContractAdminRow {
   id: string;
+  contractCode: string | null;
   userEmail: string;
   rentalFormId: string | null;
   startDate: string;
@@ -59,6 +60,6 @@ export class ContractService {
   }
 
   static async getMyContracts(): Promise<ContractDTO[]> {
-    return ApiClient.get<ContractDTO[]>('/contracts/');
+    return ApiClient.get<ContractDTO[]>('/contracts/mine');
   }
 }

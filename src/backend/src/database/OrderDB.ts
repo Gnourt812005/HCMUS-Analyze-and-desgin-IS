@@ -38,7 +38,7 @@ export class OrderDB {
 
     try {
       const result = await dbClient.query(query, [email]);
-      return result.rows.map(row => ({
+      return result.rows.map((row: any) => ({
         id: row.id,
         userEmail: row.user_email,
         dormName: row.dorm_name,
@@ -79,7 +79,7 @@ export class OrderDB {
 
     try {
       const result = await dbClient.query(query);
-      return result.rows.map(row => ({
+      return result.rows.map((row: any) => ({
         id: row.id,
         userEmail: row.user_email,
         dormName: row.dorm_name,

@@ -14,7 +14,9 @@ export interface HandoverBed {
 
 export interface HandoverReport {
   id: string;
+  handoverCode: string | null;
   contractId: string;
+  contractCode: string | null;
   customerName: string;
   roomName: string;
   type: HandoverType;
@@ -25,6 +27,7 @@ export interface HandoverReport {
 
 export interface ActiveContract {
   contractId: string;
+  contractCode: string | null;
   customerName: string;
   roomName: string;
   beds: { id: string; bedNumber: string }[];

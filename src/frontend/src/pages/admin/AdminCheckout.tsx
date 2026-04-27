@@ -497,7 +497,7 @@ export const AdminCheckout = () => {
                           className="mt-1"
                         />
                         <div className="flex-1 text-sm text-slate-700">
-                          <p className="font-bold text-slate-900">{contract.dormName} - Tầng {contract.floor} - Phòng {contract.roomName}</p>
+                          <p className="font-bold text-slate-900">{contract.dormName} - Tầng {contract.floor} - Phòng {contract.roomId}</p>
                           <p className="text-xs text-slate-600">Giường: {contract.bedNumbers}</p>
                           <p className="text-xs mt-1">
                             Hợp đồng: {contract.contractId}
