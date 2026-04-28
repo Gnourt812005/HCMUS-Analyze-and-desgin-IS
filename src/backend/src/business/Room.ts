@@ -62,7 +62,7 @@ export class Room {
     return await RoomDB.delete(id);
   }
 
-  static async updateBedStatus(roomId: string, bedIds: string[], status: string): Promise<boolean> {
+  static async updateBedStatus(roomId: string, bedIds: string[], status: 'AVAILABLE' | 'DEPOSITED' | 'BOOKED'): Promise<boolean> {
     return await RoomDB.markBedsStatus(roomId, bedIds, status);
   }
 
