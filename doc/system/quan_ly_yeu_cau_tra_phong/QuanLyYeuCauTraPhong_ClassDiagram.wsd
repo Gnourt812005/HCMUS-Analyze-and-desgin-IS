@@ -6,19 +6,24 @@ skinparam {
     ClassBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 14
+    DefaultFontSize 16
+    ClassBorderThickness 2
+    StereotypeFontColor #2D3E50
+    Padding 5
 }
 
 class "ManageCheckoutRequestScreen" <<boundary>> {
   - dgvRequests: DataGridView
-  + show(): void
   + loadRequests(): void
 }
 
 class "CreateCheckoutRequestScreen" <<boundary>> {
-  - cbUsers: ComboBox
+  - txtSearchUser: TextBox
+  - cbbContractList: ComboBox
   - dtpExpectedDate: DateTimePicker
   - btnSave: Button
+  - btnSearch: Button
+  - btnBack: Button
   + show(): void
   + btnSaveClick(): void
 }
@@ -28,78 +33,98 @@ class "CheckoutRequestDetailScreen" <<boundary>> {
   - lblRefundInfo: Label
   - btnProcess: Button
   - btnReject: Button
-  + show(requestID: int): void
+  - btnBack: Button
+  + show(requestId: string): void
   + displayDetail(): void
 }
 
 class "CheckoutRequest" <<control>> {
-  - requestID: int
-  - userCCCD: string
-  - expectedDate: DateTime
-  - status: string
-  - createdAt: DateTime
-  - documentUrl: string
-  - reason: string
+  - requestId: string
+  - userEmail: string
+  - userFullName: string
+  - contractId: string
+  - dormName: string
+  - roomName: string
+  - floor: number
+  - bedNumbers: string
+  - expectedDate: string 
+  - status: CheckoutStatus
+  - createdAt: string
   + <<static>> getList(): CheckoutRequest[]
-  + <<static>> getById(id: int): CheckoutRequest
-  + <<static>> create(data: CheckoutRequest): bool
-  + <<static>> updateStatus(id: int, status: string, reason: string = ""): bool
-}
-
-class "User" <<control>> {
-  - userCCCD: string
-  - fullName: string
-  + <<static>> getUsersWithActiveContract(): User[]
+  + <<static>> getById(requestId: string): CheckoutRequest 
+  + <<static>> create(data: CheckoutRequest): CheckoutRequest
+  + <<static>> createWithDuplicateCheck(data: CheckoutRequest): {success: bool, request: CheckoutRequest}
+  + <<static>> updateStatus(requestId: string, status: CheckoutStatus, expectedStatus: CheckoutStatus): bool
 }
 
 class "Contract" <<control>> {
-  - contractID: int
-  - userCCCD: string
-  - depositAmount: float
-  - liquidationDocUrl: string
-  - status: string
-  + <<static>> getByUserId(userId: int): Contract
+  - contractId: string
+  - contractCode: string
+  - userEmail: string
+  - roomName: string
+  - dormName: string
+  - floor: number
+  - bedNumbers: string
+  - startDate: string
+  - stayDuration: number
+  - rentalFormId: string
+  - status: ContractStatus
+  - depositAmount: number
+  - signatureUrl: string
+  - createdAt: string
+  + <<static>> getByUserEmail(userEmail: string): Contract 
+  + <<static>> getByContractId(contractId: string): Contract 
+  + <<static>> getActiveByUserEmail(userEmail: string): Contract[]
+  + <<static>> updateStatus(contractId: string, status: ContractStatus): bool
+  + <<static>> getBedsInfoByContractId(contractId: string): {roomId: string, bedIds: string[]} 
 }
 
 class "RefundCalculation" <<control>> {
-  - calculationID: int
-  - requestID: int
-  - depositAmount: float
-  - damageFee: float
-  - extraDebt: float
-  - finalRefundAmount: float
-  + <<static>> getByRequestId(requestId: int): RefundCalculation
+  - calculationId: string
+  - requestId: string
+  - contractId: string
+  - depositAmount: number
+  - damageFee: number
+  - extraFee: number
+  - finalRefundAmount: number
+  - notes: string
+  - createdAt: string
+  + <<static>> getByRequestId(requestId: string): RefundCalculation 
+  + <<static>> getById(calculationId: string): RefundCalculation 
+  + <<static>> create(data: RefundCalculation): RefundCalculation
+  + <<static>> update(calculationId: string, data: RefundCalculation): RefundCalculation 
 }
 
 class "CheckoutRequestDB" <<entity>> {
   + <<static>> getAll(): CheckoutRequest[]
-  + <<static>> getById(id: int): CheckoutRequest
-  + <<static>> insert(data: CheckoutRequest): bool
-  + <<static>> updateStatus(id: int, status: string): bool
-}
-
-class "UserDB" <<entity>> {
-  + <<static>> getByActiveContract(): User[]
+  + <<static>> getById(requestId: string): CheckoutRequest
+  + <<static>> insert(request: CheckoutRequest): string 
+  + <<static>> insertIfNoActiveRequest(request: CheckoutRequest, contractId: string, userEmail: string): {success: bool, error: string, requestId: string}
 }
 
 class "ContractDB" <<entity>> {
-  + <<static>> getByUserId(id: int): Contract
+  + <<static>> getByUserEmail(userEmail: string): Contract 
+  + <<static>> getByContractId(contractId: string): Contract 
+  + <<static>> getActiveByUserEmail(userEmail: string): Contract[]
+  + <<static>> updateStatus(contractId: string, status: ContractStatus): bool
+  + <<static>> getBedsInfoByContractId(contractId: string): {roomId: string, bedIds: string[]} 
 }
 
-class "RefundDB" <<entity>> {
-  + <<static>> getByRequestId(id: int): RefundCalculation
+class "RefundCalculationDB" as RefundCalculationDB <<entity>> {
+  + <<static>> getByRequestId(requestId: string): RefundCalculation 
+  + <<static>> getById(calculationId: string): RefundCalculation 
+  + <<static>> create(data: RefundCalculation): RefundCalculation
+  + <<static>> update(calculationId: string, data: RefundCalculation): RefundCalculation 
 }
 
 ManageCheckoutRequestScreen --> CheckoutRequest
 CreateCheckoutRequestScreen --> CheckoutRequest
-CreateCheckoutRequestScreen --> User
 CheckoutRequestDetailScreen --> CheckoutRequest
 CheckoutRequestDetailScreen --> Contract
 CheckoutRequestDetailScreen --> RefundCalculation
 
 CheckoutRequest --> CheckoutRequestDB
-User --> UserDB
 Contract --> ContractDB
-RefundCalculation --> RefundDB
+RefundCalculation --> RefundCalculationDB
 
 @enduml

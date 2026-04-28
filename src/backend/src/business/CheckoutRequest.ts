@@ -49,6 +49,11 @@ export class CheckoutRequest {
     return requestModels.map(model => new CheckoutRequest(model).toDto());
   }
 
+  static async getListByUserEmail(userEmail: string): Promise<CheckoutRequestDTO[]> {
+    const requestModels = await CheckoutRequestDB.getByUserEmail(userEmail);
+    return requestModels.map(model => new CheckoutRequest(model).toDto());
+  }
+
   static async create(requestData: Partial<CheckoutRequestDTO>): Promise<CheckoutRequestDTO> {
     if (!requestData.userEmail || !requestData.expectedDate || !requestData.contractId) {
       throw new Error('userEmail, contractId và expectedDate là bắt buộc.');

@@ -1,145 +1,149 @@
-@startuml
+@startuml QuanLyYeuCauTraPhong_SequenceDiagram
+title Sequence Diagram - UC26: Quản lý yêu cầu trả phòng
+
+skinparam {
+    BackgroundColor White
+    ArrowColor #2D3E50
+    DefaultFontName "Arial"
+    DefaultFontSize 16
+    ParticipantPadding 15
+    MaxMessageSize 200
+}
+
 autonumber
-skinparam maxMessageSize 150
 
 actor "Nhân viên" as nv
-
 boundary "ManageCheckoutRequestScreen" as guiManage
 boundary "CreateCheckoutRequestScreen" as guiCreate
 boundary "CheckoutRequestDetailScreen" as guiDetail
-
 control "CheckoutRequest" as reqCtrl
 control "Contract" as conCtrl
 control "RefundCalculation" as refCtrl
-control "User" as userCtrl
+database "CheckoutRequestDB" as reqDB
+database "ContractDB" as conDB
+database "RefundCalculationDB" as refDB
 
-entity "CheckoutRequestDB" as reqDB
-entity "ContractDB" as conDB
-entity "RefundDB" as refDB
-entity "UserDB" as userDB
+== Kịch bản 1: Xem danh sách yêu cầu ==
+nv -> guiManage: loadRequests()
+activate nv
+activate guiManage
 
-group Kịch bản 1: Xem danh sách và tra cứu yêu cầu
-    nv -> guiManage: Mở màn hình / loadRequests()
-    activate guiManage
-    
-    guiManage -> reqCtrl: getList()
-    activate reqCtrl
-    reqCtrl -> reqDB: getAll()
-    activate reqDB
-    reqDB --> reqCtrl: CheckoutRequest[]
-    deactivate reqDB
-    reqCtrl --> guiManage: CheckoutRequest[]
-    deactivate reqCtrl
-    
-    guiManage --> nv: Hiển thị danh sách yêu cầu
-    
-    nv -> guiManage: Chọn 1 yêu cầu để xem chi tiết
-    guiManage -> guiDetail: show(requestID)
-    activate guiDetail
-    
-    ' 1. Lấy thông tin Request
-    guiDetail -> reqCtrl: getById(requestID)
-    activate reqCtrl
-    reqCtrl -> reqDB: getById(requestID)
-    activate reqDB
-    reqDB --> reqCtrl: requestData
-    deactivate reqDB
-    reqCtrl --> guiDetail: requestData
-    deactivate reqCtrl
+guiManage -> reqCtrl: getList()
+activate reqCtrl
+reqCtrl -> reqDB: getAll()
+activate reqDB
+reqDB --> reqCtrl: CheckoutRequest[]
+deactivate reqDB
+reqCtrl --> guiManage: CheckoutRequest[]
+deactivate reqCtrl
+guiManage --> nv: Hiển thị danh sách yêu cầu
+deactivate guiManage
+deactivate nv
 
-    ' 2. Lấy thông tin Hợp đồng
-    guiDetail -> conCtrl: getByUserId(userId)
-    activate conCtrl
-    conCtrl -> conDB: getByUserId(userId)
-    activate conDB
-    conDB --> conCtrl: contractData
-    deactivate conDB
-    conCtrl --> guiDetail: contractData
-    deactivate conCtrl
+== Kịch bản 2: Xem chi tiết yêu cầu ==
+nv -> guiManage: Chọn yêu cầu để xem chi tiết
+activate nv
+activate guiManage
+guiManage -> guiDetail: show(requestId)
+activate guiDetail
+deactivate guiManage
+guiDetail -> reqCtrl: getById(requestId)
+activate reqCtrl
+reqCtrl -> reqDB: getById(requestId)
+activate reqDB
+reqDB --> reqCtrl: CheckoutRequest
+deactivate reqDB
+reqCtrl --> guiDetail: CheckoutRequest
+deactivate reqCtrl
 
-    ' 3. Lấy thông tin Hoàn cọc (Đã bổ sung)
-    guiDetail -> refCtrl: getByRequestId(requestID)
-    activate refCtrl
-    refCtrl -> refDB: getByRequestId(requestID)
-    activate refDB
-    refDB --> refCtrl: refundData
-    deactivate refDB
-    refCtrl --> guiDetail: refundData
-    deactivate refCtrl
+guiDetail -> conCtrl: getByContractId(contractId)
+activate conCtrl
+conCtrl -> conDB: getByContractId(contractId)
+activate conDB
+conDB --> conCtrl: Contract
+deactivate conDB
+conCtrl --> guiDetail: Contract
+deactivate conCtrl
 
-    guiDetail --> nv: Hiển thị chi tiết thông tin yêu cầu
-    
-    deactivate guiDetail
-    deactivate guiManage
-end
+guiDetail -> refCtrl: getByRequestId(requestId)
+activate refCtrl
+refCtrl -> refDB: getByRequestId(requestId)
+activate refDB
+refDB --> refCtrl: RefundCalculation 
+deactivate refDB
+refCtrl --> guiDetail: RefundCalculation
+deactivate refCtrl
 
-group Kịch bản 2: Tạo yêu cầu trả phòng
-    nv -> guiManage: Nhấn "Tạo yêu cầu mới"
-    activate guiManage
-    guiManage -> guiCreate: show()
-    activate guiCreate
-    
-    guiCreate -> userCtrl: getUsersWithActiveContract()
-    activate userCtrl
-    userCtrl -> userDB: getByActiveContract()
-    activate userDB
-    userDB --> userCtrl: User[]
-    deactivate userDB
-    userCtrl --> guiCreate: User[]
-    deactivate userCtrl
-    
-    guiCreate --> nv: Hiển thị form & danh sách khách hàng
-    
-    nv -> guiCreate: Chọn khách hàng, ngày, đính kèm & Nhấn "Lưu"
-    guiCreate -> reqCtrl: create(data: CheckoutRequest)
-    activate reqCtrl
-    reqCtrl -> reqDB: insert(data)
-    activate reqDB
-    reqDB --> reqCtrl: bool (true)
-    deactivate reqDB
-    reqCtrl --> guiCreate: bool (true)
-    deactivate reqCtrl
-    
-    guiCreate --> nv: Thông báo thành công & Đóng màn hình
-    deactivate guiCreate
-    deactivate guiManage
-end
+guiDetail --> nv: Hiển thị chi tiết yêu cầu
+deactivate guiDetail
+deactivate nv
 
-group Kịch bản 3: Xử lý và cập nhật trạng thái (Tiếp nhận)
-    nv -> guiDetail: Đối chiếu thông tin & Nhấn "Tiếp nhận"
-    activate guiDetail
-    
-    guiDetail -> reqCtrl: updateStatus(requestID, "Đang xử lý", "")
-    activate reqCtrl
-    reqCtrl -> reqDB: updateStatus(requestID, "Đang xử lý")
-    activate reqDB
-    reqDB --> reqCtrl: bool (true)
-    deactivate reqDB
-    reqCtrl --> guiDetail: bool (true)
-    deactivate reqCtrl
-    
-    guiDetail --> nv: Hiện các nút chức năng tiếp theo\nvà thông báo thành công
-    deactivate guiDetail
-end
+== Kịch bản 3: Tạo yêu cầu trả phòng ==
+nv -> guiManage: Nhấn "Tạo yêu cầu mới"
+activate nv
+activate guiManage
+guiManage -> guiCreate: show()
+activate guiCreate
+deactivate guiManage
 
-group Kịch bản 4: Hủy bỏ hoặc từ chối yêu cầu
-    nv -> guiDetail: Nhấn "Hủy yêu cầu" / "Từ chối"
-    activate guiDetail
-    guiDetail --> nv: Hiển thị popup yêu cầu nhập lý do
-    
-    nv -> guiDetail: Nhập lý do (reason) và nhấn "Xác nhận"
-    
-    guiDetail -> reqCtrl: updateStatus(requestID, "Đã hủy")
-    activate reqCtrl
-    reqCtrl -> reqDB: updateStatus(requestID, "Đã hủy")
-    activate reqDB
-    reqDB --> reqCtrl: bool (true)
-    deactivate reqDB
-    reqCtrl --> guiDetail: bool (true)
-    deactivate reqCtrl
-    
-    guiDetail --> nv: Thông báo thành công và cập nhật trạng thái
-    deactivate guiDetail
-end
+guiCreate -> conCtrl: getActiveByUserEmail(userEmail)
+activate conCtrl
+conCtrl -> conDB: getActiveByUserEmail(userEmail)
+activate conDB
+conDB --> conCtrl: Contract[]
+deactivate conDB
+conCtrl --> guiCreate: Contract[]
+deactivate conCtrl
+
+guiCreate --> nv: Hiển thị form và danh sách hợp đồng
+
+nv -> guiCreate: Chọn hợp đồng và Nhấn "Lưu"
+guiCreate -> reqCtrl: createWithDuplicateCheck(data)
+activate reqCtrl
+reqCtrl -> reqDB: insertIfNoActiveRequest(data)
+activate reqDB
+reqDB --> reqCtrl: {success: bool, requestId?: string}
+deactivate reqDB
+reqCtrl --> guiCreate: {success: bool, request?: CheckoutRequestRefundCalculation}
+deactivate reqCtrl
+
+guiCreate --> nv: Thông báo thành công
+deactivate guiCreate
+deactivate guiCreate
+deactivate nv
+
+nv -> guiDetail: Chọn hợp đồng và Nhấn "Tiếp nhận"
+activate guiDetail
+activate nv
+
+guiDetail -> reqCtrl: updateStatus(requestId, CheckoutStatus.PROCESSING)
+activate reqCtrl
+reqCtrl -> reqDB: updateStatus(requestId, CheckoutStatus.PROCESSING)
+activate reqDB
+reqDB --> reqCtrl: bool (true)
+deactivate reqDB
+reqCtrl --> guiDetail: bool (true)
+deactivate reqCtrl
+
+guiDetail --> nv: Hiện các nút chức năng tiếp theo\nvà thông báo thành công
+deactivate guiDetail
+deactivate nv
+
+== Kịch bản 4: Hủy yêu cầu / Từ chối yêu cầu ==
+nv -> guiDetail: Nhấn "Hủy yêu cầu" / "Từ chối"
+activate guiDetail
+activate nv
+guiDetail -> reqCtrl: updateStatus(requestId, CheckoutStatus.CANCELLED)
+activate reqCtrl
+reqCtrl -> reqDB: updateStatus(requestId, CheckoutStatus.CANCELLED)
+activate reqDB
+reqDB --> reqCtrl: bool (true)
+deactivate reqDB
+reqCtrl --> guiDetail: bool (true)
+deactivate reqCtrl
+
+guiDetail --> nv: Thông báo thành công và cập nhật trạng thái
+deactivate guiDetail
+deactivate nv
 
 @enduml

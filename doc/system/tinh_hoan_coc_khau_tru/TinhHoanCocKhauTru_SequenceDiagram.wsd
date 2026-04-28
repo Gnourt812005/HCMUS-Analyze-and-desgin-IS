@@ -5,34 +5,50 @@ skinparam {
     BackgroundColor White
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
-    ParticipantPadding 20
+    DefaultFontSize 16
+    ParticipantPadding 15
 }
-
-actor "BranchManager" as QuanLy
-boundary "ScreenRefundCalculation" as Screen <<boundary>>
-control "Contract" as Contract <<control>>
-control "CheckoutRequest" as Request <<control>>
-control "RefundCalculation" as Calc <<control>>
-database "RefundCalculationDB" as DB <<database>>
-database "CheckoutRequestDB" as RequestDB <<database>>
 
 autonumber
 
-== Khởi tạo màn hình ==
-QuanLy -> Screen: show()
-Screen -> Contract: getContractInfo()
+actor "Quản lý" as manager
+boundary "ScreenRefundCalculation" as screen
+control "Contract" as contract
+control "RefundCalculation" as refund
+control "CheckoutRequest" as request
+database "ContractDB" as contractDb
+database "RefundCalculationDB" as refundDb
+database "CheckoutRequestDB" as requestDb
 
-== Tính toán khấu trừ ==
-QuanLy -> Screen: Nhập hư hỏng và phí phát sinh
-QuanLy -> Screen: Nhấn "Tính toán" (btnCalculateClick)
-Screen -> Calc: calculateTotal()
+manager -> screen: show(requestId)
+activate screen
+screen -> contract: getByContractId(contractId)
+activate contract
+contract -> contractDb: getByContractId(contractId)
+activate contractDb
+contractDb --> contract: Contract
+deactivate contractDb
+contract --> screen: Contract
+deactivate contract
+deactivate screen
 
-== Lưu kết quả tính toán ==
-QuanLy -> Screen: Nhấn "Lưu bảng đối soát" (btnSaveClick)
-Screen -> Calc: saveCalculation()
-Calc -> DB: insert()
-Screen -> Request: updateStatus(PENDING_LIQUIDATION)
-Request -> RequestDB: update()
+manager -> screen: Nhập hư hỏng và phí phát sinh
+activate screen
+manager -> screen: Nhấn "Tính toán"
+deactivate screen
+
+manager -> screen: Nhấn "Lưu bảng đối soát"
+activate screen
+screen -> refund: create(data)
+activate refund
+refund -> refundDb: create(data)
+activate refundDb
+refundDb --> refund: RefundCalculation
+deactivate refundDb
+refund --> screen: RefundCalculation
+deactivate refund
+
+screen --> manager: Thông báo thành công
+deactivate screen
 
 @enduml

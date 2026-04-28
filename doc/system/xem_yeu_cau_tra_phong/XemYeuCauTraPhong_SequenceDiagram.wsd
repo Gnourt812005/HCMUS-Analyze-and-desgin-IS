@@ -1,77 +1,76 @@
 @startuml XemYeuCauTraPhong_SequenceDiagram
 title Sequence Diagram - UC23: Xem yêu cầu trả phòng
 
-' --- STYLE CONFIGURATION ---
 skinparam {
     BackgroundColor White
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
-    ParticipantPadding 20
-    BoxPadding 10
+    DefaultFontSize 16
+    ParticipantPadding 15
 }
-
-actor "Khách hàng" as Actor
-boundary "ScreenCheckoutRequestList" as ListScreen <<boundary>>
-boundary "ScreenCheckoutRequestDetail" as DetailScreen <<boundary>>
-control "CheckoutRequest" as BUS_Request <<control>>
-database "CheckoutRequestDB" as DB_Request <<database>>
-control "Contract" as BUS_Contract <<control>>
-database "ContractDB" as DB_Contract <<database>>
-control "RefundCalculator" as BUS_Calc <<control>>
-database "RefundCalculationDB" as DB_Calc <<database>>
 
 autonumber
 
-Actor -> ListScreen: yêu cầu xem danh sách trả phòng
-activate ListScreen
-ListScreen -> BUS_Request: getListByCustomer(customerID)
-activate BUS_Request
-BUS_Request -> DB_Request: fetchByCustomer(customerID)
-activate DB_Request
-DB_Request --> BUS_Request: DataTable
-deactivate DB_Request
-BUS_Request --> ListScreen: List<CheckoutRequest>
-deactivate BUS_Request
-ListScreen --> Actor: hiển thị danh sách yêu cầu
-deactivate ListScreen
+actor "Khách hàng" as customer
+boundary "ScreenCheckoutRequestList" as listScreen
+boundary "ScreenCheckoutRequestDetail" as detailScreen
+control "CheckoutRequest" as checkoutCtrl
+control "Contract" as contractCtrl
+control "RefundCalculation" as refundCtrl
+database "CheckoutRequestDB" as checkoutDb
+database "ContractDB" as contractDb
+database "RefundCalculationDB" as refundDb
 
-Actor -> ListScreen: nhấp chọn xem chi tiết
-activate ListScreen
-ListScreen -> DetailScreen: show(requestID)
-activate DetailScreen
+customer -> listScreen: show()
+activate listScreen
+listScreen -> checkoutCtrl: getListByUserEmail(userEmail)
+activate checkoutCtrl
+checkoutCtrl -> checkoutDb: getByUserEmail(userEmail)
+activate checkoutDb
+checkoutDb --> checkoutCtrl: CheckoutRequest[]
+deactivate checkoutDb
+checkoutCtrl --> listScreen: CheckoutRequest[]
+deactivate checkoutCtrl
 
-DetailScreen -> BUS_Request: getById(requestID)
-activate BUS_Request
-BUS_Request -> DB_Request: fetchById(requestID)
-activate DB_Request
-DB_Request --> BUS_Request: DataRow
-deactivate DB_Request
-BUS_Request --> DetailScreen: CheckoutRequest object
-deactivate BUS_Request
+listScreen --> customer: Hiển thị danh sách
+deactivate listScreen
 
-DetailScreen -> BUS_Contract: getById(contractId)
-activate BUS_Contract
-BUS_Contract -> DB_Contract: fetchById(contractId)
-activate DB_Contract
-DB_Contract --> BUS_Contract: DataRow
-deactivate DB_Contract
-BUS_Contract --> DetailScreen: Contract object
-deactivate BUS_Contract
+customer -> listScreen: Chọn yêu cầu
+activate listScreen
+listScreen -> detailScreen: show(requestId)
+activate detailScreen
+deactivate listScreen
+detailScreen -> checkoutCtrl: getById(requestId)
+activate checkoutCtrl
+checkoutCtrl -> checkoutDb: getById(requestId)
+activate checkoutDb
+checkoutDb --> checkoutCtrl: CheckoutRequest
+deactivate checkoutDb
+checkoutCtrl --> detailScreen: CheckoutRequest
+deactivate checkoutCtrl
 
-alt trạng thái là "Đã duyệt" hoặc "Thanh lý"
-    DetailScreen -> BUS_Calc: getByRequestId(requestID)
-    activate BUS_Calc
-    BUS_Calc -> DB_Calc: fetchByRequestId(requestID)
-    activate DB_Calc
-    DB_Calc --> BUS_Calc: DataRow
-    deactivate DB_Calc
-    BUS_Calc --> DetailScreen: RefundCalculator object
-    deactivate BUS_Calc
+detailScreen -> contractCtrl: getByContractId(contractId)
+activate contractCtrl
+contractCtrl -> contractDb: getByContractId(contractId)
+activate contractDb
+contractDb --> contractCtrl: Contract
+deactivate contractDb
+contractCtrl --> detailScreen: Contract
+deactivate contractCtrl
+
+alt Đã tính hoàn cọc và khấu trừ
+    detailScreen -> refundCtrl: getByRequestId(requestId)
+    activate refundCtrl
+    refundCtrl -> refundDb: getByRequestId(requestId)
+    activate refundDb
+    refundDb --> refundCtrl: RefundCalculation 
+    deactivate refundDb
+    refundCtrl --> detailScreen: RefundCalculation 
+    deactivate refundCtrl
 end
 
-DetailScreen --> Actor: hiển thị thông tin chi tiết
-deactivate DetailScreen
-deactivate ListScreen
+detailScreen --> customer: Hiển thị chi tiết
+deactivate detailScreen
+deactivate listScreen
 
 @enduml

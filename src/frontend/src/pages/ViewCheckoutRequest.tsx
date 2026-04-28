@@ -77,21 +77,11 @@ export const ViewCheckoutRequest = () => {
       setLoading(true);
       setError(null);
 
-      const profileData = await ApiClient.get<UserProfileDTO>('/users/profile');
+      const requests = await ApiClient.get<CheckoutRequestDTO[]>('/checkout-requests');
       
       if (abortController.signal.aborted) return;
       
-      // setProfile(profileData);
-
-      const allRequests = await ApiClient.get<CheckoutRequestDTO[]>('/checkout-requests');
-      
-      if (abortController.signal.aborted) return;
-      
-      const filteredRequests = profileData.email
-        ? allRequests.filter((request) => request.userEmail === profileData.email)
-        : [];
-
-      setCheckoutRequests(filteredRequests);
+      setCheckoutRequests(requests || []);
     } catch (err) {
       if (!abortController.signal.aborted) {
         setError(err instanceof Error ? err.message : 'Lỗi tải yêu cầu trả phòng');

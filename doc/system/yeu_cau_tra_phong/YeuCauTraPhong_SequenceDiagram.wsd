@@ -1,45 +1,64 @@
 @startuml YeuCauTraPhong_SequenceDiagram
-title Sequence Diagram - UC22: Tạo yêu cầu trả phòng (Khách hàng)
+title Sequence Diagram - UC22: Tạo yêu cầu trả phòng
 
 skinparam {
     BackgroundColor White
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
-    ParticipantPadding 20
+    DefaultFontSize 16
+    ParticipantPadding 15
 }
-
-actor "Customer" as Customer
-boundary "ScreenCheckoutRequest" as Screen <<boundary>>
-control "Contract" as Contract <<control>>
-control "CheckoutRequest" as Request <<control>>
-database "CheckoutRequestDB" as RequestDB <<database>>
-database "ContractDB" as ContractDB <<database>>
 
 autonumber
 
-== Khởi tạo màn hình ==
-Customer -> Screen: show()
-Screen -> Contract: getActiveContractByCustomer()
-Contract -> ContractDB: getActiveByCustomer()
+actor "Khách hàng" as customer
+boundary "ScreenCheckoutRequest" as screen
+control "Contract" as contract
+control "CheckoutRequest" as request
+database "ContractDB" as contractDb
+database "CheckoutRequestDB" as requestDb
 
-== Gửi yêu cầu ==
-Customer -> Screen: Chọn phòng/giường cần trả
-Customer -> Screen: Điền thông tin và tải giấy tờ
-Customer -> Screen: Nhấn "Gửi yêu cầu" (btnSubmitClick)
+customer -> screen: show()
+activate customer
+activate screen
+screen -> contract: getActiveByUserEmail(userEmail)
+activate contract
+contract -> contractDb: getActiveByUserEmail(userEmail)
+activate contractDb
+contractDb --> contract: Contract[]
+deactivate contractDb
+contract --> screen: Contract[]
+deactivate contract
 
+screen --> customer: Hiển thị danh sách hợp đồng
+deactivate screen
+deactivate customer
+
+customer -> screen: Chọn hợp đồng
+activate customer
+activate screen
+customer -> screen: Điền ngày dự kiến
+deactivate customer
+deactivate screen
+
+customer -> screen: Nhấn "Gửi yêu cầu"
+activate customer
+activate screen
 alt Thông tin hợp lệ
-    Screen -> Request: createRequest()
-    Request -> RequestDB: insert()
-    Screen --> Customer: Thông báo thành công
+    screen -> request: createWithDuplicateCheck(data)
+    activate request
+    request -> requestDb: insertIfNoActiveRequest(data)
+    activate requestDb
+    requestDb --> request: {success: bool, requestId?: string}
+    deactivate requestDb
+    request --> screen: {success: bool, request?: CheckoutRequest}
+    deactivate request
+    screen --> customer: Thông báo thành công
+else Yêu cầu đã tồn tại
+    screen --> customer: Thông báo lỗi
 end
 
-== Hủy yêu cầu ==
-alt Yêu cầu đã được tạo
-    Customer -> Screen: Nhấn "Hủy yêu cầu" (btnCancelClick)
-    Screen -> Request: cancelRequest()
-    Request -> RequestDB: removeById()
-    Screen --> Customer: Xác nhận hủy thành công
-end
+deactivate customer
+deactivate screen
 
 @enduml
