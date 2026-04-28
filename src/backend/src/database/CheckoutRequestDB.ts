@@ -105,6 +105,12 @@ export class CheckoutRequestDB {
     return result.rows[0] ? this.mapRow(result.rows[0]) : null;
   }
 
+  static async getByUserEmail(userEmail: string): Promise<Partial<CheckoutRequest>[]> {
+    const sql = `${this.BASE_QUERY} WHERE cr.user_email = $1 ORDER BY cr.created_at DESC`;
+    const result = await dbClient.query(sql, [userEmail]);
+    return result.rows.map((row: any) => this.mapRow(row));
+  }
+
   static async updateStatus(requestId: string, newStatus: CheckoutStatus, expectedStatus?: CheckoutStatus): Promise<boolean> {
     const sql = expectedStatus 
       ? `UPDATE checkout_requests SET status = $1 WHERE id = $2 AND status = $3` 

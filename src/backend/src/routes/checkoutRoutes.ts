@@ -4,12 +4,22 @@ import { Contract } from '../business/Contract';
 import { Room } from '../business/Room';
 import { RefundCalculation } from '../business/RefundCalculation';
 import { CheckoutStatus, ContractStatus } from '@dormarch/shared';
+import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
 
 export const checkoutRouter = Router();
 
-checkoutRouter.get('/', async (req: Request, res: Response) => {
+checkoutRouter.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const requests = await CheckoutRequest.getList();
+    const email = req.user?.email;
+    if (!email) {
+      return res.status(401).json({ message: 'Không thể định danh' });
+    }
+    
+    // Admin sees all requests, customers see only their own
+    const isAdmin = req.user?.role === 'ADMIN';
+    const requests = isAdmin 
+      ? await CheckoutRequest.getList()
+      : await CheckoutRequest.getListByUserEmail(email);
     res.status(200).json(requests);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });
