@@ -3,54 +3,82 @@ title Class Diagram - UC25: Thanh lý hợp đồng
 
 skinparam {
     ClassBackgroundColor White
-    ClassBorderColor #2D3E50
     ArrowColor #2D3E50
+    ClassBorderColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
+    DefaultFontSize 16
+    ClassBorderThickness 2
+    StereotypeFontColor #2D3E50
     Padding 5
 }
 
 class "ScreenContractTermination" as ContractLiquidationScreen <<boundary>> {
-  - fileLiquidation: FileUploader
+  - lblContractInfo: Label
+  - lblRefundInfo: Label
   - btnComplete: Button
-  + show(): void
+  - btnBack: Button
+  + show(requestId: string): void
   + loadCalculation(): void
   + btnCompleteClick(): void
 }
 
 class "Contract" as Contract <<control>> {
-  - contractID: int
-  - roomID: int
-  - status: string
-  - depositAmount: float
-  - stayDuration: int
-  - liquidationUrl: string
-  + <<static>> liquidateContract(): bool
+  - contractId: string
+  - contractCode: string
+  - userEmail: string
+  - roomName: string
+  - dormName: string
+  - floor: number
+  - bedNumbers: string
+  - startDate: string
+  - stayDuration: number
+  - rentalFormId: string
+  - status: ContractStatus
+  - depositAmount: number
+  - signatureUrl: string
+  - createdAt: string
+  + <<static>> getByContractId(contractId: string): Contract 
+  + <<static>> updateStatus(contractId: string, status: ContractStatus): bool
+  + <<static>> getBedsInfoByContractId(contractId: string): {roomId: string, bedIds: string[]} 
 }
 
 class "ContractDB" as ContractDB <<entity>> {
-  + <<static>> updateStatus(contractID: int, status: string): bool
-  + <<static>> updateLiquidationUrl(contractID: int, path: string): bool
+  + <<static>> updateStatus(id: string, status: string): bool
 }
 
 class "Room" as Room <<control>> {
-  - roomID: int
+  - id: string
+  - dormId: string
+  - name: string
+  - block: string
+  - floor: number
+  - price: number
+  - totalBeds: number
+  - availableBeds: number
   - status: string
-  + <<static>> updateRoomStatus(roomID: int, status: string): bool
+  - imageUrl: string
+  + <<static>> updateBedStatus(roomId: string, bedIds: string[], status: string): bool
 }
 
 class "RoomDB" as RoomDB <<entity>> {
-  + <<static>> updateStatus(roomID: int, status: string): bool
+  + <<static>> markBedsStatus(roomId: string, bedIds: string[], status: string): bool
 }
 
 class "RefundCalculation" as RefundCalculation <<control>> {
-  - calculationID: int
-  - requestID: int
-  - depositAmount: float
-  - damageFee: float
-  - extraFee: float
-  - finalRefundAmount: float
-  + <<static>> getByRequestId(requestID: int): RefundCalculation
+  - calculationId: string
+  - requestId: string
+  - contractId: string
+  - depositAmount: number
+  - damageFee: number
+  - extraFee: number
+  - finalRefundAmount: number
+  - notes: string
+  - createdAt: string
+  + <<static>> getByRequestId(requestId: string): RefundCalculation 
+}
+
+class "RefundCalculationDB" as RefundCalculationDB <<entity>> {
+  + <<static>> getByRequestId(requestId: string): RefundCalculation
 }
 
 ContractLiquidationScreen --> Contract
@@ -58,5 +86,6 @@ ContractLiquidationScreen --> RefundCalculation
 Contract --> ContractDB
 ContractLiquidationScreen --> Room
 Room --> RoomDB
+RefundCalculation --> RefundCalculationDB
 
 @enduml
