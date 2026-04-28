@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ContractDTO, ContractStatus, UserProfileDTO } from '@dormarch/shared';
 import { ApiClient } from '../api/ApiClient';
 import { ContractService } from '../api/ContractService';
-import { HandoverService, HandoverReport } from '../api/HandoverService';
+import { HandoverService, HandoverReportDTO } from '../api/HandoverService';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -83,7 +83,7 @@ const ContractDetail = ({
 }: {
   contract: ContractDTO;
   profile: UserProfileDTO | null;
-  handovers: HandoverReport[];
+  handovers: HandoverReportDTO[];
   handoverLoading: boolean;
 }) => {
   const [tab, setTab] = useState<DetailTab>('info');
@@ -177,7 +177,7 @@ const ContractDetail = ({
               </div>
               <div className="flex gap-2">
                 <span className="text-sm text-slate-500 min-w-32">Phòng:</span>
-                <span className="text-sm font-semibold text-slate-800">{contract.roomId || '—'}</span>
+                <span className="text-sm font-semibold text-slate-800">{contract.roomName || '—'}</span>
               </div>
               <div className="flex gap-2">
                 <span className="text-sm text-slate-500 min-w-32">Tầng:</span>
@@ -420,7 +420,7 @@ export const UserContractPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<ContractDTO | null>(null);
-  const [handovers, setHandovers] = useState<HandoverReport[]>([]);
+  const [handovers, setHandovers] = useState<HandoverReportDTO[]>([]);
   const [handoverLoading, setHandoverLoading] = useState(false);
 
   useEffect(() => {
@@ -482,8 +482,8 @@ export const UserContractPage = () => {
                 key={c.contractId}
                 onClick={() => selectContract(c)}
                 className={`text-left rounded-xl border p-4 transition-all ${isActive
-                    ? 'border-blue-500 bg-blue-50 shadow-sm'
-                    : 'border-slate-200 bg-white hover:border-blue-300'
+                  ? 'border-blue-500 bg-blue-50 shadow-sm'
+                  : 'border-slate-200 bg-white hover:border-blue-300'
                   }`}
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
@@ -495,6 +495,7 @@ export const UserContractPage = () => {
                 </div>
                 <p className="text-sm font-semibold text-slate-800">{c.dormName ?? '—'}</p>
                 <p className="text-xs text-slate-500">{c.roomId}{c.bedNumbers ? ` · Giường ${c.bedNumbers}` : ''}</p>
+                <p className="text-xs text-slate-500">{(c as any).roomName || c.roomId}{c.bedNumbers ? ` · Giường ${c.bedNumbers}` : ''}</p>
                 <p className="text-xs text-slate-400 mt-1">{fmtDate(c.startDate)}</p>
               </button>
             );

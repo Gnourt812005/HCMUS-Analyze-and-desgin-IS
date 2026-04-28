@@ -1,43 +1,16 @@
 import { ApiClient } from './ApiClient';
-import { ContractDTO } from '@dormarch/shared';
+import { ContractDTO, ContractAdminDTO, RentalFormOptionDTO } from '@dormarch/shared';
 
-export type ContractStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING_CHECKOUT' | 'LIQUIDATED';
-
-export interface ContractAdminRow {
-  id: string;
-  contractCode: string | null;
-  userEmail: string;
-  rentalFormId: string | null;
-  startDate: string;
-  stayDuration: number;
-  status: ContractStatus;
-  signatureUrl: string | null;
-  createdAt: string;
-  customerName: string;
-  phone: string | null;
-  cccd: string | null;
-  roomName: string | null;
-  bedNumbers: string[];
-}
-
-export interface RentalFormOption {
-  id: string;
-  customerName: string;
-  phone: string | null;
-  cccd: string | null;
-  roomName: string | null;
-  bedNumbers: string[];
-  totalAmount: number;
-  createdAt: string;
-}
+export { ContractStatus } from '@dormarch/shared';
+export type { ContractAdminDTO, RentalFormOptionDTO };
 
 export class ContractService {
-  static async getAll(): Promise<ContractAdminRow[]> {
+  static async getAll(): Promise<ContractAdminDTO[]> {
     const res = await ApiClient.get('/contracts/admin/all');
     return res.data;
   }
 
-  static async getRentalForms(): Promise<RentalFormOption[]> {
+  static async getRentalForms(): Promise<RentalFormOptionDTO[]> {
     const res = await ApiClient.get('/contracts/admin/rental-forms');
     return res.data;
   }
