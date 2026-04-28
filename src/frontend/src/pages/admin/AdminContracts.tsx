@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   ContractService,
-  ContractAdminRow,
-  RentalFormOption,
-  ContractStatus,
+  ContractAdminDTO,
+  RentalFormOptionDTO,
 } from '../../api/ContractService';
 import { ApiClient } from '../../api/ApiClient';
 
@@ -39,22 +38,22 @@ function calcEndDate(startDate: string, stayDuration: number): string {
   } catch { return ''; }
 }
 
-type UIStatus = 'Hiệu lực' | 'Hết hạn' | 'Đã huỷ';
-function toUIStatus(s: ContractStatus): UIStatus {
-  if (s === 'ACTIVE' || s === 'PENDING_CHECKOUT') return 'Hiệu lực';
-  if (s === 'INACTIVE') return 'Hết hạn';
-  return 'Đã huỷ';
+type UIStatus = 'Hiệu lực' | 'Đã chấm dứt' | 'Đã thanh lý';
+function toUIStatus(s: string): UIStatus {
+  if (s === 'ACTIVE') return 'Hiệu lực';
+  if (s === 'TERMINATED') return 'Đã chấm dứt';
+  return 'Đã thanh lý';
 }
 
 const STATUS_STYLE: Record<UIStatus, string> = {
-  'Hiệu lực': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  'Hết hạn': 'bg-slate-100  text-slate-500  border-slate-200',
-  'Đã huỷ': 'bg-red-50     text-red-600    border-red-200',
+  'Hiệu lực':    'bg-emerald-50 text-emerald-700 border-emerald-200',
+  'Đã chấm dứt': 'bg-slate-100  text-slate-500  border-slate-200',
+  'Đã thanh lý': 'bg-blue-50    text-blue-700   border-blue-200',
 };
 const STATUS_DOT: Record<UIStatus, string> = {
-  'Hiệu lực': 'bg-emerald-500',
-  'Hết hạn': 'bg-slate-400',
-  'Đã huỷ': 'bg-red-500',
+  'Hiệu lực':    'bg-emerald-500',
+  'Đã chấm dứt': 'bg-slate-400',
+  'Đã thanh lý': 'bg-blue-500',
 };
 
 // ─── Create Contract Modal ────────────────────────────────────────────────────
@@ -62,7 +61,7 @@ const STATUS_DOT: Record<UIStatus, string> = {
 const CreateContractModal = ({
   onClose, onCreated,
 }: { onClose: () => void; onCreated: () => void }) => {
-  const [forms, setForms] = useState<RentalFormOption[]>([]);
+  const [forms, setForms] = useState<RentalFormOptionDTO[]>([]);
   const [loadingForms, setLoadingForms] = useState(true);
   const [rentalFormId, setRentalFormId] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -110,7 +109,6 @@ const CreateContractModal = ({
         <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Lập hợp đồng mới</h2>
-            <p className="text-slate-500 text-sm mt-0.5">Tạo hợp đồng từ phiếu đăng ký thuê đã có</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
             <span className="material-symbols-outlined text-slate-500">close</span>
@@ -212,8 +210,8 @@ const CreateContractModal = ({
                 type="number"
                 min={1}
                 max={24}
-                value={stayDuration}
-                onChange={e => setStayDuration(Number(e.target.value))}
+                value={stayDuration || ''}
+                onChange={e => setStayDuration(parseInt(e.target.value) || 0)}
                 className="w-full bg-slate-50 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               />
               {startDate && stayDuration >= 1 && (
@@ -267,7 +265,7 @@ const SectionTitle = ({ number, title }: { number: string; title: string }) => (
 const ContractDetailModal = ({
   contract, onClose, onUpdated, onCancelled,
 }: {
-  contract: ContractAdminRow;
+  contract: ContractAdminDTO;
   onClose: () => void;
   onUpdated: () => void;
   onCancelled: () => void;
@@ -426,7 +424,7 @@ const ContractDetailModal = ({
                 <div className="flex gap-2 items-center">
                   <span className="text-sm text-slate-500 min-w-32">Thời hạn:</span>
                   {editing
-                    ? <input type="number" min={1} max={24} value={stayDuration} onChange={e => setStayDuration(Number(e.target.value))}
+                    ? <input type="number" min={1} max={24} value={stayDuration || ''} onChange={e => setStayDuration(parseInt(e.target.value) || 0)}
                       className="bg-slate-100 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 w-24" />
                     : <span className="text-sm font-semibold text-slate-800">{stayDuration} tháng</span>
                   }
@@ -596,14 +594,14 @@ const ContractDetailModal = ({
 type StatusFilter = 'all' | UIStatus;
 
 export const AdminContracts = () => {
-  const [contracts, setContracts] = useState<ContractAdminRow[]>([]);
+  const [contracts, setContracts] = useState<ContractAdminDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
 
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [showCreate, setShowCreate] = useState(false);
-  const [selected, setSelected] = useState<ContractAdminRow | null>(null);
+  const [selected, setSelected] = useState<ContractAdminDTO | null>(null);
   const [successMsg, setSuccessMsg] = useState('');
 
   const fetchContracts = () => {
@@ -656,8 +654,8 @@ export const AdminContracts = () => {
   const stats = useMemo(() => ({
     total: contracts.length,
     active: contracts.filter(c => toUIStatus(c.status) === 'Hiệu lực').length,
-    expired: contracts.filter(c => toUIStatus(c.status) === 'Hết hạn').length,
-    cancelled: contracts.filter(c => toUIStatus(c.status) === 'Đã huỷ').length,
+    terminated: contracts.filter(c => toUIStatus(c.status) === 'Đã chấm dứt').length,
+    liquidated: contracts.filter(c => toUIStatus(c.status) === 'Đã thanh lý').length,
   }), [contracts]);
 
   return (
@@ -688,8 +686,8 @@ export const AdminContracts = () => {
         {[
           { label: 'Tổng hợp đồng', value: stats.total, icon: 'description', color: 'text-blue-600 bg-blue-50' },
           { label: 'Đang hiệu lực', value: stats.active, icon: 'verified', color: 'text-emerald-600 bg-emerald-50' },
-          { label: 'Hết hạn', value: stats.expired, icon: 'schedule', color: 'text-slate-500 bg-slate-100' },
-          { label: 'Đã huỷ', value: stats.cancelled, icon: 'cancel', color: 'text-red-500 bg-red-50' },
+          { label: 'Đã chấm dứt', value: stats.terminated, icon: 'cancel', color: 'text-slate-500 bg-slate-100' },
+          { label: 'Đã thanh lý', value: stats.liquidated, icon: 'receipt_long', color: 'text-blue-600 bg-blue-50' },
         ].map(s => (
           <div key={s.label} className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex items-center gap-4">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.color}`}>
@@ -715,7 +713,7 @@ export const AdminContracts = () => {
           />
         </div>
         <div className="flex gap-2">
-          {(['all', 'Hiệu lực', 'Hết hạn', 'Đã huỷ'] as const).map(s => (
+          {(['all', 'Hiệu lực', 'Đã chấm dứt', 'Đã thanh lý'] as const).map(s => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}

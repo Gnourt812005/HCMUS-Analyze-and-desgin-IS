@@ -1,104 +1,48 @@
-import { ContractDB, ContractAdminRow, RentalFormOption } from '../database/ContractDB';
-import { ContractDTO , ContractStatus } from '@dormarch/shared';
+import { ContractDB } from '../database/ContractDB';
+import { ContractDTO, ContractAdminDTO, RentalFormOptionDTO, ContractStatus } from '@dormarch/shared';
 
 export class Contract {
-  contractId: string;
-  contractCode?: string;
-  userEmail: string;
-  rentalFormId?: string;
-  roomId?: string;
-  roomName?: string;
-  dormName?: string;
-  floor?: number;
-  bedNumbers?: string;
-  startDate?: string;
-  depositAmount?: number;
-  stayDuration?: number;
-  signatureUrl?: string;
-  createdAt?: string;
-  status: ContractStatus;
-
-  constructor(data: Partial<Contract>) {
-    this.contractId = data.contractId || '';
-    this.contractCode = data.contractCode;
-    this.userEmail = data.userEmail || '';
-    this.rentalFormId = data.rentalFormId;
-    this.roomId = data.roomId;
-    this.roomName = data.roomName;
-    this.dormName = data.dormName;
-    this.floor = data.floor;
-    this.bedNumbers = data.bedNumbers;
-    this.startDate = data.startDate;
-    this.depositAmount = data.depositAmount;
-    this.stayDuration = data.stayDuration || 0;
-    this.signatureUrl = data.signatureUrl;
-    this.createdAt = data.createdAt || new Date().toISOString();
-    this.status = data.status || ContractStatus.ACTIVE;
-  }
-  
-  toDto(): ContractDTO {
-    return {
-      contractId: this.contractId,
-      contractCode: this.contractCode,
-      userEmail: this.userEmail,
-      rentalFormId: this.rentalFormId,
-      dormName: this.dormName,
-      floor: this.floor,
-      bedNumbers: this.bedNumbers,
-      startDate: this.startDate,
-      depositAmount: this.depositAmount,
-      stayDuration: this.stayDuration,
-      status: this.status,
-      signatureUrl: this.signatureUrl,
-      createdAt: this.createdAt
-    };
-  }
-
   static async getByUserEmail(userEmail: string): Promise<ContractDTO | null> {
-    const contractModel = await ContractDB.getByUserEmail(userEmail);
-    return contractModel ? new Contract(contractModel).toDto() : null;
+    return ContractDB.getByUserEmail(userEmail);
   }
 
   static async getByContractId(contractId: string): Promise<ContractDTO | null> {
-    const contractModel = await ContractDB.getByContractId(contractId);
-    return contractModel ? new Contract(contractModel).toDto() : null;
+    return ContractDB.getByContractId(contractId);
   }
 
   static async getActiveByUserEmail(userEmail: string): Promise<ContractDTO[]> {
-    const contractModels = await ContractDB.getActiveByUserEmail(userEmail);
-    return contractModels.map(model => new Contract(model).toDto());
+    return ContractDB.getActiveByUserEmail(userEmail);
   }
 
   static async getAllByUserEmail(userEmail: string): Promise<ContractDTO[]> {
-    const contractModels = await ContractDB.getAllByUserEmail(userEmail);
-    return contractModels.map(model => new Contract(model).toDto());
+    return ContractDB.getAllByUserEmail(userEmail);
   }
-  
+
   static async updateStatus(contractId: string, status: ContractStatus): Promise<boolean> {
-    return await ContractDB.updateStatus(contractId, status);
+    return ContractDB.updateStatus(contractId, status);
   }
 
-  static async getBedsInfoByContractId(contractId: string): Promise<{ roomId: string, bedIds: string[] } | null> {
-    return await ContractDB.getBedsInfoByContractId(contractId);
+  static async getBedsInfoByContractId(contractId: string): Promise<{ roomId: string; bedIds: string[] } | null> {
+    return ContractDB.getBedsInfoByContractId(contractId);
   }
 
-  static async getAll(): Promise<ContractAdminRow[]> {
+  static async getAll(): Promise<ContractAdminDTO[]> {
     return ContractDB.getAll();
   }
 
-  static async getRentalFormsWithoutContract(): Promise<RentalFormOption[]> {
+  static async getRentalFormsWithoutContract(): Promise<RentalFormOptionDTO[]> {
     return ContractDB.getRentalFormsWithoutContract();
   }
 
   static async insert(rentalFormId: string, startDate: string, stayDuration: number): Promise<string> {
-    return await ContractDB.insert(rentalFormId, startDate, stayDuration);
+    return ContractDB.insert(rentalFormId, startDate, stayDuration);
   }
 
   static async adminUpdate(contractId: string, startDate: string, stayDuration: number): Promise<boolean> {
-    return await ContractDB.adminUpdate(contractId, startDate, stayDuration);
+    return ContractDB.adminUpdate(contractId, startDate, stayDuration);
   }
 
   static async cancel(contractId: string): Promise<boolean> {
-    return await ContractDB.cancel(contractId);
+    return ContractDB.cancel(contractId);
   }
 }
