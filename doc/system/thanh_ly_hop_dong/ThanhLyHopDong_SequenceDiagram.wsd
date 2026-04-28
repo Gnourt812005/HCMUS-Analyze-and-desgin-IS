@@ -5,36 +5,58 @@ skinparam {
     BackgroundColor White
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
-    ParticipantPadding 20
+    DefaultFontSize 16
+    ParticipantPadding 15
 }
-
-actor "Staff" as NV
-boundary "ScreenContractTermination" as Screen <<boundary>>
-control "RefundCalculation" as Calc <<control>>
-control "Contract" as Contract <<control>>
-control "Room" as Room <<control>>
-database "ContractDB" as ContractDB <<database>>
-database "RoomDB" as RoomDB <<database>>
 
 autonumber
 
-== Khởi tạo màn hình ==
-NV -> Screen: show()
-Screen -> Calc: getByRequestId()
+actor "Nhân viên" as nv
+boundary "ScreenContractTermination" as screen
+control "Contract" as contract
+control "Room" as room
+database "ContractDB" as contractDb
+database "RoomDB" as roomDb
 
-== Hoàn tất thanh lý ==
-NV -> Screen: Xác nhận thanh toán và tải biên bản thanh lý
-NV -> Screen: Nhấn "Hoàn tất" (btnCompleteClick)
+nv -> screen: show(requestId)
+activate nv
+deactivate nv
+activate screen
+deactivate screen
 
-alt Biên bản thanh lý hợp lệ
-    Screen -> Contract: liquidateContract()
-    Contract -> ContractDB: updateStatus()
-    Contract -> ContractDB: updateLiquidationUrl()
+nv -> screen: Nhấn "Hoàn tất thanh lý"
+activate nv
+activate screen
 
-    Screen -> Room: updateRoomStatus()
-    Room -> RoomDB: updateStatus()
-    
-end
+screen -> contract: updateStatus(contractId, ContractStatus.LIQUIDATED)
+activate contract
+contract -> contractDb: updateStatus(contractId, ContractStatus.LIQUIDATED)
+activate contractDb
+contractDb --> contract: bool (true)
+deactivate contractDb
+contract --> screen: bool (true)
+deactivate contract
+
+screen -> contract: getBedsInfoByContractId(contractId)
+activate contract
+contract -> contractDb: getBedsInfoByContractId(contractId)
+activate contractDb
+contractDb --> contract: {roomId: string, bedIds: string[]}
+deactivate contractDb
+contract --> screen: {roomId: string, bedIds: string[]}
+deactivate contract
+
+screen -> room: updateBedStatus(roomId, bedIds, "AVAILABLE")
+activate room
+room -> roomDb: markBedsStatus(roomId, bedIds, "AVAILABLE")
+activate roomDb
+roomDb --> room: bool (true)
+deactivate roomDb
+room --> screen: bool (true)
+deactivate room
+
+screen --> nv: Thông báo thành công
+deactivate screen
+deactivate nv
 
 @enduml

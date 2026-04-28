@@ -3,49 +3,66 @@ title Class Diagram - UC22: Tạo yêu cầu trả phòng
 
 skinparam {
     ClassBackgroundColor White
-    ClassBorderColor #2D3E50
     ArrowColor #2D3E50
+    ClassBorderColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
+    DefaultFontSize 16
+    ClassBorderThickness 2
+    StereotypeFontColor #2D3E50
     Padding 5
 }
 
 class "ScreenCheckoutRequest" as CheckoutRequestScreen <<boundary>> {
+  - cbbContractList: ComboBox
   - dtpCheckoutDate: DateTimePicker
-  - file: FileUploader
   - btnSubmit: Button
-  - btnCancel: Button
+  - btnBack: Button
   + show(): void
   + btnSubmitClick(): void
   + btnCancelClick(): void
 }
 
 class "CheckoutRequest" as CheckoutRequest <<control>> {
-  - requestID: int
-  - expectedDate: DateTime
-  - documentUrl: string
-  - status: string
-  - createdAt: DateTime
-  + <<static>> createRequest(): bool
-  + <<static>> cancelRequest(): bool
+  - requestId: string
+  - userEmail: string
+  - userFullName: string
+  - contractId: string
+  - dormName: string
+  - roomName: string
+  - floor: number
+  - bedNumbers: string
+  - expectedDate: string
+  - status: CheckoutStatus
+  - createdAt: string
+  + <<static>> create(data: Partial<CheckoutRequestDTO>): CheckoutRequestDTO
+  + <<static>> createWithDuplicateCheck(data: Partial<CheckoutRequestDTO>): {success: bool, request?: CheckoutRequestDTO, error?: string}
 }
 
 class "CheckoutRequestDB" as CheckoutRequestDB <<entity>> {
-  + <<static>> insert(request: CheckoutRequest): bool
-  + <<static>> removeById(requestID: int): bool
+  + <<static>> insert(request: CheckoutRequest): string | null
+  + <<static>> insertIfNoActiveRequest(request: CheckoutRequest, contractId: string, userEmail: string): {success: bool, error?: string, requestId?: string}
 }
 
 class "Contract" as Contract <<control>> {
-  - contractID: int
-  - roomID: int
-  - status: string
-  - depositAmount: float
-  - stayDuration: int
-  + <<static>> getActiveContractByCustomer(): Contract
+  - contractId: string
+  - contractCode: string
+  - userEmail: string
+  - roomName: string
+  - dormName: string
+  - floor: number
+  - bedNumbers: string
+  - startDate: string
+  - stayDuration: number
+  - rentalFormId: string
+  - status: ContractStatus
+  - depositAmount: number
+  - signatureUrl: string
+  - createdAt: string
+  + <<static>> getActiveByUserEmail(userEmail: string): ContractDTO[]
 }
 
 class "ContractDB" as ContractDB <<entity>> {
-  + <<static>> getActiveByCustomer(): Contract
+  + <<static>> getActiveByUserEmail(userEmail: string): Partial<Contract>[]
 }
 
 CheckoutRequestScreen --> CheckoutRequest
