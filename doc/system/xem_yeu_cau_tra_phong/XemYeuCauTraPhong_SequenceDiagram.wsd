@@ -23,6 +23,7 @@ database "RefundCalculationDB" as refundDb
 
 customer -> listScreen: show()
 activate listScreen
+activate customer
 listScreen -> checkoutCtrl: getListByUserEmail(userEmail)
 activate checkoutCtrl
 checkoutCtrl -> checkoutDb: getByUserEmail(userEmail)
@@ -34,9 +35,11 @@ deactivate checkoutCtrl
 
 listScreen --> customer: Hiển thị danh sách
 deactivate listScreen
+deactivate customer
 
 customer -> listScreen: Chọn yêu cầu
 activate listScreen
+activate customer
 listScreen -> detailScreen: show(requestId)
 activate detailScreen
 deactivate listScreen
@@ -72,5 +75,6 @@ end
 detailScreen --> customer: Hiển thị chi tiết
 deactivate detailScreen
 deactivate listScreen
+deactivate customer
 
 @enduml

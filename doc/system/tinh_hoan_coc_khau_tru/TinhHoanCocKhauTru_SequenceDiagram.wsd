@@ -22,6 +22,7 @@ database "CheckoutRequestDB" as requestDb
 
 manager -> screen: show(requestId)
 activate screen
+activate manager
 screen -> contract: getByContractId(contractId)
 activate contract
 contract -> contractDb: getByContractId(contractId)
@@ -50,5 +51,6 @@ deactivate refund
 
 screen --> manager: Thông báo thành công
 deactivate screen
+deactivate manager
 
 @enduml
