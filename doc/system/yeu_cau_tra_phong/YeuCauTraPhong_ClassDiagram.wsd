@@ -34,12 +34,12 @@ class "CheckoutRequest" as CheckoutRequest <<control>> {
   - expectedDate: string
   - status: CheckoutStatus
   - createdAt: string
-  + <<static>> create(data: Partial<CheckoutRequestDTO>): CheckoutRequestDTO
-  + <<static>> createWithDuplicateCheck(data: Partial<CheckoutRequestDTO>): {success: bool, request?: CheckoutRequestDTO, error?: string}
+  + <<static>> create(data: CheckoutRequest): CheckoutRequest
+  + <<static>> createWithDuplicateCheck(data: CheckoutRequest): {success: bool, request?: CheckoutRequest, error?: string}
 }
 
 class "CheckoutRequestDB" as CheckoutRequestDB <<entity>> {
-  + <<static>> insert(request: CheckoutRequest): string | null
+  + <<static>> insert(request: CheckoutRequest): string
   + <<static>> insertIfNoActiveRequest(request: CheckoutRequest, contractId: string, userEmail: string): {success: bool, error?: string, requestId?: string}
 }
 
@@ -58,11 +58,11 @@ class "Contract" as Contract <<control>> {
   - depositAmount: number
   - signatureUrl: string
   - createdAt: string
-  + <<static>> getActiveByUserEmail(userEmail: string): ContractDTO[]
+  + <<static>> getActiveByUserEmail(userEmail: string): Contract[]
 }
 
 class "ContractDB" as ContractDB <<entity>> {
-  + <<static>> getActiveByUserEmail(userEmail: string): Partial<Contract>[]
+  + <<static>> getActiveByUserEmail(userEmail: string): Contract[]
 }
 
 CheckoutRequestScreen --> CheckoutRequest
