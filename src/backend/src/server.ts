@@ -10,6 +10,7 @@ import { previewRoutes } from './routes/previewRoutes';
 import { handoverRoutes } from './routes/handoverRoutes';
 import { utilityRoutes } from './routes/utilityRoutes';
 import { dbClient } from './database/DatabaseClient';
+import { BackgroundTasks } from './utils/BackgroundTasks';
 
 dotenv.config();
 
@@ -45,5 +46,6 @@ app.listen(PORT, () => {
     }
   }
   startServer();
+  BackgroundTasks.start();
   console.log(`🚀 DormArch Backend running at http://localhost:${PORT}`);
 });
