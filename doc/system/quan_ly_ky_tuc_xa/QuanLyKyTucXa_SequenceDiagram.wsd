@@ -61,7 +61,19 @@ BUS -> DB: update(id, data)
 Actor -> MainGUI: Nhấn nút Xóa & Xác nhận
 MainGUI -> MainGUI: handleDelete(id)
 MainGUI -> BUS: delete(id)
-BUS -> DB: delete(id)
+BUS -> DB: fetchById(id)
+BUS -> RDB: getByDormId(id)
+alt Có phòng đang có người ở (availableBeds < totalBeds)
+    BUS --> MainGUI: Ném lỗi (Không thể xóa)
+    MainGUI --> Actor: Hiển thị thông báo lỗi
+else Tất cả phòng trống hoặc không có phòng
+    BUS -> ROOM: deleteByDormId(id)
+    ROOM -> RDB: deleteByDormId(id)
+    BUS -> DB: delete(id)
+    DB --> BUS: Thành công
+    BUS --> MainGUI: Thành công
+end
+
 
 @enduml
 

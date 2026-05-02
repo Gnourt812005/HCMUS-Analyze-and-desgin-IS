@@ -25,6 +25,20 @@ export class Bed {
   }
 
   static async deleteBed(bedId: string): Promise<boolean> {
-    return await RoomDB.removeBed(bedId);
+    const bed = await RoomDB.fetchBedById(bedId);
+    if (!bed) {
+      throw new Error('Không tìm thấy giường');
+    }
+
+    if (bed.status !== 'AVAILABLE') {
+      throw new Error('Không thể xóa giường này vì trạng thái không phải là "Sẵn sàng" (AVAILABLE).');
+    }
+
+    const success = await RoomDB.removeBed(bedId);
+    if (success) {
+      await RoomDB.syncRoomAvailability(bed.roomId);
+    }
+    return success;
   }
+
 }

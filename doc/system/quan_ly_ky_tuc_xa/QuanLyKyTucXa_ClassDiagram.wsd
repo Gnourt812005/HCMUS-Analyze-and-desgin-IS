@@ -114,6 +114,8 @@ class "Dorm" <<control>> {
 
 class "Room" <<control>> {
     + <<static>> fetchAll(query: GetRoomDto): { rooms: RoomDTO[], total: number }
+    + <<static>> getByDormId(dormId: string): RoomDTO[]
+    + <<static>> deleteByDormId(dormId: string): boolean
 }
 
 class "Utility" <<control>> {
@@ -130,6 +132,12 @@ class "DormDB" <<database>> {
     + <<static>> delete(id: string): boolean
 }
 
+class "RoomDB" <<database>> {
+    + <<static>> getByDormId(dormId: string): Room[]
+    + <<static>> deleteByDormId(dormId: string): boolean
+}
+
+
 ' --- RELATIONSHIPS ---
 AdminDorm --> Dorm
 AdminDormDetail --> Dorm
@@ -137,6 +145,8 @@ AdminDormDetail --> Room
 AdminDormDetail --> Utility
 Dorm --> DormDB
 AdminDorm ..> AdminDormDetail
+Room --> RoomDB
+Dorm --> Room
 
 @enduml
 

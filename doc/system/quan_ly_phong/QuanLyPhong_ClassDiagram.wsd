@@ -132,6 +132,7 @@ class "Room" <<control>> {
     + <<static>> create(data: CreateRoomDTO): boolean
     + <<static>> update(id: string, data: UpdateRoomDTO): boolean
     + <<static>> delete(id: string): boolean
+    + <<static>> deleteBedsByRoomId(roomId: string): boolean
 }
 
 class "Bed" <<control>> {
@@ -150,15 +151,18 @@ class "Utility" <<control>> {
 }
 
 ' --- DATABASE LAYER ---
-class "RoomDB" <<entity>> {
+class "RoomDB" <<database>> {
     + <<static>> fetchAll(query: GetRoomDto): { rooms: any[], total: number }
     + <<static>> fetchById(id: string): any
     + <<static>> insert(data: any): boolean
     + <<static>> update(id: string, data: any): boolean
     + <<static>> delete(id: string): boolean
+    + <<static>> deleteBedsByRoomId(roomId: string): boolean
     + <<static>> insertBed(data: any): boolean
     + <<static>> updateBed(id: string, data: any): boolean
     + <<static>> removeBed(id: string): boolean
+    + <<static>> fetchBedById(id: string): any
+    + <<static>> syncRoomAvailability(roomId: string): void
 }
 
 class "DormDB" <<entity>> {

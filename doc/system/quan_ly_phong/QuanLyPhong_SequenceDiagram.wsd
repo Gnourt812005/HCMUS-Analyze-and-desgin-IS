@@ -62,7 +62,17 @@ BUS_Room -> RDB: update(id, data)
 Actor -> MainGUI: Nhấn Xóa & Xác nhận
 MainGUI -> MainGUI: handleDelete(id)
 MainGUI -> BUS_Room: delete(id)
-BUS_Room -> RDB: delete(id)
+BUS_Room -> RDB: fetchById(id)
+alt Có giường đang có người ở (status != 'AVAILABLE')
+    BUS_Room --> MainGUI: Ném lỗi (Không thể xóa)
+    MainGUI --> Actor: Hiển thị thông báo lỗi
+else Tất cả giường trống
+    BUS_Room -> RDB: deleteBedsByRoomId(id)
+    BUS_Room -> RDB: delete(id)
+    RDB --> BUS_Room: Thành công
+    BUS_Room --> MainGUI: Thành công
+end
+
 
 == Kịch bản 6 & 7: Quản lý Giường (Thêm/Sửa) ==
 Actor -> DetailGUI: Nhấn Thêm/Sửa giường & Lưu
@@ -74,7 +84,16 @@ BUS_Bed -> RDB: insertBed() / updateBed()
 Actor -> DetailGUI: Nhấn "Xóa" giường
 DetailGUI -> DetailGUI: handleDeleteBed(id)
 DetailGUI -> BUS_Bed: deleteBed(id)
-BUS_Bed -> RDB: removeBed(id)
+BUS_Bed -> RDB: fetchBedById(id)
+alt Giường đang có người ở (status != 'AVAILABLE')
+    BUS_Bed --> DetailGUI: Ném lỗi (Không thể xóa)
+    DetailGUI --> Actor: Hiển thị lỗi
+else Giường trống
+    BUS_Bed -> RDB: removeBed(id)
+    BUS_Bed -> RDB: syncRoomAvailability(roomId)
+    BUS_Bed --> DetailGUI: Thành công
+end
+
 
 @enduml
 

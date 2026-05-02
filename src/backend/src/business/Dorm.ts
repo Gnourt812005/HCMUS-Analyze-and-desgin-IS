@@ -1,5 +1,6 @@
 import { DormDTO, CreateDormDTO, UpdateDormDTO, GetDormsDto } from '@dormarch/shared';
 import { DormDB } from '../database/DormDB';
+import { Room } from './Room';
 
 export class Dorm {
   id: string;
@@ -73,10 +74,22 @@ export class Dorm {
   }
 
   static async delete(id: string): Promise<boolean> {
-    const exists = await DormDB.fetchById(id);
-    if (!exists) {
+    const dorm = await DormDB.fetchById(id);
+    if (!dorm) {
       throw new Error('Không tìm thấy ký túc xá');
     }
+
+    // Ensure all rooms in this dorm are free
+    const rooms = await Room.getByDormId(id);
+    const occupiedRooms = rooms.filter(r => r.availableBeds < r.totalBeds);
+
+    if (occupiedRooms.length > 0) {
+      throw new Error('Không thể xóa ký túc xá vì vẫn còn phòng đang có người ở.');
+    }
+
+    // Delete both dorm and rooms inside
+    await Room.deleteByDormId(id);
+
     return await DormDB.delete(id);
   }
 }
