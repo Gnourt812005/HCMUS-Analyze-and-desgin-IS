@@ -1,5 +1,5 @@
 import { ContractDB } from '../database/ContractDB';
-import { ContractDTO, ContractAdminDTO, RentalFormOptionDTO, ContractStatus } from '@dormarch/shared';
+import { ContractDTO, ContractAdminDTO, RentalFormOptionDTO, ContractStatus, DormFeesDTO } from '@dormarch/shared';
 
 export class Contract {
   static async getByUserEmail(userEmail: string): Promise<ContractDTO | null> {
@@ -44,5 +44,9 @@ export class Contract {
 
   static async cancel(contractId: string): Promise<boolean> {
     return ContractDB.cancel(contractId);
+  }
+
+  static async getFeesByContractId(contractId: string): Promise<DormFeesDTO | null> {
+    return ContractDB.getFeesByContractId(contractId);
   }
 }

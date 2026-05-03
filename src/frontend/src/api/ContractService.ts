@@ -1,8 +1,8 @@
 import { ApiClient } from './ApiClient';
-import { ContractDTO, ContractAdminDTO, RentalFormOptionDTO } from '@dormarch/shared';
+import { ContractDTO, ContractAdminDTO, RentalFormOptionDTO, DormFeesDTO } from '@dormarch/shared';
 
 export { ContractStatus } from '@dormarch/shared';
-export type { ContractAdminDTO, RentalFormOptionDTO };
+export type { ContractAdminDTO, RentalFormOptionDTO, DormFeesDTO };
 
 export class ContractService {
   static async getAll(): Promise<ContractAdminDTO[]> {
@@ -34,5 +34,14 @@ export class ContractService {
 
   static async getMyContracts(): Promise<ContractDTO[]> {
     return ApiClient.get<ContractDTO[]>('/contracts/mine');
+  }
+
+  static async getFees(contractId: string): Promise<DormFeesDTO | null> {
+    try {
+      const res = await ApiClient.get(`/contracts/${contractId}/fees`);
+      return res.data;
+    } catch {
+      return null;
+    }
   }
 }

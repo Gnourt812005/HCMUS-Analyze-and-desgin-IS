@@ -4,6 +4,7 @@ import {
   ContractDTO,
   ContractAdminDTO,
   RentalFormOptionDTO,
+  DormFeesDTO,
 } from '@dormarch/shared';
 import { dbClient } from './DatabaseClient';
 
@@ -37,7 +38,8 @@ export class ContractDB {
           json_agg(b.bed_number ORDER BY b.bed_number)
             FILTER (WHERE b.bed_number IS NOT NULL),
           '[]'::json
-        ) AS bed_numbers
+        ) AS bed_numbers,
+        COALESCE(SUM(b.price), 0) AS monthly_rent
       FROM contracts c
       JOIN users u           ON c.user_email   = u.email
       LEFT JOIN contract_beds cb ON cb.contract_id = c.id
@@ -56,6 +58,7 @@ export class ContractDB {
         rf.id,
         rf.total_amount,
         rf.created_at,
+        rf.deadline,
         u.full_name,
         u.phone,
         u.cccd,
@@ -70,7 +73,8 @@ export class ContractDB {
           json_agg(b.bed_number ORDER BY b.bed_number)
             FILTER (WHERE b.bed_number IS NOT NULL),
           '[]'::json
-        ) AS bed_numbers
+        ) AS bed_numbers,
+        COALESCE(SUM(b.price), 0) AS monthly_rent
       FROM rental_forms rf
       JOIN users u ON rf.user_email = u.email
       LEFT JOIN rental_form_beds rfb ON rfb.rental_form_id = rf.id
@@ -81,16 +85,24 @@ export class ContractDB {
       GROUP BY rf.id, u.full_name, u.phone, u.cccd
       ORDER BY rf.created_at DESC
     `);
-    return result.rows.map((row: any) => ({
-      id: row.id,
-      customerName: row.full_name,
-      phone: row.phone || null,
-      cccd: row.cccd || null,
-      roomName: row.room_name || null,
-      bedNumbers: row.bed_numbers || [],
-      totalAmount: parseFloat(row.total_amount) || 0,
-      createdAt: row.created_at,
-    }));
+    return result.rows.map((row: any) => {
+      const rentalMonths = Math.max(1, Math.round(
+        (new Date(row.deadline).getTime() - new Date(row.created_at).getTime())
+        / (30 * 24 * 60 * 60 * 1000)
+      ));
+      return {
+        id: row.id,
+        customerName: row.full_name,
+        phone: row.phone || null,
+        cccd: row.cccd || null,
+        roomName: row.room_name || null,
+        bedNumbers: row.bed_numbers || [],
+        monthlyRent: parseFloat(row.monthly_rent) || 0,
+        rentalMonths,
+        totalAmount: parseFloat(row.total_amount) || 0,
+        createdAt: row.created_at,
+      };
+    });
   }
 
   // ── Admin: create contract from rental form ────────────────────────────────
@@ -107,10 +119,29 @@ export class ContractDB {
       if (!rfResult.rows[0]) throw new Error('Không tìm thấy phiếu đăng ký thuê');
       const { user_email } = rfResult.rows[0];
 
+      // Snapshot fees tại thời điểm tạo hợp đồng
+      const feesResult = await client.query(`
+        SELECT df.electricity_fee, df.water_fee, df.wifi_fee, df.cleaning_fee
+        FROM rental_form_beds rfb
+        JOIN beds b   ON b.id   = rfb.bed_id
+        JOIN rooms r  ON r.id   = b.room_id
+        JOIN dorms d  ON d.id   = r.dorm_id
+        JOIN dorm_fees df ON df.dorm_id = d.id
+        WHERE rfb.rental_form_id = $1
+        LIMIT 1
+      `, [rentalFormId]);
+      const feesRow = feesResult.rows[0];
+      const feesSnapshot = feesRow ? {
+        electricityFee: parseFloat(feesRow.electricity_fee) || 0,
+        waterFee:       parseFloat(feesRow.water_fee)       || 0,
+        wifiFee:        parseFloat(feesRow.wifi_fee)        || 0,
+        cleaningFee:    parseFloat(feesRow.cleaning_fee)    || 0,
+      } : null;
+
       const contractResult = await client.query(
-        `INSERT INTO contracts (user_email, start_date, stay_duration, rental_form_id, status)
-         VALUES ($1, $2, $3, $4, 'ACTIVE') RETURNING id`,
-        [user_email, startDate, stayDuration, rentalFormId],
+        `INSERT INTO contracts (user_email, start_date, stay_duration, rental_form_id, status, fees_snapshot)
+         VALUES ($1, $2, $3, $4, 'ACTIVE', $5) RETURNING id`,
+        [user_email, startDate, stayDuration, rentalFormId, feesSnapshot ? JSON.stringify(feesSnapshot) : null],
       );
       const contractId = contractResult.rows[0].id;
 
@@ -203,6 +234,44 @@ export class ContractDB {
     };
   }
 
+  static async getFeesByContractId(contractId: string): Promise<DormFeesDTO | null> {
+    const result = await dbClient.query(`
+      SELECT
+        CASE WHEN c.fees_snapshot IS NOT NULL
+          THEN (c.fees_snapshot->>'electricityFee')::numeric
+          ELSE df.electricity_fee
+        END AS electricity_fee,
+        CASE WHEN c.fees_snapshot IS NOT NULL
+          THEN (c.fees_snapshot->>'waterFee')::numeric
+          ELSE df.water_fee
+        END AS water_fee,
+        CASE WHEN c.fees_snapshot IS NOT NULL
+          THEN (c.fees_snapshot->>'wifiFee')::numeric
+          ELSE df.wifi_fee
+        END AS wifi_fee,
+        CASE WHEN c.fees_snapshot IS NOT NULL
+          THEN (c.fees_snapshot->>'cleaningFee')::numeric
+          ELSE df.cleaning_fee
+        END AS cleaning_fee
+      FROM contracts c
+      LEFT JOIN contract_beds cb ON cb.contract_id = c.id
+      LEFT JOIN beds b           ON b.id           = cb.bed_id
+      LEFT JOIN rooms r          ON r.id           = b.room_id
+      LEFT JOIN dorms d          ON d.id           = r.dorm_id
+      LEFT JOIN dorm_fees df     ON df.dorm_id     = d.id
+      WHERE c.id = $1
+      LIMIT 1
+    `, [contractId]);
+    if (!result.rows[0]) return null;
+    const row = result.rows[0];
+    return {
+      electricityFee: parseFloat(row.electricity_fee) || 0,
+      waterFee:       parseFloat(row.water_fee)       || 0,
+      wifiFee:        parseFloat(row.wifi_fee)        || 0,
+      cleaningFee:    parseFloat(row.cleaning_fee)    || 0,
+    };
+  }
+
   static async updateStatus(contractId: string, status: ContractStatus): Promise<boolean> {
     const result = await dbClient.query(
       'UPDATE contracts SET status = $1 WHERE id = $2',
@@ -236,6 +305,9 @@ export class ContractDB {
       (SELECT STRING_AGG(b.bed_number, ', ')
        FROM contract_beds cb JOIN beds b ON cb.bed_id = b.id
        WHERE cb.contract_id = c.id) AS bed_numbers,
+      (SELECT COALESCE(SUM(b.price), 0)
+       FROM contract_beds cb JOIN beds b ON cb.bed_id = b.id
+       WHERE cb.contract_id = c.id) AS monthly_rent,
       (SELECT rf.total_amount FROM rental_forms rf WHERE rf.id = c.rental_form_id) AS deposit_amount
     FROM contracts c
   `;
@@ -250,6 +322,7 @@ export class ContractDB {
       dormName: row.dorm_name || undefined,
       floor: row.floor ?? undefined,
       bedNumbers: row.bed_numbers || undefined,
+      monthlyRent: row.monthly_rent ? parseFloat(row.monthly_rent) : undefined,
       startDate: row.start_date || undefined,
       depositAmount: row.deposit_amount ? parseFloat(row.deposit_amount) : undefined,
       stayDuration: row.stay_duration || undefined,
@@ -277,6 +350,7 @@ export class ContractDB {
       cccd: row.cccd || null,
       roomName: row.room_name || null,
       bedNumbers: row.bed_numbers || [],
+      monthlyRent: parseFloat(row.monthly_rent) || 0,
     };
   }
 }

@@ -11,13 +11,6 @@ import {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const EQUIPMENT_KEYS: { key: keyof HandoverBedDTO; label: string; icon: string }[] = [
-  { key: 'bedStatus', label: 'Giường', icon: 'bed' },
-  { key: 'mattressStatus', label: 'Nệm', icon: 'rectangle' },
-  { key: 'cabinetStatus', label: 'Tủ', icon: 'door_open' },
-  { key: 'keyStatus', label: 'Chìa khóa', icon: 'key' },
-];
-
 const STATUS_OPTIONS: EquipmentStatus[] = ['Tốt', 'Hư hỏng', 'Mất'];
 
 const STATUS_STYLE: Record<EquipmentStatus, string> = {
@@ -33,8 +26,7 @@ const STATUS_DOT: Record<EquipmentStatus, string> = {
 };
 
 function isBedGood(bed: HandoverBedDTO) {
-  return bed.bedStatus === 'Tốt' && bed.mattressStatus === 'Tốt'
-    && bed.cabinetStatus === 'Tốt' && bed.keyStatus === 'Tốt';
+  return bed.utilities.every(u => u.status === 'Tốt');
 }
 
 function isReportGood(report: HandoverReportDTO) {
@@ -95,25 +87,31 @@ const BedChecklist = ({
         )}
       </div>
       <div className="divide-y divide-slate-100">
-        {EQUIPMENT_KEYS.map(eq => {
-          const val = bed[eq.key] as EquipmentStatus;
-          return (
-            <div key={eq.key as string} className="flex items-center gap-3 px-4 py-3">
-              <span className="material-symbols-outlined text-slate-400 text-base w-5">{eq.icon}</span>
-              <span className="text-sm text-slate-700 font-medium w-24">{eq.label}</span>
-              {editable ? (
-                <div className="flex-1">
-                  <StatusSelector value={val} onChange={v => onChange?.({ ...bed, [eq.key]: v })} />
-                </div>
-              ) : (
-                <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_STYLE[val]}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[val]}`} />
-                  {val}
-                </span>
-              )}
-            </div>
-          );
-        })}
+        {bed.utilities.map((util, i) => (
+          <div key={util.utilityId} className="flex items-center gap-3 px-4 py-3">
+            <span className="material-symbols-outlined text-slate-400 text-base w-5">inventory_2</span>
+            <span className="text-sm text-slate-700 font-medium w-24">{util.title}</span>
+            {editable ? (
+              <div className="flex-1">
+                <StatusSelector
+                  value={util.status}
+                  onChange={v => onChange?.({
+                    ...bed,
+                    utilities: bed.utilities.map((u, j) => j === i ? { ...u, status: v } : u),
+                  })}
+                />
+              </div>
+            ) : (
+              <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_STYLE[util.status]}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[util.status]}`} />
+                {util.status}
+              </span>
+            )}
+          </div>
+        ))}
+        {bed.utilities.length === 0 && (
+          <p className="px-4 py-3 text-sm text-slate-400 italic">Không có thiết bị nào được gắn với giường này.</p>
+        )}
       </div>
     </div>
   );
@@ -155,10 +153,11 @@ const CreateReportModal = ({
       setBeds(contract.beds.map(b => ({
         bedId: b.id,
         bedNumber: b.bedNumber,
-        bedStatus: 'Tốt',
-        mattressStatus: 'Tốt',
-        cabinetStatus: 'Tốt',
-        keyStatus: 'Tốt',
+        utilities: b.utilities.map(u => ({
+          utilityId: u.utilityId,
+          title: u.title,
+          status: 'Tốt' as EquipmentStatus,
+        })),
       })));
     } else {
       setBeds([]);
@@ -179,10 +178,7 @@ const CreateReportModal = ({
       type: reportType,
       beds: beds.map(b => ({
         bedId: b.bedId,
-        bedStatus: b.bedStatus,
-        mattressStatus: b.mattressStatus,
-        cabinetStatus: b.cabinetStatus,
-        keyStatus: b.keyStatus,
+        utilities: b.utilities,
       })),
       note,
     };

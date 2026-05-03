@@ -14,6 +14,7 @@ export interface ContractDTO {
   dormName?: string;
   floor?: number;
   bedNumbers?: string;
+  monthlyRent?: number;
   startDate?: string;
   depositAmount?: number;
   stayDuration?: number;
@@ -37,6 +38,14 @@ export interface ContractAdminDTO {
   cccd: string | null;
   roomName: string | null;
   bedNumbers: string[];
+  monthlyRent: number;
+}
+
+export interface DormFeesDTO {
+  electricityFee: number;
+  waterFee: number;
+  wifiFee: number;
+  cleaningFee: number;
 }
 
 export interface RentalFormOptionDTO {
@@ -46,6 +55,8 @@ export interface RentalFormOptionDTO {
   cccd: string | null;
   roomName: string | null;
   bedNumbers: string[];
+  monthlyRent: number;
+  rentalMonths: number;
   totalAmount: number;
   createdAt: string;
 }
