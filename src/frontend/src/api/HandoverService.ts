@@ -6,7 +6,14 @@ import {
 } from '@dormarch/shared';
 
 export type { HandoverReportDTO, ActiveContractForHandoverDTO, CreateHandoverDTO };
-export type { HandoverType, EquipmentStatus, HandoverBedDTO, CreateHandoverBedDTO } from '@dormarch/shared';
+export type {
+  HandoverType,
+  EquipmentStatus,
+  HandoverBedDTO,
+  HandoverUtilityStatusDTO,
+  BedForHandoverDTO,
+  CreateHandoverBedDTO,
+} from '@dormarch/shared';
 
 export class HandoverService {
   static async getAll(): Promise<HandoverReportDTO[]> {
