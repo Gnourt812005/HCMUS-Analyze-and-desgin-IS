@@ -187,7 +187,7 @@ export const AdminDorm = () => {
             )}
 
             {/* Pagination UI */}
-            {!loading && total > limit && (
+            {!loading && (
                 <div className="flex items-center justify-between bg-white px-8 py-5 rounded-3xl border border-slate-200 shadow-sm">
                     <p className="text-sm text-slate-500 font-medium">
                         Hiển thị <span className="text-slate-900 font-bold">{(page - 1) * limit + 1}</span> - <span className="text-slate-900 font-bold">{Math.min(page * limit, total)}</span> của <span className="text-slate-900 font-bold">{total}</span> cơ sở
@@ -205,7 +205,6 @@ export const AdminDorm = () => {
                             <span className="flex items-center justify-center min-w-[2.5rem] h-10 px-3 rounded-xl bg-blue-50 text-blue-600 font-bold border border-blue-100">
                                 {page}
                             </span>
-                            <span className="text-sm font-bold text-slate-400">của {Math.ceil(total / limit)}</span>
                         </div>
                         <button
                             disabled={page * limit >= total}

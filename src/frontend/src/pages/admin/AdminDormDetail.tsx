@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ApiClient } from '../../api/ApiClient';
-import { DormDTO, CreateDormDTO, UpdateDormDTO, UtilityDTO } from '@dormarch/shared';
+import { DormDTO, CreateDormDTO, UpdateDormDTO, UtilityDTO, DormFeeDTO, UpdateDormFeeDTO } from '@dormarch/shared';
 import { motion } from 'framer-motion';
 
 export const AdminDormDetail = () => {
@@ -14,10 +14,13 @@ export const AdminDormDetail = () => {
     const initialEdit = queryParams.get('edit') === 'true' || isNew;
 
     const [dorm, setDorm] = useState<DormDTO | null>(null);
+    const [dormFee, setDormFee] = useState<DormFeeDTO | null>(null);
     const [rooms, setRooms] = useState<any[]>([]);
     const [loading, setLoading] = useState(!isNew);
     const [isEditing, setIsEditing] = useState(initialEdit);
+    const [isEditingFees, setIsEditingFees] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmittingFees, setIsSubmittingFees] = useState(false);
     const [availableUtilities, setAvailableUtilities] = useState<UtilityDTO[]>([]);
 
     // Form states
@@ -31,13 +34,21 @@ export const AdminDormDetail = () => {
         utilityIds: []
     });
 
+    const [feeFormData, setFeeFormData] = useState<UpdateDormFeeDTO>({
+        waterFee: 0,
+        electricityFee: 0,
+        wifiFee: 0,
+        cleaningFee: 0
+    });
+
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [dormRes, roomsRes, utilsRes] = await Promise.all([
+            const [dormRes, roomsRes, utilsRes, feeRes] = await Promise.all([
                 isNew ? Promise.resolve({ data: null }) : ApiClient.get<{ data: DormDTO }>(`/dorms/${id}`),
                 isNew ? Promise.resolve({ data: { rooms: [], total: 0 } }) : ApiClient.get<{ data: { rooms: any[], total: number } }>(`/rooms?dormId=${id}&limit=100`),
-                ApiClient.get<{ data: { utilities: UtilityDTO[] } }>('/utilities?limit=100?type=DORM')
+                ApiClient.get<{ data: { utilities: UtilityDTO[] } }>('/utilities?limit=100?type=DORM'),
+                isNew ? Promise.resolve({ data: null }) : ApiClient.get<{ data: DormFeeDTO }>(`/dorms/${id}/fees`)
             ]);
 
             setAvailableUtilities(utilsRes.data.utilities);
@@ -55,6 +66,16 @@ export const AdminDormDetail = () => {
                     managerId: dormRes.data.managerId,
                     status: dormRes.data.status,
                     utilityIds: dormRes.data.utilityIds || []
+                });
+            }
+
+            if (feeRes.data) {
+                setDormFee(feeRes.data);
+                setFeeFormData({
+                    waterFee: feeRes.data.waterFee,
+                    electricityFee: feeRes.data.electricityFee,
+                    wifiFee: feeRes.data.wifiFee,
+                    cleaningFee: feeRes.data.cleaningFee
                 });
             }
         } catch (error) {
@@ -92,6 +113,24 @@ export const AdminDormDetail = () => {
             setIsSubmitting(false);
         }
     };
+
+    const handleSaveFees = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            setIsSubmittingFees(true);
+            await ApiClient.put(`/dorms/${id}/fees`, {
+                body: JSON.stringify(feeFormData)
+            });
+            alert('Cập nhật phí thành công');
+            setIsEditingFees(false);
+            fetchData();
+        } catch (error: any) {
+            alert(error.message || 'Lỗi khi cập nhật phí');
+        } finally {
+            setIsSubmittingFees(false);
+        }
+    };
+
 
     if (loading) return (
         <div className="flex items-center justify-center min-h-[400px]">
@@ -319,7 +358,7 @@ export const AdminDormDetail = () => {
                                     </div>
                                     <div>
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cấu hình phòng</p>
-                                        <p className="font-bold text-slate-700">{dorm?.availableRooms} / {dorm?.totalRooms} phòng trống</p>
+                                        <p className="font-bold text-slate-700">{dorm?.availableRooms} / {dorm?.totalRooms} phòng  </p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4">
@@ -368,7 +407,121 @@ export const AdminDormDetail = () => {
                             </div>
                         )}
                     </div>
+
+                    {/* Dorm Fees Section */}
+                    {!isNew && (
+                        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="font-bold text-lg text-slate-800">Cấu hình chi phí</h3>
+                                <button
+                                    onClick={() => setIsEditingFees(!isEditingFees)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                                        isEditingFees ? 'bg-slate-100 text-slate-600' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                                    }`}
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">{isEditingFees ? 'close' : 'edit'}</span>
+                                    {isEditingFees ? 'Hủy' : 'Chỉnh sửa phí'}
+                                </button>
+                            </div>
+
+                            {isEditingFees ? (
+                                <form onSubmit={handleSaveFees} className="space-y-5">
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tiền nước (VNĐ)</label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-bold"
+                                                value={feeFormData.waterFee}
+                                                onChange={e => setFeeFormData({ ...feeFormData, waterFee: parseInt(e.target.value) || 0 })}
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tiền điện (VNĐ/kWh)</label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-bold"
+                                                value={feeFormData.electricityFee}
+                                                onChange={e => setFeeFormData({ ...feeFormData, electricityFee: parseInt(e.target.value) || 0 })}
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tiền Wifi (VNĐ/tháng)</label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-bold"
+                                                value={feeFormData.wifiFee}
+                                                onChange={e => setFeeFormData({ ...feeFormData, wifiFee: parseInt(e.target.value) || 0 })}
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tiền vệ sinh (VNĐ/tháng)</label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-bold"
+                                                value={feeFormData.cleaningFee}
+                                                onChange={e => setFeeFormData({ ...feeFormData, cleaningFee: parseInt(e.target.value) || 0 })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <motion.button
+                                        whileTap={{ scale: 0.98 }}
+                                        type="submit"
+                                        disabled={isSubmittingFees}
+                                        className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 mt-4"
+                                    >
+                                        <span className="material-symbols-outlined text-[18px]">save</span>
+                                        {isSubmittingFees ? 'Đang lưu...' : 'Lưu chi phí'}
+                                    </motion.button>
+                                </form>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <div className="flex items-center gap-3">
+                                            <div className="bg-white p-2 rounded-lg text-blue-500 shadow-sm">
+                                                <span className="material-symbols-outlined text-[20px]">water_drop</span>
+                                            </div>
+                                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Tiền nước</p>
+                                        </div>
+                                        <p className="font-bold text-slate-700">{dormFee?.waterFee.toLocaleString()} đ</p>
+                                    </div>
+                                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <div className="flex items-center gap-3">
+                                            <div className="bg-white p-2 rounded-lg text-amber-500 shadow-sm">
+                                                <span className="material-symbols-outlined text-[20px]">bolt</span>
+                                            </div>
+                                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Tiền điện</p>
+                                        </div>
+                                        <p className="font-bold text-slate-700">{dormFee?.electricityFee.toLocaleString()} đ</p>
+                                    </div>
+                                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <div className="flex items-center gap-3">
+                                            <div className="bg-white p-2 rounded-lg text-indigo-500 shadow-sm">
+                                                <span className="material-symbols-outlined text-[20px]">wifi</span>
+                                            </div>
+                                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Wifi</p>
+                                        </div>
+                                        <p className="font-bold text-slate-700">{dormFee?.wifiFee.toLocaleString()} đ</p>
+                                    </div>
+                                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <div className="flex items-center gap-3">
+                                            <div className="bg-white p-2 rounded-lg text-emerald-500 shadow-sm">
+                                                <span className="material-symbols-outlined text-[20px]">cleaning_services</span>
+                                            </div>
+                                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Vệ sinh</p>
+                                        </div>
+                                        <p className="font-bold text-slate-700">{dormFee?.cleaningFee.toLocaleString()} đ</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
+
 
                 {/* Rooms List Section */}
                 <div className="lg:col-span-8">
@@ -376,12 +529,6 @@ export const AdminDormDetail = () => {
                         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                             <div className="p-8 border-b border-slate-100 flex items-center justify-between">
                                 <h3 className="font-bold text-lg text-slate-800">Cấu trúc phòng ({rooms.length})</h3>
-                                <div className="flex items-center gap-4">
-                                    <div className="flex bg-slate-50 p-1 rounded-xl">
-                                        <button className="px-4 py-1.5 rounded-lg text-sm font-bold bg-white shadow-sm text-slate-700">Tất cả</button>
-                                        <button className="px-4 py-1.5 rounded-lg text-sm font-bold text-slate-400 hover:text-slate-600">Trống</button>
-                                    </div>
-                                </div>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left">

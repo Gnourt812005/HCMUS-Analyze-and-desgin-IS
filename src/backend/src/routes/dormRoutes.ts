@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { Dorm } from '../business/Dorm';
+import { DormFee } from '../business/DormFee';
 import { RentalDB } from '../database/RentalDB';
 
 export const dormRoutes = Router();
@@ -62,6 +63,27 @@ dormRoutes.delete('/:id', async (req, res) => {
     res.status(500).json({ message: error.message || 'Lỗi khi xóa', status: 500 });
   }
 });
+
+// GET /:id/fees - Get dorm fees
+dormRoutes.get('/:id/fees', async (req, res) => {
+  try {
+    const fees = await DormFee.getByDormId(req.params.id);
+    res.json({ message: 'Success', status: 200, data: fees ? fees.toDTO() : null });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Lỗi khi lấy thông tin phí', status: 500 });
+  }
+});
+
+// PUT /:id/fees - Update dorm fees
+dormRoutes.put('/:id/fees', async (req, res) => {
+  try {
+    const success = await DormFee.update(req.params.id, req.body);
+    res.json({ message: 'Cập nhật phí thành công', status: 200, data: success });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Lỗi khi cập nhật phí', status: 500 });
+  }
+});
+
 
 /**
  * EXISTING ROUTE - DO NOT REMOVE

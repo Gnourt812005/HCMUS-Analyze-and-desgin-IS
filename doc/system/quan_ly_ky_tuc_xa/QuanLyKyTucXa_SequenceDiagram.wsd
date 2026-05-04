@@ -17,7 +17,9 @@ boundary "AdminDormDetail" as DetailGUI <<boundary>>
 control "Dorm" as BUS <<control>>
 control "Room" as ROOM <<control>>
 control "Utility" as UTIL <<control>>
+control "DormFee" as FEE <<control>>
 database "DormDB" as DB <<database>>
+database "DormFeeDB" as FDB <<database>>
 database "RoomDB" as RDB <<database>>
 database "UtilityDB" as UDB <<database>>
 
@@ -42,6 +44,8 @@ DetailGUI -> ROOM: fetchAll(query)
 ROOM -> RDB: fetchAll(query)
 DetailGUI -> UTIL: fetchAll(query)
 UTIL -> UDB: fetchAll(query)
+DetailGUI -> FEE: getByDormId(id)
+FEE -> FDB: fetchByDormId(id)
 
 == Kịch bản 3: Thêm mới KTX ==
 Actor -> MainGUI: Nhấn "Thêm cơ sở mới"
@@ -50,6 +54,8 @@ Actor -> DetailGUI: Nhập thông tin & Nhấn Lưu
 DetailGUI -> DetailGUI: handleSave()
 DetailGUI -> BUS: create(formData)
 BUS -> DB: insert(dormModel)
+DB --> BUS: newDormId
+BUS -> FDB: create(defaultFees)
 
 == Kịch bản 4: Cập nhật KTX ==
 Actor -> DetailGUI: Chỉnh sửa & Nhấn Lưu
@@ -67,6 +73,7 @@ alt Có phòng đang có người ở (availableBeds < totalBeds)
     BUS --> MainGUI: Ném lỗi (Không thể xóa)
     MainGUI --> Actor: Hiển thị thông báo lỗi
 else Tất cả phòng trống hoặc không có phòng
+    BUS -> FDB: delete(id)
     BUS -> ROOM: deleteByDormId(id)
     ROOM -> RDB: deleteByDormId(id)
     BUS -> DB: delete(id)
@@ -75,5 +82,10 @@ else Tất cả phòng trống hoặc không có phòng
 end
 
 
-@enduml
+== Kịch bản 6: Cập nhật chi phí KTX ==
+Actor -> DetailGUI: Chỉnh sửa phí & Nhấn Lưu
+DetailGUI -> DetailGUI: handleSaveFees()
+DetailGUI -> FEE: update(id, feeFormData)
+FEE -> FDB: update(id, data)
 
+@enduml

@@ -7,3 +7,5 @@ export * from './RoomDto';
 export * from './PreviewDto';
 export * from './RentalDto';
 export * from './UtilityDto';
+export * from './DormFeeDto';
+

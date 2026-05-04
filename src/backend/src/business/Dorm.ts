@@ -1,5 +1,6 @@
 import { DormDTO, CreateDormDTO, UpdateDormDTO, GetDormsDto } from '@dormarch/shared';
 import { DormDB } from '../database/DormDB';
+import { DormFeeDB } from '../database/DormFeeDB';
 import { Room } from './Room';
 
 export class Dorm {
@@ -62,7 +63,26 @@ export class Dorm {
       status: 'Còn phòng',
       availableRooms: data.totalRooms
     });
-    return await DormDB.insert(newDorm);
+    
+    const newId = await DormDB.insert(newDorm);
+    if (!newId) return false;
+
+    // Create default DormFee
+    try {
+      await DormFeeDB.create({
+        dormId: newId,
+        waterFee: 0,
+        electricityFee: 0,
+        wifiFee: 0,
+        cleaningFee: 0
+      });
+    } catch (error) {
+      console.error("Failed to create default DormFee:", error);
+      // We could potentially roll back the dorm creation here, 
+      // but for now we'll just log it.
+    }
+
+    return true;
   }
 
   static async update(id: string, data: UpdateDormDTO): Promise<boolean> {
@@ -86,6 +106,8 @@ export class Dorm {
     if (occupiedRooms.length > 0) {
       throw new Error('Không thể xóa ký túc xá vì vẫn còn phòng đang có người ở.');
     }
+
+    await DormFeeDB.delete(id);
 
     // Delete both dorm and rooms inside
     await Room.deleteByDormId(id);
