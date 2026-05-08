@@ -145,6 +145,14 @@ export class RefundCalculation {
     return await RefundDB.getRentalFormById(rentalFormId);
   }
 
+  /**
+   * Gets the total registration fee (tiền đăng ký thuê) paid for a rental form
+   * This is the sum of all successful payments made by the customer
+   */
+  static async getRegistrationFeePaid(rentalFormId: string): Promise<number> {
+    return await RefundDB.getPaymentAmount(rentalFormId);
+  }
+
   static async autoCalculateRefundForNoContract(requestId: string, rentalFormId: string) {
     try {
       const existingRefund = await RefundDB.getByRequestId(requestId);
@@ -155,14 +163,16 @@ export class RefundCalculation {
       const rentalForm = await RefundDB.getRentalFormById(rentalFormId);
       if (!rentalForm) return;
 
-      const depositAmount = rentalForm.totalAmount * 2;
+      const depositAmount = rentalForm.totalAmount;
       let refundAmount = 0;
       let notes = '';
 
       if (rentalForm.type === 'DEPOSIT') {
+        // Đã đăng ký cọc, chưa đăng ký thuê, chưa có hợp đồng: hoàn 80% tiền cọc
         refundAmount = depositAmount * 0.8;
         notes = 'Hoàn 80% tiền cọc (chưa đăng ký thuê, chưa hợp đồng)';
       } else if (rentalForm.type === 'FULL') {
+        // Đã đăng ký cọc, đã đăng ký thuê, chưa có hợp đồng: hoàn 80% tiền cọc + 100% tiền đăng ký thuê
         const registrationFeePaid = await RefundDB.getPaymentAmount(rentalFormId);
         refundAmount = depositAmount * 0.8 + registrationFeePaid;
         notes = 'Hoàn 80% tiền cọc và 100% tiền đăng ký thuê (chưa có hợp đồng)';

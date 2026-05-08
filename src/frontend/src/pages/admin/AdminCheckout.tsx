@@ -188,15 +188,10 @@ export const AdminCheckout = () => {
     
     // Load rental form info to check if it has a contract
     try {
-      const rentalFormData = await ApiClient.get<any>(
-        `/checkout-requests/rental-forms/available?userEmail=${encodeURIComponent(request.userEmail)}`
-      );
+      const detailData = await ApiClient.get<any>(`/checkout-requests/${request.requestId}/details`);
       
-      if (rentalFormData && Array.isArray(rentalFormData)) {
-        const form = rentalFormData.find((f: any) => f.rental_form_id === request.rentalFormId);
-        if (form) {
-          setSelectedRentalForm(form);
-        }
+      if (detailData && detailData.rentalForm) {
+        setSelectedRentalForm(detailData.rentalForm);
       }
     } catch (err) {
       console.error('Failed to load rental form:', err);
@@ -242,7 +237,8 @@ export const AdminCheckout = () => {
       
       setError(null);
       showSuccess('Đã tiếp nhận yêu cầu trả phòng!');
-      // Keep modal open to show the refund calculation that was just created
+      // Close modal after acceptance
+      setShowDetailModal(false);
     } catch (err) {
       // Rollback
       setCheckoutRequests(prev => prev.map(r => r.requestId === requestId ? { ...r, status: CheckoutStatus.PENDING } : r));
@@ -564,7 +560,7 @@ export const AdminCheckout = () => {
                           <div className="flex items-center gap-2 mb-1">
                             <p className="font-bold text-slate-900">{rental.dorm_name} - Tầng {rental.floor} - Phòng {rental.room_name}</p>
                             <span className="px-2 py-1 text-xs font-medium rounded bg-amber-100 text-amber-800">
-                              {rental.type === 'DEPOSIT' ? 'Tiền cọp' : 'Toàn bộ'}
+                              {rental.type === 'DEPOSIT' ? 'Cọc' : 'Thuê'}
                             </span>
                           </div>
                           <p className="text-xs text-slate-600">Giường: {rental.bed_numbers}</p>
@@ -776,7 +772,7 @@ export const AdminCheckout = () => {
                     className="flex items-center gap-2 px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold rounded-lg transition-all"
                   >
                     <span className="material-symbols-outlined text-base">task_alt</span>
-                    Hoàn tất thanh lý
+                    Hoàn tất trả phòng
                   </button>
                 )}
               </div>

@@ -143,10 +143,18 @@ export class RefundDB {
     }
   }
 
-  static async getRentalFormById(rentalFormId: string): Promise<{ id: string; userEmail: string; type: 'DEPOSIT' | 'FULL'; totalAmount: number } | null> {
+  static async getRentalFormById(rentalFormId: string): Promise<{ id: string; userEmail: string; type: 'DEPOSIT' | 'FULL'; totalAmount: number; contract_id?: string | null } | null> {
     try {
       const result = await dbClient.query(
-        'SELECT id, user_email, type, total_amount FROM rental_forms WHERE id = $1::uuid',
+        `SELECT 
+          rf.id, 
+          rf.user_email, 
+          rf.type, 
+          rf.total_amount,
+          c.id as contract_id
+        FROM rental_forms rf
+        LEFT JOIN contracts c ON c.rental_form_id = rf.id
+        WHERE rf.id = $1::uuid`,
         [rentalFormId]
       );
       if (result.rows.length === 0) return null;
@@ -156,7 +164,8 @@ export class RefundDB {
         id: row.id,
         userEmail: row.user_email,
         type: row.type as 'DEPOSIT' | 'FULL',
-        totalAmount: row.total_amount
+        totalAmount: row.total_amount,
+        contract_id: row.contract_id || null
       };
     } catch (error) {
       console.error('Error fetching rental form:', error);

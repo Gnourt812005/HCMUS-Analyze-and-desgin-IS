@@ -117,6 +117,19 @@ contractRouter.get('/:id/fees', authMiddleware, async (req: AuthRequest, res: Re
   }
 });
 
+contractRouter.get('/by-rental-form/:rentalFormId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { rentalFormId } = req.params;
+    const contract = await Contract.getByRentalFormId(rentalFormId);
+    if (!contract) {
+      return res.status(404).json({ message: 'Không tìm thấy hợp đồng cho đơn đăng ký này' });
+    }
+    res.status(200).json(contract);
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error', error });
+  }
+});
+
 contractRouter.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
