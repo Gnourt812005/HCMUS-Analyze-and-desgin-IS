@@ -31,7 +31,7 @@ class "AdminDorm" <<boundary>> {
 
 class "AdminDormDetail" <<boundary>> {
     - dorm: DormDTO | null
-    - setDorm: void
+    - dormFee: DormFeeDTO | null
     - rooms: RoomDTO[]
     - setRooms: void
     - availableUtilities: UtilityDTO[]
@@ -40,10 +40,15 @@ class "AdminDormDetail" <<boundary>> {
     - setLoading: void
     - isEditing: boolean
     - setIsEditing: void
+    - isEditingFees: boolean
+    - setIsEditingFees: void
     - formData: CreateDormDTO | UpdateDormDTO
     - setFormData: void
+    - feeFormData: UpdateDormFeeDTO
+    - setFeeFormData: void
     + fetchData(): void
     + handleSave(): void
+    + handleSaveFees(): void
 }
 
 ' --- DTO LAYER ---
@@ -74,6 +79,15 @@ interface "UtilityDTO" <<dto>> {
     + type: string
     + status?: string
 }
+
+interface "DormFeeDTO" <<dto>> {
+    + dormId: string
+    + waterFee: number
+    + electricityFee: number
+    + wifiFee: number
+    + cleaningFee: number
+}
+
 
 interface "GetDormsDto" <<dto>> {
     + page: number
@@ -112,8 +126,21 @@ class "Dorm" <<control>> {
     + toDTO(): DormDTO
 }
 
+class "DormFee" <<control>> {
+    - dormId: string
+    - waterFee: number
+    - electricityFee: number
+    - wifiFee: number
+    - cleaningFee: number
+    + <<static>> getByDormId(dormId: string): DormFee
+    + <<static>> update(dormId: string, data: UpdateDormFeeDTO): boolean
+    + toDTO(): DormFeeDTO
+}
+
 class "Room" <<control>> {
     + <<static>> fetchAll(query: GetRoomDto): { rooms: RoomDTO[], total: number }
+    + <<static>> getByDormId(dormId: string): RoomDTO[]
+    + <<static>> deleteByDormId(dormId: string): boolean
 }
 
 class "Utility" <<control>> {
@@ -125,19 +152,37 @@ class "Utility" <<control>> {
 class "DormDB" <<database>> {
     + <<static>> fetchAll(query: GetDormsDto): { dorms: Dorm[], total: number }
     + <<static>> fetchById(id: string): Dorm
-    + <<static>> insert(data: Dorm): boolean
+    + <<static>> insert(data: Dorm): string
     + <<static>> update(id: string, data: any): boolean
     + <<static>> delete(id: string): boolean
 }
+
+class "DormFeeDB" <<database>> {
+    + <<static>> fetchByDormId(dormId: string): DormFeeDTO
+    + <<static>> create(data: CreateDormFeeDTO): DormFeeDTO
+    + <<static>> update(dormId: string, data: UpdateDormFeeDTO): boolean
+    + <<static>> delete(dormId: string): boolean
+}
+
+class "RoomDB" <<database>> {
+    + <<static>> getByDormId(dormId: string): Room[]
+    + <<static>> deleteByDormId(dormId: string): boolean
+}
+
 
 ' --- RELATIONSHIPS ---
 AdminDorm --> Dorm
 AdminDormDetail --> Dorm
 AdminDormDetail --> Room
 AdminDormDetail --> Utility
+AdminDormDetail --> DormFee
 Dorm --> DormDB
+
+Dorm --> DormFeeDB
+DormFee --> DormFeeDB
 AdminDorm ..> AdminDormDetail
+Room --> RoomDB
+Dorm --> Room
+Dorm --> DormFee
 
 @enduml
-
-

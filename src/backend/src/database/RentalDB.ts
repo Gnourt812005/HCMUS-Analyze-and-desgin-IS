@@ -77,6 +77,7 @@ export class RentalDB {
           AND rf.type = 'DEPOSIT'
           AND u.cccd = $1
           AND b.room_id = $2
+          AND rf.created_at >= NOW() - INTERVAL '24 hours'
         LIMIT 1
       `,
       [idCard, roomId]
@@ -99,6 +100,7 @@ export class RentalDB {
         WHERE p.status = 'SUCCESS'
           AND rf.type = 'DEPOSIT'
           AND u.cccd = $1
+          AND rf.created_at >= NOW() - INTERVAL '24 hours'
       `,
       [idCard]
     );
@@ -311,6 +313,7 @@ export class RentalDB {
             AND rf.type = 'DEPOSIT'
             AND rf.user_email = $1
             AND rfb.bed_id = ANY($2::uuid[])
+            AND rf.created_at >= NOW() - INTERVAL '24 hours'
           LIMIT 1
         `,
         [row.user_email, bedIds]
@@ -332,5 +335,66 @@ export class RentalDB {
       roomPrice: Number(row.room_price),
       alreadyDeposited
     };
+  }
+
+  static async cleanupExpiredRentals(): Promise<number> {
+    const client = await dbClient.getClient();
+    try {
+      await client.query('BEGIN');
+
+      // 1. Find expired rental forms
+      // - DEPOSIT: created_at < now - 24 hours
+      // - FULL: deadline < now
+      const expiredFormsResult = await client.query(`
+        SELECT rf.id, rf.type
+        FROM rental_forms rf
+        WHERE (rf.type = 'DEPOSIT' AND rf.created_at < NOW() - INTERVAL '24 hours')
+           OR (rf.type = 'FULL' AND rf.deadline < NOW())
+      `);
+
+      if (expiredFormsResult.rows.length === 0) {
+        await client.query('COMMIT');
+        return 0;
+      }
+
+      const expiredIds = expiredFormsResult.rows.map((r: any) => r.id);
+      console.log(`[Cleanup] Found ${expiredIds.length} expired rentals: ${expiredIds.join(', ')}`);
+
+      // 2. Find beds associated with these expired forms that are NOT already available
+      const bedsToResetResult = await client.query(`
+        SELECT DISTINCT b.id, b.room_id
+        FROM rental_form_beds rfb
+        JOIN beds b ON b.id = rfb.bed_id
+        WHERE rfb.rental_form_id = ANY($1::uuid[])
+          AND b.status IN ('DEPOSITED', 'BOOKED')
+      `, [expiredIds]);
+
+      if (bedsToResetResult.rows.length > 0) {
+        const bedIds = bedsToResetResult.rows.map((r: any) => r.id);
+        const roomIds = Array.from(new Set(bedsToResetResult.rows.map((r: any) => r.room_id)));
+
+        console.log(`[Cleanup] Resetting ${bedIds.length} beds to AVAILABLE.`);
+
+        // Update beds status
+        await client.query(
+          `UPDATE beds SET status = 'AVAILABLE' WHERE id = ANY($1::uuid[])`,
+          [bedIds]
+        );
+
+        // Sync rooms/dorms availability
+        for (const roomId of roomIds) {
+          await RoomDB.syncRoomAvailability(roomId);
+        }
+      }
+
+      await client.query('COMMIT');
+      return expiredIds.length;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('[Cleanup] Error during rental cleanup:', error);
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 }

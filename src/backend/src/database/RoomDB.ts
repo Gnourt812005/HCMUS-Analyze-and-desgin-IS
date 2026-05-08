@@ -392,6 +392,17 @@ export class RoomDB {
     }
   }
 
+  static async deleteByDormId(dormId: string): Promise<boolean> {
+    try {
+      await dbClient.query('DELETE FROM rooms WHERE dorm_id = $1', [dormId]);
+      return true;
+    } catch (error) {
+      console.error("Error in RoomDB.deleteByDormId:", error);
+      return false;
+    }
+  }
+
+
   static async insertBed(data: any): Promise<boolean> {
     const query = `
       INSERT INTO beds (room_id, bed_number, price, status)
@@ -461,6 +472,36 @@ export class RoomDB {
       return false;
     }
   }
+
+  static async fetchBedById(bedId: string): Promise<BedOptionDTO | null> {
+    const query = `SELECT id, room_id, bed_number, status, price FROM beds WHERE id = $1`;
+    try {
+      const result = await dbClient.query(query, [bedId]);
+      if (result.rows.length === 0) return null;
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        roomId: row.room_id,
+        bedNumber: row.bed_number,
+        status: row.status,
+        price: Number(row.price || 0)
+      };
+    } catch (error) {
+      console.error("Error in RoomDB.fetchBedById:", error);
+      return null;
+    }
+  }
+
+  static async deleteBedsByRoomId(roomId: string): Promise<boolean> {
+    try {
+      await dbClient.query('DELETE FROM beds WHERE room_id = $1', [roomId]);
+      return true;
+    } catch (error) {
+      console.error("Error in RoomDB.deleteBedsByRoomId:", error);
+      return false;
+    }
+  }
+
 
   static async checkRoomIdExists(dormId: string, name: string): Promise<boolean> {
     try {

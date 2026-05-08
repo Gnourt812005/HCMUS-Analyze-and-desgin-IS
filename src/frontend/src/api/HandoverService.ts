@@ -1,68 +1,37 @@
 import { ApiClient } from './ApiClient';
+import {
+  HandoverReportDTO,
+  ActiveContractForHandoverDTO,
+  CreateHandoverDTO,
+} from '@dormarch/shared';
 
-export type HandoverType = 'IN' | 'OUT';
-export type EquipmentStatus = 'Tốt' | 'Hư hỏng' | 'Mất';
-
-export interface HandoverBed {
-  bedId: string;
-  bedNumber: string;
-  bedStatus: EquipmentStatus;
-  mattressStatus: EquipmentStatus;
-  cabinetStatus: EquipmentStatus;
-  keyStatus: EquipmentStatus;
-}
-
-export interface HandoverReport {
-  id: string;
-  handoverCode: string | null;
-  contractId: string;
-  contractCode: string | null;
-  customerName: string;
-  roomName: string;
-  type: HandoverType;
-  createdAt: string;
-  beds: HandoverBed[];
-  note: string;
-}
-
-export interface ActiveContract {
-  contractId: string;
-  contractCode: string | null;
-  customerName: string;
-  roomName: string;
-  beds: { id: string; bedNumber: string }[];
-}
-
-export interface CreateHandoverPayload {
-  contractId: string;
-  type: HandoverType;
-  beds: {
-    bedId: string;
-    bedStatus: EquipmentStatus;
-    mattressStatus: EquipmentStatus;
-    cabinetStatus: EquipmentStatus;
-    keyStatus: EquipmentStatus;
-  }[];
-  note: string;
-}
+export type { HandoverReportDTO, ActiveContractForHandoverDTO, CreateHandoverDTO };
+export type {
+  HandoverType,
+  EquipmentStatus,
+  HandoverBedDTO,
+  HandoverUtilityStatusDTO,
+  BedForHandoverDTO,
+  CreateHandoverBedDTO,
+} from '@dormarch/shared';
 
 export class HandoverService {
-  static async getAll(): Promise<HandoverReport[]> {
+  static async getAll(): Promise<HandoverReportDTO[]> {
     const res = await ApiClient.get('/handovers');
     return res.data;
   }
 
-  static async getActiveContracts(): Promise<ActiveContract[]> {
+  static async getActiveContracts(): Promise<ActiveContractForHandoverDTO[]> {
     const res = await ApiClient.get('/handovers/active-contracts');
     return res.data;
   }
 
-  static async create(payload: CreateHandoverPayload): Promise<{ id: string }> {
+  static async create(payload: CreateHandoverDTO): Promise<{ id: string }> {
     const res = await ApiClient.post('/handovers', { body: JSON.stringify(payload) });
     return res.data;
   }
 
-  static async getByContractId(contractId: string): Promise<HandoverReport[]> {
+  static async getByContractId(contractId: string): Promise<HandoverReportDTO[]> {
     const res = await ApiClient.get(`/handovers/by-contract/${contractId}`);
     return res.data;
   }

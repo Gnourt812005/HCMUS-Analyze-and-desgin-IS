@@ -1,22 +1,15 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   HandoverService,
-  HandoverReport,
-  HandoverBed,
+  HandoverReportDTO,
+  HandoverBedDTO,
   HandoverType,
   EquipmentStatus,
-  ActiveContract,
-  CreateHandoverPayload,
+  ActiveContractForHandoverDTO,
+  CreateHandoverDTO,
 } from '../../api/HandoverService';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-const EQUIPMENT_KEYS: { key: keyof HandoverBed; label: string; icon: string }[] = [
-  { key: 'bedStatus', label: 'Giường', icon: 'bed' },
-  { key: 'mattressStatus', label: 'Nệm', icon: 'rectangle' },
-  { key: 'cabinetStatus', label: 'Tủ', icon: 'door_open' },
-  { key: 'keyStatus', label: 'Chìa khóa', icon: 'key' },
-];
 
 const STATUS_OPTIONS: EquipmentStatus[] = ['Tốt', 'Hư hỏng', 'Mất'];
 
@@ -32,12 +25,11 @@ const STATUS_DOT: Record<EquipmentStatus, string> = {
   'Mất': 'bg-red-500',
 };
 
-function isBedGood(bed: HandoverBed) {
-  return bed.bedStatus === 'Tốt' && bed.mattressStatus === 'Tốt'
-    && bed.cabinetStatus === 'Tốt' && bed.keyStatus === 'Tốt';
+function isBedGood(bed: HandoverBedDTO) {
+  return bed.utilities.every(u => u.status === 'Tốt');
 }
 
-function isReportGood(report: HandoverReport) {
+function isReportGood(report: HandoverReportDTO) {
   return report.beds.every(isBedGood);
 }
 
@@ -59,8 +51,8 @@ const StatusSelector = ({
         type="button"
         onClick={() => onChange(opt)}
         className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all ${value === opt
-            ? STATUS_STYLE[opt] + ' border'
-            : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
+          ? STATUS_STYLE[opt] + ' border'
+          : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
           }`}
       >
         {opt}
@@ -74,9 +66,9 @@ const StatusSelector = ({
 const BedChecklist = ({
   bed, editable, onChange,
 }: {
-  bed: HandoverBed;
+  bed: HandoverBedDTO;
   editable: boolean;
-  onChange?: (updated: HandoverBed) => void;
+  onChange?: (updated: HandoverBedDTO) => void;
 }) => {
   const good = isBedGood(bed);
   return (
@@ -95,25 +87,31 @@ const BedChecklist = ({
         )}
       </div>
       <div className="divide-y divide-slate-100">
-        {EQUIPMENT_KEYS.map(eq => {
-          const val = bed[eq.key] as EquipmentStatus;
-          return (
-            <div key={eq.key} className="flex items-center gap-3 px-4 py-3">
-              <span className="material-symbols-outlined text-slate-400 text-base w-5">{eq.icon}</span>
-              <span className="text-sm text-slate-700 font-medium w-24">{eq.label}</span>
-              {editable ? (
-                <div className="flex-1">
-                  <StatusSelector value={val} onChange={v => onChange?.({ ...bed, [eq.key]: v })} />
-                </div>
-              ) : (
-                <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_STYLE[val]}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[val]}`} />
-                  {val}
-                </span>
-              )}
-            </div>
-          );
-        })}
+        {bed.utilities.map((util, i) => (
+          <div key={util.utilityId} className="flex items-center gap-3 px-4 py-3">
+            <span className="material-symbols-outlined text-slate-400 text-base w-5">inventory_2</span>
+            <span className="text-sm text-slate-700 font-medium w-24">{util.title}</span>
+            {editable ? (
+              <div className="flex-1">
+                <StatusSelector
+                  value={util.status}
+                  onChange={v => onChange?.({
+                    ...bed,
+                    utilities: bed.utilities.map((u, j) => j === i ? { ...u, status: v } : u),
+                  })}
+                />
+              </div>
+            ) : (
+              <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_STYLE[util.status]}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[util.status]}`} />
+                {util.status}
+              </span>
+            )}
+          </div>
+        ))}
+        {bed.utilities.length === 0 && (
+          <p className="px-4 py-3 text-sm text-slate-400 italic">Không có thiết bị nào được gắn với giường này.</p>
+        )}
       </div>
     </div>
   );
@@ -128,12 +126,12 @@ const CreateReportModal = ({
   onClose: () => void;
   onCreated: () => void;
 }) => {
-  const [contracts, setContracts] = useState<ActiveContract[]>([]);
+  const [contracts, setContracts] = useState<ActiveContractForHandoverDTO[]>([]);
   const [loadingContracts, setLoadingContracts] = useState(true);
 
   const [contractId, setContractId] = useState('');
   const [reportType, setReportType] = useState<HandoverType>('IN');
-  const [beds, setBeds] = useState<HandoverBed[]>([]);
+  const [beds, setBeds] = useState<HandoverBedDTO[]>([]);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -155,17 +153,18 @@ const CreateReportModal = ({
       setBeds(contract.beds.map(b => ({
         bedId: b.id,
         bedNumber: b.bedNumber,
-        bedStatus: 'Tốt',
-        mattressStatus: 'Tốt',
-        cabinetStatus: 'Tốt',
-        keyStatus: 'Tốt',
+        utilities: b.utilities.map(u => ({
+          utilityId: u.utilityId,
+          title: u.title,
+          status: 'Tốt' as EquipmentStatus,
+        })),
       })));
     } else {
       setBeds([]);
     }
   };
 
-  const updateBed = (index: number, updated: HandoverBed) => {
+  const updateBed = (index: number, updated: HandoverBedDTO) => {
     setBeds(prev => prev.map((b, i) => i === index ? updated : b));
   };
 
@@ -174,15 +173,12 @@ const CreateReportModal = ({
   const handleSave = async () => {
     if (!contractId) { setError('Vui lòng chọn hợp đồng'); return; }
 
-    const payload: CreateHandoverPayload = {
+    const payload: CreateHandoverDTO = {
       contractId,
       type: reportType,
       beds: beds.map(b => ({
         bedId: b.bedId,
-        bedStatus: b.bedStatus,
-        mattressStatus: b.mattressStatus,
-        cabinetStatus: b.cabinetStatus,
-        keyStatus: b.keyStatus,
+        utilities: b.utilities,
       })),
       note,
     };
@@ -201,7 +197,7 @@ const CreateReportModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl h-[90vh] flex flex-col">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
 
         <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100">
           <div>
@@ -225,8 +221,8 @@ const CreateReportModal = ({
                   type="button"
                   onClick={() => setReportType(val)}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-bold transition-all ${reportType === val
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-blue-200'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-blue-200'
                     }`}
                 >
                   <span className="material-symbols-outlined text-base">{icon}</span>
@@ -345,7 +341,7 @@ const CreateReportModal = ({
 const ReportDetailModal = ({
   report, onClose,
 }: {
-  report: HandoverReport;
+  report: HandoverReportDTO;
   onClose: () => void;
 }) => {
   const allGood = isReportGood(report);
@@ -353,15 +349,15 @@ const ReportDetailModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl h-[90vh] flex flex-col">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
 
         <div className="flex items-start justify-between px-7 py-5 border-b border-slate-100">
           <div>
             <div className="flex items-center gap-3 mb-1">
               <h2 className="text-xl font-bold text-slate-900">Biên bản {report.handoverCode || report.id.slice(0, 8) + '...'}</h2>
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${report.type === 'IN'
-                  ? 'bg-blue-50 text-blue-700 border-blue-200'
-                  : 'bg-purple-50 text-purple-700 border-purple-200'
+                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                : 'bg-purple-50 text-purple-700 border-purple-200'
                 }`}>
                 {report.type === 'IN' ? 'Nhận phòng' : 'Trả phòng'}
               </span>
@@ -427,14 +423,14 @@ const ReportDetailModal = ({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export const AdminHandover = () => {
-  const [reports, setReports] = useState<HandoverReport[]>([]);
+  const [reports, setReports] = useState<HandoverReportDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
 
   const [keyword, setKeyword] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | HandoverType>('all');
   const [showCreate, setShowCreate] = useState(false);
-  const [selected, setSelected] = useState<HandoverReport | null>(null);
+  const [selected, setSelected] = useState<HandoverReportDTO | null>(null);
   const [successMsg, setSuccessMsg] = useState('');
 
   const fetchReports = () => {
@@ -595,8 +591,8 @@ export const AdminHandover = () => {
                     <td className="px-5 py-4 font-bold text-blue-700 font-mono text-xs">{report.handoverCode || report.id.slice(0, 8) + '...'}</td>
                     <td className="px-5 py-4">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${report.type === 'IN'
-                          ? 'bg-blue-50 text-blue-700 border-blue-200'
-                          : 'bg-purple-50 text-purple-700 border-purple-200'
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : 'bg-purple-50 text-purple-700 border-purple-200'
                         }`}>
                         {report.type === 'IN' ? 'Nhận phòng' : 'Trả phòng'}
                       </span>
@@ -610,8 +606,8 @@ export const AdminHandover = () => {
                       <div className="flex flex-wrap gap-1">
                         {report.beds.map(b => (
                           <span key={b.bedId} className={`px-2 py-0.5 rounded-full text-xs font-medium border ${isBedGood(b)
-                              ? 'bg-slate-100 text-slate-600 border-slate-200'
-                              : 'bg-amber-50 text-amber-700 border-amber-200'
+                            ? 'bg-slate-100 text-slate-600 border-slate-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
                             }`}>
                             {b.bedNumber}
                           </span>
@@ -620,8 +616,8 @@ export const AdminHandover = () => {
                     </td>
                     <td className="px-5 py-4">
                       <span className={`flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-full text-xs font-bold border ${allGood
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-amber-50 text-amber-700 border-amber-200'
                         }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${allGood ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                         {allGood ? 'Tốt' : 'Có hư hỏng'}

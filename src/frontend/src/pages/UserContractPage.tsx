@@ -1,31 +1,32 @@
 import { useEffect, useState } from 'react';
-import { ContractDTO, ContractStatus, UserProfileDTO } from '@dormarch/shared';
+import { ContractDTO, ContractStatus, UserProfileDTO, DormFeesDTO } from '@dormarch/shared';
 import { ApiClient } from '../api/ApiClient';
 import { ContractService } from '../api/ContractService';
-import { HandoverService, HandoverReport } from '../api/HandoverService';
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const BASE_RENT_PER_BED = 1_500_000;
-
-const SERVICE_FEES = [
-  { name: 'Điện', price: '3.500 đ/kWh', note: 'Theo chỉ số công tơ, thanh toán cuối tháng' },
-  { name: 'Nước', price: '50.000 đ/người/tháng', note: 'Định mức 4m³/người, vượt tính thêm' },
-  { name: 'Internet & Wifi', price: '50.000 đ/phòng/tháng', note: 'Tốc độ tối thiểu 50 Mbps' },
-  { name: 'Vệ sinh chung', price: '30.000 đ/người/tháng', note: 'Bao gồm hành lang và khu vực sinh hoạt chung' },
-  { name: 'Bảo vệ & an ninh', price: 'Miễn phí', note: 'Hoạt động 24/7' },
-];
+import { HandoverService, HandoverReportDTO } from '../api/HandoverService';
 
 const DEPOSIT_RULES = [
-  { icon: 'check_circle', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200', title: 'Hoàn trả 100% tiền cọc', detail: 'Không có hư hỏng tài sản, thanh toán đầy đủ các khoản phí, và thông báo chấm dứt hợp đồng trước ít nhất 30 ngày.' },
-  { icon: 'remove_circle', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200', title: 'Khấu trừ chi phí sửa chữa', detail: 'Trường hợp có hư hỏng tài sản được ghi nhận trong biên bản bàn giao, chi phí sửa chữa sẽ được khấu trừ trực tiếp vào tiền cọc.' },
-  { icon: 'cancel', color: 'text-red-600', bg: 'bg-red-50 border-red-200', title: 'Không hoàn trả tiền cọc', detail: 'Vi phạm hợp đồng nghiêm trọng, tự ý rời đi không báo trước, hoặc còn nợ phí chưa thanh toán sau khi trừ tiền cọc.' },
+  { icon: 'check_circle',  color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200', title: 'Hoàn trả 100% tiền cọc',               detail: 'Áp dụng khi trả phòng đúng hạn theo hợp đồng, không có hư hỏng tài sản và đã thanh toán đầy đủ các khoản phí.' },
+  { icon: 'check_circle',  color: 'text-blue-600',    bg: 'bg-blue-50 border-blue-200',       title: 'Hoàn trả 80% tiền cọc',               detail: 'Dành cho trường hợp đã đặt cọc nhưng chưa ký hợp đồng, do không đạt điều kiện lưu trú hoặc chủ động hủy giao dịch.' },
+  { icon: 'check_circle',  color: 'text-yellow-600',  bg: 'bg-yellow-50 border-yellow-200',   title: 'Hoàn trả 70% tiền cọc',               detail: 'Dành cho khách đã ký hợp đồng, lưu trú trên 6 tháng nhưng trả phòng trước khi hết hạn hợp đồng.' },
+  { icon: 'check_circle',  color: 'text-orange-600',  bg: 'bg-orange-50 border-orange-200',   title: 'Hoàn trả 50% tiền cọc',               detail: 'Dành cho khách đã ký hợp đồng, lưu trú chưa tới 6 tháng nhưng trả phòng trước hạn.' },
+  { icon: 'remove_circle', color: 'text-amber-600',   bg: 'bg-amber-50 border-amber-200',     title: 'Khấu trừ chi phí sửa chữa và công nợ', detail: 'Hư hỏng tài sản ghi nhận trong biên bản bàn giao sẽ được khấu trừ vào tiền cọc. Các khoản nợ tiền thuê, điện nước và dịch vụ cũng được đối soát và khấu trừ tại bước này.' },
+  { icon: 'cancel',        color: 'text-red-600',     bg: 'bg-red-50 border-red-200',         title: 'Không hoàn trả tiền cọc (0%)',         detail: 'Vi phạm hợp đồng nghiêm trọng hoặc tự ý rời đi không báo trước. Nếu tiền cọc không đủ bù các khoản nợ, khách hàng bắt buộc thanh toán thêm phần chênh lệch.' },
 ];
 
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtMoney(n: number) { return n.toLocaleString('vi-VN') + ' đ'; }
+
+function feesToItems(fees: DormFeesDTO) {
+  const fmt = (n: number, unit: string) => n > 0 ? `${fmtMoney(n)}${unit}` : 'Miễn phí';
+  return [
+    { name: 'Điện',           price: fmt(fees.electricityFee, '/kWh'),          note: 'Theo chỉ số công tơ, thanh toán cuối tháng' },
+    { name: 'Nước',           price: fmt(fees.waterFee,       '/người/tháng'),   note: 'Định mức 4m³/người, vượt tính thêm' },
+    { name: 'Internet & Wifi',price: fmt(fees.wifiFee,        '/phòng/tháng'),   note: 'Tốc độ tối thiểu 50 Mbps' },
+    { name: 'Vệ sinh chung',  price: fmt(fees.cleaningFee,    '/người/tháng'),   note: 'Bao gồm hành lang và khu vực sinh hoạt chung' },
+  ];
+}
 function fmtDate(iso?: string) {
   if (!iso) return '—';
   try { return new Date(iso).toLocaleDateString('vi-VN'); } catch { return iso; }
@@ -83,22 +84,24 @@ const ContractDetail = ({
 }: {
   contract: ContractDTO;
   profile: UserProfileDTO | null;
-  handovers: HandoverReport[];
+  handovers: HandoverReportDTO[];
   handoverLoading: boolean;
 }) => {
   const [tab, setTab] = useState<DetailTab>('info');
   const [policyContent, setPolicyContent] = useState('');
+  const [dormFees, setDormFees] = useState<DormFeesDTO | null>(null);
 
   useEffect(() => {
     ApiClient.get<{ data: { content: string } }>('/rentals/policy/latest')
       .then(res => setPolicyContent(res.data?.content ?? ''))
       .catch(() => setPolicyContent(''));
-  }, []);
+    ContractService.getFees(contract.contractId)
+      .then(fees => setDormFees(fees));
+  }, [contract.contractId]);
 
   const uiStatus = toUIStatus(contract.status);
   const beds = contract.bedNumbers?.split(',').map(s => s.trim()).filter(Boolean) ?? [];
-  const bedCount = beds.length || 1;
-  const totalRent = BASE_RENT_PER_BED * bedCount;
+  const totalRent = contract.monthlyRent ?? 0;
   const endDate = contract.startDate && contract.stayDuration
     ? calcEndDate(contract.startDate, contract.stayDuration) : '';
 
@@ -177,7 +180,7 @@ const ContractDetail = ({
               </div>
               <div className="flex gap-2">
                 <span className="text-sm text-slate-500 min-w-32">Phòng:</span>
-                <span className="text-sm font-semibold text-slate-800">{contract.roomId || '—'}</span>
+                <span className="text-sm font-semibold text-slate-800">{contract.roomName || '—'}</span>
               </div>
               <div className="flex gap-2">
                 <span className="text-sm text-slate-500 min-w-32">Tầng:</span>
@@ -222,8 +225,7 @@ const ContractDetail = ({
             <div className="pl-10 space-y-2">
               <div className="flex items-center justify-between py-2.5 border-b border-dashed border-slate-200">
                 <div>
-                  <span className="text-sm text-slate-600">Giá thuê cơ bản</span>
-                  <span className="text-xs text-slate-400 ml-2">({bedCount} giường × {fmtMoney(BASE_RENT_PER_BED)})</span>
+                  <span className="text-sm text-slate-600">Giá thuê</span>
                 </div>
                 <span className="text-sm font-bold text-slate-800">{fmtMoney(totalRent)}/tháng</span>
               </div>
@@ -271,13 +273,20 @@ const ContractDetail = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {SERVICE_FEES.map(fee => (
-                    <tr key={fee.name}>
-                      <td className="px-4 py-3 font-semibold text-slate-800">{fee.name}</td>
-                      <td className="px-4 py-3 font-bold text-blue-700">{fee.price}</td>
-                      <td className="px-4 py-3 text-slate-500">{fee.note}</td>
-                    </tr>
-                  ))}
+                  {dormFees
+                    ? feesToItems(dormFees).map(fee => (
+                      <tr key={fee.name}>
+                        <td className="px-4 py-3 font-semibold text-slate-800">{fee.name}</td>
+                        <td className="px-4 py-3 font-bold text-blue-700">{fee.price}</td>
+                        <td className="px-4 py-3 text-slate-500">{fee.note}</td>
+                      </tr>
+                    ))
+                    : (
+                      <tr>
+                        <td colSpan={3} className="px-4 py-4 text-center text-sm text-slate-400 italic">Đang tải phí dịch vụ...</td>
+                      </tr>
+                    )
+                  }
                 </tbody>
               </table>
             </div>
@@ -371,30 +380,22 @@ const ContractDetail = ({
 
                             {/* Bed table */}
                             {h.beds.length > 0 && (
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                  <thead>
-                                    <tr className="border-b border-slate-100 bg-white">
-                                      <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-5 py-3">Giường</th>
-                                      <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-4 py-3">Khung giường</th>
-                                      <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-4 py-3">Nệm</th>
-                                      <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-4 py-3">Tủ</th>
-                                      <th className="text-left text-xs font-bold uppercase tracking-wider text-slate-400 px-4 py-3">Chìa khoá</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-slate-50">
-                                    {h.beds.map(bed => (
-                                      <tr key={bed.bedId}>
-                                        <td className="px-5 py-3 font-semibold text-slate-800">{bed.bedNumber}</td>
-                                        {[bed.bedStatus, bed.mattressStatus, bed.cabinetStatus, bed.keyStatus].map((s, i) => (
-                                          <td key={i} className={`px-4 py-3 font-medium ${EQUIPMENT_STATUS_STYLE[s] ?? 'text-slate-600'}`}>
-                                            {s}
-                                          </td>
-                                        ))}
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
+                              <div className="divide-y divide-slate-50">
+                                {h.beds.map(bed => (
+                                  <div key={bed.bedId} className="px-5 py-3">
+                                    <p className="text-sm font-semibold text-slate-800 mb-2">Giường {bed.bedNumber}</p>
+                                    <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+                                      {bed.utilities.map(u => (
+                                        <div key={u.utilityId} className="flex items-center justify-between">
+                                          <span className="text-xs text-slate-500">{u.title}</span>
+                                          <span className={`text-xs font-medium ${EQUIPMENT_STATUS_STYLE[u.status] ?? 'text-slate-600'}`}>
+                                            {u.status}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
                             )}
                           </div>
@@ -420,7 +421,7 @@ export const UserContractPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<ContractDTO | null>(null);
-  const [handovers, setHandovers] = useState<HandoverReport[]>([]);
+  const [handovers, setHandovers] = useState<HandoverReportDTO[]>([]);
   const [handoverLoading, setHandoverLoading] = useState(false);
 
   useEffect(() => {
@@ -482,8 +483,8 @@ export const UserContractPage = () => {
                 key={c.contractId}
                 onClick={() => selectContract(c)}
                 className={`text-left rounded-xl border p-4 transition-all ${isActive
-                    ? 'border-blue-500 bg-blue-50 shadow-sm'
-                    : 'border-slate-200 bg-white hover:border-blue-300'
+                  ? 'border-blue-500 bg-blue-50 shadow-sm'
+                  : 'border-slate-200 bg-white hover:border-blue-300'
                   }`}
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
@@ -494,7 +495,7 @@ export const UserContractPage = () => {
                   </span>
                 </div>
                 <p className="text-sm font-semibold text-slate-800">{c.dormName ?? '—'}</p>
-                <p className="text-xs text-slate-500">{c.roomId}{c.bedNumbers ? ` · Giường ${c.bedNumbers}` : ''}</p>
+                <p className="text-xs text-slate-500">{c.roomName ?? '—'}{c.bedNumbers ? ` · Giường ${c.bedNumbers}` : ''}</p>
                 <p className="text-xs text-slate-400 mt-1">{fmtDate(c.startDate)}</p>
               </button>
             );

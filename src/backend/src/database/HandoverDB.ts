@@ -1,117 +1,62 @@
+import {
+  HandoverReportDTO,
+  HandoverBedDTO,
+  HandoverUtilityStatusDTO,
+  ActiveContractForHandoverDTO,
+  HandoverType,
+  EquipmentStatus,
+  CreateHandoverBedDTO,
+} from '@dormarch/shared';
 import { dbClient } from './DatabaseClient';
 
-export type HandoverType = 'IN' | 'OUT';
-export type EquipmentStatus = 'Tốt' | 'Hư hỏng' | 'Mất';
+export { HandoverType, EquipmentStatus, CreateHandoverBedDTO };
 
-export interface HandoverBedRow {
-  bedId: string;
-  bedNumber: string;
-  bedStatus: EquipmentStatus;
-  mattressStatus: EquipmentStatus;
-  cabinetStatus: EquipmentStatus;
-  keyStatus: EquipmentStatus;
-}
-
-export interface HandoverRow {
-  id: string;
-  handoverCode: string | null;
-  contractId: string;
-  contractCode: string | null;
-  customerName: string;
-  roomName: string;
-  type: HandoverType;
-  createdAt: string;
-  beds: HandoverBedRow[];
-  note: string;
-}
-
-export interface ActiveContractRow {
-  contractId: string;
-  contractCode: string | null;
-  customerName: string;
-  roomName: string;
-  beds: { id: string; bedNumber: string }[];
-}
-
-export interface CreateHandoverBed {
-  bedId: string;
-  bedStatus: EquipmentStatus;
-  mattressStatus: EquipmentStatus;
-  cabinetStatus: EquipmentStatus;
-  keyStatus: EquipmentStatus;
-}
+const HANDOVER_SELECT = `
+  SELECT
+    h.id,
+    h.handover_code,
+    h.contract_id,
+    c.contract_code,
+    h.type,
+    h.created_at,
+    u.full_name  AS customer_name,
+    (
+      SELECT MIN(r2.name)
+      FROM contract_beds cb2
+      JOIN beds b2  ON b2.id  = cb2.bed_id
+      JOIN rooms r2 ON r2.id  = b2.room_id
+      WHERE cb2.contract_id = h.contract_id
+    ) AS room_name,
+    COALESCE(
+      json_agg(
+        json_build_object(
+          'bedId',     hb.bed_id,
+          'bedNumber', b.bed_number,
+          'note',      hb.note
+        ) ORDER BY b.bed_number
+      ) FILTER (WHERE hb.bed_id IS NOT NULL),
+      '[]'::json
+    ) AS beds
+  FROM handovers h
+  JOIN contracts c           ON h.contract_id  = c.id
+  JOIN users u               ON c.user_email   = u.email
+  LEFT JOIN handover_beds hb ON hb.handover_id = h.id
+  LEFT JOIN beds b           ON b.id           = hb.bed_id
+`;
 
 export class HandoverDB {
-  static async getAll(): Promise<HandoverRow[]> {
+  static async getAll(): Promise<HandoverReportDTO[]> {
     const result = await dbClient.query(`
-      SELECT
-        h.id,
-        h.handover_code,
-        h.contract_id,
-        c.contract_code,
-        h.type,
-        h.created_at,
-        u.full_name  AS customer_name,
-        (
-          SELECT MIN(r2.name)
-          FROM contract_beds cb2
-          JOIN beds b2  ON b2.id  = cb2.bed_id
-          JOIN rooms r2 ON r2.id  = b2.room_id
-          WHERE cb2.contract_id = h.contract_id
-        ) AS room_name,
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'bedId',     hb.bed_id,
-              'bedNumber', b.bed_number,
-              'note',      hb.note
-            ) ORDER BY b.bed_number
-          ) FILTER (WHERE hb.bed_id IS NOT NULL),
-          '[]'::json
-        ) AS beds
-      FROM handovers h
-      JOIN contracts c           ON h.contract_id  = c.id
-      JOIN users u               ON c.user_email   = u.email
-      LEFT JOIN handover_beds hb ON hb.handover_id = h.id
-      LEFT JOIN beds b           ON b.id           = hb.bed_id
+      ${HANDOVER_SELECT}
       GROUP BY h.id, h.handover_code, c.contract_code, u.full_name
       ORDER BY h.created_at DESC
     `);
     return result.rows.map((row: any) => this.mapRow(row));
   }
 
-  static async getByContractId(contractId: string): Promise<HandoverRow[]> {
+  static async getByContractId(contractId: string): Promise<HandoverReportDTO[]> {
     const result = await dbClient.query(`
-      SELECT
-        h.id,
-        h.handover_code,
-        h.contract_id,
-        c.contract_code,
-        h.type,
-        h.created_at,
-        u.full_name  AS customer_name,
-        (
-          SELECT MIN(r2.name)
-          FROM contract_beds cb2
-          JOIN beds b2  ON b2.id  = cb2.bed_id
-          JOIN rooms r2 ON r2.id  = b2.room_id
-          WHERE cb2.contract_id = h.contract_id
-        ) AS room_name,
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'bedId',     hb.bed_id,
-              'bedNumber', b.bed_number,
-              'note',      hb.note
-            ) ORDER BY b.bed_number
-          ) FILTER (WHERE hb.bed_id IS NOT NULL),
-          '[]'::json
-        ) AS beds
-      FROM handovers h
-      JOIN contracts c           ON h.contract_id  = c.id
-      JOIN users u               ON c.user_email   = u.email
-      LEFT JOIN handover_beds hb ON hb.handover_id = h.id
-      LEFT JOIN beds b           ON b.id           = hb.bed_id
+      ${HANDOVER_SELECT}
       WHERE h.contract_id = $1
       GROUP BY h.id, h.handover_code, c.contract_code, u.full_name
       ORDER BY h.created_at ASC
@@ -119,38 +64,9 @@ export class HandoverDB {
     return result.rows.map((row: any) => this.mapRow(row));
   }
 
-  static async getById(id: string): Promise<HandoverRow | null> {
+  static async getById(id: string): Promise<HandoverReportDTO | null> {
     const result = await dbClient.query(`
-      SELECT
-        h.id,
-        h.handover_code,
-        h.contract_id,
-        c.contract_code,
-        h.type,
-        h.created_at,
-        u.full_name  AS customer_name,
-        (
-          SELECT MIN(r2.name)
-          FROM contract_beds cb2
-          JOIN beds b2  ON b2.id  = cb2.bed_id
-          JOIN rooms r2 ON r2.id  = b2.room_id
-          WHERE cb2.contract_id = h.contract_id
-        ) AS room_name,
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'bedId',     hb.bed_id,
-              'bedNumber', b.bed_number,
-              'note',      hb.note
-            ) ORDER BY b.bed_number
-          ) FILTER (WHERE hb.bed_id IS NOT NULL),
-          '[]'::json
-        ) AS beds
-      FROM handovers h
-      JOIN contracts c           ON h.contract_id  = c.id
-      JOIN users u               ON c.user_email   = u.email
-      LEFT JOIN handover_beds hb ON hb.handover_id = h.id
-      LEFT JOIN beds b           ON b.id           = hb.bed_id
+      ${HANDOVER_SELECT}
       WHERE h.id = $1
       GROUP BY h.id, h.handover_code, c.contract_code, u.full_name
     `, [id]);
@@ -158,7 +74,7 @@ export class HandoverDB {
     return this.mapRow(result.rows[0]);
   }
 
-  static async getActiveContracts(): Promise<ActiveContractRow[]> {
+  static async getActiveContracts(): Promise<ActiveContractForHandoverDTO[]> {
     const result = await dbClient.query(`
       SELECT
         c.id             AS contract_id,
@@ -166,7 +82,22 @@ export class HandoverDB {
         u.full_name      AS customer_name,
         r.name           AS room_name,
         json_agg(
-          json_build_object('id', b.id, 'bedNumber', b.bed_number)
+          json_build_object(
+            'id', b.id,
+            'bedNumber', b.bed_number,
+            'utilities', (
+              SELECT COALESCE(
+                json_agg(
+                  json_build_object('utilityId', ut.id, 'title', ut.title)
+                  ORDER BY ut.title
+                ),
+                '[]'::json
+              )
+              FROM bed_utilities bu
+              JOIN utilities ut ON ut.id = bu.utility_id
+              WHERE bu.bed_id = b.id
+            )
+          )
           ORDER BY b.bed_number
         ) AS beds
       FROM contracts c
@@ -190,7 +121,7 @@ export class HandoverDB {
   static async insert(
     contractId: string,
     type: HandoverType,
-    beds: CreateHandoverBed[],
+    beds: CreateHandoverBedDTO[],
     overallNote: string,
   ): Promise<string> {
     const client = await dbClient.getClient();
@@ -204,45 +135,31 @@ export class HandoverDB {
       const handoverId = insertResult.rows[0].id;
 
       for (const bed of beds) {
-        const noteParts = [
-          `Giường: ${bed.bedStatus}`,
-          `Nệm: ${bed.mattressStatus}`,
-          `Tủ: ${bed.cabinetStatus}`,
-          `Chìa khóa: ${bed.keyStatus}`,
-        ];
-        if (overallNote) noteParts.push(`Ghi chú: ${overallNote}`);
-        const noteText = noteParts.join('\n');
+        const noteData = JSON.stringify({ utilities: bed.utilities, note: overallNote });
 
         await client.query(
           'INSERT INTO handover_beds (handover_id, bed_id, note) VALUES ($1, $2, $3)',
-          [handoverId, bed.bedId, noteText],
+          [handoverId, bed.bedId, noteData],
         );
 
-        const isGood = bed.bedStatus === 'Tốt' && bed.mattressStatus === 'Tốt'
-          && bed.cabinetStatus === 'Tốt' && bed.keyStatus === 'Tốt';
-        const utilStatus = isGood ? 'GOOD' : 'BROKEN';
+        const isGood = bed.utilities.every(u => u.status === 'Tốt');
         await client.query(
           'UPDATE bed_utilities SET status = $1 WHERE bed_id = $2',
-          [utilStatus, bed.bedId],
+          [isGood ? 'GOOD' : 'BROKEN', bed.bedId],
         );
       }
 
-      // Update room_utilities for affected rooms
       const bedIds = beds.map(b => b.bedId);
       if (bedIds.length > 0) {
         const roomResult = await client.query(
           'SELECT DISTINCT room_id FROM beds WHERE id = ANY($1::uuid[])',
           [bedIds],
         );
-        const anyBad = beds.some(b =>
-          b.bedStatus !== 'Tốt' || b.mattressStatus !== 'Tốt'
-          || b.cabinetStatus !== 'Tốt' || b.keyStatus !== 'Tốt',
-        );
-        const roomStatus = anyBad ? 'BROKEN' : 'GOOD';
+        const anyBad = beds.some(b => b.utilities.some(u => u.status !== 'Tốt'));
         for (const row of roomResult.rows) {
           await client.query(
             'UPDATE room_utilities SET status = $1 WHERE room_id = $2',
-            [roomStatus, row.room_id],
+            [anyBad ? 'BROKEN' : 'GOOD', row.room_id],
           );
         }
       }
@@ -257,31 +174,46 @@ export class HandoverDB {
     }
   }
 
-  private static parseNoteText(note: string): Record<string, string> {
+  // ── Private helpers ────────────────────────────────────────────────────────
+
+  private static parseNote(note: string): { utilities: HandoverUtilityStatusDTO[]; overallNote: string } {
+    try {
+      const data = JSON.parse(note);
+      if (Array.isArray(data.utilities)) {
+        return { utilities: data.utilities as HandoverUtilityStatusDTO[], overallNote: data.note || '' };
+      }
+    } catch {}
+    // Fallback: old pipe-delimited text format
     const map: Record<string, string> = {};
     (note || '').split('\n').forEach(line => {
       const idx = line.indexOf(': ');
       if (idx > 0) map[line.slice(0, idx).trim()] = line.slice(idx + 2).trim();
     });
-    return map;
+    const legacyMap: Record<string, string> = {
+      'Giường': map['Giường'] || 'Tốt',
+      'Nệm': map['Nệm'] || 'Tốt',
+      'Tủ': map['Tủ'] || 'Tốt',
+      'Chìa khóa': map['Chìa khóa'] || 'Tốt',
+    };
+    const utilities = Object.entries(legacyMap).map(([title, status]) => ({
+      utilityId: title,
+      title,
+      status: status as EquipmentStatus,
+    }));
+    return { utilities, overallNote: map['Ghi chú'] || '' };
   }
 
-  private static mapRow(row: any): HandoverRow {
+  private static mapRow(row: any): HandoverReportDTO {
     const rawBeds: any[] = (row.beds || []).filter((b: any) => b.bedId != null);
 
-    const overallNote = rawBeds.length > 0
-      ? (this.parseNoteText(rawBeds[0].note || '')['Ghi chú'] || '')
-      : '';
-
-    const beds: HandoverBedRow[] = rawBeds.map((b: any) => {
-      const m = this.parseNoteText(b.note || '');
+    let overallNote = '';
+    const beds: HandoverBedDTO[] = rawBeds.map((b: any) => {
+      const parsed = this.parseNote(b.note || '');
+      overallNote = parsed.overallNote;
       return {
         bedId: b.bedId,
         bedNumber: b.bedNumber,
-        bedStatus:      (m['Giường']    || 'Tốt') as EquipmentStatus,
-        mattressStatus: (m['Nệm']       || 'Tốt') as EquipmentStatus,
-        cabinetStatus:  (m['Tủ']        || 'Tốt') as EquipmentStatus,
-        keyStatus:      (m['Chìa khóa'] || 'Tốt') as EquipmentStatus,
+        utilities: parsed.utilities,
       };
     });
 
