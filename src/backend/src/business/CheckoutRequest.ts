@@ -3,9 +3,10 @@ import { CheckoutRequestDB } from '../database/CheckoutRequestDB';
 
 export class CheckoutRequest {
   requestId: string; // PK
+  code?: string; // Display code
   userEmail: string;
   userFullName?: string;
-  contractId?: string;
+  rentalFormId?: string;
   dormName?: string;
   roomName?: string;
   floor?: number;
@@ -16,9 +17,10 @@ export class CheckoutRequest {
 
   constructor(data: Partial<CheckoutRequest>) {
     this.requestId = data.requestId || '';
+    this.code = data.code;
     this.userEmail = data.userEmail || '';
     this.userFullName = data.userFullName;
-    this.contractId = data.contractId;
+    this.rentalFormId = data.rentalFormId;
     this.dormName = data.dormName;
     this.roomName = data.roomName;
     this.floor = data.floor;
@@ -31,9 +33,10 @@ export class CheckoutRequest {
   toDto(): CheckoutRequestDTO {
     return {
       requestId: this.requestId,
+      code: this.code,
       userEmail: this.userEmail,
       userFullName: this.userFullName,
-      contractId: this.contractId,
+      rentalFormId: this.rentalFormId,
       dormName: this.dormName,
       roomName: this.roomName,
       floor: this.floor,
@@ -55,13 +58,13 @@ export class CheckoutRequest {
   }
 
   static async create(requestData: Partial<CheckoutRequestDTO>): Promise<CheckoutRequestDTO> {
-    if (!requestData.userEmail || !requestData.expectedDate || !requestData.contractId) {
-      throw new Error('userEmail, contractId và expectedDate là bắt buộc.');
+    if (!requestData.userEmail || !requestData.expectedDate || !requestData.rentalFormId) {
+      throw new Error('userEmail, rentalFormId và expectedDate là bắt buộc.');
     }
 
     const newRequest = new CheckoutRequest({
       userEmail: requestData.userEmail,
-      contractId: requestData.contractId,
+      rentalFormId: requestData.rentalFormId,
       expectedDate: requestData.expectedDate,
       createdAt: new Date().toISOString(),
       status: CheckoutStatus.PENDING
@@ -74,13 +77,13 @@ export class CheckoutRequest {
   }
 
   static async createWithDuplicateCheck(requestData: Partial<CheckoutRequestDTO>): Promise<{ success: boolean; request?: CheckoutRequestDTO; error?: string }> {
-    if (!requestData.userEmail || !requestData.expectedDate || !requestData.contractId) {
-      throw new Error('userEmail, contractId và expectedDate là bắt buộc.');
+    if (!requestData.userEmail || !requestData.expectedDate || !requestData.rentalFormId) {
+      throw new Error('userEmail, rentalFormId và expectedDate là bắt buộc.');
     }
 
     const newRequest = new CheckoutRequest({
       userEmail: requestData.userEmail,
-      contractId: requestData.contractId,
+      rentalFormId: requestData.rentalFormId,
       expectedDate: requestData.expectedDate,
       createdAt: new Date().toISOString(),
       status: CheckoutStatus.PENDING
@@ -88,7 +91,7 @@ export class CheckoutRequest {
     
     const result = await CheckoutRequestDB.insertIfNoActiveRequest(
       newRequest,
-      requestData.contractId,
+      requestData.rentalFormId,
       requestData.userEmail
     );
 
@@ -117,7 +120,7 @@ export class CheckoutRequest {
     }
 
     const validTransitions: Record<CheckoutStatus, CheckoutStatus[]> = {
-      [CheckoutStatus.PENDING]: [CheckoutStatus.PROCESSING, CheckoutStatus.CANCELLED],
+      [CheckoutStatus.PENDING]: [CheckoutStatus.PROCESSING, CheckoutStatus.LIQUIDATED, CheckoutStatus.CANCELLED],
       [CheckoutStatus.PROCESSING]: [CheckoutStatus.LIQUIDATED, CheckoutStatus.CANCELLED],
       [CheckoutStatus.LIQUIDATED]: [], 
       [CheckoutStatus.CANCELLED]: [] 

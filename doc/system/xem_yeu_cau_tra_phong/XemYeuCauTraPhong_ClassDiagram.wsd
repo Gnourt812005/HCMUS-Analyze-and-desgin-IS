@@ -43,8 +43,8 @@ class CheckoutRequest <<control>> {
     - expectedDate: string
     - status: CheckoutStatus
     - createdAt: string
-    + <<static>> getListByUserEmail(userEmail: string): List<CheckoutRequestDTO>
-    + <<static>> getById(requestId: string): CheckoutRequestDTO
+    + <<static>> getListByUserEmail(userEmail: string): CheckoutRequest[]
+    + <<static>> getById(requestId: string): CheckoutRequest
 }
 
 class RefundCalculation <<control>> {

@@ -10,6 +10,10 @@ export class Contract {
     return ContractDB.getByContractId(contractId);
   }
 
+  static async getByRentalFormId(rentalFormId: string): Promise<ContractDTO | null> {
+    return ContractDB.getByRentalFormId(rentalFormId);
+  }
+
   static async getActiveByUserEmail(userEmail: string): Promise<ContractDTO[]> {
     return ContractDB.getActiveByUserEmail(userEmail);
   }

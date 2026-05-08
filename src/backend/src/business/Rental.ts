@@ -153,4 +153,8 @@ export class Rental {
   static async getAllOrders() {
     return OrderDB.getAllOrders();
   }
+
+  static async getBedsInfoByRentalFormId(rentalFormId: string): Promise<{ roomId: string; bedIds: string[] } | null> {
+    return await RentalDB.getBedsInfoByRentalFormId(rentalFormId);
+  }
 }

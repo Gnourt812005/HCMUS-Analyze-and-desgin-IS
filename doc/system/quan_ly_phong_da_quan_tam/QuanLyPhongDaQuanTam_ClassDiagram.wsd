@@ -66,7 +66,7 @@ class "Room" as Room <<control>> {
     - roomUtilities: string
     - specialDescription: string
 
-    + <<static>> getFavoriteRoomsByUserID(userID: int): List<Room>
+    + <<static>> getFavoriteRoomsByUserID(userID: int): Room[]
     + <<static>> getFavoriteRoomDetails(roomID: int): Room
 }
 
@@ -90,7 +90,7 @@ class "PreviewForm" as PreviewForm <<control>> {
 
 ' --- DATABASE LAYER ---
 class "RoomDB" as RoomDB <<entity>> {
-    + <<static>>getFavoriteRooms(roomIDs: List<int>): List<Room>
+    + <<static>>getFavoriteRooms(roomIDs: int[]): Room[]
 }
 
 class "UtilitiesDB" as UtilitiesDB <<entity>> {
@@ -102,7 +102,7 @@ class "BedDB" as BedDB <<entity>> {
 }
 
 class "FavoriteRoomDB" as FavoriteDB <<entity>> {
-    + <<static>>getFavoriteRoomIDsByUserID(userID: int): List<int>
+    + <<static>>getFavoriteRoomIDsByUserID(userID: int): int[]
 
     + <<static>>addFavoriteRoom(roomID: int, userID: int): void
     + <<static>>removeFavoriteRoom(roomID: int, userID: int): void

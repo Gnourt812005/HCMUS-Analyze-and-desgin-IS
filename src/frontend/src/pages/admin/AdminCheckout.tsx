@@ -8,15 +8,17 @@ export const AdminCheckout = () => {
   const [checkoutRequests, setCheckoutRequests] = useState<CheckoutRequestDTO[]>([]);
   const [refundMap, setRefundMap] = useState<Record<string, RefundCalculationDTO>>({});
   const [loading, setLoading] = useState(true);
+  const [modalRefundLoading, setModalRefundLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<CheckoutRequestDTO | null>(null);
+  const [selectedRentalForm, setSelectedRentalForm] = useState<any | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Form create
   const [createForm, setCreateForm] = useState({
     userEmail: '',
-    contractId: '',
+    rentalFormId: '',
     expectedDate: '',
   });
   const [searchingUser, setSearchingUser] = useState(false);
@@ -41,7 +43,32 @@ export const AdminCheckout = () => {
       abortController.abort();
     };
   }, []);
+  // Load refund calculation when detail modal opens
+  useEffect(() => {
+    if (!showDetailModal || !selectedRequest) {
+      setModalRefundLoading(false);
+      return;
+    }
 
+    const loadRefund = async () => {
+      setModalRefundLoading(true);
+      try {
+        const refund = await ApiClient.get<RefundCalculationDTO>(
+          `/refund-calculations/by-request/${selectedRequest.requestId}`
+        );
+        setRefundMap(prev => ({
+          ...prev,
+          [selectedRequest.requestId]: refund
+        }));
+      } catch (err) {
+        console.error('Failed to load refund calculation:', err);
+      } finally {
+        setModalRefundLoading(false);
+      }
+    };
+
+    loadRefund();
+  }, [showDetailModal, selectedRequest?.requestId]);
   const loadCheckoutRequests = async (abortController: AbortController) => {
     try {
       setLoading(true);
@@ -87,8 +114,8 @@ export const AdminCheckout = () => {
     e.preventDefault();
     
     // Validation
-    if (!createForm.userEmail || !createForm.contractId || !createForm.expectedDate) {
-      setError('Vui lòng điền đầy đủ thông tin và chọn hợp đồng.');
+    if (!createForm.userEmail || !createForm.rentalFormId || !createForm.expectedDate) {
+      setError('Vui lòng điền đầy đủ thông tin và chọn đơn đăng ký thuê.');
       return;
     }
 
@@ -96,7 +123,7 @@ export const AdminCheckout = () => {
       const newRequest = await ApiClient.post<CheckoutRequestDTO>('/checkout-requests', {
         body: JSON.stringify({
           userEmail: createForm.userEmail,
-          contractId: createForm.contractId,
+          rentalFormId: createForm.rentalFormId,
           expectedDate: createForm.expectedDate,
         })
       });
@@ -105,12 +132,13 @@ export const AdminCheckout = () => {
       setCheckoutRequests(prev => [...prev, newRequest]);
       
       setShowCreateModal(false);
-      setCreateForm({ userEmail: '', contractId: '', expectedDate: '' });
+      setCreateForm({ userEmail: '', rentalFormId: '', expectedDate: '' });
       setSearchingUser(false);
       setUserSearchError(null);
       setSearchedUser(null);
       setAvailableContracts([]);
       setError(null);
+      await loadCheckoutRequests(new AbortController()); // Re-fetch to get the latest state including refund calculations
       showSuccess(`Đã tạo yêu cầu trả phòng mới thành công!`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Lỗi tạo yêu cầu');
@@ -127,24 +155,22 @@ export const AdminCheckout = () => {
     setUserSearchError(null);
     setSearchedUser(null);
     setAvailableContracts([]);
-    setCreateForm(prev => ({ ...prev, contractId: '' }));
+    setCreateForm(prev => ({ ...prev, rentalFormId: '' }));
 
     try {
-      const response = await ApiClient.get<{ user: UserProfileDTO | null; contracts: ContractDTO[] }>(
-        `/contracts/active-by-user/${encodeURIComponent(createForm.userEmail)}`
+      // Fetch rental forms for the searched customer
+      const response = await ApiClient.get<any[]>(
+        `/checkout-requests/rental-forms/available?userEmail=${encodeURIComponent(createForm.userEmail)}`
       );
 
-      if (!response.user) {
-        setUserSearchError('Không tìm thấy khách hàng.');
+      if (!response || response.length === 0) {
+        setUserSearchError('Khách hàng không có đơn đăng ký thuê nào.');
         setSearchingUser(false);
         return;
       }
 
-      setSearchedUser(response.user);
-      setAvailableContracts(response.contracts || []);
-      if (!response.contracts || response.contracts.length === 0) {
-        setUserSearchError('Khách hàng hiện không có hợp đồng hoạt động nào.');
-      }
+      setSearchedUser({ email: createForm.userEmail, fullName: response[0].user_full_name });
+      setAvailableContracts(response);
     } catch (err) {
       setUserSearchError(err instanceof Error ? err.message : 'Lỗi tìm kiếm khách hàng');
       setSearchedUser(null);
@@ -155,9 +181,26 @@ export const AdminCheckout = () => {
   };
 
   // Xem chi tiết
-  const handleViewDetail = (request: CheckoutRequestDTO) => {
+  const handleViewDetail = async (request: CheckoutRequestDTO) => {
     setSelectedRequest(request);
+    setSelectedRentalForm(null);
     setShowDetailModal(true);
+    
+    // Load rental form info to check if it has a contract
+    try {
+      const rentalFormData = await ApiClient.get<any>(
+        `/checkout-requests/rental-forms/available?userEmail=${encodeURIComponent(request.userEmail)}`
+      );
+      
+      if (rentalFormData && Array.isArray(rentalFormData)) {
+        const form = rentalFormData.find((f: any) => f.rental_form_id === request.rentalFormId);
+        if (form) {
+          setSelectedRentalForm(form);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load rental form:', err);
+    }
   };
 
   // Tiếp nhận (chuyển từ PENDING -> PROCESSING)
@@ -175,9 +218,31 @@ export const AdminCheckout = () => {
         })
       });
       
+      // Wait a moment for backend to auto-generate refund
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      await loadCheckoutRequests(new AbortController());
+      
+      // Reload the refund for the current request to show updated modal
+      if (selectedRequest) {
+        try {
+          const refund = await ApiClient.get<RefundCalculationDTO>(
+            `/refund-calculations/by-request/${selectedRequest.requestId}`
+          );
+          setRefundMap(prev => ({
+            ...prev,
+            [selectedRequest.requestId]: refund
+          }));
+          // Update selected request to show new status
+          setSelectedRequest(prev => prev ? { ...prev, status: CheckoutStatus.PROCESSING } : null);
+        } catch (err) {
+          console.error('Failed to load refund:', err);
+        }
+      }
+      
       setError(null);
       showSuccess('Đã tiếp nhận yêu cầu trả phòng!');
-      setShowDetailModal(false);
+      // Keep modal open to show the refund calculation that was just created
     } catch (err) {
       // Rollback
       setCheckoutRequests(prev => prev.map(r => r.requestId === requestId ? { ...r, status: CheckoutStatus.PENDING } : r));
@@ -243,7 +308,7 @@ export const AdminCheckout = () => {
 
   const filtered = useMemo(() => checkoutRequests.filter(r => {
     const kw = keyword.toLowerCase();
-    const matchKw = !keyword || r.requestId.toLowerCase().includes(kw) || r.userEmail.toLowerCase().includes(kw) || r.contractId?.toLowerCase().includes(kw);
+    const matchKw = !keyword || r.requestId.toLowerCase().includes(kw) || r.userEmail.toLowerCase().includes(kw) || r.rentalFormId?.toLowerCase().includes(kw);
     const matchStatus = statusFilter === 'all' || r.status === statusFilter;
     return matchKw && matchStatus;
   }), [checkoutRequests, keyword, statusFilter]);
@@ -313,7 +378,7 @@ export const AdminCheckout = () => {
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
           <input
             type="text"
-            placeholder="Tìm theo mã yêu cầu, Email, hợp đồng..."
+            placeholder="Tìm theo mã yêu cầu, Email, đơn đăng ký..."
             value={keyword}
             onChange={e => setKeyword(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-slate-50 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
@@ -367,8 +432,8 @@ export const AdminCheckout = () => {
                 </tr>
               ) : (
                 filtered.map((request) => (
-                  <tr key={request.requestId} className="hover:bg-slate-50/70 transition-colors cursor-pointer" onClick={() => handleViewDetail(request)}>
-                    <td className="px-5 py-4 font-bold text-blue-700 break-words">{request.requestId}</td>
+                  <tr key={request.code} className="hover:bg-slate-50/70 transition-colors cursor-pointer" onClick={() => handleViewDetail(request)}>
+                    <td className="px-5 py-4 font-bold text-blue-700 break-words">{request.code}</td>
                     <td className="px-5 py-4">
                       <p className="font-semibold text-slate-800 truncate">{request.userFullName || 'N/A'}</p>
                       <p className="text-xs text-slate-500 truncate">{request.userEmail}</p>
@@ -376,7 +441,6 @@ export const AdminCheckout = () => {
                     <td className="px-5 py-4">
                       <p className="font-medium text-slate-700 truncate">{request.dormName} - Tầng {request.floor}</p>
                       <p className="text-xs text-slate-500 truncate">Phòng: {request.roomName}</p>
-                      <p className="text-xs text-slate-500 break-words">HĐ: {request.contractId}</p>
                     </td>
                     <td className="px-5 py-4">
                       {refundMap[request.requestId] ? (
@@ -423,7 +487,7 @@ export const AdminCheckout = () => {
             <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100">
               <div>
                 <h2 className="text-xl font-bold text-slate-900">Khởi tạo yêu cầu trả phòng</h2>
-                <p className="text-slate-500 text-sm mt-0.5">Tạo yêu cầu cho khách hàng đang có hợp đồng</p>
+                <p className="text-slate-500 text-sm mt-0.5">Tạo yêu cầu cho khách hàng đang có đơn đăng ký thuê</p>
               </div>
               <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
                 <span className="material-symbols-outlined text-slate-500">close</span>
@@ -440,7 +504,7 @@ export const AdminCheckout = () => {
                     type="text"
                   value={createForm.userEmail}
                     onChange={(e) => {
-                    setCreateForm({ ...createForm, userEmail: e.target.value, contractId: '' });
+                    setCreateForm({ ...createForm, userEmail: e.target.value, rentalFormId: '' });
                       setSearchedUser(null);
                       setAvailableContracts([]);
                       setUserSearchError(null);
@@ -477,32 +541,36 @@ export const AdminCheckout = () => {
 
               {availableContracts.length > 0 && (
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Chọn hợp đồng *</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Chọn đơn đăng ký thuê *</label>
                   <div className="grid gap-3">
-                    {availableContracts.map((contract) => (
+                    {availableContracts.map((rental) => (
                       <label
-                        key={contract.contractId}
+                        key={rental.rental_form_id}
                         className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          createForm.contractId === contract.contractId
+                          createForm.rentalFormId === rental.rental_form_id
                             ? 'border-blue-500 bg-blue-50'
                             : 'border-slate-100 bg-white hover:border-blue-200'
                         }`}
                       >
                         <input
                           type="radio"
-                          name="contractId"
-                          value={contract.contractId}
-                          checked={createForm.contractId === contract.contractId}
-                          onChange={(e) => setCreateForm({ ...createForm, contractId: e.target.value })}
+                          name="rentalFormId"
+                          value={rental.rental_form_id}
+                          checked={createForm.rentalFormId === rental.rental_form_id}
+                          onChange={(e) => setCreateForm({ ...createForm, rentalFormId: e.target.value })}
                           className="mt-1"
                         />
                         <div className="flex-1 text-sm text-slate-700">
-                          <p className="font-bold text-slate-900">{contract.dormName} - Tầng {contract.floor} - Phòng {contract.roomId}</p>
-                          <p className="text-xs text-slate-600">Giường: {contract.bedNumbers}</p>
-                          <p className="text-xs mt-1">
-                            Hợp đồng: {contract.contractId}
-                          </p>
-                          <p className="text-xs">Hạn: {new Date(contract.startDate!).toLocaleDateString('vi-VN')}</p>
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-bold text-slate-900">{rental.dorm_name} - Tầng {rental.floor} - Phòng {rental.room_name}</p>
+                            <span className="px-2 py-1 text-xs font-medium rounded bg-amber-100 text-amber-800">
+                              {rental.type === 'DEPOSIT' ? 'Tiền cọp' : 'Toàn bộ'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-600">Giường: {rental.bed_numbers}</p>
+                          {rental.contract_id && (
+                            <p className="text-xs">Hạn: {new Date(rental.start_date!).toLocaleDateString('vi-VN')}</p>
+                          )}
                         </div>
                       </label>
                     ))}
@@ -527,7 +595,7 @@ export const AdminCheckout = () => {
               <button
                 onClick={() => {
                   setShowCreateModal(false);
-                setCreateForm({ userEmail: '', contractId: '', expectedDate: '' });
+                setCreateForm({ userEmail: '', rentalFormId: '', expectedDate: '' });
                   setSearchingUser(false);
                   setUserSearchError(null);
                   setSearchedUser(null);
@@ -551,13 +619,16 @@ export const AdminCheckout = () => {
 
       {showDetailModal && selectedRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowDetailModal(false)} />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => {
+            setShowDetailModal(false);
+            setSelectedRentalForm(null);
+          }} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col">
             <div className="px-7 py-5 border-b border-slate-100">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-3 mb-1">
-                    <h2 className="text-xl font-bold text-slate-900">Yêu cầu {selectedRequest.requestId}</h2>
+                    <h2 className="text-xl font-bold text-slate-900">Yêu cầu {selectedRequest.code}</h2>
                     <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${STATUS_STYLE[selectedRequest.status]}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[selectedRequest.status]}`} />
                       {STATUS_LABEL[selectedRequest.status]}
@@ -565,7 +636,10 @@ export const AdminCheckout = () => {
                   </div>
                   <p className="text-slate-500 text-sm">Ngày tạo: {new Date(selectedRequest.createdAt).toLocaleDateString('vi-VN')}</p>
                 </div>
-                <button onClick={() => setShowDetailModal(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors mt-1">
+                <button onClick={() => {
+                  setShowDetailModal(false);
+                  setSelectedRentalForm(null);
+                }} className="p-2 hover:bg-slate-100 rounded-lg transition-colors mt-1">
                   <span className="material-symbols-outlined text-slate-500">close</span>
                 </button>
               </div>
@@ -578,8 +652,8 @@ export const AdminCheckout = () => {
                   <span className="text-sm font-semibold text-slate-800">{selectedRequest.userFullName || selectedRequest.userEmail}</span>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Hợp đồng</span>
-                  <span className="text-sm font-semibold text-slate-800">{selectedRequest.contractId}</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Đơn đăng ký</span>
+                  <span className="text-sm font-semibold text-slate-800">{selectedRequest.rentalFormId}</span>
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Ký túc xá</span>
@@ -607,7 +681,12 @@ export const AdminCheckout = () => {
                 </div>
               </div>
 
-              {refundMap[selectedRequest.requestId] ? (
+              {modalRefundLoading ? (
+                <div className="flex flex-col items-center justify-center p-8 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-slate-400">
+                  <span className="material-symbols-outlined text-4xl mb-2 animate-spin">autorenew</span>
+                  <span className="text-sm font-medium">Đang tải bảng đối soát...</span>
+                </div>
+              ) : refundMap[selectedRequest.requestId] ? (
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <h3 className="text-sm font-black uppercase tracking-wider text-slate-700">Bảng tính đối soát</h3>
@@ -615,7 +694,7 @@ export const AdminCheckout = () => {
                   </div>
                   <div className="pl-10 space-y-2">
                     <div className="flex items-center justify-between py-2.5 border-b border-dashed border-slate-200">
-                      <span className="text-sm text-slate-600">Cọc theo hợp đồng</span>
+                      <span className="text-sm text-slate-600">Cọc theo đơn đăng ký</span>
                       <span className="text-sm font-bold text-slate-800">{formatMoney(refundMap[selectedRequest.requestId].depositAmount)}</span>
                     </div>
                     <div className="flex items-center justify-between py-2.5 border-b border-dashed border-slate-200">
@@ -662,7 +741,12 @@ export const AdminCheckout = () => {
                 )}
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setShowDetailModal(false)} className="px-5 py-2.5 text-sm font-semibold bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg transition-all">
+                <button 
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setSelectedRentalForm(null);
+                  }} 
+                  className="px-5 py-2.5 text-sm font-semibold bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg transition-all">
                   Đóng
                 </button>
                 
@@ -676,7 +760,7 @@ export const AdminCheckout = () => {
                   </button>
                 )}
                 
-                {selectedRequest.status === CheckoutStatus.PROCESSING && !refundMap[selectedRequest.requestId] && (
+                {selectedRequest.status === CheckoutStatus.PROCESSING && !refundMap[selectedRequest.requestId] && selectedRentalForm?.contract_id && (
                   <button
                     onClick={() => navigate(`/admin/checkout/${selectedRequest.requestId}/refund-calculation`)}
                     className="flex items-center gap-2 px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold rounded-lg transition-all"

@@ -4,7 +4,7 @@ import { ApiClient } from '../api/ApiClient';
 import { CheckoutRequestDTO, UserProfileDTO, ContractDTO } from '@dormarch/shared';
 
 interface CheckoutForm {
-  contractId: string;
+  rentalFormId: string;
   expectedDate: string;
 }
 
@@ -19,7 +19,7 @@ export const CreateCheckoutRequest = () => {
   const [selectedContractDetails, setSelectedContractDetails] = useState<ContractDTO | null>(null);
 
   const [form, setForm] = useState<CheckoutForm>({
-    contractId: '',
+    rentalFormId: '',
     expectedDate: '',
   });
 
@@ -49,10 +49,10 @@ export const CreateCheckoutRequest = () => {
       
       setProfile(profileData);
 
-      const activeContracts = await ApiClient.get<ContractDTO[]>('/contracts');
+      const rentalForms = await ApiClient.get<any[]>('/checkout-requests/rental-forms/available');
       
       if (abortController.signal.aborted) return;
-      setActiveContracts(activeContracts);
+      setActiveContracts(rentalForms);
     } catch (err) {
       if (!abortController.signal.aborted) {
         setError(
@@ -69,15 +69,15 @@ export const CreateCheckoutRequest = () => {
     }
   };
 
-  // Load contract details when contract is selected
+  // Load rental form details when selected
   useEffect(() => {
-    if (form.contractId) {
-      const selected = activeContracts.find(c => c.contractId === form.contractId);
+    if (form.rentalFormId) {
+      const selected = activeContracts.find(c => c.rental_form_id === form.rentalFormId);
       setSelectedContractDetails(selected || null);
     } else {
       setSelectedContractDetails(null);
     }
-  }, [form.contractId, activeContracts]);
+  }, [form.rentalFormId, activeContracts]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -89,7 +89,7 @@ export const CreateCheckoutRequest = () => {
       return;
     }
 
-    if (!form.contractId) {
+    if (!form.rentalFormId) {
       setError('Vui lòng chọn phòng/giường cần trả.');
       return;
     }
@@ -116,13 +116,13 @@ export const CreateCheckoutRequest = () => {
       await ApiClient.post<CheckoutRequestDTO>('/checkout-requests', {
         body: JSON.stringify({
           userEmail: profile.email,
-          contractId: form.contractId,
+          rentalFormId: form.rentalFormId,
           expectedDate: form.expectedDate,
         })
       });
 
       showSuccess('Gửi yêu cầu thành công!');
-      setForm({ contractId: '', expectedDate: '' });
+      setForm({ rentalFormId: '', expectedDate: '' });
       setTimeout(() => {
         navigate('/checkout-requests');
       }, 1500);
@@ -183,9 +183,9 @@ export const CreateCheckoutRequest = () => {
             <div className="flex items-start gap-3">
               <span className="material-symbols-outlined text-amber-600 mt-0.5">info</span>
               <div>
-                <p className="font-semibold text-amber-900">Không có hợp đồng hợp lệ</p>
-                <p className="text-sm text-amber-700 mt-1">
-                  Khách hàng cần phải có hợp đồng còn hiệu lực/chưa kèm yêu cầu trả phòng trên hệ thống để có thể tạo yêu cầu trả phòng.
+                <p className="font-semibold text-amber-900">Không có đơn đăng ký thuê hợp lệ</p>
+                <p className="text-xs text-amber-800 mt-1">
+                  Khách hàng cần phải có đơn đăng ký thuê còn hiệu lực/chưa kèm yêu cầu trả phòng trên hệ thống để có thể tạo yêu cầu trả phòng.
                 </p>
               </div>
             </div>
@@ -205,11 +205,11 @@ export const CreateCheckoutRequest = () => {
               </div>
 
               <div className="grid gap-3">
-                {activeContracts.map((contract) => (
+                {activeContracts.map((rental) => (
                   <label
-                    key={contract.contractId}
+                    key={rental.rental_form_id}
                     className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                      form.contractId === contract.contractId
+                      form.rentalFormId === rental.rental_form_id
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-slate-200 bg-slate-50 hover:border-slate-300'
                     }`}
@@ -217,27 +217,31 @@ export const CreateCheckoutRequest = () => {
                     <input
                       type="radio"
                       name="roomSelection"
-                      value={contract.contractId}
-                      checked={form.contractId === contract.contractId}
-                      onChange={(e) => setForm({ ...form, contractId: e.target.value })}
+                      value={rental.rental_form_id}
+                      checked={form.rentalFormId === rental.rental_form_id}
+                      onChange={(e) => setForm({ ...form, rentalFormId: e.target.value })}
                       className="mt-1"
                     />
                     <div className="flex-1">
                       <p className="font-semibold text-slate-900">
-                        {contract.dormName} - Tầng {contract.floor} - Phòng {contract.roomId}
+                        {rental.dorm_name} - Tầng {rental.floor} - Phòng {rental.room_name}
                       </p>
                       <p className="text-sm text-slate-600">
-                        Giường: {contract.bedNumbers}
-                      </p>
-                      <p className="text-sm text-slate-600 mt-1">
-                        Hợp đồng: {contract.contractCode || contract.contractId}
+                        Giường: {rental.bed_numbers}
                       </p>
                       <p className="text-sm text-slate-600">
-                        Ngày bắt đầu: {new Date(contract.startDate!).toLocaleDateString('vi-VN')}
+                        Loại: {rental.type === 'DEPOSIT' ? 'Tiền cọc' : 'Toàn bộ'}
                       </p>
-                      <p className="text-sm text-slate-600">
-                        Thời hạn thuê: {contract.stayDuration} tháng
-                      </p>
+                      {rental.contract_id && (
+                        <>
+                          <p className="text-sm text-slate-600">
+                            Ngày bắt đầu: {new Date(rental.start_date).toLocaleDateString('vi-VN')}
+                          </p>
+                          <p className="text-sm text-slate-600">
+                            Thời hạn thuê: {rental.stay_duration} tháng
+                          </p>
+                        </>
+                      )}
                     </div>
                   </label>
                 ))}
@@ -270,32 +274,34 @@ export const CreateCheckoutRequest = () => {
 
             {selectedContractDetails && (
               <div className="border-t border-slate-200 pt-6 space-y-4">
-                <h3 className="text-sm font-bold text-slate-800">Thông tin chi tiết hợp đồng</h3>
+                <h3 className="text-sm font-bold text-slate-800">Thông tin chi tiết đơn đăng ký thuê</h3>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs text-slate-500">Mã hợp đồng</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.contractCode || selectedContractDetails.contractId}</p>
-                  </div>
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Ký túc xá</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.dormName}</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.dorm_name}</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Phòng</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.roomId}</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.room_name}</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Tầng</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.floor}</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.floor}</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Giường</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.bedNumbers}</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.bed_numbers}</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs text-slate-500">Thời hạn</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails.stayDuration} tháng, từ {new Date(selectedContractDetails.startDate!).toLocaleDateString('vi-VN')}</p>
+                    <p className="text-xs text-slate-500">Loại</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.type === 'DEPOSIT' ? 'Tiền cọc' : 'Toàn bộ'}</p>
                   </div>
+                  {selectedContractDetails?.contract_id && (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <p className="text-xs text-slate-500">Thời hạn</p>
+                      <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.stay_duration} tháng, từ {new Date(selectedContractDetails?.start_date).toLocaleDateString('vi-VN')}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
