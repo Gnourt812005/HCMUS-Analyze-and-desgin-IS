@@ -397,4 +397,31 @@ export class RentalDB {
       client.release();
     }
   }
+
+  static async getBedsInfoByRentalFormId(rentalFormId: string): Promise<{ roomId: string; bedIds: string[] } | null> {
+    try {
+      const result = await dbClient.query(
+        `SELECT 
+          r.id as room_id,
+          ARRAY_AGG(b.id) as bed_ids
+         FROM rental_form_beds rfb
+         JOIN beds b ON b.id = rfb.bed_id
+         JOIN rooms r ON r.id = b.room_id
+         WHERE rfb.rental_form_id = $1::uuid
+         GROUP BY r.id`,
+        [rentalFormId]
+      );
+      
+      if (result.rows.length === 0) return null;
+      
+      const row = result.rows[0];
+      return {
+        roomId: row.room_id,
+        bedIds: row.bed_ids || []
+      };
+    } catch (error) {
+      console.error('Error fetching beds info by rental form:', error);
+      return null;
+    }
+  }
 }

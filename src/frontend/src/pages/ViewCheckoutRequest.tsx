@@ -5,7 +5,7 @@ import { CheckoutRequestDTO, CheckoutStatus, UserProfileDTO, ContractDTO, Refund
 
 type CheckoutRequestDetailResponse = {
   request: CheckoutRequestDTO;
-  contract?: ContractDTO | null;
+  rentalForm?: any | null;
   refund?: RefundCalculationDTO | null;
   depositAmount?: number;
 };
@@ -248,8 +248,8 @@ export const ViewCheckoutRequest = () => {
                   </tr>
                 ) : (
                   checkoutRequests.map((request) => (
-                    <tr key={request.requestId} className="hover:bg-slate-50/70 transition-colors cursor-pointer" onClick={() => loadDetail(request)}>
-                      <td className="px-5 py-4 font-bold text-blue-700 break-words">{request.requestId}</td>
+                    <tr key={request.code} className="hover:bg-slate-50/70 transition-colors cursor-pointer" onClick={() => loadDetail(request)}>
+                      <td className="px-5 py-4 font-bold text-blue-700 break-words">{request.code}</td>
                       <td className="px-5 py-4">
                         <p className="font-semibold text-slate-800 truncate">{request.dormName} - Tầng {request.floor}</p>
                         <p className="text-xs text-slate-500 truncate">Phòng: {request.roomName}</p>
@@ -294,7 +294,7 @@ export const ViewCheckoutRequest = () => {
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-3 mb-1">
-                      <h2 className="text-xl font-bold text-slate-900">Yêu cầu {selectedRequest.requestId}</h2>
+                      <h2 className="text-xl font-bold text-slate-900">Yêu cầu {selectedRequest.code}</h2>
                       <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${STATUS_STYLE[selectedRequest.status]}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[selectedRequest.status]}`} />
                         {STATUS_LABEL[selectedRequest.status]}
@@ -311,29 +311,20 @@ export const ViewCheckoutRequest = () => {
               <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 bg-slate-50 rounded-xl p-5 border border-slate-100">
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Ký túc xá</span>
-                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract?.dormName || 'Đang tải...'}</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Mã yêu cầu</span>
+                    <span className="text-sm font-semibold text-slate-800">{selectedRequest.code || 'N/A'}</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Phòng</span>
-                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract?.roomId || 'Đang tải...'}</span>
+                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.request?.roomName || selectedRequest.roomName || 'Đang tải...'}</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Tầng</span>
-                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract?.floor || 'Đang tải...'}</span>
+                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.request?.floor || selectedRequest.floor || 'Đang tải...'}</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Giường</span>
-                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract?.bedNumbers || 'Đang tải...'}</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    {/* Contract ID is kept but less prominent as requested */}
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Mã hợp đồng</span>
-                    <span className="text-sm font-semibold text-slate-800">
-                      {requestDetail?.contract
-                        ? (requestDetail.contract.contractCode || requestDetail.contract.contractId)
-                        : selectedRequest.contractId}
-                    </span>
+                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.request?.bedNumbers || selectedRequest.bedNumbers || 'Đang tải...'}</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Ngày dự kiến trả</span>
@@ -341,7 +332,7 @@ export const ViewCheckoutRequest = () => {
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Tiền cọc</span>
-                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.contract ? formatCurrency(requestDetail.depositAmount) : 'Đang tải...'}</span>
+                    <span className="text-sm font-semibold text-slate-800">{requestDetail?.depositAmount ? formatCurrency(requestDetail.depositAmount) : 'Đang tải...'}</span>
                   </div>
                 </div>
 
@@ -357,7 +348,7 @@ export const ViewCheckoutRequest = () => {
                     </div>
                     <div className="pl-10 space-y-2">
                       <div className="flex items-center justify-between py-2.5 border-b border-dashed border-slate-200">
-                        <span className="text-sm text-slate-600">Cọc theo hợp đồng</span>
+                        <span className="text-sm text-slate-600">Cọc theo đơn đăng ký</span>
                         <span className="text-sm font-bold text-slate-800">{formatCurrency(requestDetail.refund.depositAmount)}</span>
                       </div>
                       <div className="flex items-center justify-between py-2.5 border-b border-dashed border-slate-200">

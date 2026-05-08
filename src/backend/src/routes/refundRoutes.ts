@@ -3,6 +3,27 @@ import { RefundCalculation } from '../business/RefundCalculation';
 
 export const refundRouter = Router();
 
+refundRouter.post('/calculate', async (req: Request, res: Response) => {
+  try {
+    const { refundFormId, depositAmount } = req.body;
+
+    if (!refundFormId || depositAmount === undefined) {
+      res.status(400).json({ message: 'refundFormId và depositAmount là bắt buộc' });
+      return;
+    }
+
+    const result = await RefundCalculation.calculateRefundAmount(
+      '',
+      refundFormId,
+      depositAmount
+    );
+
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi tính toán hoàn cọc', error: error instanceof Error ? error.message : error });
+  }
+});
+
 refundRouter.get('/by-request/:requestId', async (req: Request, res: Response) => {
   try {
     const refund = await RefundCalculation.getByRequestId(req.params.requestId);
@@ -40,7 +61,7 @@ refundRouter.post('/', async (req: Request, res: Response) => {
 
     const newCalculation = await RefundCalculation.create({
       requestId,
-      contractId,
+      refundFormId: contractId,
       depositAmount,
       damageFee,
       extraFee: extraFee !== undefined ? extraFee : extraDebt || 0,

@@ -189,6 +189,12 @@ export class ContractDB {
     return result.rows[0] ? this.mapRow(result.rows[0]) : null;
   }
 
+  static async getByRentalFormId(rentalFormId: string): Promise<ContractDTO | null> {
+    const sql = `${this.BASE_QUERY} WHERE c.rental_form_id = $1 LIMIT 1`;
+    const result = await dbClient.query(sql, [rentalFormId]);
+    return result.rows[0] ? this.mapRow(result.rows[0]) : null;
+  }
+
   static async getByUserEmail(userEmail: string): Promise<ContractDTO | null> {
     const sql = `${this.BASE_QUERY} WHERE c.user_email = $1 LIMIT 1`;
     const result = await dbClient.query(sql, [userEmail]);
@@ -208,7 +214,7 @@ export class ContractDB {
         AND c.status = $2
         AND NOT EXISTS (
           SELECT 1 FROM checkout_requests cr
-          WHERE cr.contract_id = c.id AND cr.status IN ($3, $4)
+          WHERE cr.refund_form_id = c.rental_form_id AND cr.status IN ($3, $4)
         )
     `;
     const values = [userEmail, ContractStatus.ACTIVE, CheckoutStatus.PENDING, CheckoutStatus.PROCESSING];
