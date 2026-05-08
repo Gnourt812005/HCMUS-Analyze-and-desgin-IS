@@ -1,5 +1,5 @@
 @startuml Activity_ThanhLyHopDong
-title Activity Diagram: Thanh lý hợp đồng
+title Activity Diagram: Hoàn tất trả phòng
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -60,7 +60,7 @@ else (Có)
 endif
 
 |Nhân viên Quản lý|
-:Ghi biên bản trả phòng \nvà thanh lý hợp đồng;
+:Ghi biên bản trả phòng;
 note right
     Biên bản trả phòng (ghi)
 end note
@@ -71,7 +71,7 @@ note right
     Biên bản trả phòng (đọc)
 end note
 
-:Ký biên bản trả phòng \nvà thanh lý hợp đồng;
+:Ký biên bản trả phòng;
 note right
     Biên bản trả phòng (ghi)
 end note

@@ -34,7 +34,7 @@ import { AdminStaff } from './pages/admin/AdminStaff';
 import { AdminStaffDetail } from './pages/admin/AdminStaffDetail';
 import { AdminCheckout } from './pages/admin/AdminCheckout';
 import { AdminRefundCalculation } from './pages/admin/AdminRefundCalculation';
-import { AdminLiquidation } from './pages/admin/AdminLiquidation';
+import { AdminLiquidation } from './pages/admin/AdminCheckoutComplete';
 import { AdminUtilities } from './pages/admin/AdminUtilities';
 
 function App() {

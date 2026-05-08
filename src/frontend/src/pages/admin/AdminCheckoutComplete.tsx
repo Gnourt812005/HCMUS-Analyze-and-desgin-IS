@@ -14,7 +14,6 @@ export const AdminLiquidation = () => {
 
   const [checkoutRequest, setCheckoutRequest] = useState<CheckoutRequestDTO | null>(null);
   const [calculation, setCalculation] = useState<RefundCalculationDTO | null>(null);
-  const [depositAmount, setDepositAmount] = useState(0);
 
   // Load data on mount
   useEffect(() => {
@@ -47,7 +46,6 @@ export const AdminLiquidation = () => {
         request: CheckoutRequestDTO;
         rentalForm?: any | null;
         refund?: RefundCalculationDTO | null;
-        depositAmount?: number;
       }
       const detailData = await ApiClient.get<DetailResponse>(`/checkout-requests/${requestId}/details`);
       
@@ -57,7 +55,6 @@ export const AdminLiquidation = () => {
       if (detailData.refund) {
         setCalculation(detailData.refund);
       }
-      setDepositAmount(detailData.depositAmount || 0);
 
       // Load refund calculation
       try {
@@ -155,7 +152,7 @@ export const AdminLiquidation = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Hoàn tất thanh lý</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Hoàn tất trả phòng</h1>
         </div>
         <button
           onClick={() => navigate('/admin/checkout')}
@@ -185,7 +182,7 @@ export const AdminLiquidation = () => {
       {/* Contract Information */}
       <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200 space-y-4">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Thông tin phiếu đăng ký</h2>
+          <h2 className="text-lg font-bold text-slate-900">Thông tin yêu cầu trả phòng</h2>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -212,12 +209,8 @@ export const AdminLiquidation = () => {
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs text-slate-500 uppercase">Số tiền cọc</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">
-              {formatCurrency(depositAmount)}
+              {formatCurrency(calculation.depositAmount || 0)}
             </p>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs text-slate-500 uppercase">Thời hạn</p>
-            <p className="mt-2 text-sm font-semibold text-slate-900">N/A tháng</p>
           </div>
         </div>
       </div>
@@ -267,7 +260,7 @@ export const AdminLiquidation = () => {
           disabled={finalizing}
           className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-xl transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
         >
-          {finalizing ? 'Đang hoàn tất...' : 'Hoàn tất thanh lý'}
+          {finalizing ? 'Đang hoàn tất...' : 'Hoàn tất trả phòng'}
         </button>
       </div>
     </div>
