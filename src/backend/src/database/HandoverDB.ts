@@ -1,6 +1,7 @@
 import {
   HandoverReportDTO,
   HandoverBedDTO,
+  HandoverUtilityStatusDTO,
   ActiveContractForHandoverDTO,
   HandoverType,
   EquipmentStatus,
@@ -81,7 +82,22 @@ export class HandoverDB {
         u.full_name      AS customer_name,
         r.name           AS room_name,
         json_agg(
-          json_build_object('id', b.id, 'bedNumber', b.bed_number)
+          json_build_object(
+            'id', b.id,
+            'bedNumber', b.bed_number,
+            'utilities', (
+              SELECT COALESCE(
+                json_agg(
+                  json_build_object('utilityId', ut.id, 'title', ut.title)
+                  ORDER BY ut.title
+                ),
+                '[]'::json
+              )
+              FROM bed_utilities bu
+              JOIN utilities ut ON ut.id = bu.utility_id
+              WHERE bu.bed_id = b.id
+            )
+          )
           ORDER BY b.bed_number
         ) AS beds
       FROM contracts c
@@ -119,22 +135,14 @@ export class HandoverDB {
       const handoverId = insertResult.rows[0].id;
 
       for (const bed of beds) {
-        const noteParts = [
-          `Giường: ${bed.bedStatus}`,
-          `Nệm: ${bed.mattressStatus}`,
-          `Tủ: ${bed.cabinetStatus}`,
-          `Chìa khóa: ${bed.keyStatus}`,
-        ];
-        if (overallNote) noteParts.push(`Ghi chú: ${overallNote}`);
-        const noteText = noteParts.join('\n');
+        const noteData = JSON.stringify({ utilities: bed.utilities, note: overallNote });
 
         await client.query(
           'INSERT INTO handover_beds (handover_id, bed_id, note) VALUES ($1, $2, $3)',
-          [handoverId, bed.bedId, noteText],
+          [handoverId, bed.bedId, noteData],
         );
 
-        const isGood = bed.bedStatus === 'Tốt' && bed.mattressStatus === 'Tốt'
-          && bed.cabinetStatus === 'Tốt' && bed.keyStatus === 'Tốt';
+        const isGood = bed.utilities.every(u => u.status === 'Tốt');
         await client.query(
           'UPDATE bed_utilities SET status = $1 WHERE bed_id = $2',
           [isGood ? 'GOOD' : 'BROKEN', bed.bedId],
@@ -147,10 +155,7 @@ export class HandoverDB {
           'SELECT DISTINCT room_id FROM beds WHERE id = ANY($1::uuid[])',
           [bedIds],
         );
-        const anyBad = beds.some(b =>
-          b.bedStatus !== 'Tốt' || b.mattressStatus !== 'Tốt'
-          || b.cabinetStatus !== 'Tốt' || b.keyStatus !== 'Tốt',
-        );
+        const anyBad = beds.some(b => b.utilities.some(u => u.status !== 'Tốt'));
         for (const row of roomResult.rows) {
           await client.query(
             'UPDATE room_utilities SET status = $1 WHERE room_id = $2',
@@ -171,31 +176,44 @@ export class HandoverDB {
 
   // ── Private helpers ────────────────────────────────────────────────────────
 
-  private static parseNoteText(note: string): Record<string, string> {
+  private static parseNote(note: string): { utilities: HandoverUtilityStatusDTO[]; overallNote: string } {
+    try {
+      const data = JSON.parse(note);
+      if (Array.isArray(data.utilities)) {
+        return { utilities: data.utilities as HandoverUtilityStatusDTO[], overallNote: data.note || '' };
+      }
+    } catch {}
+    // Fallback: old pipe-delimited text format
     const map: Record<string, string> = {};
     (note || '').split('\n').forEach(line => {
       const idx = line.indexOf(': ');
       if (idx > 0) map[line.slice(0, idx).trim()] = line.slice(idx + 2).trim();
     });
-    return map;
+    const legacyMap: Record<string, string> = {
+      'Giường': map['Giường'] || 'Tốt',
+      'Nệm': map['Nệm'] || 'Tốt',
+      'Tủ': map['Tủ'] || 'Tốt',
+      'Chìa khóa': map['Chìa khóa'] || 'Tốt',
+    };
+    const utilities = Object.entries(legacyMap).map(([title, status]) => ({
+      utilityId: title,
+      title,
+      status: status as EquipmentStatus,
+    }));
+    return { utilities, overallNote: map['Ghi chú'] || '' };
   }
 
   private static mapRow(row: any): HandoverReportDTO {
     const rawBeds: any[] = (row.beds || []).filter((b: any) => b.bedId != null);
 
-    const overallNote = rawBeds.length > 0
-      ? (this.parseNoteText(rawBeds[0].note || '')['Ghi chú'] || '')
-      : '';
-
+    let overallNote = '';
     const beds: HandoverBedDTO[] = rawBeds.map((b: any) => {
-      const m = this.parseNoteText(b.note || '');
+      const parsed = this.parseNote(b.note || '');
+      overallNote = parsed.overallNote;
       return {
         bedId: b.bedId,
         bedNumber: b.bedNumber,
-        bedStatus:      (m['Giường']    || 'Tốt') as EquipmentStatus,
-        mattressStatus: (m['Nệm']       || 'Tốt') as EquipmentStatus,
-        cabinetStatus:  (m['Tủ']        || 'Tốt') as EquipmentStatus,
-        keyStatus:      (m['Chìa khóa'] || 'Tốt') as EquipmentStatus,
+        utilities: parsed.utilities,
       };
     });
 

@@ -17,9 +17,11 @@ boundary "ManageCheckoutRequestScreen" as guiManage
 boundary "CreateCheckoutRequestScreen" as guiCreate
 boundary "CheckoutRequestDetailScreen" as guiDetail
 control "CheckoutRequest" as reqCtrl
+control "Rental" as rentalCtrl
 control "Contract" as conCtrl
 control "RefundCalculation" as refCtrl
 database "CheckoutRequestDB" as reqDB
+database "RentalDB" as rentalDB
 database "ContractDB" as conDB
 database "RefundCalculationDB" as refDB
 
@@ -56,22 +58,31 @@ deactivate reqDB
 reqCtrl --> guiDetail: CheckoutRequest
 deactivate reqCtrl
 
-guiDetail -> conCtrl: getByContractId(contractId)
+guiDetail -> rentalCtrl: getRentalFormById(rentalFormId)
+activate rentalCtrl
+rentalCtrl -> rentalDB: getRentalFormById(rentalFormId)
+activate rentalDB
+rentalDB --> rentalCtrl: Rental
+deactivate rentalDB
+rentalCtrl --> guiDetail: Rental
+deactivate rentalCtrl
+
+guiDetail -> conCtrl: getByRentalFormId(rentalFormId)
 activate conCtrl
-conCtrl -> conDB: getByContractId(contractId)
+conCtrl -> conDB: getByRentalFormId(rentalFormId)
 activate conDB
-conDB --> conCtrl: Contract
+conDB --> conCtrl: Contract | null
 deactivate conDB
-conCtrl --> guiDetail: Contract
+conCtrl --> guiDetail: Contract | null
 deactivate conCtrl
 
 guiDetail -> refCtrl: getByRequestId(requestId)
 activate refCtrl
 refCtrl -> refDB: getByRequestId(requestId)
 activate refDB
-refDB --> refCtrl: RefundCalculation 
+refDB --> refCtrl: RefundCalculation | null
 deactivate refDB
-refCtrl --> guiDetail: RefundCalculation
+refCtrl --> guiDetail: RefundCalculation | null
 deactivate refCtrl
 
 guiDetail --> nv: Hiển thị chi tiết yêu cầu
@@ -86,33 +97,32 @@ guiManage -> guiCreate: show()
 activate guiCreate
 deactivate guiManage
 
-guiCreate -> conCtrl: getActiveByUserEmail(userEmail)
-activate conCtrl
-conCtrl -> conDB: getActiveByUserEmail(userEmail)
-activate conDB
-conDB --> conCtrl: Contract[]
-deactivate conDB
-conCtrl --> guiCreate: Contract[]
-deactivate conCtrl
+guiCreate -> rentalCtrl: getActiveRentalFormsForCheckout(userEmail)
+activate rentalCtrl
+rentalCtrl -> rentalDB: getActiveRentalFormsForCheckout(userEmail)
+activate rentalDB
+rentalDB --> rentalCtrl: Rental[]
+deactivate rentalDB
+rentalCtrl --> guiCreate: Rental[]
+deactivate rentalCtrl
 
-guiCreate --> nv: Hiển thị form và danh sách hợp đồng
+guiCreate --> nv: Hiển thị form và danh sách form thuê
 
-nv -> guiCreate: Chọn hợp đồng và Nhấn "Lưu"
+nv -> guiCreate: Chọn form thuê và Nhấn "Lưu"
 guiCreate -> reqCtrl: createWithDuplicateCheck(data)
 activate reqCtrl
 reqCtrl -> reqDB: insertIfNoActiveRequest(data)
 activate reqDB
 reqDB --> reqCtrl: {success: bool, requestId?: string}
 deactivate reqDB
-reqCtrl --> guiCreate: {success: bool, request?: CheckoutRequestRefundCalculation}
+reqCtrl --> guiCreate: {success: bool, request?: CheckoutRequest}
 deactivate reqCtrl
 
 guiCreate --> nv: Thông báo thành công
 deactivate guiCreate
-deactivate guiCreate
 deactivate nv
 
-nv -> guiDetail: Chọn hợp đồng và Nhấn "Tiếp nhận"
+nv -> guiDetail: Chọn yêu cầu và Nhấn "Tiếp nhận"
 activate guiDetail
 activate nv
 

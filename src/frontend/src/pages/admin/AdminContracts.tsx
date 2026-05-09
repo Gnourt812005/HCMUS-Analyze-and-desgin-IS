@@ -3,30 +3,35 @@ import {
   ContractService,
   ContractAdminDTO,
   RentalFormOptionDTO,
+  DormFeesDTO,
 } from '../../api/ContractService';
 import { ApiClient } from '../../api/ApiClient';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const BASE_RENT_PER_BED = 1_500_000;
-
-const SERVICE_FEES = [
-  { name: 'Điện', price: '3.500 đ/kWh', note: 'Theo chỉ số công tơ, thanh toán cuối tháng' },
-  { name: 'Nước', price: '50.000 đ/người/tháng', note: 'Định mức 4m³/người, vượt tính thêm' },
-  { name: 'Internet & Wifi', price: '50.000 đ/phòng/tháng', note: 'Tốc độ tối thiểu 50 Mbps' },
-  { name: 'Vệ sinh chung', price: '30.000 đ/người/tháng', note: 'Bao gồm hành lang và khu vực sinh hoạt chung' },
-  { name: 'Bảo vệ & an ninh', price: 'Miễn phí', note: 'Hoạt động 24/7' },
-];
-
 const DEPOSIT_RULES = [
-  { icon: 'check_circle', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200', title: 'Hoàn trả 100% tiền cọc', detail: 'Không có hư hỏng tài sản, thanh toán đầy đủ các khoản phí, và thông báo chấm dứt hợp đồng trước ít nhất 30 ngày.' },
-  { icon: 'remove_circle', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200', title: 'Khấu trừ chi phí sửa chữa', detail: 'Trường hợp có hư hỏng tài sản được ghi nhận trong biên bản bàn giao, chi phí sửa chữa sẽ được khấu trừ trực tiếp vào tiền cọc.' },
-  { icon: 'cancel', color: 'text-red-600', bg: 'bg-red-50 border-red-200', title: 'Không hoàn trả tiền cọc', detail: 'Vi phạm hợp đồng nghiêm trọng, tự ý rời đi không báo trước, hoặc còn nợ phí chưa thanh toán sau khi trừ tiền cọc.' },
+  { icon: 'check_circle',  color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200', title: 'Hoàn trả 100% tiền cọc',               detail: 'Áp dụng khi trả phòng đúng hạn theo hợp đồng, không có hư hỏng tài sản và đã thanh toán đầy đủ các khoản phí.' },
+  { icon: 'check_circle',  color: 'text-blue-600',    bg: 'bg-blue-50 border-blue-200',       title: 'Hoàn trả 80% tiền cọc',               detail: 'Dành cho trường hợp đã đặt cọc nhưng chưa ký hợp đồng, do không đạt điều kiện lưu trú hoặc chủ động hủy giao dịch.' },
+  { icon: 'check_circle',  color: 'text-yellow-600',  bg: 'bg-yellow-50 border-yellow-200',   title: 'Hoàn trả 70% tiền cọc',               detail: 'Dành cho khách đã ký hợp đồng, lưu trú trên 6 tháng nhưng trả phòng trước khi hết hạn hợp đồng.' },
+  { icon: 'check_circle',  color: 'text-orange-600',  bg: 'bg-orange-50 border-orange-200',   title: 'Hoàn trả 50% tiền cọc',               detail: 'Dành cho khách đã ký hợp đồng, lưu trú chưa tới 6 tháng nhưng trả phòng trước hạn.' },
+  { icon: 'remove_circle', color: 'text-amber-600',   bg: 'bg-amber-50 border-amber-200',     title: 'Khấu trừ chi phí sửa chữa và công nợ', detail: 'Hư hỏng tài sản ghi nhận trong biên bản bàn giao sẽ được khấu trừ vào tiền cọc. Các khoản nợ tiền thuê, điện nước và dịch vụ cũng được đối soát và khấu trừ tại bước này.' },
+  { icon: 'cancel',        color: 'text-red-600',     bg: 'bg-red-50 border-red-200',         title: 'Không hoàn trả tiền cọc (0%)',         detail: 'Vi phạm hợp đồng nghiêm trọng hoặc tự ý rời đi không báo trước. Nếu tiền cọc không đủ bù các khoản nợ, khách hàng bắt buộc thanh toán thêm phần chênh lệch.' },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtMoney(n: number) { return n.toLocaleString('vi-VN') + ' đ'; }
+
+function feesToItems(fees: DormFeesDTO) {
+  const fmt = (n: number, unit: string) => n > 0 ? `${fmtMoney(n)}${unit}` : 'Miễn phí';
+  return [
+    { name: 'Điện',           price: fmt(fees.electricityFee, '/kWh'),          note: 'Theo chỉ số công tơ, thanh toán cuối tháng' },
+    { name: 'Nước',           price: fmt(fees.waterFee,       '/người/tháng'),   note: 'Định mức 4m³/người, vượt tính thêm' },
+    { name: 'Internet & Wifi',price: fmt(fees.wifiFee,        '/phòng/tháng'),   note: 'Tốc độ tối thiểu 50 Mbps' },
+    { name: 'Vệ sinh chung',  price: fmt(fees.cleaningFee,    '/người/tháng'),   note: 'Bao gồm hành lang và khu vực sinh hoạt chung' },
+  ];
+}
+
 function fmtDate(iso: string) {
   try { return new Date(iso).toLocaleDateString('vi-VN'); } catch { return iso; }
 }
@@ -178,10 +183,8 @@ const CreateContractModal = ({
               </div>
               <div className="col-span-3 pt-1 border-t border-blue-200">
                 <p className="text-xs text-blue-600 font-semibold">
-                  Tiền thuê dự kiến:{' '}
-                  <span className="font-bold text-slate-800">
-                    {fmtMoney(BASE_RENT_PER_BED * selected.bedNumbers.length)}/tháng
-                  </span>
+                  Tiền thuê:{' '}
+                  <span className="font-bold text-slate-800">{fmtMoney(selected.monthlyRent)}/tháng</span>
                 </p>
               </div>
             </div>
@@ -278,16 +281,18 @@ const ContractDetailModal = ({
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [actionError, setActionError] = useState('');
   const [policyContent, setPolicyContent] = useState<string>('');
+  const [dormFees, setDormFees] = useState<DormFeesDTO | null>(null);
 
   useEffect(() => {
     ApiClient.get<{ data: { content: string } }>('/rentals/policy/latest')
       .then(res => setPolicyContent(res.data?.content ?? ''))
       .catch(() => setPolicyContent(''));
-  }, []);
+    ContractService.getFees(contract.id)
+      .then(fees => setDormFees(fees));
+  }, [contract.id]);
 
   const uiStatus = toUIStatus(contract.status);
-  const totalRent = BASE_RENT_PER_BED * contract.bedNumbers.length;
-  const deposit = totalRent * 2;
+  const totalRent = contract.monthlyRent;
   const endDate = calcEndDate(startDate, stayDuration);
 
   const handleSave = async () => {
@@ -440,15 +445,8 @@ const ContractDetailModal = ({
               <SectionTitle number="IV" title="Tài chính" />
               <div className="pl-10 space-y-2">
                 <div className="flex items-center justify-between py-2.5 border-b border-dashed border-slate-200">
-                  <div>
-                    <span className="text-sm text-slate-600">Giá thuê cơ bản</span>
-                    <span className="text-xs text-slate-400 ml-2">({contract.bedNumbers.length} giường × {fmtMoney(BASE_RENT_PER_BED)})</span>
-                  </div>
+                  <span className="text-sm text-slate-600">Giá thuê</span>
                   <span className="text-sm font-bold text-slate-800">{fmtMoney(totalRent)}/tháng</span>
-                </div>
-                <div className="flex items-center justify-between py-2.5 border-b border-dashed border-slate-200">
-                  <span className="text-sm text-slate-600">Tiền đặt cọc</span>
-                  <span className="text-sm font-bold text-slate-800">{fmtMoney(deposit)}</span>
                 </div>
                 <div className="flex items-center justify-between py-2.5">
                   <span className="text-sm text-slate-600">Phí dịch vụ</span>
@@ -499,13 +497,20 @@ const ContractDetailModal = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {SERVICE_FEES.map(fee => (
-                      <tr key={fee.name}>
-                        <td className="px-4 py-3 font-semibold text-slate-800">{fee.name}</td>
-                        <td className="px-4 py-3 font-bold text-blue-700">{fee.price}</td>
-                        <td className="px-4 py-3 text-slate-500">{fee.note}</td>
-                      </tr>
-                    ))}
+                    {dormFees
+                      ? feesToItems(dormFees).map(fee => (
+                        <tr key={fee.name}>
+                          <td className="px-4 py-3 font-semibold text-slate-800">{fee.name}</td>
+                          <td className="px-4 py-3 font-bold text-blue-700">{fee.price}</td>
+                          <td className="px-4 py-3 text-slate-500">{fee.note}</td>
+                        </tr>
+                      ))
+                      : (
+                        <tr>
+                          <td colSpan={3} className="px-4 py-4 text-center text-sm text-slate-400 italic">Đang tải phí dịch vụ...</td>
+                        </tr>
+                      )
+                    }
                   </tbody>
                 </table>
               </div>
@@ -772,7 +777,7 @@ export const AdminContracts = () => {
                       <p className="text-xs text-slate-400">{c.bedNumbers.join(', ') || '—'}</p>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="font-bold text-slate-800">{fmtMoney(BASE_RENT_PER_BED * c.bedNumbers.length)}</p>
+                      <p className="font-bold text-slate-800">{fmtMoney(c.monthlyRent)}</p>
                       <p className="text-xs text-slate-400">{c.stayDuration} tháng</p>
                     </td>
                     <td className="px-5 py-4">

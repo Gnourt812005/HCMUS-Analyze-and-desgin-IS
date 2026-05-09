@@ -22,41 +22,56 @@ class "ScreenContractTermination" as ContractLiquidationScreen <<boundary>> {
   + btnCompleteClick(): void
 }
 
-class "Contract" as Contract <<control>> {
-  - contractId: string
-  - contractCode: string
+class "CheckoutRequest" as CheckoutRequest <<control>> {
+  - requestId: string
+  - userEmail: string
+  - rentalFormId: string
+  - expectedDate: string
+  - status: CheckoutStatus
+  - createdAt: string
+  + <<static>> getById(requestId: string): CheckoutRequest 
+  + <<static>> updateStatus(requestId: string, status: CheckoutStatus): bool
+}
+
+class "CheckoutRequestDB" as CheckoutRequestDB <<entity>> {
+  + <<static>> getById(id: string): CheckoutRequest
+  + <<static>> updateStatus(id: string, status: string): bool
+}
+
+class "Rental" as Rental <<control>> {
+  - rentalFormId: string
   - userEmail: string
   - roomName: string
   - dormName: string
   - floor: number
   - bedNumbers: string
-  - startDate: string
-  - stayDuration: number
+  - type: string
+  - totalAmount: number
+  - createdAt: string
+  + <<static>> getBedsInfoByRentalFormId(rentalFormId: string): {roomId: string, bedIds: string[]}
+}
+
+class "RentalDB" as RentalDB <<entity>> {
+  + <<static>> getBedsInfoByRentalFormId(rentalFormId: string): {roomId: string, bedIds: string[]}
+}
+
+class "Contract" as Contract <<control>> {
+  - contractId: string
   - rentalFormId: string
   - status: ContractStatus
-  - depositAmount: number
-  - signatureUrl: string
-  - createdAt: string
-  + <<static>> getByContractId(contractId: string): Contract 
   + <<static>> updateStatus(contractId: string, status: ContractStatus): bool
-  + <<static>> getBedsInfoByContractId(contractId: string): {roomId: string, bedIds: string[]} 
+  + <<static>> getByRentalFormId(rentalFormId: string): Contract 
+  + <<static>> getBedsInfoByContractId(contractId: string): {roomId: string, bedIds: string[]}
 }
 
 class "ContractDB" as ContractDB <<entity>> {
   + <<static>> updateStatus(id: string, status: string): bool
+  + <<static>> getByRentalFormId(rentalFormId: string): Contract
+  + <<static>> getBedsInfoByContractId(contractId: string): {roomId
 }
 
 class "Room" as Room <<control>> {
-  - id: string
-  - dormId: string
-  - name: string
-  - block: string
-  - floor: number
-  - price: number
-  - totalBeds: number
-  - availableBeds: number
-  - status: string
-  - imageUrl: string
+  - roomId: string
   + <<static>> updateBedStatus(roomId: string, bedIds: string[], status: string): bool
 }
 
@@ -67,13 +82,9 @@ class "RoomDB" as RoomDB <<entity>> {
 class "RefundCalculation" as RefundCalculation <<control>> {
   - calculationId: string
   - requestId: string
-  - contractId: string
+  - rentalFormId: string
   - depositAmount: number
-  - damageFee: number
-  - extraFee: number
   - finalRefundAmount: number
-  - notes: string
-  - createdAt: string
   + <<static>> getByRequestId(requestId: string): RefundCalculation 
 }
 
@@ -81,11 +92,15 @@ class "RefundCalculationDB" as RefundCalculationDB <<entity>> {
   + <<static>> getByRequestId(requestId: string): RefundCalculation
 }
 
+ContractLiquidationScreen --> CheckoutRequest
+CheckoutRequest --> CheckoutRequestDB
 ContractLiquidationScreen --> Contract
-ContractLiquidationScreen --> RefundCalculation
 Contract --> ContractDB
+ContractLiquidationScreen --> Rental
+Rental --> RentalDB
+ContractLiquidationScreen --> RefundCalculation
+RefundCalculation --> RefundCalculationDB
 ContractLiquidationScreen --> Room
 Room --> RoomDB
-RefundCalculation --> RefundCalculationDB
 
 @enduml

@@ -2,8 +2,9 @@ import { Router, Request, Response } from 'express';
 import { CheckoutRequest } from '../business/CheckoutRequest';
 import { Contract } from '../business/Contract';
 import { Room } from '../business/Room';
+import { Rental } from '../business/Rental';
 import { RefundCalculation } from '../business/RefundCalculation';
-import { CheckoutStatus, ContractStatus } from '@dormarch/shared';
+import { CheckoutStatus, ContractStatus, RefundCalculationDTO } from '@dormarch/shared';
 import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
 
 export const checkoutRouter = Router();
@@ -21,6 +22,29 @@ checkoutRouter.get('/', authMiddleware, async (req: AuthRequest, res: Response) 
       ? await CheckoutRequest.getList()
       : await CheckoutRequest.getListByUserEmail(email);
     res.status(200).json(requests);
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error', error });
+  }
+});
+
+checkoutRouter.get('/rental-forms/available', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userEmail = (req.query.userEmail as string) || req.user?.email;
+    const authEmail = req.user?.email;
+    const isAdmin = req.user?.role === 'ADMIN';
+
+    if (!userEmail || !authEmail) {
+      return res.status(401).json({ message: 'Không thể định danh' });
+    }
+
+    // Only allow admin to fetch for other users, or users to fetch their own
+    if (userEmail !== authEmail && !isAdmin) {
+      return res.status(403).json({ message: 'Không có quyền truy cập' });
+    }
+
+    // Get active rental forms without active checkout requests
+    const rentalForms = await Rental.getActiveRentalFormsForCheckout(userEmail);
+    res.status(200).json(rentalForms);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });
   }
@@ -47,12 +71,14 @@ checkoutRouter.get('/:id/details', async (req: Request, res: Response) => {
       return;
     }
 
-    const contract = request.contractId ? await Contract.getByContractId(request.contractId) : null;
+    // Fetch rental form data and refund calculation
+    const rentalForm = request.rentalFormId ? await Rental.getRentalFormById(request.rentalFormId) : null;
     const refund = await RefundCalculation.getByRequestId(request.requestId);
-
-    const depositAmount = contract?.depositAmount || 0;
-
-    res.status(200).json({ request, contract, refund, depositAmount });
+    
+    // Deposit amount = 2 months of rent (totalAmount is 1 month rent)
+    const depositAmount = rentalForm ? rentalForm.totalAmount * 2 : 0;
+    
+    res.status(200).json({ request, rentalForm, refund, depositAmount });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });
   }
@@ -60,33 +86,28 @@ checkoutRouter.get('/:id/details', async (req: Request, res: Response) => {
 
 checkoutRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const { userEmail, contractId, expectedDate} = req.body;
+    const { userEmail, rentalFormId, expectedDate} = req.body;
 
-    if (!userEmail || !contractId || !expectedDate) {
-      res.status(400).json({ message: 'userEmail, contractId và expectedDate là bắt buộc.' });
+    if (!userEmail || !rentalFormId || !expectedDate) {
+      res.status(400).json({ message: 'userEmail, rentalFormId và expectedDate là bắt buộc.' });
       return;
     }
 
-    const contract = await Contract.getByContractId(contractId);
-    if (!contract) {
-      res.status(400).json({ message: 'Không tìm thấy hợp đồng.' });
+    const rentalForm = await Rental.getRentalFormById(rentalFormId);
+    if (!rentalForm) {
+      res.status(400).json({ message: 'Không tìm thấy phiếu đăng ký thuê.' });
       return;
     }
 
-    if (contract.status !== ContractStatus.ACTIVE) {
-      res.status(400).json({ message: 'Hợp đồng không còn hiệu lực. Không thể tạo yêu cầu trả phòng.' });
-      return;
-    }
-
-    if (contract.userEmail !== userEmail) {
-      res.status(400).json({ message: 'Hợp đồng không thuộc về khách hàng này.' });
+    if (rentalForm.userEmail !== userEmail) {
+      res.status(400).json({ message: 'Phiếu đăng ký thuê không thuộc về khách hàng này.' });
       return;
     }
 
     // Use atomic insert-with-check to prevent race condition with concurrent requests
     const createResult = await CheckoutRequest.createWithDuplicateCheck({
       userEmail,
-      contractId,
+      rentalFormId,
       expectedDate
     });
 
@@ -95,9 +116,16 @@ checkoutRouter.post('/', async (req: Request, res: Response) => {
       return;
     }
 
-    res.status(201).json(createResult.request);
+    // Send success response after creation
+    if (!res.headersSent) {
+      res.status(201).json(createResult.request);
+    }
+
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error', error });
+    console.error('Error in checkoutRouter.post:', error); // Log the error for debugging
+    if (!res.headersSent) {
+      res.status(500).json({ message: 'Internal server error', error });
+    }
   }
 });
 
@@ -120,6 +148,19 @@ checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
     }
 
     const updated = await CheckoutRequest.getById(requestId);
+    
+    // Auto-calculate refund if no contract exists and status is transitioning to PROCESSING
+    if (newStatus === CheckoutStatus.PROCESSING && updated && updated.rentalFormId) {
+      try {
+        const contract = await Contract.getByRentalFormId(updated.rentalFormId);
+        if (!contract) {
+          await RefundCalculation.autoCalculateRefundForNoContract(requestId, updated.rentalFormId);
+        }
+      } catch (autoCalcError) {
+        console.error('Error auto-calculating refund:', autoCalcError);
+      }
+    }
+
     res.status(200).json(updated);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';
@@ -148,11 +189,21 @@ checkoutRouter.patch('/:id/complete-liquidation', async (req: Request, res: Resp
       throw new Error('Yêu cầu đã được cập nhật bởi quản trị viên khác. Vui lòng làm mới và thử lại.');
     }
 
-    if (request.contractId) {
-      await Contract.updateStatus(request.contractId, ContractStatus.LIQUIDATED);
-      const bedsInfo = await Contract.getBedsInfoByContractId(request.contractId);
-      if (bedsInfo && bedsInfo.roomId && bedsInfo.bedIds.length > 0) {
-        await Room.updateBedStatus(bedsInfo.roomId, bedsInfo.bedIds, 'AVAILABLE');
+    // Find and update the associated contract if it exists
+    if (request.rentalFormId) {
+      const contract = await Contract.getByRentalFormId(request.rentalFormId);
+      if (contract && contract.contractId) {
+        await Contract.updateStatus(contract.contractId, ContractStatus.LIQUIDATED);
+        const bedsInfo = await Contract.getBedsInfoByContractId(contract.contractId);
+        if (bedsInfo && bedsInfo.roomId && bedsInfo.bedIds.length > 0) {
+          await Room.updateBedStatus(bedsInfo.roomId, bedsInfo.bedIds, 'AVAILABLE');
+        }
+      } else {
+        // No contract - get beds info directly from rental form
+        const rentalFormBedsInfo = await Rental.getBedsInfoByRentalFormId(request.rentalFormId);
+        if (rentalFormBedsInfo && rentalFormBedsInfo.roomId && rentalFormBedsInfo.bedIds.length > 0) {
+          await Room.updateBedStatus(rentalFormBedsInfo.roomId, rentalFormBedsInfo.bedIds, 'AVAILABLE');
+        }
       }
     }
 

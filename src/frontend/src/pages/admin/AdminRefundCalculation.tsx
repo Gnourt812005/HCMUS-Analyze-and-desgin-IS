@@ -37,6 +37,7 @@ export const AdminRefundCalculation = () => {
   const [successMsg, setSuccessMsg] = useState('');
 
   const [checkoutRequest, setCheckoutRequest] = useState<CheckoutRequestDTO | null>(null);
+  const [rentalForm, setRentalForm] = useState<any | null>(null);
   const [contract, setContract] = useState<ContractDTO | null>(null);
   const [existingCalculation, setExistingCalculation] = useState<RefundCalculationDTO | null>(null);
   const [depositAmount, setDepositAmount] = useState(0);
@@ -99,7 +100,8 @@ export const AdminRefundCalculation = () => {
       // Load checkout request with contract details
       interface DetailResponse {
         request: CheckoutRequestDTO;
-        contract?: ContractDTO | null;
+        rentalForm?: any | null;
+        refund?: RefundCalculationDTO | null;
         depositAmount?: number;
       }
       const detailData = await ApiClient.get<DetailResponse>(`/checkout-requests/${requestId}/details`);
@@ -107,9 +109,35 @@ export const AdminRefundCalculation = () => {
       if (abortController.signal.aborted) return;
       
       setCheckoutRequest(detailData.request);
-      if (detailData.contract) {
-        setContract(detailData.contract);
-        setDepositAmount(detailData.depositAmount || 0);
+      
+      // Set rental form data
+      if (detailData.rentalForm) {
+        setRentalForm(detailData.rentalForm);
+      }
+      
+      // Set deposit amount - use the depositAmount from response or fallback to 0
+      if (detailData.depositAmount !== undefined) {
+        setDepositAmount(detailData.depositAmount);
+      }
+      
+      // Check if checkout request is already liquidated (no contract case)
+      if (detailData.request.status === CheckoutStatus.LIQUIDATED) {
+        setError('Yêu cầu này đã được hoàn tất tự động (chưa có hợp đồng). Vui lòng quay lại danh sách.');
+        setLoading(false);
+        return;
+      }
+
+      // Load contract if rental form exists
+      if (detailData.request.rentalFormId) {
+        try {
+          const contractData = await ApiClient.get<ContractDTO>(`/contracts/by-rental-form/${detailData.request.rentalFormId}`);
+          if (!abortController.signal.aborted && contractData) {
+            setContract(contractData);
+          }
+        } catch (err) {
+          // Contract might not exist for DEPOSIT type rental forms
+          console.log('No contract found for this rental form');
+        }
       }
 
       // Try to load existing calculation
@@ -137,55 +165,69 @@ export const AdminRefundCalculation = () => {
   };
 
   const calculateRefund = () => {
-    if (!contract || !checkoutRequest) {
-      setError('Không tìm thấy thông tin hợp đồng hoặc yêu cầu trả phòng.');
+    if (!checkoutRequest) {
+      setError('Không tìm thấy thông tin yêu cầu trả phòng.');
       return;
     }
 
     setError(null);
 
-    // Base deposit amount from contract
     const initialDeposit = depositAmount;
     let baseRefundableDeposit = 0;
     let refundRule = '';
 
-    const contractStartDate = new Date(contract.startDate!);
-    const checkoutDate = new Date(checkoutRequest.expectedDate);
-
-    // Calculate the contract's official end date based on startDate and stayDuration
-    const contractOfficialEndDate = new Date(contractStartDate);
-    contractOfficialEndDate.setMonth(contractOfficialEndDate.getMonth() + contract.stayDuration!);
-    // Set to the end of the day to ensure comparison `checkoutDate >= contractOfficialEndDate` works correctly for same-day checkout
-    contractOfficialEndDate.setHours(23, 59, 59, 999);
-
-    // Contract expired (or checkout is on the expiry date or later)
-    if (checkoutDate >= contractOfficialEndDate) {
-      baseRefundableDeposit = initialDeposit; // 100%
-      refundRule = 'Hoàn 100% cọc (Hợp đồng hết hạn đúng ngày hoặc sau ngày hết hạn).';
-    } else {
-      // Early termination
-      // To accurately determine if the stay is less than 6 months, we calculate the date 6 months after the start date.
-      // This handles month-end cases correctly (e.g., Jan 31 + 6 months = July 31).
-      const sixMonthsAfterStart = new Date(contractStartDate);
-      const targetMonth = (sixMonthsAfterStart.getMonth() + 6) % 12;
-      sixMonthsAfterStart.setMonth(sixMonthsAfterStart.getMonth() + 6);
-
-      // If setMonth() rolled over to the next month (e.g., from Jan 31 to Mar 2),
-      // it means the target month was shorter. We correct this by setting the date to 0,
-      // which results in the last day of the previous (target) month.
-      if (sixMonthsAfterStart.getMonth() !== targetMonth) {
-        sixMonthsAfterStart.setDate(0);
+    // Case 1: No contract - depends on rental form type
+    if (!contract) {
+      if (rentalForm?.type === 'DEPOSIT') {
+        // DEPOSIT type (chỉ cọc, chưa đăng ký thuê, chưa hợp đồng): 80% tiền cọc
+        baseRefundableDeposit = initialDeposit * 0.8;
+        refundRule = 'Hoàn 80% cọc (chỉ đặt cọc, chưa có hợp đồng).';
+      } else {
+        // FULL type (đã cọc + đã đăng ký thuê, chưa hợp đồng): 80% tiền cọc
+        baseRefundableDeposit = initialDeposit * 0.8;
+        refundRule = 'Hoàn 80% cọc (chỉ đặt cọc, chưa có hợp đồng).';
       }
+    } 
+    // Case 2: Has contract - check duration
+    else if (contract) {
+      const contractStartDate = new Date(contract.startDate!);
+      const checkoutDate = new Date(checkoutRequest.expectedDate);
 
-      if (checkoutDate < sixMonthsAfterStart) {
-        // Stayed < 6 months
-        baseRefundableDeposit = initialDeposit * 0.5; // 50%
-        refundRule = 'Hoàn 50% cọc (Chấm dứt hợp đồng trước hạn, lưu trú < 6 tháng).';
-      }
-      else {
-        // Stayed >= 6 months
-        baseRefundableDeposit = initialDeposit * 0.7; // 70%
-        refundRule = 'Hoàn 70% cọc (Chấm dứt hợp đồng trước hạn, lưu trú từ 6 tháng trở lên).';
+      // Calculate the contract's official end date based on startDate and stayDuration
+      const contractOfficialEndDate = new Date(contractStartDate);
+      contractOfficialEndDate.setMonth(contractOfficialEndDate.getMonth() + contract.stayDuration!);
+      // Set to the end of the day to ensure comparison `checkoutDate >= contractOfficialEndDate` works correctly for same-day checkout
+      contractOfficialEndDate.setHours(23, 59, 59, 999);
+
+      // Contract expired (or checkout is on the expiry date or later)
+      if (checkoutDate >= contractOfficialEndDate) {
+        baseRefundableDeposit = initialDeposit; // 100%
+        refundRule = 'Hoàn 100% cọc (Đơn đăng ký hết hạn đúng ngày hoặc sau ngày hết hạn).';
+      } else {
+        // Early termination
+        // To accurately determine if the stay is less than 6 months, we calculate the date 6 months after the start date.
+        // This handles month-end cases correctly (e.g., Jan 31 + 6 months = July 31).
+        const sixMonthsAfterStart = new Date(contractStartDate);
+        const targetMonth = (sixMonthsAfterStart.getMonth() + 6) % 12;
+        sixMonthsAfterStart.setMonth(sixMonthsAfterStart.getMonth() + 6);
+
+        // If setMonth() rolled over to the next month (e.g., from Jan 31 to Mar 2),
+        // it means the target month was shorter. We correct this by setting the date to 0,
+        // which results in the last day of the previous (target) month.
+        if (sixMonthsAfterStart.getMonth() !== targetMonth) {
+          sixMonthsAfterStart.setDate(0);
+        }
+
+        if (checkoutDate < sixMonthsAfterStart) {
+          // Stayed < 6 months: 50% tiền cọc
+          baseRefundableDeposit = initialDeposit * 0.5;
+          refundRule = 'Hoàn 50% cọc (Chấm dứt đơn đăng ký trước hạn, lưu trú < 6 tháng).';
+        }
+        else {
+          // Stayed >= 6 months: 70% tiền cọc
+          baseRefundableDeposit = initialDeposit * 0.7;
+          refundRule = 'Hoàn 70% cọc (Chấm dứt đơn đăng ký trước hạn, lưu trú từ 6 tháng trở lên).';
+        }
       }
     }
 
@@ -230,7 +272,7 @@ export const AdminRefundCalculation = () => {
       // Create or update refund calculation
       const refundData = {
         requestId: checkoutRequest.requestId,
-        contractId: contract.contractId,
+        rentalFormId: checkoutRequest.rentalFormId,
         depositAmount: calculationResult.initialDeposit,
         damageFee: calculationResult.damageFee,
         extraDebt:
@@ -292,7 +334,7 @@ ${additionalDeductions.otherDeductionsNotes || 'Không có'}`,
     return (
       <div className="p-6">
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
-          Không tìm thấy yêu cầu hoặc hợp đồng
+          Không tìm thấy yêu cầu hoặc đơn đăng ký thuê
         </div>
       </div>
     );
@@ -334,30 +376,30 @@ ${additionalDeductions.otherDeductionsNotes || 'Không có'}`,
         <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200 space-y-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900">
-              Thông tin hợp đồng
+              Thông tin đơn đăng ký thuê
             </h2>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs text-slate-500 uppercase">Mã hợp đồng</p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">{contract.contractId}</p>
+              <p className="text-xs text-slate-500 uppercase">Mã yêu cầu</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{checkoutRequest?.code || 'N/A'}</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs text-slate-500 uppercase">Ký túc xá</p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">{contract.dormName}</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{checkoutRequest?.dormName || contract?.dormName}</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs text-slate-500 uppercase">Phòng</p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">{contract.roomId}</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{checkoutRequest?.roomName || contract?.roomName}</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs text-slate-500 uppercase">Tầng</p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">{contract.floor}</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{checkoutRequest?.floor || contract?.floor}</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs text-slate-500 uppercase">Giường</p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">{contract.bedNumbers}</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{checkoutRequest?.bedNumbers || contract?.bedNumbers}</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs text-slate-500 uppercase">Số tiền cọc</p>
@@ -367,7 +409,7 @@ ${additionalDeductions.otherDeductionsNotes || 'Không có'}`,
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs text-slate-500 uppercase">Thời hạn</p>
-              <p className="mt-2 text-sm font-semibold text-slate-900">{contract.stayDuration} tháng</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{contract?.stayDuration || 'N/A'} tháng</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
               <p className="text-xs text-slate-500 uppercase">Ngày tạo yêu cầu</p>
@@ -551,7 +593,7 @@ ${additionalDeductions.otherDeductionsNotes || 'Không có'}`,
 
             <div className="space-y-3">
             <div className="flex justify-between items-center rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <span className="text-sm font-semibold text-slate-700">Tiền cọc ban đầu từ hợp đồng</span>
+                <span className="text-sm font-semibold text-slate-700">Tiền cọc ban đầu từ đơn đăng ký</span>
                 <span className="text-lg font-bold text-slate-900">{formatCurrency(calculationResult.initialDeposit)}</span>
               </div>
 

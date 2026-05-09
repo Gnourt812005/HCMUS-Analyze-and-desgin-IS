@@ -107,6 +107,29 @@ contractRouter.get('/active-by-user/:email', authMiddleware, async (req: AuthReq
   }
 });
 
+contractRouter.get('/:id/fees', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const fees = await Contract.getFeesByContractId(req.params.id);
+    if (!fees) return res.status(404).json({ message: 'Không tìm thấy thông tin phí' });
+    res.status(200).json({ message: 'Success', status: 200, data: fees });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error', error });
+  }
+});
+
+contractRouter.get('/by-rental-form/:rentalFormId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { rentalFormId } = req.params;
+    const contract = await Contract.getByRentalFormId(rentalFormId);
+    if (!contract) {
+      return res.status(404).json({ message: 'Không tìm thấy hợp đồng cho đơn đăng ký này' });
+    }
+    res.status(200).json(contract);
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error', error });
+  }
+});
+
 contractRouter.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;

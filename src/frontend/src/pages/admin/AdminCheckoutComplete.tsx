@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ApiClient } from '../../api/ApiClient';
-import { CheckoutRequestDTO, ContractDTO, RefundCalculationDTO, CheckoutStatus } from '@dormarch/shared';
+import { CheckoutRequestDTO, RefundCalculationDTO, CheckoutStatus } from '@dormarch/shared';
 
 export const AdminLiquidation = () => {
   const { requestId } = useParams<{ requestId: string }>();
@@ -13,9 +13,7 @@ export const AdminLiquidation = () => {
   const [successMsg, setSuccessMsg] = useState('');
 
   const [checkoutRequest, setCheckoutRequest] = useState<CheckoutRequestDTO | null>(null);
-  const [contract, setContract] = useState<ContractDTO | null>(null);
   const [calculation, setCalculation] = useState<RefundCalculationDTO | null>(null);
-  const [depositAmount, setDepositAmount] = useState(0);
 
   // Load data on mount
   useEffect(() => {
@@ -46,17 +44,16 @@ export const AdminLiquidation = () => {
       // Load checkout request with contract details
       interface DetailResponse {
         request: CheckoutRequestDTO;
-        contract?: ContractDTO | null;
-        depositAmount?: number;
+        rentalForm?: any | null;
+        refund?: RefundCalculationDTO | null;
       }
       const detailData = await ApiClient.get<DetailResponse>(`/checkout-requests/${requestId}/details`);
       
       if (abortController.signal.aborted) return;
       
       setCheckoutRequest(detailData.request);
-      if (detailData.contract) {
-        setContract(detailData.contract);
-        setDepositAmount(detailData.depositAmount || 0);
+      if (detailData.refund) {
+        setCalculation(detailData.refund);
       }
 
       // Load refund calculation
@@ -119,13 +116,13 @@ export const AdminLiquidation = () => {
     );
   }
 
-  if (!checkoutRequest || !contract || !calculation) {
+  if (!checkoutRequest || !calculation) {
     return (
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Hoàn tất thanh lý</h1>
-            <p className="text-sm text-slate-500 mt-1">Xác nhận và hoàn tất quá trình thanh lý hợp đồng</p>
+            <p className="text-sm text-slate-500 mt-1">Xác nhận và hoàn tất quá trình thanh lý đơn đăng ký thuê</p>
           </div>
           <button
             onClick={() => navigate('/admin/checkout')}
@@ -141,7 +138,7 @@ export const AdminLiquidation = () => {
             <div>
               <p className="font-semibold text-red-900">Không tìm thấy dữ liệu</p>
               <p className="text-sm text-red-700 mt-1">
-                {error || 'Không tìm thấy yêu cầu, hợp đồng hoặc bảng đối soát'}
+                {error || 'Không tìm thấy yêu cầu, đơn đăng ký hoặc bảng đối soát'}
               </p>
             </div>
           </div>
@@ -155,7 +152,7 @@ export const AdminLiquidation = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Hoàn tất thanh lý</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Hoàn tất trả phòng</h1>
         </div>
         <button
           onClick={() => navigate('/admin/checkout')}
@@ -185,39 +182,35 @@ export const AdminLiquidation = () => {
       {/* Contract Information */}
       <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200 space-y-4">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Thông tin hợp đồng</h2>
+          <h2 className="text-lg font-bold text-slate-900">Thông tin yêu cầu trả phòng</h2>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs text-slate-500 uppercase">Mã hợp đồng</p>
-            <p className="mt-2 text-sm font-semibold text-slate-900">{contract.contractId}</p>
+            <p className="text-xs text-slate-500 uppercase">Mã yêu cầu</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{checkoutRequest?.code || 'N/A'}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs text-slate-500 uppercase">Ký túc xá</p>
-            <p className="mt-2 text-sm font-semibold text-slate-900">{contract.dormName}</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{checkoutRequest?.dormName || 'N/A'}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs text-slate-500 uppercase">Phòng</p>
-            <p className="mt-2 text-sm font-semibold text-slate-900">{contract.roomId}</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{checkoutRequest?.roomName || 'N/A'}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs text-slate-500 uppercase">Tầng</p>
-            <p className="mt-2 text-sm font-semibold text-slate-900">{contract.floor}</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{checkoutRequest?.floor || 'N/A'}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs text-slate-500 uppercase">Giường</p>
-            <p className="mt-2 text-sm font-semibold text-slate-900">{contract.bedNumbers}</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{checkoutRequest?.bedNumbers || 'N/A'}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs text-slate-500 uppercase">Số tiền cọc</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">
-              {formatCurrency(depositAmount)}
+              {formatCurrency(calculation.depositAmount || 0)}
             </p>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs text-slate-500 uppercase">Thời hạn</p>
-            <p className="mt-2 text-sm font-semibold text-slate-900">{contract.stayDuration} tháng</p>
           </div>
         </div>
       </div>
@@ -267,7 +260,7 @@ export const AdminLiquidation = () => {
           disabled={finalizing}
           className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-xl transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
         >
-          {finalizing ? 'Đang hoàn tất...' : 'Hoàn tất thanh lý'}
+          {finalizing ? 'Đang hoàn tất...' : 'Hoàn tất trả phòng'}
         </button>
       </div>
     </div>

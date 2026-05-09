@@ -21,7 +21,7 @@ class ScreenCheckoutRequestList <<boundary>> {
     + btnViewDetail_Click(): void
 }
 
-class ScreenCheckoutRequestDetail <<boundary>> {
+class ModalCheckoutRequestDetail <<boundary>> {
     - lblContractInfo: Label
     - lblRefundInfo: Label
     - btnProcess: Button
@@ -35,7 +35,7 @@ class CheckoutRequest <<control>> {
     - requestId: string
     - userEmail: string
     - userFullName: string
-    - contractId: string
+    - rentalFormId: string
     - dormName: string
     - roomName: string
     - floor: number
@@ -43,14 +43,14 @@ class CheckoutRequest <<control>> {
     - expectedDate: string
     - status: CheckoutStatus
     - createdAt: string
-    + <<static>> getListByUserEmail(userEmail: string): List<CheckoutRequestDTO>
-    + <<static>> getById(requestId: string): CheckoutRequestDTO
+    + <<static>> getListByUserEmail(userEmail: string): CheckoutRequest[]
+    + <<static>> getById(requestId: string): CheckoutRequest
 }
 
 class RefundCalculation <<control>> {
     - calculationId: string
     - requestId: string
-    - contractId: string
+    - rentalFormId: string
     - depositAmount: number
     - damageFee: number
     - extraFee: number
@@ -60,22 +60,17 @@ class RefundCalculation <<control>> {
     + <<static>> getByRequestId(requestId: string): RefundCalculation
 }
 
-class Contract <<control>> {
-    - contractId: string
-    - contractCode: string
+class Rental <<control>> {
+    - rentalFormId: string
     - userEmail: string
     - roomName: string
     - dormName: string
     - floor: number
     - bedNumbers: string
-    - startDate: string
-    - stayDuration: number
-    - rentalFormId: string
-    - status: ContractStatus
-    - depositAmount: number
-    - signatureUrl: string
+    - type: string
+    - totalAmount: number
     - createdAt: string
-    + <<static>> getByContractId(contractId: string): Contract
+    + <<static>> getRentalFormById(rentalFormId: string): Rental
 }
 
 ' --- DATABASE LAYER ---
@@ -88,17 +83,17 @@ class RefundCalculationDB <<entity>> {
     + <<static>> getByRequestId(requestId: string): RefundCalculation
 }
 
-class ContractDB <<entity>> {
-    + <<static>> getByContractId(contractId: string): Contract
+class RentalDB <<entity>> {
+    + <<static>> getRentalFormById(rentalFormId: string): Rental
 }
 
 ScreenCheckoutRequestList --> CheckoutRequest 
-ScreenCheckoutRequestDetail --> CheckoutRequest 
-ScreenCheckoutRequestDetail --> Contract 
-ScreenCheckoutRequestDetail --> RefundCalculation 
+ModalCheckoutRequestDetail --> CheckoutRequest 
+ModalCheckoutRequestDetail --> Rental 
+ModalCheckoutRequestDetail --> RefundCalculation 
 
 CheckoutRequest --> CheckoutRequestDB 
 RefundCalculation --> RefundCalculationDB 
-Contract --> ContractDB 
+Rental --> RentalDB 
 
 @enduml

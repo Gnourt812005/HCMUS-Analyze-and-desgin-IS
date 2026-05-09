@@ -194,8 +194,9 @@ CREATE TABLE handover_beds (
 -- 13. CHECKOUT REQUESTS
 CREATE TABLE checkout_requests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(50) UNIQUE NOT NULL,
     user_email VARCHAR(255) REFERENCES users(email),
-    contract_id UUID REFERENCES contracts(id),
+    refund_form_id UUID REFERENCES rental_forms(id),
     expected_date DATE NOT NULL,
     status checkout_status_type DEFAULT 'PENDING',
     handover_id UUID REFERENCES handovers(id),
@@ -206,7 +207,7 @@ CREATE TABLE checkout_requests (
 CREATE TABLE refund_calculations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     request_id UUID REFERENCES checkout_requests(id) ON DELETE CASCADE,
-    contract_id UUID REFERENCES contracts(id),
+    rental_form_id UUID REFERENCES rental_forms(id),
     deposit_amount NUMERIC(12, 2) DEFAULT 0,
     damage_fee NUMERIC(12, 2) DEFAULT 0,
     extra_fee NUMERIC(12, 2) DEFAULT 0,

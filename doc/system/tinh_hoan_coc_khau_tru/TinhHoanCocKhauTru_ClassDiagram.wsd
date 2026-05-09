@@ -28,67 +28,65 @@ class "ScreenRefundCalculation" as CalculateRefundScreen <<boundary>> {
 class "CheckoutRequest" as CheckoutRequest <<control>> {
   - requestId: string
   - userEmail: string
-  - userFullName: string
-  - contractId: string
-  - dormName: string
-  - roomName: string
-  - floor: number
-  - bedNumbers: string
+  - rentalFormId: string
   - expectedDate: string
   - status: CheckoutStatus
   - createdAt: string
   + <<static>> getById(requestId: string): CheckoutRequest 
-  + <<static>> updateStatus(requestId: string, status: CheckoutStatus, expectedStatus: CheckoutStatus): bool
 }
 
 class "CheckoutRequestDB" as CheckoutRequestDB <<entity>> {
-  + <<static>> update(request: CheckoutRequest): bool
   + <<static>> getById(id: string): CheckoutRequest
 }
 
 class "RefundCalculation" as RefundCalculation <<control>> {
   - calculationId: string
   - requestId: string
-  - contractId: string
+  - rentalFormId: string
   - depositAmount: number
   - damageFee: number
   - extraFee: number
   - finalRefundAmount: number
   - notes: string
   - createdAt: string
-  + <<static>> getByRequestId(requestId: string): RefundCalculation 
   + <<static>> create(data: RefundCalculation): RefundCalculation
   + <<static>> update(calculationId: string, data: RefundCalculation): RefundCalculation 
 }
 
 class "RefundCalculationDB" as RefundCalculationDB <<entity>> {
   + <<static>> create(data: RefundCalculation): RefundCalculation
+  + <<static>> update(calculationId: string, data: RefundCalculation): RefundCalculation
+}
+
+class "Rental" as Rental <<control>> {
+  - rentalFormId: string
+  - userEmail: string
+  - type: string
+  - totalAmount: number
+  + <<static>> getRentalFormById(rentalFormId: string): Rental
+}
+
+class "RentalDB" as RentalDB <<entity>> {
+  + <<static>> getRentalFormById(rentalFormId: string): Rental
 }
 
 class "Contract" as Contract <<control>> {
   - contractId: string
-  - contractCode: string
-  - userEmail: string
-  - roomName: string
-  - dormName: string
-  - floor: number
-  - bedNumbers: string
+  - rentalFormId: string
   - startDate: string
   - stayDuration: number
-  - rentalFormId: string
   - status: ContractStatus
-  - depositAmount: number
-  - signatureUrl: string
-  - createdAt: string
-  + <<static>> getByContractId(contractId: string): Contract 
+  + <<static>> getByRentalFormId(rentalFormId: string): Contract 
 }
 
 class "ContractDB" as ContractDB <<entity>> {
-  + <<static>> getByContractId(contractId: string): Contract 
+  + <<static>> getByRentalFormId(rentalFormId: string): Contract 
 }
 
 CalculateRefundScreen --> RefundCalculation
 RefundCalculation --> RefundCalculationDB
+CalculateRefundScreen --> Rental
+Rental --> RentalDB
 CalculateRefundScreen --> Contract
 Contract --> ContractDB
 CalculateRefundScreen --> CheckoutRequest

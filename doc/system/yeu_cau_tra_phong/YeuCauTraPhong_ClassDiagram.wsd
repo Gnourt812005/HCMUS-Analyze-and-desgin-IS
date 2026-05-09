@@ -26,7 +26,7 @@ class "CheckoutRequest" as CheckoutRequest <<control>> {
   - requestId: string
   - userEmail: string
   - userFullName: string
-  - contractId: string
+  - rentalFormId: string
   - dormName: string
   - roomName: string
   - floor: number
@@ -34,40 +34,33 @@ class "CheckoutRequest" as CheckoutRequest <<control>> {
   - expectedDate: string
   - status: CheckoutStatus
   - createdAt: string
-  + <<static>> create(data: Partial<CheckoutRequestDTO>): CheckoutRequestDTO
-  + <<static>> createWithDuplicateCheck(data: Partial<CheckoutRequestDTO>): {success: bool, request?: CheckoutRequestDTO, error?: string}
+  + <<static>> createWithDuplicateCheck(data: CheckoutRequest): {success: bool, request?: CheckoutRequest, error?: string}
 }
 
 class "CheckoutRequestDB" as CheckoutRequestDB <<entity>> {
-  + <<static>> insert(request: CheckoutRequest): string | null
-  + <<static>> insertIfNoActiveRequest(request: CheckoutRequest, contractId: string, userEmail: string): {success: bool, error?: string, requestId?: string}
+  + <<static>> insertIfNoActiveRequest(request: CheckoutRequest, rentalFormId: string, userEmail: string): {success: bool, error?: string, requestId?: string}
 }
 
-class "Contract" as Contract <<control>> {
-  - contractId: string
-  - contractCode: string
+class "Rental" as Rental <<control>> {
+  - rentalFormId: string
   - userEmail: string
   - roomName: string
   - dormName: string
   - floor: number
   - bedNumbers: string
-  - startDate: string
-  - stayDuration: number
-  - rentalFormId: string
-  - status: ContractStatus
-  - depositAmount: number
-  - signatureUrl: string
+  - type: string
+  - totalAmount: number
   - createdAt: string
-  + <<static>> getActiveByUserEmail(userEmail: string): ContractDTO[]
+  + <<static>> getActiveRentalFormsForCheckout(userEmail: string): Rental[]
 }
 
-class "ContractDB" as ContractDB <<entity>> {
-  + <<static>> getActiveByUserEmail(userEmail: string): Partial<Contract>[]
+class "RentalDB" as RentalDB <<entity>> {
+  + <<static>> getActiveRentalFormsForCheckout(userEmail: string): Rental[]
 }
 
 CheckoutRequestScreen --> CheckoutRequest
 CheckoutRequest --> CheckoutRequestDB
-CheckoutRequestScreen --> Contract
-Contract --> ContractDB
+CheckoutRequestScreen --> Rental
+Rental --> RentalDB
 
 @enduml

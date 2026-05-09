@@ -43,6 +43,10 @@ export class Room {
   static async fetchAll(query: GetRoomDto): Promise<{ rooms: RoomDTO[], total: number }> {
     return await RoomDB.fetchAll(query);
   }
+  static async getByDormId(dormId: string): Promise<RoomDTO[]> {
+    const data = await RoomDB.getByDormId(dormId);
+    return data.map(d => new Room(d).toDTO());
+  }
 
   static async getById(id: string): Promise<RoomDTO | null> {
     const data = await RoomDB.fetchById(id);
@@ -59,7 +63,30 @@ export class Room {
   }
 
   static async delete(id: string): Promise<boolean> {
+    const room = await this.getById(id);
+    if (!room) {
+      throw new Error('Không tìm thấy phòng');
+    }
+
+    // Check if all beds inside are AVAILABLE
+    const occupiedBeds = (room.beds || []).filter(b => b.status !== 'AVAILABLE');
+    if (occupiedBeds.length > 0) {
+      throw new Error('Không thể xóa phòng này vì vẫn còn giường đang có người ở hoặc được đặt.');
+    }
+
+    // Delete all beds inside
+    await this.deleteBedsByRoomId(id);
+
     return await RoomDB.delete(id);
+  }
+
+  static async deleteBedsByRoomId(roomId: string): Promise<boolean> {
+    return await RoomDB.deleteBedsByRoomId(roomId);
+  }
+
+
+  static async deleteByDormId(dormId: string): Promise<boolean> {
+    return await RoomDB.deleteByDormId(dormId);
   }
 
   static async updateBedStatus(roomId: string, bedIds: string[], status: 'AVAILABLE' | 'DEPOSITED' | 'BOOKED'): Promise<boolean> {

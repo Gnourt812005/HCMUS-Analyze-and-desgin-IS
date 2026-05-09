@@ -462,4 +462,89 @@ export class RentalDB {
       client.release();
     }
   }
+
+  static async getBedsInfoByRentalFormId(rentalFormId: string): Promise<{ roomId: string; bedIds: string[] } | null> {
+    try {
+      const result = await dbClient.query(
+        `SELECT 
+          r.id as room_id,
+          ARRAY_AGG(b.id) as bed_ids
+         FROM rental_form_beds rfb
+         JOIN beds b ON b.id = rfb.bed_id
+         JOIN rooms r ON r.id = b.room_id
+         WHERE rfb.rental_form_id = $1::uuid
+         GROUP BY r.id`,
+        [rentalFormId]
+      );
+      
+      if (result.rows.length === 0) return null;
+      
+      const row = result.rows[0];
+      return {
+        roomId: row.room_id,
+        bedIds: row.bed_ids || []
+      };
+    } catch (error) {
+      console.error('Error fetching beds info by rental form:', error);
+      return null;
+    }
+  }
+  
+  static async getActiveRentalFormsForCheckout(userEmail: string): Promise<any[]> {
+    const sql = `
+      SELECT
+        rf.id as rental_form_id,
+        rf.type,
+        rf.total_amount,
+        rf.deadline,
+        c.id as contract_id,
+        c.start_date,
+        c.stay_duration,
+        (SELECT full_name FROM users WHERE email = $1 LIMIT 1) as user_full_name,
+        (SELECT d.name FROM rental_form_beds rfb JOIN beds b ON b.id = rfb.bed_id JOIN rooms r ON r.id = b.room_id JOIN dorms d ON d.id = r.dorm_id WHERE rfb.rental_form_id = rf.id LIMIT 1) as dorm_name,
+        (SELECT r.name FROM rental_form_beds rfb JOIN beds b ON b.id = rfb.bed_id JOIN rooms r ON r.id = b.room_id WHERE rfb.rental_form_id = rf.id LIMIT 1) as room_name,
+        (SELECT r.floor FROM rental_form_beds rfb JOIN beds b ON b.id = rfb.bed_id JOIN rooms r ON r.id = b.room_id WHERE rfb.rental_form_id = rf.id LIMIT 1) as floor,
+        (SELECT STRING_AGG(b.bed_number, ', ') FROM rental_form_beds rfb JOIN beds b ON b.id = rfb.bed_id WHERE rfb.rental_form_id = rf.id) as bed_numbers
+      FROM rental_forms rf
+      LEFT JOIN contracts c ON c.rental_form_id = rf.id
+      WHERE rf.user_email = $1
+      AND NOT EXISTS (
+        SELECT 1 FROM checkout_requests 
+        WHERE refund_form_id = rf.id AND status IN ('PENDING', 'PROCESSING', 'LIQUIDATED')
+      )
+      ORDER BY rf.created_at DESC
+    `;
+    const result = await dbClient.query(sql, [userEmail]);
+    return result.rows;
+  }
+
+  static async getRentalFormById(rentalFormId: string): Promise<{ id: string; userEmail: string; type: 'DEPOSIT' | 'FULL'; totalAmount: number; contract_id?: string | null } | null> {
+    try {
+      const result = await dbClient.query(
+        `SELECT 
+          rf.id, 
+          rf.user_email, 
+          rf.type, 
+          rf.total_amount,
+          c.id as contract_id
+        FROM rental_forms rf
+        LEFT JOIN contracts c ON c.rental_form_id = rf.id
+        WHERE rf.id = $1::uuid`,
+        [rentalFormId]
+      );
+      if (result.rows.length === 0) return null;
+      
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        userEmail: row.user_email,
+        type: row.type as 'DEPOSIT' | 'FULL',
+        totalAmount: row.total_amount,
+        contract_id: row.contract_id || null
+      };
+    } catch (error) {
+      console.error('Error fetching rental form:', error);
+      return null;
+    }
+  }
 }

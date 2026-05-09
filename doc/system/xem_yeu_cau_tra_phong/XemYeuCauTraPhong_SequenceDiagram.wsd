@@ -15,14 +15,15 @@ actor "Khách hàng" as customer
 boundary "ScreenCheckoutRequestList" as listScreen
 boundary "ScreenCheckoutRequestDetail" as detailScreen
 control "CheckoutRequest" as checkoutCtrl
-control "Contract" as contractCtrl
+control "Rental" as rentalCtrl
 control "RefundCalculation" as refundCtrl
 database "CheckoutRequestDB" as checkoutDb
-database "ContractDB" as contractDb
+database "RentalDB" as rentalDb
 database "RefundCalculationDB" as refundDb
 
 customer -> listScreen: show()
 activate listScreen
+activate customer
 listScreen -> checkoutCtrl: getListByUserEmail(userEmail)
 activate checkoutCtrl
 checkoutCtrl -> checkoutDb: getByUserEmail(userEmail)
@@ -34,9 +35,11 @@ deactivate checkoutCtrl
 
 listScreen --> customer: Hiển thị danh sách
 deactivate listScreen
+deactivate customer
 
 customer -> listScreen: Chọn yêu cầu
 activate listScreen
+activate customer
 listScreen -> detailScreen: show(requestId)
 activate detailScreen
 deactivate listScreen
@@ -49,14 +52,14 @@ deactivate checkoutDb
 checkoutCtrl --> detailScreen: CheckoutRequest
 deactivate checkoutCtrl
 
-detailScreen -> contractCtrl: getByContractId(contractId)
-activate contractCtrl
-contractCtrl -> contractDb: getByContractId(contractId)
-activate contractDb
-contractDb --> contractCtrl: Contract
-deactivate contractDb
-contractCtrl --> detailScreen: Contract
-deactivate contractCtrl
+detailScreen -> rentalCtrl: getRentalFormById(rentalFormId)
+activate rentalCtrl
+rentalCtrl -> rentalDb: getRentalFormById(rentalFormId)
+activate rentalDb
+rentalDb --> rentalCtrl: Rental
+deactivate rentalDb
+rentalCtrl --> detailScreen: Rental
+deactivate rentalCtrl
 
 alt Đã tính hoàn cọc và khấu trừ
     detailScreen -> refundCtrl: getByRequestId(requestId)
@@ -72,5 +75,6 @@ end
 detailScreen --> customer: Hiển thị chi tiết
 deactivate detailScreen
 deactivate listScreen
+deactivate customer
 
 @enduml

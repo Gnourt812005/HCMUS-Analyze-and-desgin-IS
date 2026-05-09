@@ -13,24 +13,46 @@ autonumber
 
 actor "Quản lý" as manager
 boundary "ScreenRefundCalculation" as screen
+control "CheckoutRequest" as request
+control "Rental" as rental
 control "Contract" as contract
 control "RefundCalculation" as refund
-control "CheckoutRequest" as request
+database "CheckoutRequestDB" as requestDb
+database "RentalDB" as rentalDb
 database "ContractDB" as contractDb
 database "RefundCalculationDB" as refundDb
-database "CheckoutRequestDB" as requestDb
 
 manager -> screen: show(requestId)
 activate screen
-screen -> contract: getByContractId(contractId)
+activate manager
+screen -> request: getById(requestId)
+activate request
+request -> requestDb: getById(requestId)
+activate requestDb
+requestDb --> request: CheckoutRequest
+deactivate requestDb
+request --> screen: CheckoutRequest
+deactivate request
+
+screen -> rental: getRentalFormById(rentalFormId)
+activate rental
+rental -> rentalDb: getRentalFormById(rentalFormId)
+activate rentalDb
+rentalDb --> rental: Rental
+deactivate rentalDb
+rental --> screen: Rental
+deactivate rental
+
+screen -> contract: getByRentalFormId(rentalFormId)
 activate contract
-contract -> contractDb: getByContractId(contractId)
+contract -> contractDb: getByRentalFormId(rentalFormId)
 activate contractDb
-contractDb --> contract: Contract
+contractDb --> contract: Contract | null
 deactivate contractDb
-contract --> screen: Contract
+contract --> screen: Contract | null
 deactivate contract
 deactivate screen
+deactivate manager
 
 manager -> screen: Nhập hư hỏng và phí phát sinh
 activate screen
@@ -39,14 +61,26 @@ deactivate screen
 
 manager -> screen: Nhấn "Lưu bảng đối soát"
 activate screen
-screen -> refund: create(data)
-activate refund
-refund -> refundDb: create(data)
-activate refundDb
-refundDb --> refund: RefundCalculation
-deactivate refundDb
-refund --> screen: RefundCalculation
-deactivate refund
+
+alt Cập nhật bảng tính hiện tại
+  screen -> refund: update(calculationId, data)
+  activate refund
+  refund -> refundDb: update(calculationId, data)
+  activate refundDb
+  refundDb --> refund: RefundCalculation
+  deactivate refundDb
+  refund --> screen: RefundCalculation
+  deactivate refund
+else Tạo bảng tính mới
+  screen -> refund: create(data)
+  activate refund
+  refund -> refundDb: create(data)
+  activate refundDb
+  refundDb --> refund: RefundCalculation
+  deactivate refundDb
+  refund --> screen: RefundCalculation
+  deactivate refund
+end
 
 screen --> manager: Thông báo thành công
 deactivate screen

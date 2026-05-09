@@ -123,7 +123,7 @@ export class DormDB {
     }
   }
 
-  static async insert(dorm: Dorm): Promise<boolean> {
+  static async insert(dorm: Dorm): Promise<string | null> {
     const db = DatabaseClient.getInstance();
     const query = `
       INSERT INTO dorms (name, address, phone, status, total_rooms, available_rooms, manager_id)
@@ -154,10 +154,10 @@ export class DormDB {
         await db.query(utilSyncQuery);
       }
 
-      return true;
+      return newId;
     } catch (e) {
       console.error("Database insert failed (DormDB.insert):", e);
-      return false;
+      return null;
     }
   }
 

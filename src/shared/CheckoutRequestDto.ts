@@ -7,13 +7,14 @@ export enum CheckoutStatus {
 
 export interface CheckoutRequestDTO {
   requestId: string;
+  code?: string;
   userEmail: string;
   userFullName?: string;
   dormName?: string;
   roomName?: string;
   floor?: number;
   bedNumbers?: string;
-  contractId?: string;
+  rentalFormId?: string;
   expectedDate: string; // ISO Date String
   status: CheckoutStatus;
   handoverId?: string;
@@ -23,7 +24,7 @@ export interface CheckoutRequestDTO {
 export interface RefundCalculationDTO {
   calculationId: string;
   requestId: string;
-  contractId?: string;
+  rentalFormId?: string;
   depositAmount: number;
   damageFee: number;
   extraFee: number;
