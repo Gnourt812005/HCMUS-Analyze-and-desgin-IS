@@ -1,6 +1,7 @@
 import { RefundDB } from '../database/RefundDB';
 import { RefundCalculationDTO } from '@dormarch/shared';
 import { Rental } from './Rental';
+import { Contract } from './Contract';
 
 export class RefundCalculation {
   calculationId: string;
@@ -90,18 +91,17 @@ export class RefundCalculation {
       // Case 1: DEPOSIT type (chỉ cọc, chưa đăng ký thuê hết)
       if (rentalForm.type === 'DEPOSIT') {
         refundAmount = depositAmount * 0.8;
-        notes = 'Hoàn 80% tiền cọc (chỉ đặt cọc)';
+        notes = 'Hoàn 80% tiền cọc (chưa có hợp đồng';
       }
       // Case 2: FULL type (đã cọc + đã đăng ký thuê)
       else if (rentalForm.type === 'FULL') {
         // Try to fetch contract - if no contract exists, full refund
-        const contract = await RefundDB.getContractData(rentalFormId);
+        const contract = await Contract.getByRentalFormId(rentalFormId);
 
         if (!contract) {
           // No contract: return 80% deposit + 100% registration fee paid
-          const registrationFeePaid = await RefundDB.getPaymentAmount(rentalFormId);
-          refundAmount = depositAmount * 0.8 + registrationFeePaid;
-          notes = 'Hoàn 80% tiền cọc và 100% tiền đăng ký thuê (chưa có hợp đồng)';
+          refundAmount = depositAmount * 0.8 ;
+          notes = 'Hoàn 80% tiền cọc (chưa có hợp đồng)';
         } else {
           // Contract exists - check duration
           const contractStartDate = new Date(contract.startDate);
