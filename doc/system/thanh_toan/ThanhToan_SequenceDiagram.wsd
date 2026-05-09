@@ -32,11 +32,14 @@ else Thành công
         GUI -> BUS : finalizePayment(sessionId)
         
         alt Nếu action == 'DEPOSIT'
-            BUS -> DB : createInvoice()
+            BUS -> DB : createInvoice(amount)
             BUS -> RDB : markDeposited (Cập nhật giường -> DEPOSITED)
         else Nếu action == 'FULL_PAYMENT'
-            BUS -> DB : createInvoice() (Hóa đơn cọc nếu cần)
-            BUS -> RDB : Tạo rental_form mới (type: 'FULL')
+            alt Nếu chưa đặt cọc
+                BUS -> DB : createInvoice(depositAmount, 'DEPOSIT')
+                BUS -> RDB : markDeposited()
+            end
+            BUS -> RDB : markFullyPaid() (Tạo rental_form type 'FULL' & payment SUCCESS)
             BUS -> RDB : markBooked (Cập nhật giường -> BOOKED)
         end
         
