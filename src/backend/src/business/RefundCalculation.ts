@@ -91,7 +91,7 @@ export class RefundCalculation {
       // Case 1: DEPOSIT type (chỉ cọc, chưa đăng ký thuê hết)
       if (rentalForm.type === 'DEPOSIT') {
         refundAmount = depositAmount * 0.8;
-        notes = 'Hoàn 80% tiền cọc (chưa có hợp đồng';
+        notes = 'Hoàn 80% tiền cọc (chưa có hợp đồng)';
       }
       // Case 2: FULL type (đã cọc + đã đăng ký thuê)
       else if (rentalForm.type === 'FULL') {

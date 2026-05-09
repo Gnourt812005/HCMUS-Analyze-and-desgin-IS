@@ -6,6 +6,7 @@ export class RefundDB {
     return {
       calculationId: row.id,
       requestId: row.request_id,
+      rentalFormId: row.rental_form_id,
       depositAmount: Number(row.deposit_amount || 0),
       damageFee: Number(row.damage_fee || 0),
       extraFee: Number(row.extra_fee || 0),
