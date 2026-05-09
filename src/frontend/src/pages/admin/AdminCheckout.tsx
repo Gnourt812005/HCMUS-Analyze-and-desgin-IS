@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckoutStatus, CheckoutRequestDTO, RefundCalculationDTO, ContractDTO, UserProfileDTO } from '@dormarch/shared';
+import { CheckoutStatus, CheckoutRequestDTO, RefundCalculationDTO, UserProfileDTO, RentalFormDTO } from '@dormarch/shared';
 import { ApiClient } from '../../api/ApiClient';
 
 export const AdminCheckout = () => {
@@ -24,7 +24,7 @@ export const AdminCheckout = () => {
   const [searchingUser, setSearchingUser] = useState(false);
   const [userSearchError, setUserSearchError] = useState<string | null>(null);
   const [searchedUser, setSearchedUser] = useState<UserProfileDTO | null>(null);
-  const [availableContracts, setAvailableContracts] = useState<ContractDTO[]>([]);
+  const [availableContracts, setAvailableContracts] = useState<RentalFormDTO[]>([]);
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState<CheckoutStatus | 'all'>('all');
   const [successMsg, setSuccessMsg] = useState('');
@@ -159,7 +159,7 @@ export const AdminCheckout = () => {
 
     try {
       // Fetch rental forms for the searched customer
-      const response = await ApiClient.get<any[]>(
+      const response = await ApiClient.get<RentalFormDTO[]>(
         `/checkout-requests/rental-forms/available?userEmail=${encodeURIComponent(createForm.userEmail)}`
       );
 
@@ -293,7 +293,7 @@ export const AdminCheckout = () => {
   };
 
   const formatMoney = (value: number) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value) + ' đ';
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 
   const stats = useMemo(() => ({
     total: checkoutRequests.length,
@@ -541,9 +541,9 @@ export const AdminCheckout = () => {
                   <div className="grid gap-3">
                     {availableContracts.map((rental) => (
                       <label
-                        key={rental.rental_form_id}
+                        key={rental.rentalFormId}
                         className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          createForm.rentalFormId === rental.rental_form_id
+                          createForm.rentalFormId === rental.rentalFormId
                             ? 'border-blue-500 bg-blue-50'
                             : 'border-slate-100 bg-white hover:border-blue-200'
                         }`}
@@ -551,21 +551,21 @@ export const AdminCheckout = () => {
                         <input
                           type="radio"
                           name="rentalFormId"
-                          value={rental.rental_form_id}
-                          checked={createForm.rentalFormId === rental.rental_form_id}
+                          value={rental.rentalFormId}
+                          checked={createForm.rentalFormId === rental.rentalFormId}
                           onChange={(e) => setCreateForm({ ...createForm, rentalFormId: e.target.value })}
                           className="mt-1"
                         />
                         <div className="flex-1 text-sm text-slate-700">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="font-bold text-slate-900">{rental.dorm_name} - Tầng {rental.floor} - Phòng {rental.room_name}</p>
+                            <p className="font-bold text-slate-900">{rental.dormName} - Tầng {rental.floor} - Phòng {rental.roomName}</p>
                             <span className="px-2 py-1 text-xs font-medium rounded bg-amber-100 text-amber-800">
                               {rental.type === 'DEPOSIT' ? 'Cọc' : 'Thuê'}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-600">Giường: {rental.bed_numbers}</p>
-                          {rental.contract_id && (
-                            <p className="text-xs">Hạn: {new Date(rental.start_date!).toLocaleDateString('vi-VN')}</p>
+                          <p className="text-xs text-slate-600">Giường: {rental.bedNumbers}</p>
+                          {rental.contractId && (
+                            <p className="text-xs">Hạn: {new Date(rental.startDate!).toLocaleDateString('vi-VN')}</p>
                           )}
                         </div>
                       </label>

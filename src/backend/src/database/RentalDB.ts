@@ -450,10 +450,24 @@ export class RentalDB {
       ORDER BY rf.created_at DESC
     `;
     const result = await dbClient.query(sql, [userEmail]);
-    return result.rows;
+    return result.rows.map(this.mapRentalFormRow);
   }
 
-  static async getRentalFormById(rentalFormId: string): Promise<{ id: string; userEmail: string; type: 'DEPOSIT' | 'FULL'; totalAmount: number; contract_id?: string | null } | null> {
+  private static mapRentalFormRow(row: any): any {
+    return {
+      rentalFormId: row.rental_form_id,
+      type: row.type,
+      contractId: row.contract_id || undefined,
+      startDate: row.start_date || undefined,
+      stayDuration: row.stay_duration || undefined,
+      dormName: row.dorm_name,
+      roomName: row.room_name,
+      floor: row.floor,
+      bedNumbers: row.bed_numbers,
+    };
+  }
+
+  static async getRentalFormById(rentalFormId: string): Promise<{ id: string; userEmail: string; type: 'DEPOSIT' | 'FULL'; totalAmount: number; contractId?: string | null } | null> {
     try {
       const result = await dbClient.query(
         `SELECT 
@@ -475,7 +489,7 @@ export class RentalDB {
         userEmail: row.user_email,
         type: row.type as 'DEPOSIT' | 'FULL',
         totalAmount: row.total_amount,
-        contract_id: row.contract_id || null
+        contractId: row.contract_id || null
       };
     } catch (error) {
       console.error('Error fetching rental form:', error);
