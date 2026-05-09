@@ -100,8 +100,8 @@ export class RefundCalculation {
 
         if (!contract) {
           // No contract: return 80% deposit + 100% registration fee paid
-          refundAmount = depositAmount * 0.8 ;
-          notes = 'Hoàn 80% tiền cọc (chưa có hợp đồng)';
+          refundAmount = depositAmount * 0.8 + depositAmount * 0.5;
+          notes = 'Hoàn 80% tiền cọc và 100% tiền đăng ký thuê (chưa có hợp đồng)';
         } else {
           // Contract exists - check duration
           const contractStartDate = new Date(contract.startDate);
@@ -158,8 +158,8 @@ export class RefundCalculation {
         refundAmount = depositAmount * 0.8;
         notes = 'Hoàn 80% tiền cọc (chưa có hợp đồng)';
       } else if (rentalForm.type === 'FULL') {
-        refundAmount = depositAmount * 0.8;
-        notes = 'Hoàn 80% tiền cọc (chưa có hợp đồng)';
+        refundAmount = depositAmount * 0.8 + depositAmount * 0.5;
+        notes = 'Hoàn 80% tiền cọc và 100% tiền đăng ký thuê (chưa có hợp đồng)';
       }
 
       await RefundDB.create({
