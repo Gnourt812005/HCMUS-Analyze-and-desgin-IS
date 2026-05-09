@@ -293,12 +293,15 @@ export class RentalDB {
       // We always create the DEPOSIT record as the primary registration entry.
       // If action is FULL_PAYMENT, the payment logic will later call markFullyPaid 
       // which will create the second 'FULL' record.
+      const deadline = new Date();
+      deadline.setHours(deadline.getHours() + 24);
+
       await client.query(
         `
           INSERT INTO rental_forms (id, user_email, deadline, total_amount, type)
           VALUES ($1::uuid, $2, $3, $4, 'DEPOSIT')
         `,
-        [record.registrationId, userEmail, new Date().toISOString(), depositAmount]
+        [record.registrationId, userEmail, deadline.toISOString(), depositAmount]
       );
 
       for (const bedId of record.bedIds) {
