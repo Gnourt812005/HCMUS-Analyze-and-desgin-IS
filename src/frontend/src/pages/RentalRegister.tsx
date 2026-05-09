@@ -32,15 +32,13 @@ export const RentalRegister = () => {
   const [customerName, setCustomerName] = useState(flowState?.profile?.fullName || '');
   const [phone, setPhone] = useState(flowState?.profile?.phone || '');
   const [email, setEmail] = useState(flowState?.profile?.email || '');
-  const [rentalMonths, setRentalMonths] = useState(6);
 
   const [registration, setRegistration] = useState<RentalRegistrationDTO | null>(null);
   const [preview, setPreview] = useState<PaymentPreviewDTO | null>(null);
   const [currentAction, setCurrentAction] = useState<PaymentAction | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('BANK');
 
-  const [loadingRegister, setLoadingRegister] = useState(false);
-  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   if (!flowState) {
     return (
@@ -55,18 +53,22 @@ export const RentalRegister = () => {
     );
   }
 
-  const handleRegister = async (event: FormEvent) => {
-    event.preventDefault();
-
+  const handleAction = async (action: PaymentAction) => {
     const normalizedPhone = phone.trim();
     if (!/^\d{10}$/.test(normalizedPhone)) {
       alert('Số điện thoại phải gồm đúng 10 chữ số.');
       return;
     }
 
-    setLoadingRegister(true);
+    if (!customerName.trim() || !email.trim()) {
+      alert('Vui lòng điền đầy đủ thông tin Họ tên và Email.');
+      return;
+    }
+
+    setLoading(true);
 
     try {
+      // Direct registration with the chosen action
       const response = await RentalService.register({
         roomId: flowState.roomId,
         bedIds: flowState.bedIds,
@@ -74,40 +76,26 @@ export const RentalRegister = () => {
         idCard: flowState.idCard,
         phone: normalizedPhone,
         email,
-        rentalMonths,
+        rentalMonths: 1, // Default to 1 month
         acceptedConditions: flowState.acceptedConditions,
-        services: []
+        services: [],
+        action
       });
 
       if (response.status === 201) {
         setRegistration(response.data);
-        alert(`Đăng ký thuê ${rentalMonths} tháng thành công. Vui lòng chọn Đặt cọc hoặc Thanh toán trọn gói.`);
-      }
-    } catch (error: any) {
-      alert(error.message || 'Không thể đăng ký thuê.');
-    } finally {
-      setLoadingRegister(false);
-    }
-  };
-
-  const handleOpenPreview = async (action: PaymentAction) => {
-    if (!registration) return;
-
-    setLoadingPreview(true);
-    try {
-      const response = await RentalService.preview({
-        registrationId: registration.registrationId,
-        action
-      });
-
-      if (response.status === 200) {
         setCurrentAction(action);
-        setPreview(response.data);
+        setPreview({
+          registrationId: response.data.registrationId,
+          action,
+          items: response.data.summary,
+          totalAmount: response.data.summary.reduce((sum, item) => sum + item.amount, 0)
+        });
       }
     } catch (error: any) {
-      alert(error.message || 'Không thể tải tóm tắt thanh toán.');
+      alert(error.message || 'Không thể thực hiện yêu cầu.');
     } finally {
-      setLoadingPreview(false);
+      setLoading(false);
     }
   };
 
@@ -137,95 +125,62 @@ export const RentalRegister = () => {
         </div>
       )}
 
-      <form onSubmit={handleRegister} className="mt-6 rounded-lg border border-slate-200 bg-white p-6 space-y-5">
+      <div className="mt-6 rounded-lg border border-slate-200 bg-white p-6 space-y-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <label className="text-sm font-semibold text-slate-700">Họ tên</label>
             <input
               value={customerName}
-              onChange={(e) => {
-                setCustomerName(e.target.value);
-                setRegistration(null);
-                setPreview(null);
-              }}
+              onChange={(e) => setCustomerName(e.target.value)}
               required
-              readOnly={!!flowState?.profile?.fullName}
-              className={`mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 ${
-                flowState?.profile?.fullName ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''
-              }`}
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
             />
           </div>
           <div>
             <label className="text-sm font-semibold text-slate-700">Số điện thoại</label>
             <input
               value={phone}
-              onChange={(e) => {
-                setPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
-                setRegistration(null);
-                setPreview(null);
-              }}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
               inputMode="numeric"
               pattern="\d{10}"
               maxLength={10}
               required
-              readOnly={!!flowState?.profile?.phone}
-              className={`mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 ${
-                flowState?.profile?.phone ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''
-              }`}
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
             />
           </div>
-          <div>
+          <div className="md:col-span-2">
             <label className="text-sm font-semibold text-slate-700">Email</label>
             <input
               type="email"
               value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setRegistration(null);
-                setPreview(null);
-              }}
+              onChange={(e) => setEmail(e.target.value)}
               required
-              readOnly={!!flowState?.profile?.email}
-              className={`mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 ${
-                flowState?.profile?.email ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''
-              }`}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-semibold text-slate-700">Số tháng thuê</label>
-            <input
-              type="number"
-              min={1}
-              value={rentalMonths}
-              onChange={(e) => {
-                setRentalMonths(Number(e.target.value));
-                setRegistration(null);
-                setPreview(null);
-              }}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
             />
           </div>
         </div>
 
-        <button type="submit" disabled={loadingRegister} className="rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white disabled:bg-slate-300 hover:bg-blue-800 transition-colors">
-          {loadingRegister ? 'Đang xử lý...' : 'Xác nhận đăng ký thuê'}
-        </button>
-      </form>
-
-      {registration && (
-        <div className="mt-6 rounded-lg border border-slate-200 bg-white p-6">
-          <h2 className="text-xl font-bold text-slate-800">Chọn phương án thanh toán</h2>
-          <p className="mt-1 text-sm text-slate-600">Sau khi chọn, hệ thống sẽ mở popup tóm tắt dịch vụ và chi phí.</p>
-          <div className="mt-4 flex gap-3">
-            <button onClick={() => handleOpenPreview('DEPOSIT')} disabled={loadingPreview} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-300 hover:bg-slate-800 transition-colors">
-              Đặt cọc
+        <div className="pt-4 border-t border-slate-100">
+          <h2 className="text-lg font-bold text-slate-800">Chọn phương án thanh toán</h2>
+          <p className="text-sm text-slate-500 mb-4">Vui lòng kiểm tra kỹ thông tin trước khi chọn.</p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button 
+              onClick={() => handleAction('DEPOSIT')} 
+              disabled={loading} 
+              className="flex-1 rounded-xl bg-slate-900 px-6 py-4 font-bold text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800 active:scale-[0.98] transition-all disabled:bg-slate-200"
+            >
+              {loading && currentAction === 'DEPOSIT' ? 'Đang xử lý...' : 'Đặt cọc ngay'}
             </button>
-            <button onClick={() => handleOpenPreview('FULL_PAYMENT')} disabled={loadingPreview} className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-300 hover:bg-blue-800 transition-colors">
-              Thanh toán trọn gói
+            <button 
+              onClick={() => handleAction('FULL_PAYMENT')} 
+              disabled={loading} 
+              className="flex-1 rounded-xl bg-blue-700 px-6 py-4 font-bold text-white shadow-lg shadow-blue-700/20 hover:bg-blue-800 active:scale-[0.98] transition-all disabled:bg-slate-200"
+            >
+              {loading && currentAction === 'FULL_PAYMENT' ? 'Đang xử lý...' : 'Thanh toán trọn gói'}
             </button>
           </div>
         </div>
-      )}
+      </div>
 
       {preview && currentAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 backdrop-blur-sm">
@@ -235,37 +190,44 @@ export const RentalRegister = () => {
                 {currentAction === 'DEPOSIT' ? 'Xác nhận đặt cọc' : 'Xác nhận thanh toán trọn gói'}
               </h3>
             </div>
-            <div className="space-y-2 px-6 py-4">
+            <div className="space-y-3 px-6 py-4">
               {preview.items.map((item, index) => (
                 <div key={`${item.label}-${index}`} className="flex justify-between text-sm">
                   <span className="text-slate-600">{item.label}</span>
-                  <span className="font-semibold text-slate-800">{item.amount.toLocaleString('vi-VN')} VND</span>
+                  <span className="font-bold text-slate-800">{item.amount.toLocaleString('vi-VN')} VND</span>
                 </div>
               ))}
-              <div className="mt-2 border-t border-slate-200 pt-2 flex justify-between font-bold">
+              <div className="mt-2 border-t border-slate-200 pt-3 flex justify-between font-black text-lg">
                 <span>Tổng cộng</span>
                 <span className="text-blue-700">{preview.totalAmount.toLocaleString('vi-VN')} VND</span>
               </div>
 
-              <div className="pt-2">
-                <label className="text-sm font-semibold text-slate-700">Phương thức</label>
-                <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)} className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                  <option value="BANK">Ngân hàng</option>
+              <div className="pt-4 mt-2 border-t border-slate-100">
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Phương thức thanh toán</label>
+                <select 
+                  value={paymentMethod} 
+                  onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)} 
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 outline-none"
+                >
+                  <option value="BANK">Chuyển khoản Ngân hàng</option>
                   <option value="EWALLET">Ví điện tử</option>
                 </select>
               </div>
             </div>
-            <div className="flex justify-end gap-3 border-t border-slate-200 px-6 py-4">
+            <div className="flex flex-col sm:flex-row gap-3 border-t border-slate-200 px-6 py-4 bg-slate-50/50 rounded-b-xl">
               <button
                 onClick={() => {
                   setPreview(null);
                   setCurrentAction(null);
                 }}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
+                className="flex-1 rounded-xl border border-slate-300 px-4 py-3 text-sm font-bold text-slate-600 bg-white hover:bg-slate-50 transition-colors"
               >
-                Thay đổi thông tin
+                Quay lại sửa
               </button>
-              <button onClick={goToPayment} className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white">
+              <button 
+                onClick={goToPayment} 
+                className="flex-1 rounded-xl bg-blue-700 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-700/10 hover:bg-blue-800 transition-all"
+              >
                 Tiếp tục thanh toán
               </button>
             </div>

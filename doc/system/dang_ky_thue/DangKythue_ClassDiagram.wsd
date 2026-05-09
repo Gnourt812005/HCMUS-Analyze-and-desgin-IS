@@ -1,61 +1,41 @@
-@startuml DangKythue_ClassDiagram
+@startuml DangKyThue_ClassDiagram
 
 skinparam classAttributeIconSize 0
 skinparam style strictuml
 title Class Diagram - UC28: Đăng ký thuê
 
 ' --- BOUNDARY LAYER ---
-class "ScreenRent" as ScreenDeposit <<boundary>> {
+class "ScreenRoomList" as ScreenRoomList <<boundary>> {
     + showRooms()
-    + inputCustomerInfo()
-    + lockQuantityUI()
-    + showTotalAmount(amount)
+    + handleRegisterRental()
+    + showPreviewModal()
 }
 
 ' --- BUSINESS LAYER ---
-class "Customer" as Customer <<control>> {
-    - idCard: String
-    - fullName: String
-    - birthday: Date
-    - phone: String
+class "Rental" as Rental <<control>> {
+    + <<static>> register(payload)
+    + <<static>> checkEligibility(payload)
+    + <<static>> previewPayment(payload)
 }
 
-class "Room" as Room <<control>> {
-    - roomId: String
-    - roomType: String
+class "Policy" as Policy <<control>> {
+    + <<static>> hasConfirmed(idCard)
 }
 
-class "Bed" as Bed <<control>> {
-    - bedId: String
-    - status: String
-    - price: Double
-}
-
-class "Rent" as Rent <<control>> {
-    - roomId: String
-    - isAlreadyDeposited: Boolean
-    - amount: Double
-    + <<static>> validateInfo(data)
-    + <<static>> calculateAmount(isAlreadyDeposited)
-    + <<static>> createTempInvoice()
-    + <<static>> checkDepositHistory(roomId, idCard)
+class "RentalDB" as RentalDB <<entity>> {
+    + <<static>> createRegistration(record, action)
+    + <<static>> getRegistration(registrationId)
+    + <<static>> hasDeposit(roomId, idCard)
+    + <<static>> getBedsTotalPrice(roomId, bedIds)
 }
 
 class "RoomDB" as RoomDB <<entity>> {
-    + <<static>> updateStatus()
+    + <<static>> syncRoomAvailability(roomId)
 }
 
-class "BedDB" as BedDB <<entity>> {
-    + <<static>> getPrice()
-    + <<static>> checkAvailable()
-}
-
-"ScreenDeposit" ..> "Rent"
-"Rent" ..> "Customer"
-"Rent" ..> "Room"
-"Rent" ..> "Bed"
-"Customer" ..> "CustomerDB"
-"Room" ..> "RoomDB"
-"Bed" ..> "BedDB"
+"ScreenRoomList" ..> "Rental"
+"Rental" ..> "RentalDB"
+"Rental" ..> "Policy"
+"Rental" ..> "RoomDB"
 
 @enduml

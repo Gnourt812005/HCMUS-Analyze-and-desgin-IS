@@ -5,35 +5,35 @@ autonumber
 
 actor "Customer" as Actor
 boundary "ScreenDeposit" as GUI <<boundary>>
-control "Deposit" as BUS <<control>>
-database "RoomDB" as DB <<database>>
+control "Rental" as BUS <<control>>
+database "RentalDB" as DB <<database>>
 
 Actor -> GUI : Chọn phòng/giường
+GUI -> BUS : Gọi UC15 (Kiểm tra điều kiện & Nội quy)
 GUI -> Actor : Hiển thị form thông tin khách hàng
 Actor -> GUI : Nhập thông tin cá nhân và xác nhận
 
-GUI -> BUS : validateAndProcess(customerData, roomId)
+GUI -> BUS : register(customerData, roomId, bedIds)
+BUS -> BUS : checkEligibility()
 
-alt Thông tin không hợp lệ
+alt Điều kiện không hợp lệ (Hết giường/CCCD sai)
     BUS --> GUI : Lỗi kiểm tra dữ liệu
     GUI --> Actor : Hiển thị lỗi
-else Thông tin hợp lệ
-    BUS -> BUS : Gọi UC15 (Kiểm tra điều kiện)
+else Hợp lệ
+    BUS -> DB : createRegistration(type: 'DEPOSIT')
+    DB --> BUS : registrationId
     
     Actor -> GUI : Nhấn "Đặt cọc"
-    BUS -> DB : getRoomPriceFromBed(roomId, BedId)
-    DB --> BUS : Đơn giá
-    
-    BUS -> BUS : calculateDepositAmount(price)
-    BUS --> GUI : showSummary(depositAmount)
+    BUS -> BUS : previewPayment(registrationId, action: 'DEPOSIT')
+    BUS --> GUI : Trả về số tiền cọc (2 tháng)
+    GUI --> Actor : Hiển thị Summary (Tiền cọc)
     
     alt Thay đổi thông tin
-        Actor -> GUI : Nhấn "Thay đổi thông tin"
+        Actor -> GUI : Nhấn "Quay lại"
         GUI --> Actor : Quay lại bước chọn
     else Xác nhận thanh toán
         Actor -> GUI : Nhấn "Thanh toán"
         GUI -> BUS : Gọi UC16 (Thanh toán)
-        BUS --> GUI : Chuyển hướng thanh toán
     end
 end
 

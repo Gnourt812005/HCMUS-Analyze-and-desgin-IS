@@ -4,54 +4,25 @@ skinparam style strictuml
 title Class Diagram - UC14: Đặt cọc
 
 ' --- BOUNDARY LAYER ---
-class "ScreenDeposit" as ScreenDeposit <<boundary>> {
-    + showRooms()
+class "ScreenRoomList" as ScreenRoomList <<boundary>> {
     + inputCustomerInfo()
     + showTotalAmount(amount)
 }
 
 ' --- BUSINESS LAYER ---
-class "Customer" as Customer <<control>> {
-    - idCard: String
-    - fullName: String
-    - birthday: Date
-    - phone: String
+class "Rental" as Rental <<control>> {
+    + <<static>> register(payload)
+    + <<static>> checkEligibility(payload)
+    + <<static>> previewPayment(payload)
 }
 
-class "Room" as Room <<control>> {
-    - roomId: String
-    - roomType: String
+class "RentalDB" as RentalDB <<entity>> {
+    + <<static>> createRegistration(record, action)
+    + <<static>> getRegistration(registrationId)
+    + <<static>> hasDeposit(roomId, idCard)
 }
 
-class "Bed" as Bed <<control>> {
-    - bedId: String
-    - status: String
-    - price: Double
-}
-
-class "Deposit" as Deposit <<control>> {
-    - roomId: String
-    - depositAmount: Double
-    + <<static>> validateInfo(data)
-    + <<static>> calculateDeposit()
-    + <<static>> createTempInvoice()
-}
-
-class "RoomDB" as RoomDB <<entity>> {
-    + <<static>> updateStatus()
-}
-
-class "BedDB" as BedDB <<entity>> {
-    + <<static>> checkAvailable()
-     + <<static>> getPrice()
-}
-
-"ScreenDeposit" ..> "Deposit"
-"Deposit" ..> "Customer"
-"Deposit" ..> "Room"
-"Deposit" ..> "Bed"
-"Customer" ..> "CustomerDB"
-"Room" ..> "RoomDB"
-"Bed" ..> "BedDB"
+"ScreenRoomList" ..> "Rental"
+"Rental" ..> "RentalDB"
 
 @enduml

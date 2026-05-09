@@ -75,6 +75,7 @@ export interface RentalRegistrationRequestDTO {
   rentalMonths: number;
   acceptedConditions: boolean;
   services: ServiceItemDTO[];
+  action: PaymentAction;
 }
 
 export interface SummaryItemDTO {

@@ -85,11 +85,13 @@ export class Rental {
       registrationId,
       roomPrice,
       alreadyDeposited: eligibility.alreadyDeposited
-    });
+    }, payload.action);
 
-    const summary: SummaryItemDTO[] = [
-      { label: 'Tiền phòng tháng đầu', amount: roomPrice }
-    ];
+    // Get preview immediately after registration
+    const preview = await this.previewPayment({
+      registrationId,
+      action: payload.action
+    });
 
     return {
       registrationId,
@@ -97,7 +99,7 @@ export class Rental {
       bedIds: payload.bedIds,
       roomPrice,
       alreadyDeposited: eligibility.alreadyDeposited,
-      summary
+      summary: preview.items
     };
   }
 
@@ -107,14 +109,11 @@ export class Rental {
       throw new Error('Không tìm thấy thông tin đăng ký thuê.');
     }
 
-    // Deposit policy: 2 months of rent for selected beds.
     const depositAmount = registration.roomPrice * 2;
+    const items: SummaryItemDTO[] = [];
 
     if (payload.action === 'DEPOSIT') {
-      const items: SummaryItemDTO[] = [
-        { label: 'Tiền đặt cọc (2 tháng)', amount: depositAmount }
-      ];
-
+      items.push({ label: 'Tiền đặt cọc (2 tháng)', amount: depositAmount });
       return {
         registrationId: payload.registrationId,
         action: payload.action,
@@ -123,20 +122,19 @@ export class Rental {
       };
     }
 
-    const rentalMonths = Math.max(1, Number(registration.rentalMonths || 1));
-    const fullRentalAmount = registration.roomPrice * rentalMonths;
-
-    const items: SummaryItemDTO[] = [
-      { label: `Tiền phòng (${rentalMonths} tháng)`, amount: fullRentalAmount }
-    ];
+    // FULL_PAYMENT logic
+    const rentAmount = registration.roomPrice; // Default 1 month
 
     if (registration.alreadyDeposited) {
-      items.push({ label: 'Đã trừ tiền cọc', amount: -depositAmount });
+      // If already deposited, just pay the first month rent
+      items.push({ label: 'Tiền thuê tháng đầu', amount: rentAmount });
+    } else {
+      // If not deposited, pay both deposit and first month rent
+      items.push({ label: 'Tiền đặt cọc (2 tháng)', amount: depositAmount });
+      items.push({ label: 'Tiền thuê tháng đầu', amount: rentAmount });
     }
 
-    const totalAmount = fullRentalAmount - (registration.alreadyDeposited
-      ? depositAmount
-      : 0);
+    const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
 
     return {
       registrationId: payload.registrationId,

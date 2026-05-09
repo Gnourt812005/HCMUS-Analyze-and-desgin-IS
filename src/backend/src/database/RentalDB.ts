@@ -78,6 +78,13 @@ export class RentalDB {
           AND u.cccd = $1
           AND b.room_id = $2
           AND rf.created_at >= NOW() - INTERVAL '24 hours'
+          AND NOT EXISTS (
+            SELECT 1 FROM rental_forms rf2
+            JOIN rental_form_beds rfb2 ON rfb2.rental_form_id = rf2.id
+            WHERE rf2.user_email = rf.user_email
+              AND rf2.type = 'FULL'
+              AND rfb2.bed_id = b.id
+          )
         LIMIT 1
       `,
       [idCard, roomId]
@@ -101,6 +108,13 @@ export class RentalDB {
           AND rf.type = 'DEPOSIT'
           AND u.cccd = $1
           AND rf.created_at >= NOW() - INTERVAL '24 hours'
+          AND NOT EXISTS (
+            SELECT 1 FROM rental_forms rf2
+            JOIN rental_form_beds rfb2 ON rfb2.rental_form_id = rf2.id
+            WHERE rf2.user_email = rf.user_email
+              AND rf2.type = 'FULL'
+              AND rfb2.bed_id = b.id
+          )
       `,
       [idCard]
     );
@@ -198,15 +212,41 @@ export class RentalDB {
     await this.syncRoomAvailableBeds(roomId);
   }
 
-  static async markFullyPaid(registrationId: string): Promise<void> {
+  static async markFullyPaid(registrationId: string, userEmail: string, roomPrice: number, bedIds: string[]): Promise<void> {
     const client = await dbClient.getClient();
     try {
       await client.query('BEGIN');
       
-      // Update rental form type to FULL
+      const fullId = require('crypto').randomUUID();
+      const deadline = new Date();
+      deadline.setMonth(deadline.getMonth() + 1);
+
+      // 1. Create a NEW record for FULL hire
       await client.query(
-        `UPDATE rental_forms SET type = 'FULL' WHERE id = $1::uuid`,
-        [registrationId]
+        `
+          INSERT INTO rental_forms (id, user_email, deadline, total_amount, type)
+          VALUES ($1::uuid, $2, $3, $4, 'FULL')
+        `,
+        [fullId, userEmail, deadline.toISOString(), roomPrice]
+      );
+
+      // 2. Link beds to the FULL record
+      for (const bedId of bedIds) {
+        await client.query(
+          `INSERT INTO rental_form_beds (rental_form_id, bed_id) VALUES ($1::uuid, $2::uuid)`,
+          [fullId, bedId]
+        );
+      }
+
+      // 3. Create a successful payment record for the FULL form 
+      // so it shows as SUCCESS in history immediately.
+      // We link it to the same registration for reference.
+      await client.query(
+        `
+          INSERT INTO payments (id, rental_form_id, amount, status, method, created_at)
+          VALUES ($1::uuid, $2::uuid, $3, 'SUCCESS', 'TRANSFER', NOW())
+        `,
+        [require('crypto').randomUUID(), fullId, roomPrice]
       );
 
       await client.query('COMMIT');
@@ -227,22 +267,41 @@ export class RentalDB {
     await this.syncRoomAvailableBeds(roomId);
   }
 
-  static async createRegistration(record: RentalRecord): Promise<void> {
-    const userEmail = await this.resolveUserEmail(record.email, record.idCard);
+  static async createRegistration(record: RentalRecord, action: 'DEPOSIT' | 'FULL_PAYMENT'): Promise<void> {
+    let userEmail = await this.resolveUserEmail(record.email, record.idCard);
+    
+    // If user not found in DB, we must create a guest entry so we can track them by CCCD later
+    if (!userEmail) {
+      await dbClient.query(
+        `INSERT INTO users (email, full_name, phone, cccd, role) VALUES ($1, $2, $3, $4, 'GUEST') ON CONFLICT (email) DO NOTHING`,
+        [record.email, record.customerName, record.phone, record.idCard]
+      );
+      userEmail = record.email;
+    } else {
+      // Ensure the CCCD is up to date for this user so searches by CCCD work
+      await dbClient.query(
+        `UPDATE users SET cccd = $1 WHERE email = $2 AND (cccd IS NULL OR cccd = '')`,
+        [record.idCard, userEmail]
+      );
+    }
 
     const client = await dbClient.getClient();
     try {
       await client.query('BEGIN');
 
+      const depositAmount = record.roomPrice * 2;
+      // We always create the DEPOSIT record as the primary registration entry.
+      // If action is FULL_PAYMENT, the payment logic will later call markFullyPaid 
+      // which will create the second 'FULL' record.
       const deadline = new Date();
-      deadline.setMonth(deadline.getMonth() + Math.max(1, Number(record.rentalMonths || 1)));
+      deadline.setHours(deadline.getHours() + 24);
 
       await client.query(
         `
           INSERT INTO rental_forms (id, user_email, deadline, total_amount, type)
-          VALUES ($1::uuid, $2, $3, $4, 'FULL')
+          VALUES ($1::uuid, $2, $3, $4, 'DEPOSIT')
         `,
-        [record.registrationId, userEmail, deadline.toISOString(), record.roomPrice]
+        [record.registrationId, userEmail, deadline.toISOString(), depositAmount]
       );
 
       for (const bedId of record.bedIds) {
@@ -343,12 +402,21 @@ export class RentalDB {
       await client.query('BEGIN');
 
       // 1. Find expired rental forms
-      // - DEPOSIT: created_at < now - 24 hours
+      // - DEPOSIT: created_at < now - 24 hours AND no FULL record for same beds/user
       // - FULL: deadline < now
       const expiredFormsResult = await client.query(`
         SELECT rf.id, rf.type
         FROM rental_forms rf
-        WHERE (rf.type = 'DEPOSIT' AND rf.created_at < NOW() - INTERVAL '24 hours')
+        WHERE (rf.type = 'DEPOSIT' AND rf.created_at < NOW() - INTERVAL '24 hours'
+               AND NOT EXISTS (
+                 SELECT 1 
+                 FROM rental_forms rf2
+                 JOIN rental_form_beds rfb2 ON rf2.id = rfb2.rental_form_id
+                 JOIN rental_form_beds rfb1 ON rf.id = rfb1.rental_form_id
+                 WHERE rf2.type = 'FULL' 
+                   AND rf2.user_email = rf.user_email
+                   AND rfb2.bed_id = rfb1.bed_id
+               ))
            OR (rf.type = 'FULL' AND rf.deadline < NOW())
       `);
 
