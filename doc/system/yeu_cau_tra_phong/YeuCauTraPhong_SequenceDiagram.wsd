@@ -13,28 +13,28 @@ autonumber
 
 actor "Khách hàng" as customer
 boundary "ScreenCheckoutRequest" as screen
-control "Contract" as contract
+control "Rental" as rental
 control "CheckoutRequest" as request
-database "ContractDB" as contractDb
+database "RentalDB" as rentalDb
 database "CheckoutRequestDB" as requestDb
 
 customer -> screen: show()
 activate customer
 activate screen
-screen -> contract: getActiveByUserEmail(userEmail)
-activate contract
-contract -> contractDb: getActiveByUserEmail(userEmail)
-activate contractDb
-contractDb --> contract: Contract[]
-deactivate contractDb
-contract --> screen: Contract[]
-deactivate contract
+screen -> rental: getActiveRentalFormsForCheckout(userEmail)
+activate rental
+rental -> rentalDb: getActiveRentalFormsForCheckout(userEmail)
+activate rentalDb
+rentalDb --> rental: Rental[]
+deactivate rentalDb
+rental --> screen: Rental[]
+deactivate rental
 
-screen --> customer: Hiển thị danh sách hợp đồng
+screen --> customer: Hiển thị danh sách form thuê
 deactivate screen
 deactivate customer
 
-customer -> screen: Chọn hợp đồng
+customer -> screen: Chọn form thuê
 activate customer
 activate screen
 customer -> screen: Điền ngày dự kiến

@@ -12,12 +12,12 @@ skinparam {
     Padding 5
 }
 
-class "ManageCheckoutRequestScreen" <<boundary>> {
+class "ScreenManageCheckoutRequest" <<boundary>> {
   - dgvRequests: DataGridView
   + loadRequests(): void
 }
 
-class "CreateCheckoutRequestScreen" <<boundary>> {
+class "ModalCreateCheckoutRequest" <<boundary>> {
   - txtSearchUser: TextBox
   - cbbContractList: ComboBox
   - dtpExpectedDate: DateTimePicker
@@ -28,7 +28,7 @@ class "CreateCheckoutRequestScreen" <<boundary>> {
   + btnSaveClick(): void
 }
 
-class "CheckoutRequestDetailScreen" <<boundary>> {
+class "ModalCheckoutRequestDetail" <<boundary>> {
   - lblContractInfo: Label
   - lblRefundInfo: Label
   - btnProcess: Button
@@ -40,49 +40,40 @@ class "CheckoutRequestDetailScreen" <<boundary>> {
 
 class "CheckoutRequest" <<control>> {
   - requestId: string
+  - code: string
   - userEmail: string
-  - userFullName: string
-  - contractId: string
-  - dormName: string
-  - roomName: string
-  - floor: number
-  - bedNumbers: string
-  - expectedDate: string 
+  - rentalFormId: string
+  - expectedDate: string
   - status: CheckoutStatus
   - createdAt: string
   + <<static>> getList(): CheckoutRequest[]
   + <<static>> getById(requestId: string): CheckoutRequest 
-  + <<static>> create(data: CheckoutRequest): CheckoutRequest
   + <<static>> createWithDuplicateCheck(data: CheckoutRequest): {success: bool, request: CheckoutRequest}
   + <<static>> updateStatus(requestId: string, status: CheckoutStatus, expectedStatus: CheckoutStatus): bool
 }
 
 class "Contract" <<control>> {
   - contractId: string
-  - contractCode: string
-  - userEmail: string
-  - roomName: string
-  - dormName: string
-  - floor: number
-  - bedNumbers: string
+  - rentalFormId: string
   - startDate: string
   - stayDuration: number
-  - rentalFormId: string
   - status: ContractStatus
-  - depositAmount: number
-  - signatureUrl: string
-  - createdAt: string
-  + <<static>> getByUserEmail(userEmail: string): Contract 
-  + <<static>> getByContractId(contractId: string): Contract 
-  + <<static>> getActiveByUserEmail(userEmail: string): Contract[]
-  + <<static>> updateStatus(contractId: string, status: ContractStatus): bool
-  + <<static>> getBedsInfoByContractId(contractId: string): {roomId: string, bedIds: string[]} 
+  + <<static>> getByRentalFormId(rentalFormId: string): Contract 
+}
+
+class "Rental" <<control>> {
+  - rentalFormId: string
+  - userEmail: string
+  - type: string
+  - totalAmount: number
+  + <<static>> getRentalFormById(rentalFormId: string): Rental
+  + <<static>> getBedsInfoByRentalFormId(rentalFormId: string): {roomId: string, bedIds: string[]}
 }
 
 class "RefundCalculation" <<control>> {
   - calculationId: string
   - requestId: string
-  - contractId: string
+  - rentalFormId: string
   - depositAmount: number
   - damageFee: number
   - extraFee: number
@@ -90,40 +81,38 @@ class "RefundCalculation" <<control>> {
   - notes: string
   - createdAt: string
   + <<static>> getByRequestId(requestId: string): RefundCalculation 
-  + <<static>> getById(calculationId: string): RefundCalculation 
-  + <<static>> create(data: RefundCalculation): RefundCalculation
-  + <<static>> update(calculationId: string, data: RefundCalculation): RefundCalculation 
 }
 
 class "CheckoutRequestDB" <<entity>> {
   + <<static>> getAll(): CheckoutRequest[]
   + <<static>> getById(requestId: string): CheckoutRequest
-  + <<static>> insert(request: CheckoutRequest): string 
-  + <<static>> insertIfNoActiveRequest(request: CheckoutRequest, contractId: string, userEmail: string): {success: bool, error: string, requestId: string}
+  + <<static>> insertIfNoActiveRequest(request: CheckoutRequest, rentalFormId: string, userEmail: string): {success: bool, error: string, requestId: string}
+  + <<static>> updateStatus(id: string, status: string, expectedStatus?: string): bool
 }
 
 class "ContractDB" <<entity>> {
-  + <<static>> getByUserEmail(userEmail: string): Contract 
-  + <<static>> getByContractId(contractId: string): Contract 
-  + <<static>> getActiveByUserEmail(userEmail: string): Contract[]
-  + <<static>> updateStatus(contractId: string, status: ContractStatus): bool
-  + <<static>> getBedsInfoByContractId(contractId: string): {roomId: string, bedIds: string[]} 
+  + <<static>> getByRentalFormId(rentalFormId: string): Contract 
+}
+
+class "RentalDB" <<entity>> {
+  + <<static>> getRentalFormById(rentalFormId: string): Rental
+  + <<static>> getBedsInfoByRentalFormId(rentalFormId: string): {roomId: string, bedIds: string[]}
 }
 
 class "RefundCalculationDB" as RefundCalculationDB <<entity>> {
   + <<static>> getByRequestId(requestId: string): RefundCalculation 
-  + <<static>> getById(calculationId: string): RefundCalculation 
-  + <<static>> create(data: RefundCalculation): RefundCalculation
-  + <<static>> update(calculationId: string, data: RefundCalculation): RefundCalculation 
 }
 
-ManageCheckoutRequestScreen --> CheckoutRequest
-CreateCheckoutRequestScreen --> CheckoutRequest
-CheckoutRequestDetailScreen --> CheckoutRequest
-CheckoutRequestDetailScreen --> Contract
-CheckoutRequestDetailScreen --> RefundCalculation
+ScreenManageCheckoutRequest --> CheckoutRequest
+ModalCreateCheckoutRequest --> CheckoutRequest
+ModalCreateCheckoutRequest --> Rental
+ModalCheckoutRequestDetail --> CheckoutRequest
+ModalCheckoutRequestDetail --> Rental
+ModalCheckoutRequestDetail --> Contract
+ModalCheckoutRequestDetail --> RefundCalculation
 
 CheckoutRequest --> CheckoutRequestDB
+Rental --> RentalDB
 Contract --> ContractDB
 RefundCalculation --> RefundCalculationDB
 
