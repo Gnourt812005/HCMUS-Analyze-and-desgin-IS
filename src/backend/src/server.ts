@@ -9,6 +9,9 @@ import { roomRoutes } from './routes/roomRoutes';
 import { previewRoutes } from './routes/previewRoutes';
 import { handoverRoutes } from './routes/handoverRoutes';
 import { utilityRoutes } from './routes/utilityRoutes';
+import { checkoutRouter } from './routes/checkoutRoutes';
+import { refundRouter } from './routes/refundRoutes';
+import { contractRouter } from './routes/contractRoutes';
 import { dbClient } from './database/DatabaseClient';
 import { BackgroundTasks } from './utils/BackgroundTasks';
 
@@ -29,6 +32,9 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/previews', previewRoutes);
 app.use('/api/handovers', handoverRoutes);
 app.use('/api/utilities', utilityRoutes);
+app.use('/api/checkout-requests', checkoutRouter);
+app.use('/api/refund-calculations', refundRouter);
+app.use('/api/contracts', contractRouter);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });

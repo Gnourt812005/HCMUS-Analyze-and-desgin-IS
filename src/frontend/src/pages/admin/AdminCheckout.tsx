@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckoutStatus, CheckoutRequestDTO, RefundCalculationDTO, ContractDTO, UserProfileDTO } from '@dormarch/shared';
+import { CheckoutStatus, CheckoutRequestDTO, RefundCalculationDTO, UserProfileDTO, RentalFormDTO } from '@dormarch/shared';
 import { ApiClient } from '../../api/ApiClient';
 
 export const AdminCheckout = () => {
@@ -24,7 +24,7 @@ export const AdminCheckout = () => {
   const [searchingUser, setSearchingUser] = useState(false);
   const [userSearchError, setUserSearchError] = useState<string | null>(null);
   const [searchedUser, setSearchedUser] = useState<UserProfileDTO | null>(null);
-  const [availableContracts, setAvailableContracts] = useState<ContractDTO[]>([]);
+  const [availableContracts, setAvailableContracts] = useState<RentalFormDTO[]>([]);
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState<CheckoutStatus | 'all'>('all');
   const [successMsg, setSuccessMsg] = useState('');
@@ -159,7 +159,7 @@ export const AdminCheckout = () => {
 
     try {
       // Fetch rental forms for the searched customer
-      const response = await ApiClient.get<any[]>(
+      const response = await ApiClient.get<RentalFormDTO[]>(
         `/checkout-requests/rental-forms/available?userEmail=${encodeURIComponent(createForm.userEmail)}`
       );
 

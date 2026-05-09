@@ -1,7 +1,7 @@
 import { useEffect, useState, FormEvent} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiClient } from '../api/ApiClient';
-import { CheckoutRequestDTO, UserProfileDTO, ContractDTO } from '@dormarch/shared';
+import { CheckoutRequestDTO, UserProfileDTO, RentalFormDTO } from '@dormarch/shared';
 
 interface CheckoutForm {
   rentalFormId: string;
@@ -11,12 +11,12 @@ interface CheckoutForm {
 export const CreateCheckoutRequest = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfileDTO | null>(null);
-  const [activeContracts, setActiveContracts] = useState<ContractDTO[]>([]);
+  const [activeContracts, setActiveContracts] = useState<RentalFormDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState('');
-  const [selectedContractDetails, setSelectedContractDetails] = useState<ContractDTO | null>(null);
+  const [selectedContractDetails, setSelectedContractDetails] = useState<RentalFormDTO | null>(null);
 
   const [form, setForm] = useState<CheckoutForm>({
     rentalFormId: '',
@@ -49,7 +49,7 @@ export const CreateCheckoutRequest = () => {
       
       setProfile(profileData);
 
-      const rentalForms = await ApiClient.get<any[]>('/checkout-requests/rental-forms/available');
+      const rentalForms = await ApiClient.get<RentalFormDTO[]>('/checkout-requests/rental-forms/available');
       
       if (abortController.signal.aborted) return;
       setActiveContracts(rentalForms);
@@ -235,7 +235,7 @@ export const CreateCheckoutRequest = () => {
                       {rental.contract_id && (
                         <>
                           <p className="text-sm text-slate-600">
-                            Ngày bắt đầu: {new Date(rental.start_date).toLocaleDateString('vi-VN')}
+                            Ngày bắt đầu: {new Date(rental.start_date!).toLocaleDateString('vi-VN')}
                           </p>
                           <p className="text-sm text-slate-600">
                             Thời hạn thuê: {rental.stay_duration} tháng
@@ -299,7 +299,7 @@ export const CreateCheckoutRequest = () => {
                   {selectedContractDetails?.contract_id && (
                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                       <p className="text-xs text-slate-500">Thời hạn</p>
-                      <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.stay_duration} tháng, từ {new Date(selectedContractDetails?.start_date).toLocaleDateString('vi-VN')}</p>
+                      <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.stay_duration} tháng, từ {new Date(selectedContractDetails?.start_date!).toLocaleDateString('vi-VN')}</p>
                     </div>
                   )}
                 </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiClient } from '../api/ApiClient';
-import { CheckoutRequestDTO, CheckoutStatus, UserProfileDTO, ContractDTO, RefundCalculationDTO } from '@dormarch/shared';
+import { CheckoutRequestDTO, CheckoutStatus, RefundCalculationDTO } from '@dormarch/shared';
 
 type CheckoutRequestDetailResponse = {
   request: CheckoutRequestDTO;

@@ -3,6 +3,18 @@ export type PaymentMethod = 'BANK' | 'EWALLET';
 export type PaymentVerificationOutcome = 'success' | 'timeout' | 'cancel';
 export type PaymentSessionStatus = 'QR_READY' | 'VERIFYING' | 'TIMEOUT' | 'FAILED' | 'SUCCESS' | 'COMPLETED';
 
+export interface RentalFormDTO {
+  rentalFormId: string;
+  type: 'DEPOSIT' | 'FULL_PAYMENT';
+  contractId?: string;
+  startDate?: string;
+  stayDuration?: number;
+  dormName: string;
+  roomName: string;
+  floor: number;
+  bedNumbers: string;
+}
+
 export interface ApiEnvelopeDTO<T> {
   message: string;
   status: number;
