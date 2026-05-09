@@ -157,4 +157,12 @@ export class Rental {
   static async getBedsInfoByRentalFormId(rentalFormId: string): Promise<{ roomId: string; bedIds: string[] } | null> {
     return await RentalDB.getBedsInfoByRentalFormId(rentalFormId);
   }
+
+  static async getActiveRentalFormsForCheckout(userEmail: string) {
+      return await RentalDB.getActiveRentalFormsForCheckout(userEmail);
+    }
+  
+    static async getRentalFormById(rentalFormId: string) {
+      return await RentalDB.getRentalFormById(rentalFormId);
+    }
 }

@@ -1,5 +1,5 @@
 @startuml ThanhLyHopDong_SequenceDiagram
-title Sequence Diagram - UC25: Thanh lý hợp đồng
+title Sequence Diagram - UC25: Hoàn tất trả phòng
 
 skinparam {
     BackgroundColor White
@@ -13,38 +13,74 @@ autonumber
 
 actor "Nhân viên" as nv
 boundary "ScreenContractTermination" as screen
+control "CheckoutRequest" as checkoutCtrl
 control "Contract" as contract
+control "Rental" as rental
 control "Room" as room
+database "CheckoutRequestDB" as checkoutDb
 database "ContractDB" as contractDb
 database "RoomDB" as roomDb
 
 nv -> screen: show(requestId)
 activate nv
-deactivate nv
 activate screen
+screen -> checkoutCtrl: getById(requestId)
+activate checkoutCtrl
+checkoutCtrl -> checkoutDb: getById(requestId)
+activate checkoutDb
+checkoutDb --> checkoutCtrl: CheckoutRequest
+deactivate checkoutDb
+checkoutCtrl --> screen: CheckoutRequest
+deactivate checkoutCtrl
 deactivate screen
+deactivate nv
 
-nv -> screen: Nhấn "Hoàn tất thanh lý"
+nv -> screen: Nhấn "Hoàn tất trả phòng"
 activate nv
 activate screen
 
-screen -> contract: updateStatus(contractId, ContractStatus.LIQUIDATED)
+screen -> checkoutCtrl: updateStatus(requestId, LIQUIDATED)
+activate checkoutCtrl
+checkoutCtrl -> checkoutDb: updateStatus(requestId, LIQUIDATED)
+activate checkoutDb
+checkoutDb --> checkoutCtrl: bool (true)
+deactivate checkoutDb
+checkoutCtrl --> screen: bool (true)
+deactivate checkoutCtrl
+
+screen -> contract: getByRentalFormId(rentalFormId)
 activate contract
-contract -> contractDb: updateStatus(contractId, ContractStatus.LIQUIDATED)
+contract -> contractDb: getByRentalFormId(rentalFormId)
 activate contractDb
-contractDb --> contract: bool (true)
+contractDb --> contract: Contract
 deactivate contractDb
-contract --> screen: bool (true)
+contract --> screen: Contract
 deactivate contract
 
-screen -> contract: getBedsInfoByContractId(contractId)
-activate contract
-contract -> contractDb: getBedsInfoByContractId(contractId)
-activate contractDb
-contractDb --> contract: {roomId: string, bedIds: string[]}
-deactivate contractDb
-contract --> screen: {roomId: string, bedIds: string[]}
-deactivate contract
+alt Có hợp đồng
+    screen -> contract: updateStatus(contractId, LIQUIDATED)
+    activate contract
+    contract -> contractDb: updateStatus(contractId, LIQUIDATED)
+    activate contractDb
+    contractDb --> contract: bool (true)
+    deactivate contractDb
+    contract --> screen: bool (true)
+    deactivate contract
+
+    screen -> contract: getBedsInfoByContractId(contractId)
+    activate contract
+    contract -> contractDb: getBedsInfoByContractId(contractId)
+    activate contractDb
+    contractDb --> contract: {roomId: string, bedIds: string[]}
+    deactivate contractDb
+    contract --> screen: {roomId: string, bedIds: string[]}
+    deactivate contract
+else Không có hợp đồng
+    screen -> rental: getBedsInfoByRentalFormId(rentalFormId)
+    activate rental
+    rental --> screen: {roomId: string, bedIds: string[]}
+    deactivate rental
+end
 
 screen -> room: updateBedStatus(roomId, bedIds, "AVAILABLE")
 activate room

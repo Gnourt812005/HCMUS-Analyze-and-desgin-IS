@@ -207,7 +207,7 @@ CREATE TABLE checkout_requests (
 CREATE TABLE refund_calculations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     request_id UUID REFERENCES checkout_requests(id) ON DELETE CASCADE,
-    refund_form_id UUID REFERENCES rental_forms(id),
+    rental_form_id UUID REFERENCES rental_forms(id),
     deposit_amount NUMERIC(12, 2) DEFAULT 0,
     damage_fee NUMERIC(12, 2) DEFAULT 0,
     extra_fee NUMERIC(12, 2) DEFAULT 0,

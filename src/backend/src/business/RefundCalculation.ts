@@ -1,5 +1,7 @@
 import { RefundDB } from '../database/RefundDB';
 import { RefundCalculationDTO } from '@dormarch/shared';
+import { Rental } from './Rental';
+import { Contract } from './Contract';
 
 export class RefundCalculation {
   calculationId: string;
@@ -89,18 +91,17 @@ export class RefundCalculation {
       // Case 1: DEPOSIT type (chỉ cọc, chưa đăng ký thuê hết)
       if (rentalForm.type === 'DEPOSIT') {
         refundAmount = depositAmount * 0.8;
-        notes = 'Hoàn 80% tiền cọc (chỉ đặt cọc)';
+        notes = 'Hoàn 80% tiền cọc (chưa có hợp đồng)';
       }
       // Case 2: FULL type (đã cọc + đã đăng ký thuê)
       else if (rentalForm.type === 'FULL') {
         // Try to fetch contract - if no contract exists, full refund
-        const contract = await RefundDB.getContractData(rentalFormId);
+        const contract = await Contract.getByRentalFormId(rentalFormId);
 
         if (!contract) {
           // No contract: return 80% deposit + 100% registration fee paid
-          const registrationFeePaid = await RefundDB.getPaymentAmount(rentalFormId);
-          refundAmount = depositAmount * 0.8 + registrationFeePaid;
-          notes = 'Hoàn 80% tiền cọc và 100% tiền đăng ký thuê (chưa có hợp đồng)';
+          refundAmount = depositAmount * 0.8 ;
+          notes = 'Hoàn 80% tiền cọc (chưa có hợp đồng)';
         } else {
           // Contract exists - check duration
           const contractStartDate = new Date(contract.startDate);
@@ -137,22 +138,6 @@ export class RefundCalculation {
     }
   }
 
-  static async getActiveRentalFormsForCheckout(userEmail: string) {
-    return await RefundDB.getActiveRentalFormsForCheckout(userEmail);
-  }
-
-  static async getRentalFormById(rentalFormId: string) {
-    return await RefundDB.getRentalFormById(rentalFormId);
-  }
-
-  /**
-   * Gets the total registration fee (tiền đăng ký thuê) paid for a rental form
-   * This is the sum of all successful payments made by the customer
-   */
-  static async getRegistrationFeePaid(rentalFormId: string): Promise<number> {
-    return await RefundDB.getPaymentAmount(rentalFormId);
-  }
-
   static async autoCalculateRefundForNoContract(requestId: string, rentalFormId: string) {
     try {
       const existingRefund = await RefundDB.getByRequestId(requestId);
@@ -160,22 +145,21 @@ export class RefundCalculation {
         return; // Already calculated
       }
 
-      const rentalForm = await RefundDB.getRentalFormById(rentalFormId);
+      const rentalForm = await Rental.getRentalFormById(rentalFormId);
       if (!rentalForm) return;
 
-      const depositAmount = rentalForm.totalAmount;
+      // Deposit = 2 months of rent (totalAmount is 1 month)
+      const depositAmount = rentalForm.totalAmount * 2;
       let refundAmount = 0;
       let notes = '';
 
       if (rentalForm.type === 'DEPOSIT') {
         // Đã đăng ký cọc, chưa đăng ký thuê, chưa có hợp đồng: hoàn 80% tiền cọc
         refundAmount = depositAmount * 0.8;
-        notes = 'Hoàn 80% tiền cọc (chưa đăng ký thuê, chưa hợp đồng)';
+        notes = 'Hoàn 80% tiền cọc (chưa có hợp đồng)';
       } else if (rentalForm.type === 'FULL') {
-        // Đã đăng ký cọc, đã đăng ký thuê, chưa có hợp đồng: hoàn 80% tiền cọc + 100% tiền đăng ký thuê
-        const registrationFeePaid = await RefundDB.getPaymentAmount(rentalFormId);
-        refundAmount = depositAmount * 0.8 + registrationFeePaid;
-        notes = 'Hoàn 80% tiền cọc và 100% tiền đăng ký thuê (chưa có hợp đồng)';
+        refundAmount = depositAmount * 0.8;
+        notes = 'Hoàn 80% tiền cọc (chưa có hợp đồng)';
       }
 
       await RefundDB.create({
