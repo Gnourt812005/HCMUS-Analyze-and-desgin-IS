@@ -130,19 +130,6 @@ export class RefundDB {
     return result.rows;
   }
 
-  static async getPaymentAmount(rentalFormId: string): Promise<number> {
-    try {
-      const result = await dbClient.query(
-        "SELECT SUM(amount) as paid FROM payments WHERE rental_form_id = $1::uuid AND status = 'SUCCESS'",
-        [rentalFormId]
-      );
-      return Number(result.rows[0]?.paid || 0);
-    } catch (error) {
-      console.error('Error fetching payment amount:', error);
-      return 0;
-    }
-  }
-
   static async getRentalFormById(rentalFormId: string): Promise<{ id: string; userEmail: string; type: 'DEPOSIT' | 'FULL'; totalAmount: number; contract_id?: string | null } | null> {
     try {
       const result = await dbClient.query(

@@ -41,7 +41,6 @@ export const AdminRefundCalculation = () => {
   const [contract, setContract] = useState<ContractDTO | null>(null);
   const [existingCalculation, setExistingCalculation] = useState<RefundCalculationDTO | null>(null);
   const [depositAmount, setDepositAmount] = useState(0);
-  const [registrationFeeAmount, setRegistrationFeeAmount] = useState(0);
 
   const [damageInspection, setDamageInspection] = useState<DamageInspection>({
     roomCondition: '',
@@ -104,7 +103,6 @@ export const AdminRefundCalculation = () => {
         rentalForm?: any | null;
         refund?: RefundCalculationDTO | null;
         depositAmount?: number;
-        registrationFeeAmount?: number;
       }
       const detailData = await ApiClient.get<DetailResponse>(`/checkout-requests/${requestId}/details`);
       
@@ -122,11 +120,6 @@ export const AdminRefundCalculation = () => {
         setDepositAmount(detailData.depositAmount);
       }
       
-      // Set registration fee amount
-      if (detailData.registrationFeeAmount !== undefined) {
-        setRegistrationFeeAmount(detailData.registrationFeeAmount);
-      }
-
       // Check if checkout request is already liquidated (no contract case)
       if (detailData.request.status === CheckoutStatus.LIQUIDATED) {
         setError('Yêu cầu này đã được hoàn tất tự động (chưa có hợp đồng). Vui lòng quay lại danh sách.');
@@ -190,9 +183,9 @@ export const AdminRefundCalculation = () => {
         baseRefundableDeposit = initialDeposit * 0.8;
         refundRule = 'Hoàn 80% cọc (chỉ đặt cọc, chưa có hợp đồng).';
       } else {
-        // FULL type (đã cọc + đã đăng ký thuê, chưa hợp đồng): 80% tiền cọc + 100% tiền đăng ký thuê
-        baseRefundableDeposit = initialDeposit * 0.8 + registrationFeeAmount;
-        refundRule = 'Hoàn 80% cọc và 100% tiền đăng ký thuê (chưa có hợp đồng).';
+        // FULL type (đã cọc + đã đăng ký thuê, chưa hợp đồng): 80% tiền cọc
+        baseRefundableDeposit = initialDeposit * 0.8;
+        refundRule = 'Hoàn 80% cọc (chỉ đặt cọc, chưa có hợp đồng).';
       }
     } 
     // Case 2: Has contract - check duration

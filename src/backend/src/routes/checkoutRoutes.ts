@@ -76,13 +76,10 @@ checkoutRouter.get('/:id/details', async (req: Request, res: Response) => {
     const rentalForm = request.rentalFormId ? await RefundDB.getRentalFormById(request.rentalFormId) : null;
     const refund = await RefundCalculation.getByRequestId(request.requestId);
     
-    // Deposit amount = totalAmount from rental form
-    const depositAmount = rentalForm?.totalAmount || 0;
+    // Deposit amount = 2 months of rent (totalAmount is 1 month rent)
+    const depositAmount = rentalForm ? rentalForm.totalAmount * 2 : 0;
     
-    // Registration fee = total successful payments for the rental form
-    const registrationFeeAmount = request.rentalFormId ? await RefundCalculation.getRegistrationFeePaid(request.rentalFormId) : 0;
-
-    res.status(200).json({ request, rentalForm, refund, depositAmount, registrationFeeAmount });
+    res.status(200).json({ request, rentalForm, refund, depositAmount });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });
   }

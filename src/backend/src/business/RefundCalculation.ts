@@ -145,14 +145,6 @@ export class RefundCalculation {
     return await RefundDB.getRentalFormById(rentalFormId);
   }
 
-  /**
-   * Gets the total registration fee (tiền đăng ký thuê) paid for a rental form
-   * This is the sum of all successful payments made by the customer
-   */
-  static async getRegistrationFeePaid(rentalFormId: string): Promise<number> {
-    return await RefundDB.getPaymentAmount(rentalFormId);
-  }
-
   static async autoCalculateRefundForNoContract(requestId: string, rentalFormId: string) {
     try {
       const existingRefund = await RefundDB.getByRequestId(requestId);
