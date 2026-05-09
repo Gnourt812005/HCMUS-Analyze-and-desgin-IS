@@ -293,7 +293,7 @@ export const AdminCheckout = () => {
   };
 
   const formatMoney = (value: number) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value) + ' đ';
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 
   const stats = useMemo(() => ({
     total: checkoutRequests.length,
