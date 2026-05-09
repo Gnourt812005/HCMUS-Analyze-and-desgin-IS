@@ -9,50 +9,46 @@ title Sequence Diagram - UC28: Đăng ký thuê
 autonumber
 
 actor "Customer" as Actor
-boundary "ScreenDeposit" as GUI <<boundary>>
-control "Deposit" as BUS <<control>>
-database "RoomDB" as DB <<database>>
+boundary "ScreenRoomList" as GUI <<boundary>>
+control "Rental" as BUS <<control>>
+database "RentalDB" as DB <<database>>
 
-Actor -> GUI : Chọn phòng/giường
-GUI -> BUS : checkDepositHistory(roomId, idCard)
-BUS -> DB : Truy vấn trạng thái cọc
+Actor -> GUI : Chọn phòng
+GUI -> BUS : Truy vấn trạng thái (hasUserDeposit)
 
-alt Nếu đã có lịch sử đặt cọc
-    DB --> BUS : Đã có cọc
-    BUS --> GUI : Yêu cầu khóa số lượng giường
-    GUI -> Actor : Hiển thị thông báo & Khóa UI số lượng
-end
-
-GUI -> Actor : Hiển thị form thông tin khách hàng
-Actor -> GUI : Nhập thông tin cá nhân và xác nhận
-GUI -> BUS : validateAndProcess(customerData, roomId)
-
-alt Thông tin không hợp lệ
-    BUS --> GUI : Lỗi kiểm tra dữ liệu
-    GUI --> Actor : Hiển thị lỗi
-
-else Thông tin hợp lệ
-    BUS -> BUS : Gọi UC15 (Kiểm tra điều kiện)
-    Actor -> GUI : Nhấn "Thanh toán"
-    BUS -> DB : getRoomPriceFromBed(roomId, BedId)
-    DB --> BUS : Đơn giá
-
-    BUS -> BUS : calculateAmount(isAlreadyDeposited)
-    BUS --> GUI : showSummary(amount)
-
-    alt Đã đặt cọc trước đó
-        BUS --> GUI : Hiển thị summary đã trừ cọc
+alt Nếu khách đã đặt cọc phòng này (Fast-track)
+    Actor -> GUI : Nhấn "Tiếp tục thanh toán"
+    GUI -> BUS : previewPayment(registrationId, action: 'FULL_PAYMENT')
+    BUS --> GUI : Trả về tóm tắt thanh toán (Tiền thuê)
+    GUI -> BUS : Gọi UC16 (Thanh toán)
+else Nếu khách chưa đặt cọc
+    Actor -> GUI : Chọn giường & Nhấn "Đăng ký thuê"
+    GUI -> BUS : Gọi UC15 (Kiểm tra điều kiện & Đồng ý nội quy)
+    GUI -> Actor : Hiển thị form thông tin khách hàng
+    Actor -> GUI : Nhập thông tin cá nhân và xác nhận
+    
+    GUI -> BUS : register(customerData, roomId, bedIds)
+    BUS -> BUS : checkEligibility()
+    BUS -> BUS : Kiểm tra xác nhận nội quy (hasConfirmedPolicy)
+    
+    alt Thông tin/Điều kiện không hợp lệ
+        BUS --> GUI : Lỗi kiểm tra dữ liệu
+        GUI --> Actor : Hiển thị thông báo lỗi
+    else Hợp lệ
+        BUS -> DB : createRegistration(type: 'DEPOSIT')
+        DB --> BUS : registrationId
+        BUS -> BUS : previewPayment(registrationId, action: 'DEPOSIT')
+        BUS --> GUI : Trả về tóm tắt thanh toán (Tiền cọc)
+        GUI --> Actor : Hiển thị Summary
+        
+        alt Thay đổi thông tin
+            Actor -> GUI : Nhấn "Thay đổi thông tin" / "Quay lại"
+            GUI --> Actor : Quay lại bước chọn giường
+        else Xác nhận thanh toán
+            Actor -> GUI : Nhấn "Thanh toán"
+            GUI -> BUS : Gọi UC16 (Thanh toán)
+        end
     end
-
-    alt Thay đổi thông tin
-        Actor -> GUI : Nhấn "Thay đổi thông tin"
-        GUI --> Actor : Quay lại bước chọn
-    else Xác nhận thanh toán
-        Actor -> GUI : Nhấn "Thanh toán"
-        GUI -> BUS : Gọi UC16 (Thanh toán)
-        BUS --> GUI : Chuyển hướng thanh toán
-    end
-
 end
 
 @enduml

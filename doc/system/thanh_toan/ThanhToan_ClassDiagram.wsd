@@ -10,27 +10,38 @@ class "ScreenPayment" <<boundary>> {
 }
 
 class "Payment" <<control>> {
-    - invoiceId: String
-    - contractId: String
-    - method: String
-    - amount: Double
-    - paymentDate: Date
-    - signDate: Date
-    - status: String
-    + <<static>> createPaymentCode(method)
-    + <<static>> verifyTransaction()
-    + <<static>> updateRoomStatus()
+    + <<static>> createPaymentCode(payload)
+    + <<static>> verifyTransaction(payload)
+    + <<static>> finalizePayment(payload)
+    + <<static>> getPaymentStatus(sessionId)
+}
+
+class "Rental" <<control>> {
+    + <<static>> previewPayment(payload)
 }
 
 class "PaymentDB" <<entity>> {
-    + saveInvoice()
+    + <<static>> createSession()
+    + <<static>> getSession()
+    + <<static>> updateSessionStatus()
+    + <<static>> createInvoice()
 }
-class "ContractDB" <<entity>> {
-    + create()
+
+class "RentalDB" <<entity>> {
+    + <<static>> getRegistration()
+    + <<static>> markDeposited()
+    + <<static>> markFullyPaid()
+    + <<static>> markBooked()
+}
+
+class "RoomDB" <<entity>> {
+    + <<static>> markBedsStatus()
 }
 
 "ScreenPayment" ..> "Payment"
+"Payment" ..> "Rental"
 "Payment" ..> "PaymentDB"
-"Payment" ..> "ContractDB"
+"Payment" ..> "RentalDB"
+"Payment" ..> "RoomDB"
 
 @enduml

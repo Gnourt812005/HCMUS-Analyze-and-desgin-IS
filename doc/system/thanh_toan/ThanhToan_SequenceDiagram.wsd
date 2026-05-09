@@ -1,6 +1,6 @@
 @startuml ThanhToan_SequenceDiagram
 
-title Sequence Diagram - Thanh toán (UC15)
+title Sequence Diagram - Thanh toán (UC16)
 
 autonumber
 
@@ -8,37 +8,40 @@ actor "Customer" as Actor
 boundary "ScreenPayment" as GUI <<boundary>>
 control "Payment" as BUS <<control>>
 database "PaymentDB" as DB <<database>>
+database "RentalDB" as RDB <<database>>
 
 Actor -> GUI : Nhấn nút thanh toán
-GUI -> BUS : getPaymentDetails()
-BUS --> GUI : Hiển thị tiền cọc & tiền phòng
-
-Actor -> GUI : Chọn phương thức thanh toán (Ngân hàng/Ví điện tử)
-GUI -> BUS : createPaymentCode(method)
+GUI -> BUS : createPaymentCode(registrationId, method, action)
 
 alt Lỗi khởi tạo mã
     BUS --> GUI : Lỗi hệ thống
     GUI --> Actor : Thông báo lỗi & Thử lại
 else Thành công
-    BUS --> GUI : Hiển thị mã QR
+    BUS --> GUI : Trả về PaymentSessionDTO (Mã QR)
+    GUI --> Actor : Hiển thị mã QR
     
-    alt Khách hàng hủy/không quét mã
-        Actor -> GUI : Không có hành động thanh toán
-        GUI --> Actor : Hiển thị thông báo "Thử lại?"
-    else Quét mã QR
-        Actor -> GUI : Quét mã và hoàn tất trên App Ngân hàng
-        GUI -> BUS : verifyTransaction()
+    Actor -> GUI : Quét mã trên App Ngân hàng
+    GUI -> BUS : verifyTransaction(sessionId)
+    
+    alt Không nhận được phản hồi (Timeout / Cancel)
+        BUS --> GUI : Trạng thái TIMEOUT / FAILED
+        GUI --> Actor : Thông báo lỗi kết nối / Đã hủy
+    else Thành công
+        BUS --> GUI : Trạng thái SUCCESS
         
-        alt Không nhận được phản hồi từ Ngân hàng
-            BUS --> GUI : Hết thời gian chờ (timeout)
-            GUI --> Actor : Thông báo lỗi kết nối
-        else Thành công
-            BUS -> DB : saveInvoice(invoiceId, date)
-            DB --> BUS : Thành công
-            BUS -> BUS : generateElectronicInvoice()
-            BUS --> GUI : showSuccess(Invoice)
-            GUI --> Actor : Thông báo thành công & Gửi hóa đơn
+        GUI -> BUS : finalizePayment(sessionId)
+        
+        alt Nếu action == 'DEPOSIT'
+            BUS -> DB : createInvoice()
+            BUS -> RDB : markDeposited (Cập nhật giường -> DEPOSITED)
+        else Nếu action == 'FULL_PAYMENT'
+            BUS -> DB : createInvoice() (Hóa đơn cọc nếu cần)
+            BUS -> RDB : Tạo rental_form mới (type: 'FULL')
+            BUS -> RDB : markBooked (Cập nhật giường -> BOOKED)
         end
+        
+        BUS --> GUI : Hoàn tất thanh toán
+        GUI --> Actor : Thông báo thành công & Gửi hóa đơn
     end
 end
 

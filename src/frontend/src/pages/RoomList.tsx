@@ -127,7 +127,7 @@ export const RoomList = () => {
         return originalRooms.filter((room) => {
             const priceMatch = room.price >= filters.priceRange[0] && room.price <= filters.priceRange[1];
             const blockMatch = !filters.block || room.block === filters.block;
-            const availableBedsMatch = filters.availableBeds === null || room.availableBeds >= filters.availableBeds;
+            const availableBedsMatch = room.hasUserDeposit || filters.availableBeds === null || room.availableBeds >= filters.availableBeds;
             const totalBedsMatch = filters.totalBeds === null || room.totalBeds === filters.totalBeds;
 
             return priceMatch && blockMatch && availableBedsMatch && totalBedsMatch;
