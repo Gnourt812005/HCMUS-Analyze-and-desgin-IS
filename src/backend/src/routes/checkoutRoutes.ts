@@ -4,7 +4,6 @@ import { Contract } from '../business/Contract';
 import { Room } from '../business/Room';
 import { Rental } from '../business/Rental';
 import { RefundCalculation } from '../business/RefundCalculation';
-import { RefundDB } from '../database/RefundDB';
 import { CheckoutStatus, ContractStatus, RefundCalculationDTO } from '@dormarch/shared';
 import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
 
@@ -44,7 +43,7 @@ checkoutRouter.get('/rental-forms/available', authMiddleware, async (req: AuthRe
     }
 
     // Get active rental forms without active checkout requests
-    const rentalForms = await RefundDB.getActiveRentalFormsForCheckout(userEmail);
+    const rentalForms = await Rental.getActiveRentalFormsForCheckout(userEmail);
     res.status(200).json(rentalForms);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });
@@ -73,7 +72,7 @@ checkoutRouter.get('/:id/details', async (req: Request, res: Response) => {
     }
 
     // Fetch rental form data and refund calculation
-    const rentalForm = request.rentalFormId ? await RefundDB.getRentalFormById(request.rentalFormId) : null;
+    const rentalForm = request.rentalFormId ? await Rental.getRentalFormById(request.rentalFormId) : null;
     const refund = await RefundCalculation.getByRequestId(request.requestId);
     
     // Deposit amount = 2 months of rent (totalAmount is 1 month rent)
@@ -94,7 +93,7 @@ checkoutRouter.post('/', async (req: Request, res: Response) => {
       return;
     }
 
-    const rentalForm = await RefundDB.getRentalFormById(rentalFormId);
+    const rentalForm = await Rental.getRentalFormById(rentalFormId);
     if (!rentalForm) {
       res.status(400).json({ message: 'Không tìm thấy phiếu đăng ký thuê.' });
       return;

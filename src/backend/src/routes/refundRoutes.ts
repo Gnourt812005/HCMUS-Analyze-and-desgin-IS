@@ -5,16 +5,16 @@ export const refundRouter = Router();
 
 refundRouter.post('/calculate', async (req: Request, res: Response) => {
   try {
-    const { refundFormId, depositAmount } = req.body;
+    const { rentalFormId, depositAmount } = req.body;
 
-    if (!refundFormId || depositAmount === undefined) {
-      res.status(400).json({ message: 'refundFormId và depositAmount là bắt buộc' });
+    if (!rentalFormId || depositAmount === undefined) {
+      res.status(400).json({ message: 'rentalFormId và depositAmount là bắt buộc' });
       return;
     }
 
     const result = await RefundCalculation.calculateRefundAmount(
       '',
-      refundFormId,
+      rentalFormId,
       depositAmount
     );
 
@@ -52,7 +52,7 @@ refundRouter.get('/:calculationId', async (req: Request, res: Response) => {
 
 refundRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const { requestId, contractId, depositAmount, damageFee, extraDebt, extraFee, finalRefundAmount, notes } = req.body;
+    const { requestId, rentalFormId, depositAmount, damageFee, extraDebt, extraFee, finalRefundAmount, notes } = req.body;
 
     if (!requestId || depositAmount === undefined || damageFee === undefined) {
       res.status(400).json({ message: 'requestId, depositAmount, và damageFee là bắt buộc' });
@@ -61,7 +61,7 @@ refundRouter.post('/', async (req: Request, res: Response) => {
 
     const newCalculation = await RefundCalculation.create({
       requestId,
-      refundFormId: contractId,
+      rentalFormId,
       depositAmount,
       damageFee,
       extraFee: extraFee !== undefined ? extraFee : extraDebt || 0,
