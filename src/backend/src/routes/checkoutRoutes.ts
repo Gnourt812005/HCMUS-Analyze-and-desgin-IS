@@ -173,7 +173,7 @@ checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
   }
 });
 
-checkoutRouter.patch('/:id/complete-liquidation', async (req: Request, res: Response) => {
+checkoutRouter.patch('/:id/complete-checkout', async (req: Request, res: Response) => {
   try {
     const { status, expectedStatus } = req.body;
 

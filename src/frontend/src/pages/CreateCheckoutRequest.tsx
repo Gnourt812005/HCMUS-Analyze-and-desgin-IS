@@ -207,9 +207,9 @@ export const CreateCheckoutRequest = () => {
               <div className="grid gap-3">
                 {activeContracts.map((rental) => (
                   <label
-                    key={rental.rental_form_id}
+                    key={rental.rentalFormId}
                     className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                      form.rentalFormId === rental.rental_form_id
+                      form.rentalFormId === rental.rentalFormId
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-slate-200 bg-slate-50 hover:border-slate-300'
                     }`}
@@ -217,28 +217,28 @@ export const CreateCheckoutRequest = () => {
                     <input
                       type="radio"
                       name="roomSelection"
-                      value={rental.rental_form_id}
-                      checked={form.rentalFormId === rental.rental_form_id}
+                      value={rental.rentalFormId}
+                      checked={form.rentalFormId === rental.rentalFormId}
                       onChange={(e) => setForm({ ...form, rentalFormId: e.target.value })}
                       className="mt-1"
                     />
                     <div className="flex-1">
                       <p className="font-semibold text-slate-900">
-                        {rental.dorm_name} - Tầng {rental.floor} - Phòng {rental.room_name}
+                        {rental.dormName} - Tầng {rental.floor} - Phòng {rental.roomName}
                       </p>
                       <p className="text-sm text-slate-600">
-                        Giường: {rental.bed_numbers}
+                        Giường: {rental.bedNumbers}
                       </p>
                       <p className="text-sm text-slate-600">
                         Loại: {rental.type === 'DEPOSIT' ? 'Tiền cọc' : 'Toàn bộ'}
                       </p>
-                      {rental.contract_id && (
+                      {rental.contractId && (
                         <>
                           <p className="text-sm text-slate-600">
-                            Ngày bắt đầu: {new Date(rental.start_date!).toLocaleDateString('vi-VN')}
+                            Ngày bắt đầu: {new Date(rental.startDate!).toLocaleDateString('vi-VN')}
                           </p>
                           <p className="text-sm text-slate-600">
-                            Thời hạn thuê: {rental.stay_duration} tháng
+                            Thời hạn thuê: {rental.stayDuration} tháng
                           </p>
                         </>
                       )}
@@ -278,11 +278,11 @@ export const CreateCheckoutRequest = () => {
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Ký túc xá</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.dorm_name}</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.dormName}</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Phòng</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.room_name}</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.roomName}</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Tầng</p>
@@ -290,16 +290,16 @@ export const CreateCheckoutRequest = () => {
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Giường</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.bed_numbers}</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.bedNumbers}</p>
                   </div>
                   <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Loại</p>
                     <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.type === 'DEPOSIT' ? 'Tiền cọc' : 'Toàn bộ'}</p>
                   </div>
-                  {selectedContractDetails?.contract_id && (
+                  {selectedContractDetails?.contractId && (
                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                       <p className="text-xs text-slate-500">Thời hạn</p>
-                      <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.stay_duration} tháng, từ {new Date(selectedContractDetails?.start_date!).toLocaleDateString('vi-VN')}</p>
+                      <p className="mt-2 text-sm font-semibold text-slate-900">{selectedContractDetails?.stayDuration} tháng, từ {new Date(selectedContractDetails?.startDate!).toLocaleDateString('vi-VN')}</p>
                     </div>
                   )}
                 </div>

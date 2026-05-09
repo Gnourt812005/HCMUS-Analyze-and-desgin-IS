@@ -85,14 +85,14 @@ export const AdminLiquidation = () => {
       setFinalizing(true);
       setError(null);
 
-      await ApiClient.patch(`/checkout-requests/${checkoutRequest.requestId}/complete-liquidation`, {
+      await ApiClient.patch(`/checkout-requests/${checkoutRequest.requestId}/complete-checkout`, {
         body: JSON.stringify({
           status: CheckoutStatus.LIQUIDATED,
           expectedStatus: checkoutRequest.status
         })
       });
       
-      showSuccess('Hoàn tất thanh lý thành công!');
+      showSuccess('Hoàn tất trả phòng thành công!');
       setTimeout(() => {
         navigate('/admin/checkout');
       }, 1500);
