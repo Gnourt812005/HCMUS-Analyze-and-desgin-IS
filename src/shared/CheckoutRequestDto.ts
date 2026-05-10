@@ -10,6 +10,7 @@ export interface CheckoutRequestDTO {
   code?: string;
   userEmail: string;
   userFullName?: string;
+  dormId?: string;
   dormName?: string;
   roomName?: string;
   floor?: number;

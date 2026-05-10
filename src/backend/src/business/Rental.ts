@@ -6,12 +6,143 @@ import {
   RentalEligibilityRequestDTO,
   RentalRegistrationDTO,
   RentalRegistrationRequestDTO,
-  SummaryItemDTO
+  SummaryItemDTO,
+  RentalFormCheckoutDTO,
+  RentalFormBedDTO
 } from '@dormarch/shared';
 import { randomUUID } from 'crypto';
 import { RentalDB } from '../database/RentalDB';
 import { OrderDB } from '../database/OrderDB';
 import { Policy } from './Policy';
+
+export class RentalFormCheckout {
+  rentalFormId: string;
+  userEmail: string;
+  type: 'DEPOSIT' | 'FULL';
+  totalAmount: number;
+  contractId?: string;
+  startDate?: string;
+  stayDuration?: number;
+  dormId?: string;
+  dormName?: string;
+  roomName?: string;
+  floor?: number;
+  bedNumbers?: string;
+
+  constructor(data: {
+    rentalFormId: string;
+    userEmail: string;
+    type: 'DEPOSIT' | 'FULL';
+    totalAmount: number;
+    contractId?: string;
+    startDate?: string;
+    stayDuration?: number;
+    dormId?: string;
+    dormName?: string;
+    roomName?: string;
+    floor?: number;
+    bedNumbers?: string;
+  }) {
+    this.rentalFormId = data.rentalFormId;
+    this.userEmail = data.userEmail;
+    this.type = data.type;
+    this.totalAmount = data.totalAmount;
+    this.contractId = data.contractId;
+    this.startDate = data.startDate;
+    this.stayDuration = data.stayDuration;
+    this.dormId = data.dormId;
+    this.dormName = data.dormName;
+    this.roomName = data.roomName;
+    this.floor = data.floor;
+    this.bedNumbers = data.bedNumbers;
+  }
+
+  toDTO(): RentalFormCheckoutDTO {
+    return {
+      rentalFormId: this.rentalFormId,
+      userEmail: this.userEmail,
+      type: this.type,
+      totalAmount: this.totalAmount,
+      contractId: this.contractId,
+      startDate: this.startDate,
+      stayDuration: this.stayDuration,
+      dormId: this.dormId,
+      dormName: this.dormName,
+      roomName: this.roomName,
+      floor: this.floor,
+      bedNumbers: this.bedNumbers
+    };
+  }
+
+  static async getActiveRentalFormsForCheckout(userEmail: string, dormId?: string): Promise<RentalFormCheckoutDTO[]> {
+    const results = await RentalDB.getActiveRentalFormsForCheckout(userEmail, dormId);
+    return results.map(result => {
+      const rentalFormCheckout = new RentalFormCheckout({
+        rentalFormId: result.rentalFormId,
+        userEmail: userEmail,
+        type: result.type,
+        totalAmount: result.total_amount,
+        contractId: result.contractId,
+        startDate: result.startDate,
+        stayDuration: result.stayDuration,
+        dormId: result.dormId,
+        dormName: result.dormName,
+        roomName: result.roomName,
+        floor: result.floor,
+        bedNumbers: result.bedNumbers
+      });
+      return rentalFormCheckout.toDTO();
+    });
+  }
+
+  static async getRentalFormById(rentalFormId: string): Promise<RentalFormCheckoutDTO | null> {
+      const result = await RentalDB.getRentalFormById(rentalFormId);
+      if (!result) {
+        return null;
+      }
+      const rentalFormCheckout = new RentalFormCheckout({
+        rentalFormId: result.id,
+        userEmail: result.userEmail,
+        type: result.type,
+        totalAmount: result.totalAmount,
+        contractId: result.contractId || undefined,
+        dormId: result.dormId || undefined
+      });
+      return rentalFormCheckout.toDTO();
+    }
+}
+
+export class RentalFormBed {
+  roomId: string;
+  bedIds: string[];
+
+  constructor(data: {
+    roomId: string;
+    bedIds: string[];
+  }) {
+    this.roomId = data.roomId;
+    this.bedIds = data.bedIds;
+  }
+
+  toDTO(): RentalFormBedDTO {
+    return {
+      roomId: this.roomId,
+      bedIds: this.bedIds
+    };
+  }
+
+  static async getBedsInfoByRentalFormId(rentalFormId: string): Promise<RentalFormBedDTO | null> {
+    const bedInfo = await RentalDB.getBedsInfoByRentalFormId(rentalFormId);
+    if (!bedInfo) {
+      return null;
+    }
+    const rentalFormBed = new RentalFormBed({
+      roomId: bedInfo.roomId,
+      bedIds: bedInfo.bedIds
+    });
+    return rentalFormBed.toDTO();
+  }
+}
 
 export class Rental {
   static getConditions(): RentalConditionDTO[] {
@@ -150,17 +281,5 @@ export class Rental {
 
   static async getAllOrders() {
     return OrderDB.getAllOrders();
-  }
-
-  static async getBedsInfoByRentalFormId(rentalFormId: string): Promise<{ roomId: string; bedIds: string[] } | null> {
-    return await RentalDB.getBedsInfoByRentalFormId(rentalFormId);
-  }
-
-  static async getActiveRentalFormsForCheckout(userEmail: string) {
-      return await RentalDB.getActiveRentalFormsForCheckout(userEmail);
-    }
-  
-    static async getRentalFormById(rentalFormId: string) {
-      return await RentalDB.getRentalFormById(rentalFormId);
-    }
+  } 
 }

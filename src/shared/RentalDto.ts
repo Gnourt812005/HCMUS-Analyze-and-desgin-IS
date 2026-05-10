@@ -9,6 +9,7 @@ export interface RentalFormDTO {
   contractId?: string;
   startDate?: string;
   stayDuration?: number;
+  dormId?: string;
   dormName: string;
   roomName: string;
   floor: number;
@@ -152,4 +153,24 @@ export interface RetryPaymentRequestDTO {
 
 export interface FinalizePaymentRequestDTO {
   sessionId: string;
+}
+
+export interface RentalFormCheckoutDTO {
+  rentalFormId: string;
+  userEmail: string;
+  type: 'DEPOSIT' | 'FULL';
+  totalAmount: number;
+  contractId?: string;
+  startDate?: string;
+  stayDuration?: number;
+  dormId?: string;
+  dormName?: string;
+  roomName?: string;
+  floor?: number;
+  bedNumbers?: string;
+}
+
+export interface RentalFormBedDTO {
+  roomId: string;
+  bedIds: string[];
 }

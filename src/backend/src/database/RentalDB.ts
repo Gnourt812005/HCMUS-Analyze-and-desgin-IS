@@ -494,7 +494,7 @@ export class RentalDB {
     }
   }
   
-  static async getActiveRentalFormsForCheckout(userEmail: string): Promise<any[]> {
+  static async getActiveRentalFormsForCheckout(userEmail: string, dormId?: string): Promise<any[]> {
     const sql = `
       SELECT
         rf.id as rental_form_id,
@@ -505,6 +505,7 @@ export class RentalDB {
         c.start_date,
         c.stay_duration,
         (SELECT full_name FROM users WHERE email = $1 LIMIT 1) as user_full_name,
+        (SELECT d.id FROM rental_form_beds rfb JOIN beds b ON b.id = rfb.bed_id JOIN rooms r ON r.id = b.room_id JOIN dorms d ON d.id = r.dorm_id WHERE rfb.rental_form_id = rf.id LIMIT 1) as dorm_id,
         (SELECT d.name FROM rental_form_beds rfb JOIN beds b ON b.id = rfb.bed_id JOIN rooms r ON r.id = b.room_id JOIN dorms d ON d.id = r.dorm_id WHERE rfb.rental_form_id = rf.id LIMIT 1) as dorm_name,
         (SELECT r.name FROM rental_form_beds rfb JOIN beds b ON b.id = rfb.bed_id JOIN rooms r ON r.id = b.room_id WHERE rfb.rental_form_id = rf.id LIMIT 1) as room_name,
         (SELECT r.floor FROM rental_form_beds rfb JOIN beds b ON b.id = rfb.bed_id JOIN rooms r ON r.id = b.room_id WHERE rfb.rental_form_id = rf.id LIMIT 1) as floor,
@@ -512,31 +513,53 @@ export class RentalDB {
       FROM rental_forms rf
       LEFT JOIN contracts c ON c.rental_form_id = rf.id
       WHERE rf.user_email = $1
+      ${dormId ? `AND (SELECT d.id FROM rental_form_beds rfb JOIN beds b ON b.id = rfb.bed_id JOIN rooms r ON r.id = b.room_id JOIN dorms d ON d.id = r.dorm_id WHERE rfb.rental_form_id = rf.id LIMIT 1) = $2` : ''}
       AND NOT EXISTS (
-        SELECT 1 FROM checkout_requests 
-        WHERE refund_form_id = rf.id AND status IN ('PENDING', 'PROCESSING', 'LIQUIDATED')
+        SELECT 1 FROM checkout_requests cr
+        INNER JOIN rental_form_beds rfb ON cr.refund_form_id = rfb.rental_form_id
+        WHERE rfb.bed_id IN (
+          SELECT bed_id FROM rental_form_beds WHERE rental_form_id = rf.id
+        )
+        AND cr.status IN ('PENDING', 'PROCESSING', 'LIQUIDATED')
       )
       ORDER BY rf.created_at DESC
     `;
-    const result = await dbClient.query(sql, [userEmail]);
-    return result.rows.map(this.mapRentalFormRow);
-  }
-
-  private static mapRentalFormRow(row: any): any {
-    return {
+    const params = dormId ? [userEmail, dormId] : [userEmail];
+    const result = await dbClient.query(sql, params);
+    const mappedRows = result.rows.map((row: any) => ({
       rentalFormId: row.rental_form_id,
       type: row.type,
-      contractId: row.contract_id || undefined,
-      startDate: row.start_date || undefined,
-      stayDuration: row.stay_duration || undefined,
+      total_amount: row.total_amount,
+      deadline: row.deadline,
+      contractId: row.contract_id,
+      startDate: row.start_date,
+      stayDuration: row.stay_duration,
+      userFullName: row.user_full_name,
+      dormId: row.dorm_id,
       dormName: row.dorm_name,
       roomName: row.room_name,
       floor: row.floor,
-      bedNumbers: row.bed_numbers,
-    };
+      bedNumbers: row.bed_numbers
+    }));
+    
+    // Deduplicate rental forms by bed (dorm + room + bed_numbers)
+    // Keep FULL type if both DEPOSIT and FULL exist for same bed
+    const deduplicatedMap = new Map<string, any>();
+    
+    for (const row of mappedRows) {
+      const bedKey = `${row.dormName}|${row.roomName}|${row.bedNumbers}`;
+      const existing = deduplicatedMap.get(bedKey);
+      
+      // Keep existing FULL type, or replace DEPOSIT with FULL
+      if (!existing || row.type === 'FULL') {
+        deduplicatedMap.set(bedKey, row);
+      }
+    }
+    
+    return Array.from(deduplicatedMap.values());
   }
 
-  static async getRentalFormById(rentalFormId: string): Promise<{ id: string; userEmail: string; type: 'DEPOSIT' | 'FULL'; totalAmount: number; contractId?: string | null } | null> {
+  static async getRentalFormById(rentalFormId: string): Promise<{ id: string; userEmail: string; type: 'DEPOSIT' | 'FULL'; totalAmount: number; contractId?: string | null; dormId?: string | null } | null> {
     try {
       const result = await dbClient.query(
         `SELECT 
@@ -553,12 +576,33 @@ export class RentalDB {
       if (result.rows.length === 0) return null;
       
       const row = result.rows[0];
+      
+      // Fetch dormId separately
+      let dormId: string | null = null;
+      try {
+        const dormResult = await dbClient.query(
+          `SELECT DISTINCT d.id FROM rental_form_beds rfb
+           JOIN beds b ON rfb.bed_id = b.id
+           JOIN rooms r ON b.room_id = r.id
+           JOIN dorms d ON r.dorm_id = d.id
+           WHERE rfb.rental_form_id = $1
+           LIMIT 1`,
+          [rentalFormId]
+        );
+        if (dormResult.rows.length > 0) {
+          dormId = dormResult.rows[0].id;
+        }
+      } catch (dormError) {
+        console.error('Error fetching dorm ID:', dormError);
+      }
+      
       return {
         id: row.id,
         userEmail: row.user_email,
         type: row.type as 'DEPOSIT' | 'FULL',
         totalAmount: row.total_amount,
-        contractId: row.contract_id || null
+        contractId: row.contract_id || null,
+        dormId: dormId
       };
     } catch (error) {
       console.error('Error fetching rental form:', error);

@@ -7,6 +7,7 @@ export class CheckoutRequest {
   userEmail: string;
   userFullName?: string;
   rentalFormId?: string;
+  dormId?: string;
   dormName?: string;
   roomName?: string;
   floor?: number;
@@ -21,6 +22,7 @@ export class CheckoutRequest {
     this.userEmail = data.userEmail || '';
     this.userFullName = data.userFullName;
     this.rentalFormId = data.rentalFormId;
+    this.dormId = data.dormId;
     this.dormName = data.dormName;
     this.roomName = data.roomName;
     this.floor = data.floor;
@@ -37,6 +39,7 @@ export class CheckoutRequest {
       userEmail: this.userEmail,
       userFullName: this.userFullName,
       rentalFormId: this.rentalFormId,
+      dormId: this.dormId,
       dormName: this.dormName,
       roomName: this.roomName,
       floor: this.floor,
@@ -47,13 +50,13 @@ export class CheckoutRequest {
     };
   }
 
-  static async getList(): Promise<CheckoutRequestDTO[]> {
-    const requestModels = await CheckoutRequestDB.getAll();
+  static async getList(dormId?: string): Promise<CheckoutRequestDTO[]> {
+    const requestModels = await CheckoutRequestDB.getAll(dormId);
     return requestModels.map(model => new CheckoutRequest(model).toDto());
   }
 
-  static async getListByUserEmail(userEmail: string): Promise<CheckoutRequestDTO[]> {
-    const requestModels = await CheckoutRequestDB.getByUserEmail(userEmail);
+  static async getListByUserEmail(userEmail: string, dormId?: string): Promise<CheckoutRequestDTO[]> {
+    const requestModels = await CheckoutRequestDB.getByUserEmail(userEmail, dormId);
     return requestModels.map(model => new CheckoutRequest(model).toDto());
   }
 
@@ -103,8 +106,8 @@ export class CheckoutRequest {
     return { success: true, request: fullRequest || undefined };
   }
 
-  static async getById(requestId: string): Promise<CheckoutRequestDTO | null> {
-    const requestModel = await CheckoutRequestDB.getById(requestId);
+  static async getById(requestId: string, dormId?: string): Promise<CheckoutRequestDTO | null> {
+    const requestModel = await CheckoutRequestDB.getById(requestId, dormId);
     return requestModel ? new CheckoutRequest(requestModel).toDto() : null;
   }
 
