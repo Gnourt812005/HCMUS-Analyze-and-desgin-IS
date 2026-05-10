@@ -274,7 +274,7 @@ export const AdminRoomDetail = () => {
                                                                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
                                                                         status === 'GOOD' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
                                                                     }`}>
-                                                                        {status === 'GOOD' ? 'Hoạt động tốt' : 'Cần bảo trì'}
+                                                                    {status === 'GOOD' ? 'Hoạt động tốt' : 'Cần bảo trì'}
                                                                     </span>
                                                                 </td>
                                                                 <td className="px-4 py-3 text-right">
@@ -349,7 +349,7 @@ export const AdminRoomDetail = () => {
                             {isEditing && (
                                 <button type="submit" disabled={isSubmitting} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 active:scale-[0.98]">
                                     <span className="material-symbols-outlined text-[20px]">save</span>
-                                    {isSubmitting ? 'Đ đang lưu...' : (isNew ? 'Tạo phòng mới' : 'Lưu thay đổi')}
+                                    {isSubmitting ? 'Đang lưu...' : (isNew ? 'Tạo phòng mới' : 'Lưu thay đổi')}
                                 </button>
                             )}
                         </form>

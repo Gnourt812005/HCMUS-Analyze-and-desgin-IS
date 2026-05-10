@@ -32,7 +32,7 @@ export const AdminSidebar = () => {
       {/* Brand Identity */}
       <div className="p-6 flex flex-col gap-1 cursor-pointer" onClick={() => navigate('/')}>
         <span className="text-xl font-black tracking-tighter text-blue-800">DormArch</span>
-        <span className="font-manrope font-bold tracking-tight text-xs uppercase opacity-60">Management Portal</span>
+        <span className="font-manrope font-bold tracking-tight text-xs uppercase opacity-60">Cổng quản lý</span>
       </div>
 
       {/* Navigation Links */}

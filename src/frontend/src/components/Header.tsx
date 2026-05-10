@@ -41,8 +41,8 @@ export const Header = () => {
                   className="bg-slate-900 text-white px-4 py-2 text-sm font-bold rounded-lg hover:bg-slate-800 transition-all flex items-center gap-2 mr-2"
                   title="Truy cập dành cho Ban quản lý"
                 >
-                  <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
-                  Admin Portal
+                  <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                  Trang quản trị
                 </button>
               )}
               <button

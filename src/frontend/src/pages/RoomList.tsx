@@ -249,7 +249,7 @@ export const RoomList = () => {
                 }, 2000);
             }
         } catch (error: any) {
-            setPreviewError(error.message || "Failed to book preview");
+            setPreviewError(error.message || "Không thể đăng ký xem phòng");
         }
     };
 

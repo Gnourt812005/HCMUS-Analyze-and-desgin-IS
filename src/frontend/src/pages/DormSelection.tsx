@@ -31,7 +31,7 @@ export const DormSelection = () => {
                     setDorms(res.data.dorms);
                 }
             } catch (error) {
-                console.error("Failed to fetch dorms", error);
+                alert('Không thể đăng ký xem phòng. Vui lòng thử lại sau.');
             } finally {
                 setLoading(false);
             }
@@ -132,7 +132,7 @@ export const DormSelection = () => {
                                             disabled={dorm.status === "Hết phòng"}
                                             className="w-full rounded-lg border-2 border-red-500 bg-white px-6 py-3 font-semibold text-red-500 transition-all hover:bg-red-500 hover:text-white disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400 disabled:hover:bg-white"
                                         >
-                                            {dorm.status === "Hết phòng" ? "Hết phòng" : "Select"}
+                                            {dorm.status === "Hết phòng" ? "Hết phòng" : "Chọn"}
                                         </button>
                                     </div>
                                 </div>
