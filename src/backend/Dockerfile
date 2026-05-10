@@ -18,6 +18,10 @@ RUN npm install
 # Build shared first
 RUN npm run build -w shared
 
+# Build the backend
+RUN npm run build -w backend
+
 EXPOSE 3001
 
-CMD ["npm", "run", "dev", "-w", "backend"]
+# Start backend using the workspace command
+CMD ["npm", "start", "-w", "backend"]

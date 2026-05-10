@@ -104,13 +104,13 @@ export class RefundCalculation {
           notes = 'Hoàn 80% tiền cọc và 100% tiền đăng ký thuê (chưa có hợp đồng)';
         } else {
           // Contract exists - check duration
-          const contractStartDate = new Date(contract.startDate ?? new Date().toISOString());
+          const contractStartDate = new Date(contract.startDate);
           const currentDate = new Date();
           const monthsDiff = (currentDate.getFullYear() - contractStartDate.getFullYear()) * 12 +
             (currentDate.getMonth() - contractStartDate.getMonth());
 
           // Check if contract is expired
-          if (monthsDiff >= (contract.stayDuration ?? 0)) {
+          if (monthsDiff >= contract.stayDuration) {
             // Contract expired: return 100% deposit
             refundAmount = depositAmount;
             notes = `Hoàn 100% tiền cọc (hết hạn hợp đồng - ${monthsDiff} tháng / ${contract.stayDuration} tháng)`;
