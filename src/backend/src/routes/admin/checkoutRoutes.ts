@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { CheckoutRequest } from '../../business/CheckoutRequest';
 import { Contract } from '../../business/Contract';
 import { Room } from '../../business/Room';
-import { Rental } from '../../business/Rental';
+import { RentalFormCheckout, RentalFormBed } from '../../business/Rental';
 import { RefundCalculation } from '../../business/RefundCalculation';
 import { CheckoutStatus, ContractStatus, RefundCalculationDTO } from '@dormarch/shared';
 import { AuthRequest, authMiddleware } from '../../middleware/authMiddleware';
@@ -34,7 +34,7 @@ checkoutRouter.get('/rental-forms/available', async (req: AuthRequest, res: Resp
     }
 
     // Get active rental forms without active checkout requests
-    const rentalForms = await Rental.getActiveRentalFormsForCheckout(userEmail, dormId);
+    const rentalForms = await RentalFormCheckout.getActiveRentalFormsForCheckout(userEmail, dormId);
     res.status(200).json(rentalForms);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });
@@ -74,7 +74,7 @@ checkoutRouter.get('/:id/details', authMiddleware, async (req: AuthRequest, res:
     }
 
     // Fetch rental form data and refund calculation
-    const rentalForm = request.rentalFormId ? await Rental.getRentalFormById(request.rentalFormId) : null;
+    const rentalForm = request.rentalFormId ? await RentalFormCheckout.getRentalFormById(request.rentalFormId) : null;
     const refund = await RefundCalculation.getByRequestId(request.requestId);
 
     // Deposit amount = 2 months of rent (totalAmount is 1 month rent)
@@ -96,7 +96,7 @@ checkoutRouter.post('/', authMiddleware, async (req: AuthRequest, res: Response)
       return;
     }
 
-    const rentalForm = await Rental.getRentalFormById(rentalFormId);
+    const rentalForm = await RentalFormCheckout.getRentalFormById(rentalFormId);
     if (!rentalForm) {
       res.status(400).json({ message: 'Không tìm thấy phiếu đăng ký thuê.' });
       return;
@@ -214,7 +214,7 @@ checkoutRouter.patch('/:id/complete-checkout', async (req: Request, res: Respons
         }
       } else {
         // No contract - get beds info directly from rental form
-        const rentalFormBedsInfo = await Rental.getBedsInfoByRentalFormId(request.rentalFormId);
+        const rentalFormBedsInfo = await RentalFormBed.getBedsInfoByRentalFormId(request.rentalFormId);
         if (rentalFormBedsInfo && rentalFormBedsInfo.roomId && rentalFormBedsInfo.bedIds.length > 0) {
           await Room.updateBedStatus(rentalFormBedsInfo.roomId, rentalFormBedsInfo.bedIds, 'AVAILABLE');
         }

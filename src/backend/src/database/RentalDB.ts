@@ -515,14 +515,32 @@ export class RentalDB {
       WHERE rf.user_email = $1
       ${dormId ? `AND (SELECT d.id FROM rental_form_beds rfb JOIN beds b ON b.id = rfb.bed_id JOIN rooms r ON r.id = b.room_id JOIN dorms d ON d.id = r.dorm_id WHERE rfb.rental_form_id = rf.id LIMIT 1) = $2` : ''}
       AND NOT EXISTS (
-        SELECT 1 FROM checkout_requests 
-        WHERE refund_form_id = rf.id AND status IN ('PENDING', 'PROCESSING', 'LIQUIDATED')
+        SELECT 1 FROM checkout_requests cr
+        INNER JOIN rental_form_beds rfb ON cr.refund_form_id = rfb.rental_form_id
+        WHERE rfb.bed_id IN (
+          SELECT bed_id FROM rental_form_beds WHERE rental_form_id = rf.id
+        )
+        AND cr.status IN ('PENDING', 'PROCESSING', 'LIQUIDATED')
       )
       ORDER BY rf.created_at DESC
     `;
     const params = dormId ? [userEmail, dormId] : [userEmail];
     const result = await dbClient.query(sql, params);
-    const mappedRows = result.rows.map(this.mapRentalFormRow);
+    const mappedRows = result.rows.map((row: any) => ({
+      rentalFormId: row.rental_form_id,
+      type: row.type,
+      total_amount: row.total_amount,
+      deadline: row.deadline,
+      contractId: row.contract_id,
+      startDate: row.start_date,
+      stayDuration: row.stay_duration,
+      userFullName: row.user_full_name,
+      dormId: row.dorm_id,
+      dormName: row.dorm_name,
+      roomName: row.room_name,
+      floor: row.floor,
+      bedNumbers: row.bed_numbers
+    }));
     
     // Deduplicate rental forms by bed (dorm + room + bed_numbers)
     // Keep FULL type if both DEPOSIT and FULL exist for same bed
@@ -539,21 +557,6 @@ export class RentalDB {
     }
     
     return Array.from(deduplicatedMap.values());
-  }
-
-  private static mapRentalFormRow(row: any): any {
-    return {
-      rentalFormId: row.rental_form_id,
-      type: row.type,
-      contractId: row.contract_id || undefined,
-      startDate: row.start_date || undefined,
-      stayDuration: row.stay_duration || undefined,
-      dormId: row.dorm_id,
-      dormName: row.dorm_name,
-      roomName: row.room_name,
-      floor: row.floor,
-      bedNumbers: row.bed_numbers,
-    };
   }
 
   static async getRentalFormById(rentalFormId: string): Promise<{ id: string; userEmail: string; type: 'DEPOSIT' | 'FULL'; totalAmount: number; contractId?: string | null; dormId?: string | null } | null> {

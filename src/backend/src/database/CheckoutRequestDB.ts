@@ -83,12 +83,18 @@ export class CheckoutRequestDB {
 
   static async insertIfNoActiveRequest(request: CheckoutRequest, rentalFormId: string, userEmail: string): Promise<{ success: boolean; error?: string; requestId?: string }> {
     const code = this.generateCode();
+    // Check if ANY rental form with the same beds (room/dorm/floor) has an active checkout request
+    // This prevents duplicate checkout requests across DEPOSIT/FULL versions of the same room
     const sql = `
       INSERT INTO checkout_requests (code, user_email, refund_form_id, expected_date, status, created_at)
       SELECT $1, $2, $3, $4, $5, $6
       WHERE NOT EXISTS (
-        SELECT 1 FROM checkout_requests 
-        WHERE refund_form_id = $3 AND status::text IN ($7, $8, $9)
+        SELECT 1 FROM checkout_requests cr
+        INNER JOIN rental_form_beds rfb ON cr.refund_form_id = rfb.rental_form_id
+        WHERE rfb.bed_id IN (
+          SELECT bed_id FROM rental_form_beds WHERE rental_form_id = $3
+        )
+        AND cr.status::text IN ($7, $8, $9)
       )
       RETURNING id;
     `;

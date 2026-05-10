@@ -1,6 +1,6 @@
 import { RefundDB } from '../database/RefundDB';
 import { RefundCalculationDTO } from '@dormarch/shared';
-import { Rental } from './Rental';
+import { RentalFormCheckout } from './Rental';
 import { Contract } from './Contract';
 
 export class RefundCalculation {
@@ -149,7 +149,7 @@ export class RefundCalculation {
         return; // Already calculated
       }
 
-      const rentalForm = await Rental.getRentalFormById(rentalFormId);
+      const rentalForm = await RentalFormCheckout.getRentalFormById(rentalFormId);
       if (!rentalForm) return;
 
       // Deposit = 2 months of rent (totalAmount is 1 month)
