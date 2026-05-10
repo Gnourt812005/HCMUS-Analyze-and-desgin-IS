@@ -7,10 +7,11 @@ export class PolicyDB {
   static async findActivePolicy(): Promise<PolicyContentDTO> {
     const result = await dbClient.query(
       `
-        SELECT id, title, content, created_at
-        FROM policies
-        WHERE is_active = TRUE
-        ORDER BY created_at DESC
+        SELECT p.id, p.title, p.content, p.created_at
+        FROM policies p
+        WHERE p.is_active = TRUE
+          AND EXISTS (SELECT 1 FROM dorms d WHERE d.policy_id = p.id)
+        ORDER BY p.created_at DESC
         LIMIT 1
       `
     );

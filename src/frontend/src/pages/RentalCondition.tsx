@@ -4,6 +4,19 @@ import { PolicyContentDTO, RentalConditionDTO, UserProfileDTO } from '@dormarch/
 import { RentalService } from '../api/RentalService';
 import { ApiClient } from '../api/ApiClient';
 
+function parsePolicy(content: string): string[] {
+  return content
+    .split('\n')
+    .flatMap(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return [];
+      return trimmed
+        .split(/ (?=\d+\. )/)
+        .map(part => part.trim())
+        .filter(Boolean);
+    });
+}
+
 export const RentalCondition = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -179,16 +192,11 @@ export const RentalCondition = () => {
                 <p className="font-bold text-blue-900 uppercase tracking-tight text-xs">{policy.title}</p>
               </div>
               <div>
-                {policy.content
-                  .split('\n')
-                  .map(line => line.replace(/^[•\-]\s*/, '').trim())
-                  .filter(Boolean)
-                  .map((line, i) => (
-                    <div key={i} className="flex items-start gap-2 py-2 border-b border-blue-100 last:border-0">
-                      <span className="text-sm text-blue-800">{line}</span>
-                    </div>
-                  ))
-                }
+                {parsePolicy(policy.content).map((line, i) => (
+                  <div key={i} className="flex items-start gap-2 py-2 border-b border-blue-100 last:border-0">
+                    <span className="text-sm text-blue-800">{line}</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
