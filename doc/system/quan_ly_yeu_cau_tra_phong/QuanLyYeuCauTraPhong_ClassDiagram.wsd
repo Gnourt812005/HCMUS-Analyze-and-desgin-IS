@@ -14,7 +14,7 @@ skinparam {
 
 class "ScreenManageCheckoutRequest" <<boundary>> {
   - dgvRequests: DataGridView
-  + loadRequests(): void
+  + show(): void
 }
 
 class "ModalCreateCheckoutRequest" <<boundary>> {
@@ -35,7 +35,6 @@ class "ModalCheckoutRequestDetail" <<boundary>> {
   - btnReject: Button
   - btnBack: Button
   + show(requestId: string): void
-  + displayDetail(): void
 }
 
 class "CheckoutRequest" <<control>> {

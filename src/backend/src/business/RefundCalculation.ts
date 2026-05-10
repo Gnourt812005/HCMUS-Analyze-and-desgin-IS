@@ -102,8 +102,8 @@ export class RefundCalculation {
           // No contract: return 80% deposit + 100% registration fee paid
           refundAmount = depositAmount * 0.8 + depositAmount * 0.5;
           notes = 'Hoàn 80% tiền cọc và 100% tiền đăng ký thuê (chưa có hợp đồng)';
-        } else {
-          // Contract exists - check duration
+        } else if (contract.startDate && contract.stayDuration !== undefined) {
+          // Contract exists with valid duration data - check duration
           const contractStartDate = new Date(contract.startDate);
           const currentDate = new Date();
           const monthsDiff = (currentDate.getFullYear() - contractStartDate.getFullYear()) * 12 +
@@ -125,6 +125,10 @@ export class RefundCalculation {
             refundAmount = depositAmount * 0.7;
             notes = `Hoàn 70% tiền cọc (hợp đồng ${monthsDiff} tháng ≥ 6 tháng)`;
           }
+        } else {
+          // Contract exists but missing critical data (startDate or stayDuration)
+          refundAmount = depositAmount * 0.5;
+          notes = 'Hoàn 50% tiền cọc (hợp đồng thiếu dữ liệu)';
         }
       }
 
