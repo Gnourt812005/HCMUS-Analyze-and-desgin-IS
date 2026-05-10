@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Package, Calendar, CreditCard, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { Package, Calendar, CreditCard, CheckCircle2, Clock, AlertCircle, ArrowRight } from 'lucide-react';
 import { ApiClient } from '../api/ApiClient';
+import { RentalService } from '../api/RentalService';
 
 interface Order {
   id: string;
@@ -13,11 +15,14 @@ interface Order {
   type: 'DEPOSIT' | 'FULL';
   paymentStatus: 'PENDING' | 'SUCCESS' | 'FAILED' | 'TIMEOUT';
   createdAt: string;
+  hasFullPayment?: boolean;
 }
 
 export const CustomerOrders = () => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -36,29 +41,54 @@ export const CustomerOrders = () => {
     fetchOrders();
   }, []);
 
+  const handlePayHire = async (order: Order) => {
+    setProcessingId(order.id);
+    try {
+      const response = await RentalService.preview({
+        registrationId: order.id,
+        action: 'FULL_PAYMENT'
+      });
+
+      if (response.status === 200) {
+        navigate('/rental/payment', {
+          state: {
+            registrationId: order.id,
+            action: 'FULL_PAYMENT',
+            defaultMethod: 'BANK',
+            preview: response.data
+          }
+        });
+      }
+    } catch (error: any) {
+      alert(error.message || 'Không thể chuẩn bị thanh toán.');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   const getStatusBadge = (status: Order['paymentStatus']) => {
     switch (status) {
       case 'SUCCESS':
         return (
-          <span className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded-full text-xs font-bold">
+          <span className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight">
             <CheckCircle2 className="h-3 w-3" /> Đã thanh toán
           </span>
         );
       case 'PENDING':
         return (
-          <span className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded-full text-xs font-bold">
+          <span className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight">
             <Clock className="h-3 w-3" /> Chờ thanh toán
           </span>
         );
       case 'FAILED':
         return (
-          <span className="flex items-center gap-1 text-red-600 bg-red-50 px-2 py-1 rounded-full text-xs font-bold">
+          <span className="flex items-center gap-1 text-red-600 bg-red-50 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight">
             <AlertCircle className="h-3 w-3" /> Thất bại
           </span>
         );
       default:
         return (
-          <span className="flex items-center gap-1 text-slate-500 bg-slate-50 px-2 py-1 rounded-full text-xs font-bold">
+          <span className="flex items-center gap-1 text-slate-500 bg-slate-50 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight">
             <Clock className="h-3 w-3" /> {status}
           </span>
         );
@@ -92,17 +122,17 @@ export const CustomerOrders = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow"
+              className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow"
             >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex items-center gap-3 mb-3">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
                       order.type === 'DEPOSIT' ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-100 text-blue-700'
                     }`}>
                       {order.type === 'DEPOSIT' ? 'Đặt cọc' : 'Thuê phòng'}
                     </span>
-                    <span className="text-slate-400 text-xs font-medium">#{order.id.slice(0, 8)}</span>
+                    <span className="text-slate-400 text-xs font-medium tracking-tight">#{order.id.slice(0, 8).toUpperCase()}</span>
                     {getStatusBadge(order.paymentStatus)}
                   </div>
                   <h3 className="text-lg font-bold text-slate-800">
@@ -113,14 +143,32 @@ export const CustomerOrders = () => {
                   </p>
                 </div>
 
-                <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-2 border-t md:border-t-0 pt-4 md:pt-0">
-                  <div className="flex items-center gap-2 text-slate-500 text-xs font-medium">
-                    <Calendar className="h-3 w-3" />
-                    {new Date(order.createdAt).toLocaleDateString('vi-VN')}
+                <div className="flex flex-col md:items-end gap-4 min-w-[200px]">
+                  <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-1">
+                    <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
+                      <Calendar className="h-3 w-3" />
+                      {new Date(order.createdAt).toLocaleDateString('vi-VN')}
+                    </div>
+                    <div className="text-xl font-black text-slate-900">
+                      {order.totalAmount.toLocaleString('vi-VN')} <span className="text-xs font-bold text-slate-400">VND</span>
+                    </div>
                   </div>
-                  <div className="text-xl font-black text-blue-600">
-                    {order.totalAmount.toLocaleString('vi-VN')} VND
-                  </div>
+
+                  {order.type === 'DEPOSIT' && order.paymentStatus === 'SUCCESS' && !order.hasFullPayment && (
+                    <button
+                      onClick={() => handlePayHire(order)}
+                      disabled={processingId === order.id}
+                      className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all disabled:bg-slate-200 disabled:shadow-none"
+                    >
+                      {processingId === order.id ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      ) : (
+                        <>
+                          Thanh toán thuê phòng <ArrowRight className="h-3 w-3" />
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             </motion.div>

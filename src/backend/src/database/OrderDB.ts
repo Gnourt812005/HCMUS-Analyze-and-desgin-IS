@@ -10,6 +10,7 @@ export interface OrderRecord {
   type: 'DEPOSIT' | 'FULL';
   paymentStatus: 'PENDING' | 'SUCCESS' | 'FAILED' | 'TIMEOUT';
   createdAt: string;
+  hasFullPayment?: boolean;
 }
 
 export class OrderDB {
@@ -24,7 +25,18 @@ export class OrderDB {
         rf.total_amount,
         rf.type,
         COALESCE(p.status, 'PENDING') as payment_status,
-        rf.created_at
+        rf.created_at,
+        EXISTS (
+          SELECT 1 FROM rental_forms rf2
+          JOIN rental_form_beds rfb2 ON rf2.id = rfb2.rental_form_id
+          JOIN payments p2 ON p2.rental_form_id = rf2.id
+          WHERE rf2.user_email = rf.user_email
+            AND rf2.type = 'FULL'
+            AND p2.status = 'SUCCESS'
+            AND rfb2.bed_id IN (
+              SELECT bed_id FROM rental_form_beds rfb3 WHERE rfb3.rental_form_id = rf.id
+            )
+        ) as has_full_payment
       FROM rental_forms rf
       JOIN rental_form_beds rfb ON rf.id = rfb.rental_form_id
       JOIN beds b ON rfb.bed_id = b.id
@@ -47,7 +59,8 @@ export class OrderDB {
         totalAmount: Number(row.total_amount),
         type: row.type,
         paymentStatus: row.payment_status,
-        createdAt: row.created_at
+        createdAt: row.createdAt || row.created_at,
+        hasFullPayment: row.has_full_payment
       }));
     } catch (error) {
       console.error('Error fetching orders by user:', error);

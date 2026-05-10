@@ -11,27 +11,25 @@ class "ScreenPolicy" as ScreenPolicy <<boundary>> {
 
 ' --- BUSINESS LAYER ---
 class "Policy" as Policy <<control>> {
-    - policyId: String
-    - content: String
+    + <<static>> hasConfirmed(idCard)
 }
 
-class "Customer" as Customer <<control>> {
-    - idCard: String
-}
-
-class "RentalCondition" as RentalCondition <<control>> {
-    + <<static>> validateInfo(data)
+class "Rental" as Rental <<control>> {
+    + <<static>> checkEligibility(payload)
 }
 
 ' --- DATABASE LAYER ---
 class "PolicyDB" as PolicyDB <<entity>> {
     + <<static>> getDetails()
 }
+class "RentalDB" as RentalDB <<entity>> {
+    + <<static>> hasDeposit(roomId, idCard)
+    + <<static>> areBedsAvailable(roomId, bedIds)
+}
 
-"ScreenPolicy" ..> "RentalCondition"
-"RentalCondition" ..> "Policy"
-"RentalCondition" ..> "Customer"
+"ScreenPolicy" ..> "Policy"
+"ScreenPolicy" ..> "Rental"
+"Rental" ..> "RentalDB"
 "Policy" ..> "PolicyDB"
-"Customer" ..> "CustomerDB"
 
 @enduml
