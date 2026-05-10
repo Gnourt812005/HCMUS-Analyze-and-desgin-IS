@@ -1,9 +1,6 @@
 import { Router } from 'express';
-import { RoomDB } from '../database/RoomDB';
-import { DormDB } from '../database/DormDB';
-import { FavouriteRoomsDB } from '../database/FavouriteRoomsDB';
 import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
-import { RoomBriefDTO, RoomDetailDTO } from '@dormarch/shared';
+import { Favourites } from '../business/Favourites';
 
 export const favouriteRoutes = Router();
 
@@ -13,29 +10,13 @@ favouriteRoutes.get('/', authMiddleware, async (req: AuthRequest, res) => {
     const email = req.user?.email;
     if (!email) return res.status(401).json({ message: 'Unauthorized' });
 
-    // Find favorited room IDs
-    const roomIds = await FavouriteRoomsDB.getRoomIdsByUserId(email);
-    
-    // Get all rooms and dorms (large limit to ensure favorites aren't cut off by pagination)
-    const rooms = await RoomDB.fetchAll({ limit: 1000 });
-    const dorms = await DormDB.getAll();
-    const r = rooms.rooms;
+    const { code, data } = await Favourites.getFavouritesByUserId(email);
 
-    // Filter relevant rooms
-    const favoritedRooms = r.filter(r => roomIds.includes(r.id!));
-
-    // Map to full detailed structure mimicking RoomList.tsx needs
-    const data = favoritedRooms.map(r => {
-        const dormMatch = dorms.find(d => d.id === r.dormId);
-        return {
-            ...r,
-            isFavorite: true,
-            dormName: dormMatch?.name || 'Không xác định',
-            dormAddress: dormMatch?.address || 'Không có địa chỉ'
-        };
-    });
-
-    res.json({ message: 'Success', status: 200, data });
+    if (code === 0) {
+        res.json({ message: 'Success', status: 200, data });
+    } else {
+        res.status(500).json({ message: 'Lỗi server' });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Lỗi server' });
@@ -50,11 +31,13 @@ favouriteRoutes.post('/:roomId', authMiddleware, async (req: AuthRequest, res) =
 
         if (!email) return res.status(401).json({ message: 'Unauthorized' });
 
-        const inserted = await FavouriteRoomsDB.insert(email, roomId);
-        if (inserted) {
+        const result = await Favourites.addFavourite(email, roomId);
+        if (result === 0) {
             res.json({ message: 'Đã thêm vào mục yêu thích', status: 200 });
+        } else if (result === 1) {
+            res.status(400).json({ message: 'Phòng đã nằm trong danh sách yêu thích' });
         } else {
-            res.status(400).json({ message: 'Phòng đã có trong danh sách yêu thích' });
+            res.status(500).json({ message: 'Lỗi server' });
         }
     } catch (error) {
         console.error(error);
@@ -70,11 +53,13 @@ favouriteRoutes.delete('/:roomId', authMiddleware, async (req: AuthRequest, res)
 
         if (!email) return res.status(401).json({ message: 'Unauthorized' });
 
-        const deleted = await FavouriteRoomsDB.delete(email, roomId);
-        if (deleted) {
+        const result = await Favourites.deleteFavourite(email, roomId);
+        if (result === 0) {
             res.json({ message: 'Đã xóa khỏi mục yêu thích', status: 200 });
-        } else {
+        } else if (result === 1) {
             res.status(400).json({ message: 'Phòng không nằm trong danh sách yêu thích' });
+        } else {
+            res.status(500).json({ message: 'Lỗi server' });
         }
     } catch (error) {
         console.error(error);
