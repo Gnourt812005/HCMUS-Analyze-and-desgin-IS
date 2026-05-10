@@ -12,7 +12,16 @@ export class ContractDB {
 
   // ── Admin: list all contracts ──────────────────────────────────────────────
 
-  static async getAll(): Promise<ContractAdminDTO[]> {
+  static async getAll(dormId?: string): Promise<ContractAdminDTO[]> {
+    const dormFilter = dormId
+      ? `WHERE EXISTS (
+          SELECT 1 FROM contract_beds cb2
+          JOIN beds b2  ON b2.id  = cb2.bed_id
+          JOIN rooms r2 ON r2.id  = b2.room_id
+          WHERE cb2.contract_id = c.id AND r2.dorm_id = $1
+        )`
+      : '';
+    const values = dormId ? [dormId] : [];
     const result = await dbClient.query(`
       SELECT
         c.id,
@@ -44,15 +53,25 @@ export class ContractDB {
       JOIN users u           ON c.user_email   = u.email
       LEFT JOIN contract_beds cb ON cb.contract_id = c.id
       LEFT JOIN beds b           ON b.id           = cb.bed_id
+      ${dormFilter}
       GROUP BY c.id, u.full_name, u.phone, u.cccd
       ORDER BY c.created_at DESC
-    `);
+    `, values);
     return result.rows.map(this.mapAdminRow);
   }
 
   // ── Admin: rental forms without a contract ─────────────────────────────────
 
-  static async getRentalFormsWithoutContract(): Promise<RentalFormOptionDTO[]> {
+  static async getRentalFormsWithoutContract(dormId?: string): Promise<RentalFormOptionDTO[]> {
+    const dormFilter = dormId
+      ? `AND EXISTS (
+          SELECT 1 FROM rental_form_beds rfb2
+          JOIN beds b2  ON b2.id  = rfb2.bed_id
+          JOIN rooms r2 ON r2.id  = b2.room_id
+          WHERE rfb2.rental_form_id = rf.id AND r2.dorm_id = $1
+        )`
+      : '';
+    const values = dormId ? [dormId] : [];
     const result = await dbClient.query(`
       SELECT
         rf.id,
@@ -83,9 +102,15 @@ export class ContractDB {
         AND rf.id NOT IN (
           SELECT rental_form_id FROM contracts WHERE rental_form_id IS NOT NULL
         )
+        AND rf.id NOT IN (
+          SELECT refund_form_id FROM checkout_requests
+          WHERE refund_form_id IS NOT NULL
+            AND status IN ('PROCESSING', 'LIQUIDATED')
+        )
+        ${dormFilter}
       GROUP BY rf.id, u.full_name, u.phone, u.cccd
       ORDER BY rf.created_at DESC
-    `);
+    `, values);
     return result.rows.map((row: any) => {
       const rentalMonths = Math.max(1, Math.round(
         (new Date(row.deadline).getTime() - new Date(row.created_at).getTime())
