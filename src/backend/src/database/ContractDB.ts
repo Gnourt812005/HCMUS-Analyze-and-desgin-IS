@@ -79,9 +79,10 @@ export class ContractDB {
       JOIN users u ON rf.user_email = u.email
       LEFT JOIN rental_form_beds rfb ON rfb.rental_form_id = rf.id
       LEFT JOIN beds b               ON b.id               = rfb.bed_id
-      WHERE rf.id NOT IN (
-        SELECT rental_form_id FROM contracts WHERE rental_form_id IS NOT NULL
-      )
+      WHERE rf.type = 'FULL'
+        AND rf.id NOT IN (
+          SELECT rental_form_id FROM contracts WHERE rental_form_id IS NOT NULL
+        )
       GROUP BY rf.id, u.full_name, u.phone, u.cccd
       ORDER BY rf.created_at DESC
     `);
