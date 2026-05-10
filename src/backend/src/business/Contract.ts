@@ -30,12 +30,12 @@ export class Contract {
     return ContractDB.getBedsInfoByContractId(contractId);
   }
 
-  static async getAll(): Promise<ContractAdminDTO[]> {
-    return ContractDB.getAll();
+  static async getAll(dormId?: string): Promise<ContractAdminDTO[]> {
+    return ContractDB.getAll(dormId);
   }
 
-  static async getRentalFormsWithoutContract(): Promise<RentalFormOptionDTO[]> {
-    return ContractDB.getRentalFormsWithoutContract();
+  static async getRentalFormsWithoutContract(dormId?: string): Promise<RentalFormOptionDTO[]> {
+    return ContractDB.getRentalFormsWithoutContract(dormId);
   }
 
   static async insert(rentalFormId: string, startDate: string, stayDuration: number): Promise<string> {
