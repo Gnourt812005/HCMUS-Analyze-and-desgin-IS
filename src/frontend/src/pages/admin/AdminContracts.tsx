@@ -20,6 +20,20 @@ const DEPOSIT_RULES = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+function parsePolicy(content: string): string[] {
+  return content
+    .split('\n')
+    .flatMap(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return [];
+      // Handle inline numbered items: "1. text 2. text 3. text"
+      return trimmed
+        .split(/ (?=\d+\. )/)
+        .map(part => part.trim())
+        .filter(Boolean);
+    });
+}
+
 function fmtMoney(n: number) { return n.toLocaleString('vi-VN') + ' đ'; }
 
 function feesToItems(fees: DormFeesDTO) {
@@ -536,16 +550,11 @@ const ContractDetailModal = ({
               <div className="pl-10">
                 {policyContent ? (
                   <div>
-                    {policyContent
-                      .split('\n')
-                      .map(line => line.replace(/^[•\-]\s*/, '').trim())
-                      .filter(Boolean)
-                      .map((line, i) => (
-                        <div key={i} className="flex items-start gap-3 py-2.5 border-b border-slate-100 last:border-0">
-                          <span className="text-sm text-slate-700">{line}</span>
-                        </div>
-                      ))
-                    }
+                    {parsePolicy(policyContent).map((line, i) => (
+                      <div key={i} className="flex items-start gap-3 py-2.5 border-b border-slate-100 last:border-0">
+                        <span className="text-sm text-slate-700">{line}</span>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <p className="text-sm text-slate-400 italic">Chưa có nội quy được cấu hình.</p>

@@ -11,9 +11,9 @@ import { AuthRequest } from '../../middleware/authMiddleware';
 
 export const rentalRoutes = Router();
 
-rentalRoutes.get('/policy/latest', async (req, res) => {
+rentalRoutes.get('/policy/latest', async (req: AuthRequest, res) => {
   try {
-    const dormId = req.query.dormId as string;
+    const dormId = (req.query.dormId as string) || req.user?.dormId;
     const policy = await Policy.getLatestRegulations(dormId);
     res.json({ message: 'Success', status: 200, data: policy });
   } catch (error: any) {
