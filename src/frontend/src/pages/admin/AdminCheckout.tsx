@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckoutStatus, CheckoutRequestDTO, RefundCalculationDTO, UserProfileDTO, RentalFormDTO } from '@dormarch/shared';
+import { CheckoutStatus, CheckoutRequestDTO, RefundCalculationDTO, UserProfileDTO, RentalFormDTO, UserRole } from '@dormarch/shared';
 import { ApiClient } from '../../api/ApiClient';
 
 export const AdminCheckout = () => {
@@ -169,7 +169,7 @@ export const AdminCheckout = () => {
         return;
       }
 
-      setSearchedUser({ email: createForm.userEmail, fullName: response[0].user_full_name });
+      setSearchedUser({ email: createForm.userEmail, fullName: '', role: UserRole.GUEST });
       setAvailableContracts(response);
     } catch (err) {
       setUserSearchError(err instanceof Error ? err.message : 'Lỗi tìm kiếm khách hàng');

@@ -10,10 +10,11 @@ export interface RoomBedOption {
   available: number;
 }
 
-export interface RentalRecord extends RentalRegistrationRequestDTO {
+export interface RentalRecord extends Omit<RentalRegistrationRequestDTO, 'action'> {
   registrationId: string;
   roomPrice: number;
   alreadyDeposited: boolean;
+  action?: RentalRegistrationRequestDTO['action'];
 }
 
 export class RentalDB {

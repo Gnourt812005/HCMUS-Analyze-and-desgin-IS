@@ -17,10 +17,6 @@ RUN npm install
 # Build shared first
 RUN npm run build -w shared
 
-# Build the frontend
-RUN npm run build -w frontend
-
 EXPOSE 3000
 
-# Run using npm start (which aliases to vite preview)
-CMD ["npm", "start", "-w", "frontend"]
+CMD ["npm", "run", "dev", "-w", "frontend"]
