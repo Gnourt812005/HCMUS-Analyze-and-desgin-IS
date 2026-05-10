@@ -5,22 +5,19 @@ import { Room } from '../../business/Room';
 import { Rental } from '../../business/Rental';
 import { RefundCalculation } from '../../business/RefundCalculation';
 import { CheckoutStatus, ContractStatus, RefundCalculationDTO } from '@dormarch/shared';
-import { AuthRequest } from '../../middleware/authMiddleware';
+import { AuthRequest, authMiddleware } from '../../middleware/authMiddleware';
 
 export const checkoutRouter = Router();
 
 checkoutRouter.get('/', async (req: AuthRequest, res: Response) => {
   try {
     const email = req.user?.email;
+    const dormId = req.user?.dormId;
     if (!email) {
       return res.status(401).json({ message: 'Không thể định danh' });
     }
 
-    // Admin sees all requests, customers see only their own
-    const isAdmin = req.user?.role === 'ADMIN';
-    const requests = isAdmin
-      ? await CheckoutRequest.getList()
-      : await CheckoutRequest.getListByUserEmail(email);
+    const requests = await CheckoutRequest.getList(dormId);
     res.status(200).json(requests);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });
@@ -30,31 +27,30 @@ checkoutRouter.get('/', async (req: AuthRequest, res: Response) => {
 checkoutRouter.get('/rental-forms/available', async (req: AuthRequest, res: Response) => {
   try {
     const userEmail = (req.query.userEmail as string) || req.user?.email;
-    const authEmail = req.user?.email;
-    const isAdmin = req.user?.role === 'ADMIN';
+    const dormId = req.user?.dormId;
 
-    if (!userEmail || !authEmail) {
+    if (!userEmail) {
       return res.status(401).json({ message: 'Không thể định danh' });
     }
 
-    // Only allow admin to fetch for other users, or users to fetch their own
-    if (userEmail !== authEmail && !isAdmin) {
-      return res.status(403).json({ message: 'Không có quyền truy cập' });
-    }
-
     // Get active rental forms without active checkout requests
-    const rentalForms = await Rental.getActiveRentalFormsForCheckout(userEmail);
+    const rentalForms = await Rental.getActiveRentalFormsForCheckout(userEmail, dormId);
     res.status(200).json(rentalForms);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });
   }
 });
 
-checkoutRouter.get('/:id', async (req: Request, res: Response) => {
+checkoutRouter.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const request = await CheckoutRequest.getById(req.params.id);
+    const dormId = req.user?.dormId;
+    const request = await CheckoutRequest.getById(req.params.id, dormId);
     if (!request) {
       res.status(404).json({ message: 'Không tìm thấy yêu cầu' });
+      return;
+    }
+    if (dormId && request.dormId && request.dormId !== dormId) {
+      res.status(403).json({ message: 'Không có quyền truy cập' });
       return;
     }
     res.status(200).json(request);
@@ -63,11 +59,17 @@ checkoutRouter.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
-checkoutRouter.get('/:id/details', async (req: Request, res: Response) => {
+checkoutRouter.get('/:id/details', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const request = await CheckoutRequest.getById(req.params.id);
+    const dormId = req.user?.dormId;
+    const request = await CheckoutRequest.getById(req.params.id, dormId);
     if (!request) {
       res.status(404).json({ message: 'Không tìm thấy yêu cầu' });
+      return;
+    }
+
+    if (dormId && request.dormId && request.dormId !== dormId) {
+      res.status(403).json({ message: 'Không có quyền truy cập' });
       return;
     }
 
@@ -84,9 +86,10 @@ checkoutRouter.get('/:id/details', async (req: Request, res: Response) => {
   }
 });
 
-checkoutRouter.post('/', async (req: Request, res: Response) => {
+checkoutRouter.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { userEmail, rentalFormId, expectedDate } = req.body;
+    const dormId = req.user?.dormId;
 
     if (!userEmail || !rentalFormId || !expectedDate) {
       res.status(400).json({ message: 'userEmail, rentalFormId và expectedDate là bắt buộc.' });
@@ -96,6 +99,11 @@ checkoutRouter.post('/', async (req: Request, res: Response) => {
     const rentalForm = await Rental.getRentalFormById(rentalFormId);
     if (!rentalForm) {
       res.status(400).json({ message: 'Không tìm thấy phiếu đăng ký thuê.' });
+      return;
+    }
+
+    if (dormId && rentalForm.dormId && rentalForm.dormId !== dormId) {
+      res.status(403).json({ message: 'Không có quyền truy cập' });
       return;
     }
 
@@ -129,16 +137,22 @@ checkoutRouter.post('/', async (req: Request, res: Response) => {
   }
 });
 
-checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
+checkoutRouter.patch('/:id/status', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { status, expectedStatus } = req.body;
     const requestId = req.params.id;
+    const dormId = req.user?.dormId;
     const newStatus = status as CheckoutStatus;
     const expectedCurrentStatus = expectedStatus as CheckoutStatus | undefined;
 
-    const currentRequest = await CheckoutRequest.getById(requestId);
+    const currentRequest = await CheckoutRequest.getById(requestId, dormId);
     if (!currentRequest) {
       res.status(404).json({ message: 'Không tìm thấy yêu cầu' });
+      return;
+    }
+
+    if (dormId && currentRequest.dormId && currentRequest.dormId !== dormId) {
+      res.status(403).json({ message: 'Không có quyền truy cập' });
       return;
     }
 
@@ -147,7 +161,7 @@ checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
       throw new Error('Yêu cầu đã được cập nhật bởi quản trị viên khác. Vui lòng làm mới và thử lại.');
     }
 
-    const updated = await CheckoutRequest.getById(requestId);
+    const updated = await CheckoutRequest.getById(requestId, dormId);
 
     // Auto-calculate refund if no contract exists and status is transitioning to PROCESSING
     if (newStatus === CheckoutStatus.PROCESSING && updated && updated.rentalFormId) {

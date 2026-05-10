@@ -9,6 +9,7 @@ export interface RentalFormDTO {
   contractId?: string;
   startDate?: string;
   stayDuration?: number;
+  dormId?: string;
   dormName: string;
   roomName: string;
   floor: number;

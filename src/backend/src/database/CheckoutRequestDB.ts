@@ -10,6 +10,7 @@ export class CheckoutRequestDB {
       userEmail: row.user_email,
       userFullName: row.user_full_name,
       rentalFormId: row.refund_form_id,
+      dormId: row.dorm_id,
       dormName: row.dorm_name,
       roomName: row.room_name,
       floor: row.floor,
@@ -30,6 +31,7 @@ export class CheckoutRequestDB {
       cr.status,
       cr.created_at,
       u.full_name as user_full_name,
+      (SELECT d.id FROM rental_form_beds rfb JOIN beds b ON rfb.bed_id = b.id JOIN rooms r ON b.room_id = r.id JOIN dorms d ON r.dorm_id = d.id WHERE rfb.rental_form_id = cr.refund_form_id LIMIT 1) as dorm_id,
       (SELECT d.name FROM rental_form_beds rfb JOIN beds b ON rfb.bed_id = b.id JOIN rooms r ON b.room_id = r.id JOIN dorms d ON r.dorm_id = d.id WHERE rfb.rental_form_id = cr.refund_form_id LIMIT 1) as dorm_name,
       (SELECT r.floor FROM rental_form_beds rfb JOIN beds b ON rfb.bed_id = b.id JOIN rooms r ON b.room_id = r.id WHERE rfb.rental_form_id = cr.refund_form_id LIMIT 1) as floor,
       (SELECT r.name FROM rental_form_beds rfb JOIN beds b ON rfb.bed_id = b.id JOIN rooms r ON b.room_id = r.id WHERE rfb.rental_form_id = cr.refund_form_id LIMIT 1) as room_name,
@@ -38,9 +40,13 @@ export class CheckoutRequestDB {
     LEFT JOIN users u ON cr.user_email = u.email
   `;
 
-  static async getAll(): Promise<Partial<CheckoutRequest>[]> {
-    const sql = `${this.BASE_QUERY} ORDER BY cr.created_at DESC`;
-    const result = await dbClient.query(sql);
+  static async getAll(dormId?: string): Promise<Partial<CheckoutRequest>[]> {
+    let sql = `${this.BASE_QUERY}`;
+    if (dormId) {
+      sql += ` WHERE (SELECT d.id FROM rental_form_beds rfb JOIN beds b ON rfb.bed_id = b.id JOIN rooms r ON b.room_id = r.id JOIN dorms d ON r.dorm_id = d.id WHERE rfb.rental_form_id = cr.refund_form_id LIMIT 1) = $1`;
+    }
+    sql += ` ORDER BY cr.created_at DESC`;
+    const result = await dbClient.query(sql, dormId ? [dormId] : []);
     return result.rows.map((row: any) => this.mapRow(row));
   }
 
@@ -113,15 +119,27 @@ export class CheckoutRequestDB {
     }
   }
 
-  static async getById(requestId: string): Promise<Partial<CheckoutRequest> | null> {
-    const sql = `${this.BASE_QUERY} WHERE cr.id = $1 LIMIT 1`;
-    const result = await dbClient.query(sql, [requestId]);
+  static async getById(requestId: string, dormId?: string): Promise<Partial<CheckoutRequest> | null> {
+    let sql = `${this.BASE_QUERY} WHERE cr.id = $1`;
+    const params: any[] = [requestId];
+    if (dormId) {
+      sql += ` AND (SELECT d.id FROM rental_form_beds rfb JOIN beds b ON rfb.bed_id = b.id JOIN rooms r ON b.room_id = r.id JOIN dorms d ON r.dorm_id = d.id WHERE rfb.rental_form_id = cr.refund_form_id LIMIT 1) = $2`;
+      params.push(dormId);
+    }
+    sql += ` LIMIT 1`;
+    const result = await dbClient.query(sql, params);
     return result.rows[0] ? this.mapRow(result.rows[0]) : null;
   }
 
-  static async getByUserEmail(userEmail: string): Promise<Partial<CheckoutRequest>[]> {
-    const sql = `${this.BASE_QUERY} WHERE cr.user_email = $1 ORDER BY cr.created_at DESC`;
-    const result = await dbClient.query(sql, [userEmail]);
+  static async getByUserEmail(userEmail: string, dormId?: string): Promise<Partial<CheckoutRequest>[]> {
+    let sql = `${this.BASE_QUERY} WHERE cr.user_email = $1`;
+    const params: any[] = [userEmail];
+    if (dormId) {
+      sql += ` AND (SELECT d.id FROM rental_form_beds rfb JOIN beds b ON rfb.bed_id = b.id JOIN rooms r ON b.room_id = r.id JOIN dorms d ON r.dorm_id = d.id WHERE rfb.rental_form_id = cr.refund_form_id LIMIT 1) = $2`;
+      params.push(dormId);
+    }
+    sql += ` ORDER BY cr.created_at DESC`;
+    const result = await dbClient.query(sql, params);
     return result.rows.map((row: any) => this.mapRow(row));
   }
 

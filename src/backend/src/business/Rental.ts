@@ -156,8 +156,8 @@ export class Rental {
     return await RentalDB.getBedsInfoByRentalFormId(rentalFormId);
   }
 
-  static async getActiveRentalFormsForCheckout(userEmail: string) {
-      return await RentalDB.getActiveRentalFormsForCheckout(userEmail);
+  static async getActiveRentalFormsForCheckout(userEmail: string, dormId?: string) {
+      return await RentalDB.getActiveRentalFormsForCheckout(userEmail, dormId);
     }
   
     static async getRentalFormById(rentalFormId: string) {
