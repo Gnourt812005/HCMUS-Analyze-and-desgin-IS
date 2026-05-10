@@ -25,12 +25,15 @@ class "AdminStaff" <<boundary>> {
 
 class "AdminStaffDetail" <<boundary>> {
     - formData: UserDTO
+    - dorms: DormDTO[]
     - setFormData: void
+    - setDorms: void
     - loading: boolean
     - setLoading: void
     - isSubmitting: boolean
     - setIsSubmitting: void
     + fetchStaff(): void
+    + fetchDorms(): void
     + handleSubmit(): void
 }
 
@@ -41,6 +44,7 @@ interface "UserProfileDTO" <<dto>> {
     + phone: string
     + role: string
     + address: string
+    + dormId?: string
 }
 
 interface "UserDTO" <<dto>> {
@@ -53,6 +57,12 @@ interface "UserDTO" <<dto>> {
     + gender?: string
     + birthday?: string
     + password?: string
+    + dormId?: string
+}
+
+interface "DormDTO" <<dto>> {
+    + id: string
+    + name: string
 }
 
 ' --- BUSINESS LAYER ---
@@ -60,11 +70,17 @@ class "User" <<control>> {
     - email: string
     - fullName: string
     - role: string
+    - dormId?: string
     + <<static>> getAllEmployees(query: any): UserProfileDTO[]
     + <<static>> getEmployeeByEmail(email: string): UserProfileDTO
     + <<static>> upsertEmployee(data: UserDTO): boolean
     + <<static>> deleteEmployee(email: string): boolean
 }
+
+class "Dorm" <<control>> {
+    + <<static>> getAll(query: any): DormDTO[]
+}
+
 
 ' --- DATABASE LAYER ---
 class "UserDB" <<entity>> {
@@ -78,6 +94,7 @@ class "UserDB" <<entity>> {
 ' --- RELATIONSHIPS ---
 AdminStaff --> User
 AdminStaffDetail --> User
+AdminStaffDetail --> Dorm
 User --> UserDB
 AdminStaff ..> AdminStaffDetail
 

@@ -1,12 +1,37 @@
-import { Router } from 'express';
-import { Dorm } from '../business/Dorm';
-import { DormFee } from '../business/DormFee';
-import { RentalDB } from '../database/RentalDB';
+import { Router, Response, NextFunction } from 'express';
+import { Dorm } from '../../business/Dorm';
+import { DormFee } from '../../business/DormFee';
+import { RentalDB } from '../../database/RentalDB';
+import { AuthRequest, authorize } from '../../middleware/authMiddleware';
+import { UserRole } from '@dormarch/shared';
 
 export const dormRoutes = Router();
 
-// GET / - List dorms (supports ?keyword=...)
-dormRoutes.get('/', async (req, res) => {
+/**
+ * Middleware to ensure Managers only access their own dorm.
+ * Admins bypass this check.
+ */
+const checkDormOwnership = (req: AuthRequest, res: Response, next: NextFunction) => {
+  const user = req.user;
+  // Use id or dormId depending on the route parameter name
+  const requestedDormId = req.params.id || req.params.dormId;
+
+  if (user?.role === UserRole.ADMIN) return next();
+
+  if (user?.role === UserRole.MANAGER && user.dormId === requestedDormId) {
+    return next();
+  }
+
+  return res.status(403).json({ message: 'Bạn không có quyền thực hiện hành động này trên ký túc xá khác' });
+};
+
+// GET / - List dorms
+dormRoutes.get('/', async (req: AuthRequest, res) => {
+  const dormId = req.user?.dormId;
+  if (dormId && req.user?.role === UserRole.MANAGER) {
+    const dorm = await Dorm.getById(dormId);
+    return res.json({ message: 'Success', status: 200, data: { dorms: [dorm], total: dorm ? 1 : 0 } });
+  }
   try {
     const query = {
       page: parseInt(req.query.page as string) || 1,
@@ -22,7 +47,7 @@ dormRoutes.get('/', async (req, res) => {
 });
 
 // GET /:id - Get dorm detail
-dormRoutes.get('/:id', async (req, res) => {
+dormRoutes.get('/:id', checkDormOwnership, async (req: AuthRequest, res) => {
   try {
     const dorm = await Dorm.getById(req.params.id);
     if (!dorm) {
@@ -34,9 +59,8 @@ dormRoutes.get('/:id', async (req, res) => {
   }
 });
 
-// POST / - Create new dorm
-/*
-dormRoutes.post('/', async (req, res) => {
+// POST / - Create new dorm (ADMIN ONLY)
+dormRoutes.post('/', authorize(UserRole.ADMIN), async (req, res) => {
   try {
     const success = await Dorm.create(req.body);
     res.json({ message: 'Thêm mới thành công', status: 201, data: success });
@@ -46,7 +70,7 @@ dormRoutes.post('/', async (req, res) => {
 });
 
 // PUT /:id - Update dorm
-dormRoutes.put('/:id', async (req, res) => {
+dormRoutes.put('/:id', checkDormOwnership, async (req: AuthRequest, res) => {
   try {
     const success = await Dorm.update(req.params.id, req.body);
     res.json({ message: 'Cập nhật thành công', status: 200, data: success });
@@ -55,8 +79,8 @@ dormRoutes.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /:id - Delete dorm (Soft delete)
-dormRoutes.delete('/:id', async (req, res) => {
+// DELETE /:id - Delete dorm
+dormRoutes.delete('/:id', authorize(UserRole.ADMIN), async (req, res) => {
   try {
     const success = await Dorm.delete(req.params.id);
     res.json({ message: 'Đã ẩn ký túc xá', status: 200, data: success });
@@ -64,10 +88,9 @@ dormRoutes.delete('/:id', async (req, res) => {
     res.status(500).json({ message: error.message || 'Lỗi khi xóa', status: 500 });
   }
 });
-*/
 
 // GET /:id/fees - Get dorm fees
-dormRoutes.get('/:id/fees', async (req, res) => {
+dormRoutes.get('/:id/fees', checkDormOwnership, async (req: AuthRequest, res) => {
   try {
     const fees = await DormFee.getByDormId(req.params.id);
     res.json({ message: 'Success', status: 200, data: fees ? fees.toDTO() : null });
@@ -77,8 +100,7 @@ dormRoutes.get('/:id/fees', async (req, res) => {
 });
 
 // PUT /:id/fees - Update dorm fees
-/*
-dormRoutes.put('/:id/fees', async (req, res) => {
+dormRoutes.put('/:id/fees', checkDormOwnership, async (req: AuthRequest, res) => {
   try {
     const success = await DormFee.update(req.params.id, req.body);
     res.json({ message: 'Cập nhật phí thành công', status: 200, data: success });
@@ -86,14 +108,9 @@ dormRoutes.put('/:id/fees', async (req, res) => {
     res.status(500).json({ message: error.message || 'Lỗi khi cập nhật phí', status: 500 });
   }
 });
-*/
 
-
-/**
- * EXISTING ROUTE - DO NOT REMOVE
- * GET /:dormId/rooms - List rooms in a dorm
- */
-dormRoutes.get('/:dormId/rooms', async (req, res) => {
+// GET /:dormId/rooms - List rooms in a dorm
+dormRoutes.get('/:dormId/rooms', checkDormOwnership, async (req: AuthRequest, res) => {
   try {
     const rooms = await RentalDB.listRoomBedsByDorm(req.params.dormId);
     res.json({ message: 'Success', status: 200, data: rooms });

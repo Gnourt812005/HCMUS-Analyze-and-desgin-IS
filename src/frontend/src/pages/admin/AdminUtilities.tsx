@@ -22,7 +22,7 @@ export const AdminUtilities = () => {
         try {
             setLoading(true);
             const res = await ApiClient.get<{ data: { utilities: UtilityDTO[] } }>(
-                `/utilities?search=${searchQuery}`
+                `/admin/utilities?search=${searchQuery}`
             );
             setUtilities(res.data.utilities);
         } catch (error) {
@@ -65,11 +65,11 @@ export const AdminUtilities = () => {
         try {
             setIsSubmitting(true);
             if (editingId) {
-                await ApiClient.put(`/utilities/${editingId}`, {
+                await ApiClient.put(`/admin/utilities/${editingId}`, {
                     body: JSON.stringify({ title: formData.title })
                 });
             } else {
-                await ApiClient.post('/utilities', {
+                await ApiClient.post('/admin/utilities', {
                     body: JSON.stringify(formData)
                 });
             }
@@ -85,7 +85,7 @@ export const AdminUtilities = () => {
     const handleDelete = async (id: string) => {
         if (!window.confirm('Bạn có chắc chắn muốn xóa tiện ích này?')) return;
         try {
-            await ApiClient.delete(`/utilities/${id}`);
+            await ApiClient.delete(`/admin/utilities/${id}`);
             fetchUtilities();
         } catch (error: any) {
             alert(error.message || 'Lỗi khi xóa tiện ích');

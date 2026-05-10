@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { Room } from '../business/Room';
-import { Bed } from '../business/Bed';
+import { Room } from '../../business/Room';
+import { Bed } from '../../business/Bed';
 import { GetRoomDto } from '@dormarch/shared';
-import { RoomDB } from '../database/RoomDB';
-import { AuthRequest } from 'src/middleware/authMiddleware';
+import { RoomDB } from '../../database/RoomDB';
+import { AuthRequest } from '../../middleware/authMiddleware';
 
 export const roomRoutes = Router();
 
@@ -101,11 +101,4 @@ roomRoutes.delete('/beds/:bedId', async (req, res) => {
   }
 });
 
-roomRoutes.get('/:roomId/beds', async (req, res) => {
-  try {
-    const beds = await Room.getBedsByRoomId(req.params.roomId);
-    res.json({ message: 'Success', status: 200, data: beds });
-  } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error', status: 500, data: [] });
-  }
-});
+

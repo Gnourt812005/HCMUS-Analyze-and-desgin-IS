@@ -284,7 +284,7 @@ const ContractDetailModal = ({
   const [dormFees, setDormFees] = useState<DormFeesDTO | null>(null);
 
   useEffect(() => {
-    ApiClient.get<{ data: { content: string } }>('/rentals/policy/latest')
+    ApiClient.get<{ data: { content: string } }>('/admin/rentals/policy/latest')
       .then(res => setPolicyContent(res.data?.content ?? ''))
       .catch(() => setPolicyContent(''));
     ContractService.getFees(contract.id)

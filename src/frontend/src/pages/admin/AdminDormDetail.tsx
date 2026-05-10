@@ -45,10 +45,10 @@ export const AdminDormDetail = () => {
         try {
             setLoading(true);
             const [dormRes, roomsRes, utilsRes, feeRes] = await Promise.all([
-                isNew ? Promise.resolve({ data: null }) : ApiClient.get<{ data: DormDTO }>(`/dorms/${id}`),
-                isNew ? Promise.resolve({ data: { rooms: [], total: 0 } }) : ApiClient.get<{ data: { rooms: any[], total: number } }>(`/rooms?dormId=${id}&limit=100`),
-                ApiClient.get<{ data: { utilities: UtilityDTO[] } }>('/utilities?limit=100?type=DORM'),
-                isNew ? Promise.resolve({ data: null }) : ApiClient.get<{ data: DormFeeDTO }>(`/dorms/${id}/fees`)
+                isNew ? Promise.resolve({ data: null }) : ApiClient.get<{ data: DormDTO }>(`/admin/dorms/${id}`),
+                isNew ? Promise.resolve({ data: { rooms: [], total: 0 } }) : ApiClient.get<{ data: { rooms: any[], total: number } }>(`/admin/rooms?dormId=${id}&limit=100`),
+                ApiClient.get<{ data: { utilities: UtilityDTO[] } }>('/admin/utilities?limit=100?type=DORM'),
+                isNew ? Promise.resolve({ data: null }) : ApiClient.get<{ data: DormFeeDTO }>(`/admin/dorms/${id}/fees`)
             ]);
 
             setAvailableUtilities(utilsRes.data.utilities);
@@ -94,13 +94,13 @@ export const AdminDormDetail = () => {
         try {
             setIsSubmitting(true);
             if (isNew) {
-                await ApiClient.post('/dorms', {
+                await ApiClient.post('/admin/dorms', {
                     body: JSON.stringify(formData)
                 });
                 alert('Thêm cơ sở mới thành công');
                 navigate('/admin/dorms');
             } else {
-                await ApiClient.put(`/dorms/${id}`, {
+                await ApiClient.put(`/admin/dorms/${id}`, {
                     body: JSON.stringify(formData)
                 });
                 alert('Cập nhật thành công');
@@ -118,7 +118,7 @@ export const AdminDormDetail = () => {
         e.preventDefault();
         try {
             setIsSubmittingFees(true);
-            await ApiClient.put(`/dorms/${id}/fees`, {
+            await ApiClient.put(`/admin/dorms/${id}/fees`, {
                 body: JSON.stringify(feeFormData)
             });
             alert('Cập nhật phí thành công');

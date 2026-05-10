@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import { JwtUtils } from '../utils/jwt';
+import { UserRole } from '@dormarch/shared';
 
 export interface TokenPayload {
   email: string;
   role: string;
+  dormId?: string;
 }
 
 // Define a custom interface to extend the Express Request
@@ -29,9 +31,28 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
   }
 };
 
-export const adminMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (req.user?.role !== 'ADMIN') {
-    return res.status(403).json({ message: 'Bạn không có quyền thực hiện hành động này' });
-  }
-  next();
+/**
+ * Middleware to authorize specific roles
+ * UserRole.ADMIN always bypasses these checks.
+ * Usage: 
+ *   router.get('/manager-only', authMiddleware, authorize(UserRole.MANAGER), controller)
+ */
+export const authorize = (...allowedRoles: UserRole[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Không thể định danh' });
+    }
+
+    // ADMIN bypasses all role checks
+    if (req.user.role === UserRole.ADMIN) {
+      return next();
+    }
+
+    if (!allowedRoles.includes(req.user.role as UserRole)) {
+      return res.status(403).json({ message: 'Bạn không có quyền thực hiện hành động này' });
+    }
+    next();
+  };
 };
+
+export const adminMiddleware = authorize(UserRole.ADMIN);

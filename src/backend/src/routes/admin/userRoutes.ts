@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { User } from '../business/User';
+import { User } from '../../business/User';
 import { UserProfileDTO, ChangePasswordDTO, UserDTO } from '@dormarch/shared';
-import { authMiddleware, AuthRequest, adminMiddleware } from '../middleware/authMiddleware';
+import { AuthRequest, adminMiddleware } from '../../middleware/authMiddleware';
 
 const router = Router();
 
-router.get('/profile', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/profile', async (req: AuthRequest, res) => {
   try {
     const email = req.user?.email;
     if (!email) return res.status(401).json({ message: 'Không thể định danh' });
@@ -19,7 +19,7 @@ router.get('/profile', authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
-router.put('/profile', authMiddleware, async (req: AuthRequest, res) => {
+router.put('/profile', async (req: AuthRequest, res) => {
   try {
     const email = req.user?.email;
     if (!email) return res.status(401).json({ message: 'Không thể định danh' });
@@ -37,7 +37,7 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
-router.patch('/profile/password', authMiddleware, async (req: AuthRequest, res) => {
+router.patch('/profile/password', async (req: AuthRequest, res) => {
   try {
     const email = req.user?.email;
     if (!email) return res.status(401).json({ message: 'Không thể định danh' });
@@ -55,9 +55,8 @@ router.patch('/profile/password', authMiddleware, async (req: AuthRequest, res) 
   }
 });
 
-/*
 // STAFF MANAGEMENT
-router.get('/staff', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
+router.get('/staff', adminMiddleware, async (req: AuthRequest, res) => {
   try {
     const keyword = req.query.keyword as string;
     const staff = await User.getAllEmployees({ keyword });
@@ -67,7 +66,7 @@ router.get('/staff', authMiddleware, adminMiddleware, async (req: AuthRequest, r
   }
 });
 
-router.get('/staff/:email', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
+router.get('/staff/:email', adminMiddleware, async (req: AuthRequest, res) => {
   try {
     const staff = await User.getEmployeeByEmail(req.params.email);
     if (!staff) return res.status(404).json({ message: 'Không tìm thấy nhân viên' });
@@ -77,7 +76,7 @@ router.get('/staff/:email', authMiddleware, adminMiddleware, async (req: AuthReq
   }
 });
 
-router.post('/staff', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
+router.post('/staff', adminMiddleware, async (req: AuthRequest, res) => {
   try {
     const data: UserDTO = req.body;
     const success = await User.upsertEmployee(data);
@@ -87,7 +86,7 @@ router.post('/staff', authMiddleware, adminMiddleware, async (req: AuthRequest, 
   }
 });
 
-router.delete('/staff/:email', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
+router.delete('/staff/:email', adminMiddleware, async (req: AuthRequest, res) => {
   try {
     const success = await User.deleteEmployee(req.params.email);
     res.json({ success, message: 'Xóa nhân viên thành công' });
@@ -95,6 +94,5 @@ router.delete('/staff/:email', authMiddleware, adminMiddleware, async (req: Auth
     res.status(400).json({ message: error.message });
   }
 });
-*/
 
 export default router;

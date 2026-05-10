@@ -3,6 +3,7 @@ import { UserRole } from '@dormarch/shared';
 export interface TokenPayload {
   email: string;
   role: UserRole;
+  dormId?: string;
   iat: number;
   exp: number;
 }

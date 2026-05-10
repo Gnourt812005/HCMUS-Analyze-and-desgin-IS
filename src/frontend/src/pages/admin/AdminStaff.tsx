@@ -14,7 +14,7 @@ export const AdminStaff = () => {
         try {
             setLoading(true);
             const res = await ApiClient.get<{ data: UserProfileDTO[] }>(
-                `/users/staff${searchQuery ? `?keyword=${searchQuery}` : ''}`
+                `/admin/users/staff${searchQuery ? `?keyword=${searchQuery}` : ''}`
             );
             setStaff(res.data);
         } catch (error) {
@@ -34,7 +34,7 @@ export const AdminStaff = () => {
     const handleDelete = async (email: string) => {
         if (!window.confirm(`Bạn có chắc chắn muốn xóa nhân viên ${email}?`)) return;
         try {
-            await ApiClient.delete(`/users/staff/${email}`);
+            await ApiClient.delete(`/admin/users/staff/${email}`);
             fetchStaff();
         } catch (error) {
             alert('Lỗi khi xóa nhân viên');

@@ -15,6 +15,7 @@ export interface UserDTO {
   phone?: string;
   address?: string;
   password?: string;
+  dormId?: string;
 }
 
 export interface SignInDTO {
@@ -40,6 +41,7 @@ export interface UserProfileDTO {
   gender?: string;
   phone?: string;
   address?: string;
+  dormId?: string;
 }
 
 export interface ChangePasswordDTO {
@@ -53,4 +55,5 @@ export interface UpdateProfileDTO {
   gender?: string;
   phone?: string;
   address?: string;
+  dormId?: string;
 }

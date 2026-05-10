@@ -17,7 +17,7 @@ export const AdminDorm = () => {
         try {
             setLoading(true);
             const res = await ApiClient.get<{ data: { dorms: DormDTO[], total: number } }>(
-                `/dorms?page=${page}&limit=${limit}${searchQuery ? `&keyword=${searchQuery}` : ''}`
+                `/admin/dorms?page=${page}&limit=${limit}${searchQuery ? `&keyword=${searchQuery}` : ''}`
             );
             setDorms(res.data.dorms);
             setTotal(res.data.total);
@@ -42,7 +42,7 @@ export const AdminDorm = () => {
     const handleDelete = async (id: string) => {
         if (!window.confirm('Bạn có chắc chắn muốn xóa ký túc xá này?')) return;
         try {
-            await ApiClient.delete(`/dorms/${id}`);
+            await ApiClient.delete(`/admin/dorms/${id}`);
             fetchDorms();
         } catch (error) {
             alert('Lỗi khi xóa ký túc xá');

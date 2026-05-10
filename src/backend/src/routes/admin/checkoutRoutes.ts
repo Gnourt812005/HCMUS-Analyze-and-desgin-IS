@@ -1,24 +1,24 @@
 import { Router, Request, Response } from 'express';
-import { CheckoutRequest } from '../business/CheckoutRequest';
-import { Contract } from '../business/Contract';
-import { Room } from '../business/Room';
-import { Rental } from '../business/Rental';
-import { RefundCalculation } from '../business/RefundCalculation';
+import { CheckoutRequest } from '../../business/CheckoutRequest';
+import { Contract } from '../../business/Contract';
+import { Room } from '../../business/Room';
+import { Rental } from '../../business/Rental';
+import { RefundCalculation } from '../../business/RefundCalculation';
 import { CheckoutStatus, ContractStatus, RefundCalculationDTO } from '@dormarch/shared';
-import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
+import { AuthRequest } from '../../middleware/authMiddleware';
 
 export const checkoutRouter = Router();
 
-checkoutRouter.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
+checkoutRouter.get('/', async (req: AuthRequest, res: Response) => {
   try {
     const email = req.user?.email;
     if (!email) {
       return res.status(401).json({ message: 'Không thể định danh' });
     }
-    
+
     // Admin sees all requests, customers see only their own
     const isAdmin = req.user?.role === 'ADMIN';
-    const requests = isAdmin 
+    const requests = isAdmin
       ? await CheckoutRequest.getList()
       : await CheckoutRequest.getListByUserEmail(email);
     res.status(200).json(requests);
@@ -27,7 +27,7 @@ checkoutRouter.get('/', authMiddleware, async (req: AuthRequest, res: Response) 
   }
 });
 
-checkoutRouter.get('/rental-forms/available', authMiddleware, async (req: AuthRequest, res: Response) => {
+checkoutRouter.get('/rental-forms/available', async (req: AuthRequest, res: Response) => {
   try {
     const userEmail = (req.query.userEmail as string) || req.user?.email;
     const authEmail = req.user?.email;
@@ -74,10 +74,10 @@ checkoutRouter.get('/:id/details', async (req: Request, res: Response) => {
     // Fetch rental form data and refund calculation
     const rentalForm = request.rentalFormId ? await Rental.getRentalFormById(request.rentalFormId) : null;
     const refund = await RefundCalculation.getByRequestId(request.requestId);
-    
+
     // Deposit amount = 2 months of rent (totalAmount is 1 month rent)
     const depositAmount = rentalForm ? rentalForm.totalAmount * 2 : 0;
-    
+
     res.status(200).json({ request, rentalForm, refund, depositAmount });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error });
@@ -86,7 +86,7 @@ checkoutRouter.get('/:id/details', async (req: Request, res: Response) => {
 
 checkoutRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const { userEmail, rentalFormId, expectedDate} = req.body;
+    const { userEmail, rentalFormId, expectedDate } = req.body;
 
     if (!userEmail || !rentalFormId || !expectedDate) {
       res.status(400).json({ message: 'userEmail, rentalFormId và expectedDate là bắt buộc.' });
@@ -129,7 +129,6 @@ checkoutRouter.post('/', async (req: Request, res: Response) => {
   }
 });
 
-/* 
 checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
   try {
     const { status, expectedStatus } = req.body;
@@ -149,7 +148,7 @@ checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
     }
 
     const updated = await CheckoutRequest.getById(requestId);
-    
+
     // Auto-calculate refund if no contract exists and status is transitioning to PROCESSING
     if (newStatus === CheckoutStatus.PROCESSING && updated && updated.rentalFormId) {
       try {
@@ -168,14 +167,12 @@ checkoutRouter.patch('/:id/status', async (req: Request, res: Response) => {
     const statusCode = message.includes('Yêu cầu đã được cập nhật bởi quản trị viên khác')
       ? 409
       : message.includes('Không thể chuyển trạng thái')
-      ? 400
-      : 500;
+        ? 400
+        : 500;
     res.status(statusCode).json({ message });
   }
 });
-*/
 
-/*
 checkoutRouter.patch('/:id/complete-checkout', async (req: Request, res: Response) => {
   try {
     const { status, expectedStatus } = req.body;
@@ -217,9 +214,8 @@ checkoutRouter.patch('/:id/complete-checkout', async (req: Request, res: Respons
     const statusCode = message.includes('Yêu cầu đã được cập nhật bởi quản trị viên khác')
       ? 409
       : message.includes('Không thể chuyển trạng thái')
-      ? 400
-      : 500;
+        ? 400
+        : 500;
     res.status(statusCode).json({ message });
   }
 });
-*/

@@ -21,7 +21,7 @@ export const AdminRooms = () => {
 
     const fetchDorms = async () => {
         try {
-            const res = await ApiClient.get<{ data: { dorms: DormDTO[] } }>('/dorms?limit=100');
+            const res = await ApiClient.get<{ data: { dorms: DormDTO[] } }>('/admin/dorms?limit=100');
             setDorms(res.data.dorms);
         } catch (error) {
             console.error('Failed to fetch dorms', error);
@@ -38,7 +38,7 @@ export const AdminRooms = () => {
             if (filters.dormId) queryParams.append('dormId', filters.dormId);
             if (filters.status) queryParams.append('status', filters.status);
 
-            const res = await ApiClient.get<{ data: { rooms: RoomDTO[], total: number } }>(`/rooms?${queryParams.toString()}`);
+            const res = await ApiClient.get<{ data: { rooms: RoomDTO[], total: number } }>(`/admin/rooms?${queryParams.toString()}`);
             setRooms(res.data.rooms);
             setTotal(res.data.total);
         } catch (error) {
@@ -62,7 +62,7 @@ export const AdminRooms = () => {
     const handleDelete = async (id: string) => {
         if (!window.confirm('Bạn có chắc chắn muốn xóa phòng này? Toàn bộ giường trong phòng cũng sẽ bị xóa.')) return;
         try {
-            await ApiClient.delete(`/rooms/${id}`);
+            await ApiClient.delete(`/admin/rooms/${id}`);
             fetchRooms();
         } catch (error) {
             alert('Lỗi khi xóa phòng');

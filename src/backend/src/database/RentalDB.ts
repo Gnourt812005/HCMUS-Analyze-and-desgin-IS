@@ -392,7 +392,8 @@ export class RentalDB {
       acceptedConditions: true,
       services: [],
       roomPrice: Number(row.room_price),
-      alreadyDeposited
+      alreadyDeposited,
+      action: row.type
     };
   }
 

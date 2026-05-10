@@ -54,7 +54,7 @@ export const AdminCheckout = () => {
       setModalRefundLoading(true);
       try {
         const refund = await ApiClient.get<RefundCalculationDTO>(
-          `/refund-calculations/by-request/${selectedRequest.requestId}`
+          `/admin/refund-calculations/by-request/${selectedRequest.requestId}`
         );
         setRefundMap(prev => ({
           ...prev,
@@ -73,7 +73,7 @@ export const AdminCheckout = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await ApiClient.get<CheckoutRequestDTO[]>('/checkout-requests');
+      const response = await ApiClient.get<CheckoutRequestDTO[]>('/admin/checkout-requests');
       
       if (abortController.signal.aborted) return;
       
@@ -81,7 +81,7 @@ export const AdminCheckout = () => {
 
       // Load refund calculations for all requests in parallel
       const refundPromises = (response || []).map(request =>
-        ApiClient.get<RefundCalculationDTO>(`/refund-calculations/by-request/${request.requestId}`)
+        ApiClient.get<RefundCalculationDTO>(`/admin/refund-calculations/by-request/${request.requestId}`)
           .then(refund => ({ requestId: request.requestId, refund }))
           .catch(() => ({ requestId: request.requestId, refund: null }))
       );
@@ -120,7 +120,7 @@ export const AdminCheckout = () => {
     }
 
     try {
-      const newRequest = await ApiClient.post<CheckoutRequestDTO>('/checkout-requests', {
+      const newRequest = await ApiClient.post<CheckoutRequestDTO>('/admin/checkout-requests', {
         body: JSON.stringify({
           userEmail: createForm.userEmail,
           rentalFormId: createForm.rentalFormId,
@@ -160,7 +160,7 @@ export const AdminCheckout = () => {
     try {
       // Fetch rental forms for the searched customer
       const response = await ApiClient.get<RentalFormDTO[]>(
-        `/checkout-requests/rental-forms/available?userEmail=${encodeURIComponent(createForm.userEmail)}`
+        `/admin/checkout-requests/rental-forms/available?userEmail=${encodeURIComponent(createForm.userEmail)}`
       );
 
       if (!response || response.length === 0) {
@@ -193,7 +193,7 @@ export const AdminCheckout = () => {
     
     // Load rental form info to check if it has a contract
     try {
-      const detailData = await ApiClient.get<any>(`/checkout-requests/${request.requestId}/details`);
+      const detailData = await ApiClient.get<any>(`/admin/checkout-requests/${request.requestId}/details`);
       
       if (detailData && detailData.rentalForm) {
         setSelectedRentalForm(detailData.rentalForm);
@@ -211,7 +211,7 @@ export const AdminCheckout = () => {
       );
       
       const request = checkoutRequests.find(r => r.requestId === requestId);
-      await ApiClient.patch(`/checkout-requests/${requestId}/status`, {
+      await ApiClient.patch(`/admin/checkout-requests/${requestId}/status`, {
         body: JSON.stringify({
           status: CheckoutStatus.PROCESSING,
           expectedStatus: request?.status
@@ -227,7 +227,7 @@ export const AdminCheckout = () => {
       if (selectedRequest) {
         try {
           const refund = await ApiClient.get<RefundCalculationDTO>(
-            `/refund-calculations/by-request/${selectedRequest.requestId}`
+            `/admin/refund-calculations/by-request/${selectedRequest.requestId}`
           );
           setRefundMap(prev => ({
             ...prev,
@@ -259,7 +259,7 @@ export const AdminCheckout = () => {
         prev => prev.map(r => r.requestId === requestId ? { ...r, status: CheckoutStatus.CANCELLED } : r)
       );
       
-      await ApiClient.patch(`/checkout-requests/${requestId}/status`, {
+      await ApiClient.patch(`/admin/checkout-requests/${requestId}/status`, {
         body: JSON.stringify({
           status: CheckoutStatus.CANCELLED,
           expectedStatus: request?.status

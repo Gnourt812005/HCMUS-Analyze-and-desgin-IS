@@ -23,6 +23,7 @@ CREATE TABLE users (
     phone VARCHAR(15),
     address TEXT,
     role user_role_type DEFAULT 'GUEST',
+    dorm_id UUID, -- Employee belong to specific dorm
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -160,12 +161,14 @@ CREATE TABLE payments (
 -- 11. CONTRACTS
 CREATE TABLE contracts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    contract_code VARCHAR(50) UNIQUE,
     user_email VARCHAR(255) REFERENCES users(email),
     start_date DATE NOT NULL,
     stay_duration INTEGER, -- In months
     rental_form_id UUID REFERENCES rental_forms(id),
     status contract_status_type DEFAULT 'ACTIVE',
     signature_url TEXT,
+    fees_snapshot JSONB,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -178,6 +181,7 @@ CREATE TABLE contract_beds (
 -- 12. HANDOVERS
 CREATE TABLE handovers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    handover_code VARCHAR(50) UNIQUE,
     contract_id UUID REFERENCES contracts(id) ON DELETE CASCADE,
     type handover_type,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -226,3 +230,7 @@ CREATE INDEX idx_payments_rental_form ON payments(rental_form_id);
 CREATE INDEX idx_contracts_user ON contracts(user_email);
 CREATE INDEX idx_checkout_requests_user ON checkout_requests(user_email);
 CREATE INDEX idx_refund_calculations_request ON refund_calculations(request_id);
+CREATE INDEX idx_users_dorm_id ON users(dorm_id);
+
+-- 16. CONSTRAINTS
+ALTER TABLE users ADD CONSTRAINT fk_users_dorm FOREIGN KEY (dorm_id) REFERENCES dorms(id) ON DELETE SET NULL;

@@ -47,7 +47,7 @@ export const AdminLiquidation = () => {
         rentalForm?: any | null;
         refund?: RefundCalculationDTO | null;
       }
-      const detailData = await ApiClient.get<DetailResponse>(`/checkout-requests/${requestId}/details`);
+      const detailData = await ApiClient.get<DetailResponse>(`/admin/checkout-requests/${requestId}/details`);
       
       if (abortController.signal.aborted) return;
       
@@ -58,7 +58,7 @@ export const AdminLiquidation = () => {
 
       // Load refund calculation
       try {
-        const calcData = await ApiClient.get<RefundCalculationDTO>(`/refund-calculations/by-request/${requestId}`);
+        const calcData = await ApiClient.get<RefundCalculationDTO>(`/admin/refund-calculations/by-request/${requestId}`);
         if (!abortController.signal.aborted) {
           setCalculation(calcData);
         }
@@ -85,7 +85,7 @@ export const AdminLiquidation = () => {
       setFinalizing(true);
       setError(null);
 
-      await ApiClient.patch(`/checkout-requests/${checkoutRequest.requestId}/complete-checkout`, {
+      await ApiClient.patch(`/admin/checkout-requests/${checkoutRequest.requestId}/complete-checkout`, {
         body: JSON.stringify({
           status: CheckoutStatus.LIQUIDATED,
           expectedStatus: checkoutRequest.status

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ApiClient } from '../../api/ApiClient';
-import { UserDTO, UserRole } from '@dormarch/shared';
+import { UserDTO, UserRole, DormDTO } from '@dormarch/shared';
 import { motion } from 'framer-motion';
 
 export const AdminStaffDetail = () => {
@@ -11,6 +11,7 @@ export const AdminStaffDetail = () => {
 
     const [loading, setLoading] = useState(!isNew);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [dorms, setDorms] = useState<DormDTO[]>([]);
     
     const [formData, setFormData] = useState<UserDTO>({
         email: '',
@@ -21,19 +22,30 @@ export const AdminStaffDetail = () => {
         cccd: '',
         gender: 'Nam',
         birthday: '',
-        password: ''
+        password: '',
+        dormId: ''
     });
 
     useEffect(() => {
+        fetchDorms();
         if (!isNew) {
             fetchStaff();
         }
     }, [email]);
 
+    const fetchDorms = async () => {
+        try {
+            const res = await ApiClient.get<{ data: { dorms: DormDTO[] } }>('/admin/dorms?limit=100');
+            setDorms(res.data.dorms);
+        } catch (error) {
+            console.error('Failed to fetch dorms', error);
+        }
+    };
+
     const fetchStaff = async () => {
         try {
             setLoading(true);
-            const res = await ApiClient.get<{ data: UserDTO }>(`/users/staff/${email}`);
+            const res = await ApiClient.get<{ data: UserDTO }>(`/admin/users/staff/${email}`);
             setFormData(res.data);
         } catch (error) {
             console.error('Failed to fetch staff details', error);
@@ -48,7 +60,7 @@ export const AdminStaffDetail = () => {
         e.preventDefault();
         try {
             setIsSubmitting(true);
-            await ApiClient.post('/users/staff', {
+            await ApiClient.post('/admin/users/staff', {
                 body: JSON.stringify(formData)
             });
             alert(isNew ? 'Thêm nhân viên thành công' : 'Cập nhật thông tin thành công');
@@ -111,13 +123,42 @@ export const AdminStaffDetail = () => {
                             <select
                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium outline-none"
                                 value={formData.role}
-                                onChange={e => setFormData({ ...formData, role: e.target.value as UserRole })}
+                                onChange={e => {
+                                    const newRole = e.target.value as UserRole;
+                                    setFormData({ 
+                                        ...formData, 
+                                        role: newRole,
+                                        // Reset dormId if role is not MANAGER
+                                        dormId: newRole === UserRole.MANAGER ? formData.dormId : ''
+                                    });
+                                }}
                             >
                                 <option value={UserRole.SALE_STAFF}>Nhân viên kinh doanh</option>
                                 <option value={UserRole.MANAGER}>Quản lý cơ sở</option>
                                 <option value={UserRole.ADMIN}>Quản trị viên</option>
                             </select>
                         </div>
+
+                        {formData.role === UserRole.MANAGER && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-1.5"
+                            >
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Cơ sở quản lý</label>
+                                <select
+                                    required
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium outline-none"
+                                    value={formData.dormId}
+                                    onChange={e => setFormData({ ...formData, dormId: e.target.value })}
+                                >
+                                    <option value="">Chọn cơ sở...</option>
+                                    {dorms.map(d => (
+                                        <option key={d.id} value={d.id}>{d.name}</option>
+                                    ))}
+                                </select>
+                            </motion.div>
+                        )}
 
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Họ và tên</label>

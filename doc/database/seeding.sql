@@ -1,12 +1,16 @@
--- SEEDING DATA FOR DORMITORY MANAGEMENT SYSTEM (SCALED VERSION)
+-- SEEDING DATA FOR DORMITORY MANAGEMENT SYSTEM
 -- 5 Dorms, 10 Rooms/Dorm, 4 Beds/Room
 
--- 1. USERS
+-- 1. USERS & ROLES
 INSERT INTO users (email, full_name, password, cccd, birthday, gender, phone, address, role)
 VALUES 
-('admin@dorm.com', 'Nguyễn Văn Admin', 'password123', '001095000001', '1985-05-20', 'Male', '0901234567', 'Quận 1, TP.HCM', 'ADMIN'),
-('manager1@dorm.com', 'Trần Thị Quản Lý', 'password123', '001095000002', '1990-03-15', 'Female', '0902345678', 'Quận 5, TP.HCM', 'MANAGER'),
-('sale1@dorm.com', 'Lê Văn Sales', 'password123', '001095000003', '1995-10-10', 'Male', '0903456789', 'Quận 10, TP.HCM', 'SALE_STAFF'),
+('admin@gmail.com', 'Hệ Thống Admin', 'password123', '001095000001', '1985-05-20', 'Male', '0901234567', 'Quận 1, TP.HCM', 'ADMIN'),
+('manager1@gmail.com', 'Quản Lý Khu A', 'password123', '001095000011', '1990-01-01', 'Male', '0911111111', 'TP.HCM', 'MANAGER'),
+('manager2@gmail.com', 'Quản Lý Khu B', 'password123', '001095000012', '1990-02-02', 'Female', '0922222222', 'TP.HCM', 'MANAGER'),
+('manager3@gmail.com', 'Quản Lý Khu C', 'password123', '001095000013', '1990-03-03', 'Male', '0933333333', 'TP.HCM', 'MANAGER'),
+('manager4@gmail.com', 'Quản Lý Khu D', 'password123', '001095000014', '1990-04-04', 'Female', '0944444444', 'TP.HCM', 'MANAGER'),
+('manager5@gmail.com', 'Quản Lý Khu E', 'password123', '001095000015', '1990-05-05', 'Male', '0955555555', 'TP.HCM', 'MANAGER'),
+('sale1@gmail.com', 'Lê Văn Sales', 'password123', '001095000003', '1995-10-10', 'Male', '0903456789', 'Quận 10, TP.HCM', 'SALE_STAFF'),
 ('student1@gmail.com', 'Phạm Minh Đức', 'password123', '001095000004', '2005-01-01', 'Male', '0904567890', 'Bình Định', 'GUEST'),
 ('student2@gmail.com', 'Hoàng Thu Thảo', 'password123', '001095000005', '2005-08-20', 'Female', '0905678901', 'Đà Lạt', 'GUEST')
 ON CONFLICT (email) DO NOTHING;
@@ -15,48 +19,75 @@ ON CONFLICT (email) DO NOTHING;
 INSERT INTO policies (title, content, is_active)
 VALUES 
 ('Nội quy Ký túc xá 2024', '1. Giữ gìn vệ sinh chung... 2. Không gây ồn ào sau 23h...', TRUE),
-('Quy định Hoàn tiền', 'Tiền cọc sẽ được hoàn lại sau khi trừ chi phí hư hại...', TRUE)
+('Quy định Hoàn tiền & Bồi thường', 'Tiền cọc sẽ được hoàn lại sau khi trừ chi phí hư hại thiết bị (nếu có)...', TRUE)
 ON CONFLICT DO NOTHING;
 
--- 3. UTILITIES
+-- 3. UTILITIES (Master Data)
 INSERT INTO utilities (title, type, is_liable, incurred_price)
 VALUES 
-('Máy giặt chung', 'DORM', TRUE, 5000000),
-('Điều hòa', 'ROOM', TRUE, 8000000),
-('Tủ lạnh mini', 'ROOM', TRUE, 3000000),
-('Đèn bàn', 'BED', FALSE, 200000)
+-- Dorm level
+('Máy giặt công cộng', 'DORM', TRUE, 5000000),
+('Máy lọc nước', 'DORM', FALSE, 2000000),
+-- Room level
+('Điều hòa Inverter', 'ROOM', TRUE, 12000000),
+('Tủ lạnh mini', 'ROOM', TRUE, 4500000),
+('Bàn học gỗ', 'ROOM', FALSE, 800000),
+-- Bed level
+('Đèn đọc sách chân kẹp', 'BED', FALSE, 250000),
+('Nệm cao su non', 'BED', TRUE, 1500000)
 ON CONFLICT DO NOTHING;
 
--- 4. MASTER SEEDING BLOCK (Dorms -> Rooms -> Beds)
+-- 4. MASTER SEEDING BLOCK
 DO $$
 DECLARE
     v_dorm_id UUID;
     v_room_id UUID;
+    v_bed_id UUID;
     v_policy_id UUID;
-    v_utility_washing_id UUID;
-    v_utility_ac_id UUID;
+    
+    -- Utility IDs
+    v_u_washing UUID;
+    v_u_water UUID;
+    v_u_ac UUID;
+    v_u_fridge UUID;
+    v_u_table UUID;
+    v_u_lamp UUID;
+    v_u_mattress UUID;
+    
+    v_manager_emails TEXT[] := ARRAY['manager1@gmail.com', 'manager2@gmail.com', 'manager3@gmail.com', 'manager4@gmail.com', 'manager5@gmail.com'];
     v_dorm_name TEXT;
     v_room_name TEXT;
 BEGIN
+    -- Fetch IDs
     SELECT id INTO v_policy_id FROM policies WHERE title = 'Nội quy Ký túc xá 2024' LIMIT 1;
-    SELECT id INTO v_utility_washing_id FROM utilities WHERE title = 'Máy giặt chung' LIMIT 1;
-    SELECT id INTO v_utility_ac_id FROM utilities WHERE title = 'Điều hòa' LIMIT 1;
+    
+    SELECT id INTO v_u_washing FROM utilities WHERE title = 'Máy giặt công cộng' LIMIT 1;
+    SELECT id INTO v_u_water FROM utilities WHERE title = 'Máy lọc nước' LIMIT 1;
+    SELECT id INTO v_u_ac FROM utilities WHERE title = 'Điều hòa Inverter' LIMIT 1;
+    SELECT id INTO v_u_fridge FROM utilities WHERE title = 'Tủ lạnh mini' LIMIT 1;
+    SELECT id INTO v_u_table FROM utilities WHERE title = 'Bàn học gỗ' LIMIT 1;
+    SELECT id INTO v_u_lamp FROM utilities WHERE title = 'Đèn đọc sách chân kẹp' LIMIT 1;
+    SELECT id INTO v_u_mattress FROM utilities WHERE title = 'Nệm cao su non' LIMIT 1;
 
-    -- Loop 5 Dorms (A to E)
+    -- Loop 5 Dorms (Khu A -> Khu E)
     FOR i IN 1..5 LOOP
         v_dorm_name := 'KTX Khu ' || CHR(64 + i);
         
+        -- Insert Dorm
         INSERT INTO dorms (name, address, phone, status, total_rooms, available_rooms, manager_id, policy_id)
-        VALUES (v_dorm_name, 'Địa chỉ ' || v_dorm_name || ', TP.HCM', '028000000' || i, 'AVAILABLE', 10, 10, 'manager1@dorm.com', v_policy_id)
+        VALUES (v_dorm_name, 'Số ' || i || ' Đường nội bộ, Làng Đại Học, Thủ Đức', '028000000' || i, 'AVAILABLE', 10, 10, v_manager_emails[i], v_policy_id)
         RETURNING id INTO v_dorm_id;
+
+        -- Attach Dorm to Manager (User table update)
+        UPDATE users SET dorm_id = v_dorm_id WHERE email = v_manager_emails[i];
 
         -- Dorm Fees
         INSERT INTO dorm_fees (dorm_id, water_fee, electricity_fee, wifi_fee, cleaning_fee)
-        VALUES (v_dorm_id, 50000, 3500, 100000, 20000);
+        VALUES (v_dorm_id, 50000, 3500, 100000, 30000);
 
-        -- Assign Washing Machine to Dorm
-        INSERT INTO dorm_utilities (dorm_id, utility_id, status)
-        VALUES (v_dorm_id, v_utility_washing_id, 'GOOD');
+        -- Dorm Utilities
+        INSERT INTO dorm_utilities (dorm_id, utility_id) VALUES (v_dorm_id, v_u_washing);
+        INSERT INTO dorm_utilities (dorm_id, utility_id) VALUES (v_dorm_id, v_u_water);
 
         -- Loop 10 Rooms per Dorm
         FOR j IN 1..10 LOOP
@@ -66,20 +97,27 @@ BEGIN
             VALUES (v_dorm_id, v_room_name, 'Block ' || CHR(64 + i), (j-1)/5 + 1, 'AVAILABLE', 4, 4)
             RETURNING id INTO v_room_id;
 
-            -- Assign AC to Room
-            INSERT INTO room_utilities (room_id, utility_id)
-            VALUES (v_room_id, v_utility_ac_id);
+            -- Room Utilities
+            INSERT INTO room_utilities (room_id, utility_id) VALUES (v_room_id, v_u_ac);
+            INSERT INTO room_utilities (room_id, utility_id) VALUES (v_room_id, v_u_fridge);
+            INSERT INTO room_utilities (room_id, utility_id) VALUES (v_room_id, v_u_table);
 
             -- Loop 4 Beds per Room
             FOR k IN 1..4 LOOP
                 INSERT INTO beds (room_id, bed_number, status, price)
-                VALUES (v_room_id, v_room_name || '.' || k, 'AVAILABLE', 1500000 + (i * 100000));
+                VALUES (v_room_id, v_room_name || '.' || k, 'AVAILABLE', 1800000 + (i * 50000))
+                RETURNING id INTO v_bed_id;
+
+                -- Bed Utilities
+                INSERT INTO bed_utilities (bed_id, utility_id) VALUES (v_bed_id, v_u_lamp);
+                INSERT INTO bed_utilities (bed_id, utility_id) VALUES (v_bed_id, v_u_mattress);
             END LOOP;
         END LOOP;
     END LOOP;
 END $$;
 
--- 5. SAMPLE TRANSACTION (For student1)
+/* 
+-- 5. SAMPLE TRANSACTION SEEDING (COMMENTED OUT)
 DO $$
 DECLARE
     v_rental_id UUID;
@@ -123,3 +161,4 @@ BEGIN
         VALUES (v_rental_id, v_bed_id, 'Phòng A.101, giường số 1. Đã bàn giao đầy đủ thiết bị.');
     END IF;
 END $$;
+*/

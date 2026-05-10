@@ -22,7 +22,7 @@ export const AdminOrders = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await ApiClient.get<{ status: number, data: Order[] }>('/rentals/orders/all');
+        const response = await ApiClient.get<{ status: number, data: Order[] }>('/admin/rentals/orders/all');
         if (response.status === 200) {
           setOrders(response.data);
         }

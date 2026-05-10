@@ -104,7 +104,7 @@ export const AdminRefundCalculation = () => {
         refund?: RefundCalculationDTO | null;
         depositAmount?: number;
       }
-      const detailData = await ApiClient.get<DetailResponse>(`/checkout-requests/${requestId}/details`);
+      const detailData = await ApiClient.get<DetailResponse>(`/admin/checkout-requests/${requestId}/details`);
       
       if (abortController.signal.aborted) return;
       
@@ -130,7 +130,7 @@ export const AdminRefundCalculation = () => {
       // Load contract if rental form exists
       if (detailData.request.rentalFormId) {
         try {
-          const contractData = await ApiClient.get<ContractDTO>(`/contracts/by-rental-form/${detailData.request.rentalFormId}`);
+          const contractData = await ApiClient.get<ContractDTO>(`/admin/contracts/by-rental-form/${detailData.request.rentalFormId}`);
           if (!abortController.signal.aborted && contractData) {
             setContract(contractData);
           }
@@ -142,7 +142,7 @@ export const AdminRefundCalculation = () => {
 
       // Try to load existing calculation
       try {
-        const calcData = await ApiClient.get<RefundCalculationDTO>(`/refund-calculations/by-request/${requestId}`);
+        const calcData = await ApiClient.get<RefundCalculationDTO>(`/admin/refund-calculations/by-request/${requestId}`);
         if (!abortController.signal.aborted) {
           setExistingCalculation(calcData);
           // Pre-fill the form if calculation exists
@@ -296,12 +296,12 @@ ${additionalDeductions.otherDeductionsNotes || 'Không có'}`,
       if (existingCalculation) {
         // Update existing
         savedCalculation = await ApiClient.put<RefundCalculationDTO>(
-          `/refund-calculations/${existingCalculation.calculationId}`,
+          `/admin/refund-calculations/${existingCalculation.calculationId}`,
           { body: JSON.stringify(refundData) }
         );
       } else {
         // Create new
-        savedCalculation = await ApiClient.post<RefundCalculationDTO>('/refund-calculations', {
+        savedCalculation = await ApiClient.post<RefundCalculationDTO>('/admin/refund-calculations', {
           body: JSON.stringify(refundData),
         });
       }

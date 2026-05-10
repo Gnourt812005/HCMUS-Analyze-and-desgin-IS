@@ -17,22 +17,22 @@ export type {
 
 export class HandoverService {
   static async getAll(): Promise<HandoverReportDTO[]> {
-    const res = await ApiClient.get('/handovers');
+    const res = await ApiClient.get('/admin/handovers');
     return res.data;
   }
 
   static async getActiveContracts(): Promise<ActiveContractForHandoverDTO[]> {
-    const res = await ApiClient.get('/handovers/active-contracts');
+    const res = await ApiClient.get('/admin/handovers/active-contracts');
     return res.data;
   }
 
   static async create(payload: CreateHandoverDTO): Promise<{ id: string }> {
-    const res = await ApiClient.post('/handovers', { body: JSON.stringify(payload) });
+    const res = await ApiClient.post('/admin/handovers', { body: JSON.stringify(payload) });
     return res.data;
   }
 
   static async getByContractId(contractId: string): Promise<HandoverReportDTO[]> {
-    const res = await ApiClient.get(`/handovers/by-contract/${contractId}`);
+    const res = await ApiClient.get(`/admin/handovers/by-contract/${contractId}`);
     return res.data;
   }
 }

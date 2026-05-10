@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthService } from './api/AuthService';
+import { UserRole } from '@dormarch/shared';
 
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -67,7 +69,14 @@ function App() {
 
         {/* Admin Portal Layout */}
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Navigate to="/admin/dorms" replace />} />
+          <Route 
+            index 
+            element={
+              AuthService.getRole() === UserRole.SALE_STAFF 
+                ? <Navigate to="/admin/client-preview-forms-management" replace /> 
+                : <Navigate to="/admin/dorms" replace />
+            } 
+          />
           <Route path="dorms" element={<AdminDorm />} />
           <Route path="dorms/new" element={<AdminDormDetail />} />
           <Route path="dorms/:id" element={<AdminDormDetail />} />

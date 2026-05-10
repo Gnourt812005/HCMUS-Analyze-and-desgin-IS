@@ -1,6 +1,8 @@
 import { UserDTO, SignInResponseDTO, SignInDTO, SignUpDTO, UserProfileDTO, ChangePasswordDTO, UserRole, UpdateProfileDTO } from '@dormarch/shared';
 import { UserDB } from '../database/UserDB';
 import { JwtUtils } from '../utils/jwt';
+import { TokenPayload } from '../middleware/authMiddleware';
+
 
 export class User {
   email: string; // PK
@@ -12,6 +14,7 @@ export class User {
   phone?: string;
   address?: string;
   role: UserRole;
+  dormId?: string;
 
   constructor(data: Partial<User>) {
     this.email = data.email || '';
@@ -23,6 +26,7 @@ export class User {
     this.phone = data.phone;
     this.address = data.address;
     this.role = data.role || UserRole.GUEST;
+    this.dormId = data.dormId;
   }
 
   toDTO(): UserDTO {
@@ -34,7 +38,8 @@ export class User {
       gender: this.gender,
       phone: this.phone,
       address: this.address,
-      role: this.role
+      role: this.role,
+      dormId: this.dormId
     };
   }
 
@@ -48,6 +53,7 @@ export class User {
       phone: this.phone,
       address: this.address,
       role: this.role,
+      dormId: this.dormId
     };
   }
 
@@ -63,9 +69,9 @@ export class User {
     }
 
     // Generate accurate JWT Token via Utils
-    const payload = { email: userModel.email, role: userModel.role };
+    const payload: TokenPayload = { email: userModel.email, role: userModel.role, dormId: userModel.dormId };
     const token = JwtUtils.generateToken(payload, '7d');
-
+    
     return {
       token,
     };

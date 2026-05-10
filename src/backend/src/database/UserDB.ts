@@ -13,7 +13,8 @@ export class UserDB {
       gender: row.gender,
       phone: row.phone,
       address: row.address,
-      role: row.role as UserRole
+      role: row.role as UserRole,
+      dormId: row.dorm_id
     });
   }
 
@@ -117,6 +118,10 @@ export class UserDB {
       fields.push(`address = $${counter++}`);
       values.push(data.address);
     }
+    if (data.dormId !== undefined) {
+      fields.push(`dorm_id = $${counter++}`);
+      values.push(data.dormId || null);
+    }
 
     if (fields.length === 0) return true;
 
@@ -146,8 +151,8 @@ export class UserDB {
   static async insert(user: User): Promise<boolean> {
     const db = DatabaseClient.getInstance();
     const query = `
-      INSERT INTO users (email, password, full_name, cccd, birthday, gender, phone, address, role)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      INSERT INTO users (email, password, full_name, cccd, birthday, gender, phone, address, role, dorm_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `;
     const values = [
       user.email,
@@ -158,7 +163,8 @@ export class UserDB {
       user.gender || null,
       user.phone || null,
       user.address || null,
-      user.role || UserRole.GUEST
+      user.role || UserRole.GUEST,
+      user.dormId || null
     ];
     try {
       await db.query(query, values);

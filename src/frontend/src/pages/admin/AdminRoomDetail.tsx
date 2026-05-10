@@ -41,8 +41,8 @@ export const AdminRoomDetail = () => {
     const fetchData = async () => {
         try {
             const [dormRes, utilRes] = await Promise.all([
-                ApiClient.get<{ data: { dorms: DormDTO[] } }>('/dorms?limit=100'),
-                ApiClient.get<{ data: { utilities: UtilityDTO[] } }>('/utilities?limit=200&type=ROOM')
+                ApiClient.get<{ data: { dorms: DormDTO[] } }>('/admin/dorms?limit=100'),
+                ApiClient.get<{ data: { utilities: UtilityDTO[] } }>('/admin/utilities?limit=200&type=ROOM')
             ]);
             console.log(utilRes.data)
             setDorms(dormRes.data.dorms);
@@ -50,7 +50,7 @@ export const AdminRoomDetail = () => {
 
             if (!isNew && id) {
                 setLoading(true);
-                const res = await ApiClient.get<{ data: RoomDTO }>(`/rooms/${id}`);
+                const res = await ApiClient.get<{ data: RoomDTO }>(`/admin/rooms/${id}`);
                 setRoom(res.data);
                 const initialUtilityIds = res.data.utilityIds || res.data.amenities?.map(title =>
                     utilRes.data.utilities.find(u => u.title === title)?.id
@@ -81,11 +81,11 @@ export const AdminRoomDetail = () => {
         try {
             setIsSubmitting(true);
             if (isNew) {
-                await ApiClient.post('/rooms', { body: JSON.stringify({ ...formData, totalBeds: 0 }) });
+                await ApiClient.post('/admin/rooms', { body: JSON.stringify({ ...formData, totalBeds: 0 }) });
                 alert('Tạo phòng mới thành công');
                 navigate('/admin/rooms');
             } else {
-                await ApiClient.put(`/rooms/${id}`, { body: JSON.stringify(formData) });
+                await ApiClient.put(`/admin/rooms/${id}`, { body: JSON.stringify(formData) });
                 alert('Cập nhật thành công');
                 setIsEditing(false);
                 fetchData();
@@ -101,10 +101,10 @@ export const AdminRoomDetail = () => {
         e.preventDefault();
         try {
             if (editingBed) {
-                await ApiClient.put(`/rooms/beds/${editingBed.id}`, { body: JSON.stringify(bedFormData) });
+                await ApiClient.put(`/admin/rooms/beds/${editingBed.id}`, { body: JSON.stringify(bedFormData) });
                 alert('Cập nhật giường thành công');
             } else {
-                await ApiClient.post(`/rooms/${id}/beds`, { body: JSON.stringify(bedFormData) });
+                await ApiClient.post(`/admin/rooms/${id}/beds`, { body: JSON.stringify(bedFormData) });
                 alert('Thêm giường thành công');
             }
             setIsBedModalOpen(false);
@@ -117,7 +117,7 @@ export const AdminRoomDetail = () => {
     const handleDeleteBed = async (bedId: string) => {
         if (!window.confirm('Xác nhận xóa giường này?')) return;
         try {
-            await ApiClient.delete(`/rooms/beds/${bedId}`);
+            await ApiClient.delete(`/admin/rooms/beds/${bedId}`);
             fetchData();
         } catch (error) {
             alert('Lỗi khi xóa giường. Có thể giường đang có khách thuê.');

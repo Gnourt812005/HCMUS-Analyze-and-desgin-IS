@@ -15,7 +15,9 @@ actor "Nhân viên quản lý" as Actor
 boundary "AdminStaff" as MainGUI <<boundary>>
 boundary "AdminStaffDetail" as DetailGUI <<boundary>>
 control "User" as BUS <<control>>
+control "Dorm" as DORM <<control>>
 database "UserDB" as DB <<database>>
+database "DormDB" as DDB <<database>>
 
 autonumber
 
@@ -35,7 +37,11 @@ BUS -> DB: fetchCredentialByEmail(email)
 == Kịch bản 3: Thêm mới / Cập nhật nhân viên ==
 Actor -> MainGUI: Nhấn "Thêm nhân viên mới"
 MainGUI -> DetailGUI: Mở trang (/admin/staff/new)
-Actor -> DetailGUI: Nhập thông tin & Nhấn Lưu
+DetailGUI -> DORM: getAll()
+DORM -> DDB: fetchAll()
+Actor -> DetailGUI: Nhập thông tin (Role = MANAGER)
+DetailGUI -> Actor: Hiển thị chọn KTX
+Actor -> DetailGUI: Chọn KTX & Nhấn Lưu
 DetailGUI -> DetailGUI: handleSubmit()
 DetailGUI -> BUS: upsertEmployee(formData)
 BUS -> DB: fetchCredentialByEmail(email)
