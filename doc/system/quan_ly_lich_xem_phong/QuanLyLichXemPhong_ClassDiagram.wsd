@@ -1,5 +1,5 @@
-@startuml QuanLyLichXemPhong_ClassDiagram
-title Class Diagram - UC4, 5: Quản lý lịch xem phòng
+@startuml QuanLyLichXemPhong_ClassDiagram_Exact
+title Class Diagram - UC4, 5: Quản lý lịch xem phòng (Strict Source Code)
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -7,102 +7,124 @@ skinparam {
     ClassBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
+    DefaultFontSize 18
     Padding 5
+    Nodesep 60
+    Ranksep 80
 }
 
-' --- BOUNDARY LAYER ---
-class "ScreenViewingSchedule" as PreviewManagementScreen <<boundary>> {
+' ==========================================
+' 1. SHARED LAYER (DTOs)
+' ==========================================
+package "Data Transfer Objects" <<Rectangle>> {
+    class "PreviewBriefDTO" as PreviewBriefDTO <<DTO>> {
+        + id: string
+        + roomName: string
+        + dormName: string
+        + dormAddress: string
+        + previewDate: string
+        + previewTime: string
+        + status: string
+    }
+
+    class "PreviewDetailDTO" as PreviewDetailDTO <<DTO>> {
+        + id: string
+        + roomId: string
+        + roomName: string
+        + dormId: string
+        + dormName: string
+        + dormAddress: string
+        + date: string
+        + time: string
+        + salesStaff: Object
+        + createdAt: string
+        + status: string
+    }
+}
+
+' ==========================================
+' 2. BOUNDARY LAYER (FRONTEND VIEWS)
+' ==========================================
+class "PreviewManagementScreen" as PreviewManagementScreen <<boundary>> {
     - listPreviewSchedules: ListView
+    - btnCancelPreview: Button
 
-    + showClientPreviewSchedules(userID: int): void
-    + listPreviewSchedulesItemClick(): int ' returns selected ViewingScheduleID
+    + showClientPreviewSchedules(): void
+    + listPreviewSchedulesItemClick(formId: string): void
+    + btnCancelPreviewClick(formId: string): void
 }
 
-class "ScreenPreviewScheduleDetailsView" as PreviewScheduleDetailsView <<boundary>> {
-    - userID: int
-    - EmployeeID: int
-    - lblPreviewDate: Label
-
-    - lblRoomID: Label
+class "PreviewScheduleDetailsView" as PreviewScheduleDetailsView <<boundary>> {
     - lblDormName: Label
-    - lblBlock: Label
-    - lblRoommateCount: Label
-    - lblAvailSlots: Label
-    - lblFavoriteCount: Label
-    - txtblockUltilities: TextBlock
-    - txtblockSpecialDescription: TextBlock
+    - lblRoomName: Label
+    - lblAddress: Label
+    - lblDate: Label
+    - lblTime: Label
+    - lblStaffName: Label
+    - lblStaffPhone: Label
 
-    - btnCancelPreviewSchedule: Button
-    - btnBack: IconButton
+    - btnClose: IconButton
 
-    + showPreviewScheduleDetails(viewingScheduleID: int): void
-    + btnBackClick(): void
-    + btnCancelPreviewScheduleClick(): void
-
-' --- BUSINESS LAYER ---
-class "ViewingSchedule" as PreviewForm <<control>> {
-    - roomID: int
-    - userID: int
-    - previewDate: DateTime
-    - employeeID: int
-
-    + <<static>> getViewingSchedulesByUserID(userID: int): List<ViewingSchedule>
-    + <<static>> getViewingScheduleDetails(viewingScheduleID: int): ViewingSchedule
-    + <<static>> cancelPreviewSchedule(viewingScheduleID: int): bool
+    + showPreviewScheduleDetails(formId: string): void
 }
 
-class "Room" as Room <<control>> {
-    - roomImage: byte[]
-    - roomID: int
-    - dormID: int
-    - roomNumber: string
-    - eachBedPrice: decimal
-    - roommateCount: int
-    - availSlots: int
-    - roomUtilities: string
-    - specialDescription: string
+' ==========================================
+' 3. CONTROL LAYER (BUSINESS LOGIC)
+' ==========================================
+class "PreviewForm" as PreviewForm <<control>> {
+    + formId: string
+    + roomId: string
+    + userId: string
+    + previewDatetime: string
+    + status: string
+    + staffId: string
 
-    + <<static>> getRoomsList(roomIDs: List<int>): List<Room>
+    + <<static>> getPreviewsByUserId(userId: string): List<PreviewDetailDTO>
+    + <<static>> getUserPreviewDetails(formId: string, userId: string): PreviewDetailDTO
+    + <<static>> cancelPreviewByUser(formId: string, userId: string): void
+    + <<static>> getRoomAndDormInfo(roomId: string): any
 }
 
-' --- DATABASE LAYER ---
-class "PreviewFormDB" as PreviewDB <<entity>> {
-    + <<static>>getPreviewFormsByUserID(userID: int): List<PreviewForm>
-    + <<static>>cancelPreviewSchedule(previewFormID: int): bool
+' ==========================================
+' 4. ENTITY LAYER (DATABASE)
+' ==========================================
+class "PreviewFormDB" as PreviewFormDB <<entity>> {
+    + <<static>> getAll(): List<PreviewForm>
+    + <<static>> getById(formId: string): PreviewForm
+    + <<static>> updateStatus(formId: string, status: string): boolean
 }
 
 class "RoomDB" as RoomDB <<entity>> {
-    + <<static>>getRoomsList(roomIDs: List<int>): List<Room>
+    + <<static>> fetchAll(query: any): {rooms: List<any>, total: int}
 }
 
-class "UtilitiesDB" as UtilitiesDB <<entity>> {
-    + <<static>>getUtilitiesByRoomID(roomID: int): string
+class "DormDB" as DormDB <<entity>> {
+    + <<static>> fetchAll(query: any): {dorms: List<any>, total: int}
 }
 
-class "BedDB" as BedDB <<entity>> {
-    + <<static>>getBedPrice(roomID: int): decimal
+class "UserDB" as UserDB <<entity>> {
+    + <<static>> fetchCredentialByEmail(email: string): any
 }
 
-' --- RELATIONSHIPS ---
-' 1. Screen flows (Navigation)
-PreviewManagementScreen ..> PreviewScheduleDetailsView : "navigates on item click >"
+' ==========================================
+' RELATIONSHIPS
+' ==========================================
 
-' 2. Boundary to Business connections
-PreviewManagementScreen "1" --> "1" PreviewForm : "bulk fetches forms"
-PreviewManagementScreen "1" --> "1" Room : "bulk fetches associated rooms"
+' Luồng điều hướng UI (Click vào item mở Popup)
+PreviewManagementScreen ..> PreviewScheduleDetailsView : "navigates to (Modal) >"
 
-PreviewScheduleDetailsView "1" --> "1" PreviewForm : "fetches in-memory details"
-PreviewScheduleDetailsView "1" --> "1" Room : "fetches in-memory room info"
-' 3. Business Dependencies
-PreviewForm ..> Room : "extracts roomIDs to load"
+' UI sử dụng DTO để hiển thị
+PreviewManagementScreen ..> PreviewBriefDTO : "displays list >"
+PreviewScheduleDetailsView ..> PreviewDetailDTO : "displays detail >"
 
-' 4. Business to Database connections
-PreviewForm "1" --> "1" PreviewDB : "queries/updates"
-Room "1" --> "1" RoomDB : "mass fetches by IDs"
+' UI gọi API (Boundary -> Control)
+PreviewManagementScreen "1" --> "1" PreviewForm : "fetch list / cancel form"
+PreviewScheduleDetailsView "1" --> "1" PreviewForm : "fetch details"
 
-' 5. Entity / Database connections
-RoomDB "1" *-- "many" UtilitiesDB : "contains >"
-RoomDB "1" *-- "many" BedDB : "contains >"
+' Business gọi DB (Control -> Entity) (Phản ánh chính xác theo PreviewForm.ts)
+PreviewForm "1" --> "1" PreviewFormDB : "CRUD Preview Forms"
+PreviewForm "1" --> "1" RoomDB : "get room mapping"
+PreviewForm "1" --> "1" DormDB : "get dorm mapping"
+PreviewForm "1" --> "1" UserDB : "fetch sales staff info"
 
 @enduml

@@ -1,5 +1,5 @@
-@startuml QuanLyPhongDaQuanTam_ClassDiagram
-title Class Diagram - UC7: Quản lý phòng đã quan tâm
+@startuml QuanLyPhongDaQuanTam_BCE_Complete
+title Class Diagram - UC7: Quản lý phòng đã quan tâm (Đầy đủ thành phần)
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -7,142 +7,147 @@ skinparam {
     ClassBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
+    DefaultFontSize 18
     Padding 5
+    Nodesep 60
+    Ranksep 80
 }
 
-' --- BOUNDARY LAYER ---
-class "ScreenFavoriteRooms" as FavoriteManagementScreen <<boundary>> {
-    - listFavoriteRooms: ListView
+' ==========================================
+' 1. SHARED LAYER (DTOs)
+' ==========================================
+package "Data Transfer Objects" <<Rectangle>> {
+    class "DormDTO" as DormDTO <<DTO>> {
+        + id: string
+        + name: string
+        + address: string
+        + phone: string
+        + status: string
+        + totalRooms: number
+        + availableRooms: number
+    }
 
+    class "RoomBriefDTO" as RoomBriefDTO <<DTO>> {
+        + id: string
+        + name: string
+        + block: string
+        + price: number
+        + totalBeds: number
+        + availableBeds: number
+        + amenities: string[]
+        + imageUrl: string
+    }
+
+    class "RoomDetailDTO" as RoomDetailDTO <<DTO>> {
+        - id: string;
+        - name: string;
+        - block: string;
+        - floor: number;
+        - price: number;
+        - totalBeds: number;
+        - availableBeds: number;
+        - amenities: string[];
+        - imageUrl: string;
+        - favoriteCount: number;
+        - isFavorite: boolean;
+    }
+
+' ==========================================
+' 2. BOUNDARY LAYER (FRONTEND)
+' ==========================================
+class "ScreenFavoriteRooms" as ScreenFavoriteRooms <<boundary>> {
+    - gridFavoriteRooms: GridView
     + showFavoriteRooms(): void
-    + listFavoriteRoomsItemClick(): int ' returns selected room ID
+    + gridRoomsCellClick(roomId: string): void
 }
 
 class "ScreenRoomDetailsView" as ScreenRoomDetailsView <<boundary>> {
-    - imageRoom: PictureBox
-    - lblRoomID: Label
-    - lblDormName: Label
-    - lblBlock: Label
-    - lbleachBedPrice: Label
-    - lblRoommateCount: Label
-    - lblAvailSlots: Label
-    - lblFavoriteCount: Label
-    - txtblockUltilities: TextBlock
-    - txtblockSpecialDescription: TextBlock
-
-    - btnPreviewRequest: Button
-    - btnFavorite: IconButton
-
-    - btnBack: IconButton
-
-    + showRoomDetails(roomID: int): void
-    + btnBackClick(): void
-
-    + btnPreviewRequestClick(): void
-    + btnFavoriteClick(): void
+    - imgRoom: PictureBox
+    - lblRoomName: Label
+    - btnRemoveFavorite: IconButton
+    + btnRemoveFavoriteClick(): void
 }
 
-class "ScreenPreviewRequestView" as ScreenPreviewRequestView <<boundary>> {
-    - datepickerPreviewDate: DateTimePicker
-    - btnConfirmPreviewDate: Button
+' ==========================================
+' 3. CONTROL LAYER (BUSINESS)
+' ==========================================
+class "Favourites" as Favourites <<control>> {
+    - userId: string
+    - favouriteRooms: List<Room>
 
-    - btnBack: IconButton
-
-    + showPreviewRequestScreen(): void
-    + btnBackClick(): void
-    + btnConfirmPreviewDateClick(): void
+    + <<static>> getFavouritesByUserId(userId: string): List<Room>
+    + <<static>> deleteFavourite(userId: string, roomId: string): int
 }
 
-' --- BUSINESS LAYER ---
+class "Dorm" as Dorm <<control>> {
+    + id: string
+    + name: string
+    + address: string
+    + phone: string
+    + status: string
+    + totalRooms: number
+    + availableRooms: number
+    
+    + <<static>> getAll(query: GetDormsDto): {dorms: DormDTO[], total: int}
+    + <<static>> getById(id: string): DormDTO
+}
+
 class "Room" as Room <<control>> {
-    - roomImage: byte[]
-    - roomID: int
-    - dormID: int
-    - roomNumber: string
-    - eachBedPrice: decimal
-    - roommateCount: int
-    - availSlots: int
-    - roomUtilities: string
-    - specialDescription: string
-
-    + <<static>> getFavoriteRoomsByUserID(userID: int): Room[]
-    + <<static>> getFavoriteRoomDetails(roomID: int): Room
+    - id: string;
+    - name: string;
+    - block: string;
+    - floor: number;
+    - price: number;
+    - totalBeds: number;
+    - availableBeds: number;
+    - amenities: string[];
+    - imageUrl: string;
+    - favoriteCount: number;
+    - isFavorite: boolean;
+    
+    + <<static>> fetchAll(query: GetRoomDto): {rooms: RoomDTO[], total: int}
+    + <<static>> getById(id: string): RoomDTO
 }
 
-class "FavoriteRequest" as FavoriteRequest <<control>> {
-    - roomID: int
-    - userID: int
-
-    + <<static>> addFavoriteRoom(roomID: int, userID: int): void
-    + <<static>> removeFavoriteRoom(roomID: int, userID: int): void
+' ==========================================
+' 4. ENTITY LAYER (DATABASE)
+' ==========================================
+class "DormDB" as DormDB <<entity>> {
+    + <<static>> getAll(): List<Dorm>
+    + <<static>> fetchAll(query: any): {dorms: Dorm[], total: int}
+    + <<static>> fetchById(id: string): Dorm
 }
 
-class "PreviewForm" as PreviewForm <<control>> {
-    - roomID: int
-    - userID: int
-    - previewDate: DateTime
-    - employeeID: int
-
-    + <<static>> addUserPreviewForm(roomID: int, userID: int, previewDate: DateTime): bool
-    + <<static>> assignSalesEmployee(previewDate: DateTime): bool
-}
-
-' --- DATABASE LAYER ---
 class "RoomDB" as RoomDB <<entity>> {
-    + <<static>>getFavoriteRooms(roomIDs: int[]): Room[]
+    + <<static>> fetchAll(query: GetRoomDto): {rooms: RoomDTO[], total: int}
+    + <<static>> fetchById(id: string): any
 }
 
-class "UtilitiesDB" as UtilitiesDB <<entity>> {
-    + <<static>>getUtilitiesByRoomID(roomID: int): string
+class "FavouriteRoomsDB" as FavouriteRoomsDB <<entity>> {
+    + <<static>> getRoomIdsByUserId(userId: string): List<string>
+    + <<static>> delete(userId: string, roomId: string): boolean
 }
 
-class "BedDB" as BedDB <<entity>> {
-    + <<static>>getBedPrice(roomID: int): decimal
-}
+' ==========================================
+' RELATIONSHIPS
+' ==========================================
 
-class "FavoriteRoomDB" as FavoriteDB <<entity>> {
-    + <<static>>getFavoriteRoomIDsByUserID(userID: int): int[]
+' Boundary to Control
+ScreenFavoriteRooms "1" --> "1" Favourites
+ScreenRoomDetailsView "1" --> "1" Favourites
 
-    + <<static>>addFavoriteRoom(roomID: int, userID: int): void
-    + <<static>>removeFavoriteRoom(roomID: int, userID: int): void
-}
+' Control to Control
+Favourites "1" --> "1" Room : "lấy dữ liệu phòng chi tiết"
+Favourites "1" --> "1" Dorm : "lấy dữ liệu ký túc xá"
 
-class "PreviewFormDB" as PreviewDB <<entity>> {
-    + <<static>>addUserPreviewForm(roomID: int, userID: int, previewDate: DateTime, employeeID: int): bool
+' Control to Entity
+Favourites "1" --> "1" FavouriteRoomsDB
+Room "1" --> "1" RoomDB
+Dorm "1" --> "1" DormDB
 
-    + <<static>>checkUsersDuplicatedPreviewDate(userID: int, previewDate: DateTime): bool
-    + <<static>>checkRoomsDuplicatedPreviewDate(roomID: int, previewDate: DateTime): bool
-}
-
-class "SalesEmployeeDB" as SalesEmployeeDB <<entity>> {
-    + <<static>>getAvailableSalesEmployee(previewDate: DateTime): int ' returns employee ID
-}
-
-' --- RELATIONSHIPS ---
-
-' 1. Screen flows (Navigation)
-FavoriteManagementScreen ..> ScreenRoomDetailsView : "navigates to >"
-ScreenRoomDetailsView ..> ScreenPreviewRequestView : "navigates to >"
-
-' 2. Boundary to Business connections
-FavoriteManagementScreen "1" --> "1" Room
-
-ScreenRoomDetailsView "1" --> "1" Room
-ScreenRoomDetailsView "1" --> "1" FavoriteRequest
-
-ScreenPreviewRequestView "1" --> "1" PreviewForm
-
-' 3. Business to Database connections
-Room "1" --> "1" FavoriteDB : "gets saved IDs"
-Room "1" --> "1" RoomDB : "gets room info"
-
-FavoriteRequest "1" --> "1" FavoriteDB
-PreviewForm "1" --> "1" PreviewDB
-
-' 4. Entity / Database dependencies
-RoomDB "1" *-- "many" UtilitiesDB : contains
-RoomDB "1" *-- "many" BedDB : contains
-PreviewDB "1" -- "1" SalesEmployeeDB
+' DTO mapping
+Dorm ..> DormDTO : "returns"
+Room ..> RoomBriefDTO : "maps to"
+Room ..> RoomDetailDTO : "maps to"
 
 @enduml
