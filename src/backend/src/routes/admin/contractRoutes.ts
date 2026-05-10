@@ -1,23 +1,26 @@
 import { Router, Request, Response } from 'express';
+import { AuthRequest } from '../../middleware/authMiddleware';
 import { User } from '../../business/User';
 import { Contract } from '../../business/Contract';
 
 export const contractRouter = Router();
 
-// ─── Admin routes (/api/contracts/admin/...) ──────────────────────────────────
+// ─── Admin routes (/api/admin/contracts/...) ──────────────────────────────────
 
-contractRouter.get('/all', async (_req: Request, res: Response) => {
+contractRouter.get('/all', async (req: Request, res: Response) => {
   try {
-    const data = await Contract.getAll();
+    const dormId = (req as AuthRequest).user?.dormId;
+    const data = await Contract.getAll(dormId);
     res.json({ message: 'Success', status: 200, data });
   } catch (error: any) {
     res.status(500).json({ message: error.message || 'Internal Server Error', status: 500 });
   }
 });
 
-contractRouter.get('/rental-forms', async (_req: Request, res: Response) => {
+contractRouter.get('/rental-forms', async (req: Request, res: Response) => {
   try {
-    const data = await Contract.getRentalFormsWithoutContract();
+    const dormId = (req as AuthRequest).user?.dormId;
+    const data = await Contract.getRentalFormsWithoutContract(dormId);
     res.json({ message: 'Success', status: 200, data });
   } catch (error: any) {
     res.status(500).json({ message: error.message || 'Internal Server Error', status: 500 });
