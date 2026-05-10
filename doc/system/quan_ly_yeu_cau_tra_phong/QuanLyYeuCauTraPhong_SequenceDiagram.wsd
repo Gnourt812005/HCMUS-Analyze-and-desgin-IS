@@ -13,9 +13,9 @@ skinparam {
 autonumber
 
 actor "Nhân viên" as nv
-boundary "ManageCheckoutRequestScreen" as guiManage
-boundary "CreateCheckoutRequestScreen" as guiCreate
-boundary "CheckoutRequestDetailScreen" as guiDetail
+boundary "ScreenManageCheckoutRequest" as guiManage
+boundary "ModalCreateCheckoutRequest" as guiCreate
+boundary "ModalCheckoutRequestDetail" as guiDetail
 control "CheckoutRequest" as reqCtrl
 control "Rental" as rentalCtrl
 control "Contract" as conCtrl
@@ -26,7 +26,7 @@ database "ContractDB" as conDB
 database "RefundCalculationDB" as refDB
 
 == Kịch bản 1: Xem danh sách yêu cầu ==
-nv -> guiManage: loadRequests()
+nv -> guiManage: show()
 activate nv
 activate guiManage
 

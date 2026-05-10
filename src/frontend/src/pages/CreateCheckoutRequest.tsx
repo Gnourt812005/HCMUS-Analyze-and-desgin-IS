@@ -72,7 +72,7 @@ export const CreateCheckoutRequest = () => {
   // Load rental form details when selected
   useEffect(() => {
     if (form.rentalFormId) {
-      const selected = activeContracts.find(c => c.rental_form_id === form.rentalFormId);
+      const selected = activeContracts.find(c => c.rentalFormId === form.rentalFormId);
       setSelectedContractDetails(selected || null);
     } else {
       setSelectedContractDetails(null);

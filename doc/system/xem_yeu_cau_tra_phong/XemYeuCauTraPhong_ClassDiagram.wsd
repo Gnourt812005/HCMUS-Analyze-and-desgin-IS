@@ -2,23 +2,23 @@
 title Class Diagram - UC23: Xem yêu cầu trả phòng
 
 skinparam {
-    BackgroundColor White
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
     DefaultFontSize 16
-    BorderColor #2D3E50
-    ClassBackgroundColor #F5F7F9
     ClassBorderThickness 2
     StereotypeFontColor #2D3E50
     Padding 5
 }
+
 
 class ScreenCheckoutRequestList <<boundary>> {
     - dgvRequests: DataGridView
     - btnViewDetail: Button
     + show(): void
     + loadRequests(): void
-    + btnViewDetail_Click(): void
+    + btnViewDetailClick(): void
 }
 
 class ModalCheckoutRequestDetail <<boundary>> {
@@ -28,7 +28,6 @@ class ModalCheckoutRequestDetail <<boundary>> {
     - btnReject: Button
     - btnBack: Button
     + show(requestId: string): void
-    + loadDetail(): void
 }
 
 class CheckoutRequest <<control>> {
