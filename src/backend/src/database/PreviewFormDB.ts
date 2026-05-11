@@ -2,36 +2,6 @@ import { PreviewForm } from '../business/PreviewForm';
 import { DatabaseClient } from './DatabaseClient';
 
 export class PreviewFormDB {
-  private static MOCK_PREVIEWS: PreviewForm[] = [
-    new PreviewForm({
-      formId: "prev-1",
-      roomId: "101",
-      userId: "test@gmail.com",
-      previewDatetime: new Date(Date.now() + 86400000).toISOString(),
-      createdDatetime: new Date().toISOString(),
-      status: "pending",
-      staffId: "staff@gmail.com"
-    }),
-    new PreviewForm({
-      formId: "prev-2",
-      roomId: "301",
-      userId: "test@gmail.com",
-      previewDatetime: new Date(Date.now() + 86400000 * 2).toISOString(),
-      createdDatetime: new Date().toISOString(),
-      status: "approved",
-      staffId: "staff2@gmail.com"
-    }),
-    new PreviewForm({
-      formId: "prev-3",
-      roomId: "102",
-      userId: "test2@gmail.com",
-      previewDatetime: new Date(Date.now() + 86400000 * 3).toISOString(),
-      createdDatetime: new Date().toISOString(),
-      status: "pending",
-      staffId: null
-    })
-  ];
-
   private static mapRowToPreviewForm(row: any): PreviewForm {
     let mappedStatus = row.status || "pending";
     if (row.status === 'PENDING') mappedStatus = "pending";
