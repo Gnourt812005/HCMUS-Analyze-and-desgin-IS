@@ -134,7 +134,7 @@ export const FavouriteManagement = () => {
                 body: JSON.stringify({
                     roomId: selectedRoomId,
                     userId: user?.email || "unknown",
-                    previewDatetime: selectedDateTime.toISOString()
+                    previewDatetime: `${previewDate}T${previewTime}:00`
                 })
             });
 

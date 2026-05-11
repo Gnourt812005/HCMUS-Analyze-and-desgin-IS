@@ -4,6 +4,7 @@ import { DormDB } from '../database/DormDB';
 import { UserDB } from '../database/UserDB';
 import { UserRole } from '@dormarch/shared';
 
+
 export class PreviewForm {
   formId: string;
   roomId: string;
@@ -286,7 +287,7 @@ export class PreviewForm {
         return { code: 3, data: null }; // Cannot reschedule non-pending forms
       }
 
-      const newDatetime = `${wantedPreviewDate}T${wantedPreviewTime}:00.000Z`;
+      const newDatetime = `${wantedPreviewDate}T${wantedPreviewTime}:00`;
       const success = await PreviewFormDB.updateDatetime(formId, newDatetime);
       if (!success) {
         return { code: 4, data: null }; // Failed to update
