@@ -15,6 +15,11 @@ skinparam {
 class "Register" as Register <<boundary>> {
     - showPassword: boolean
     - setShowPassword: void
+    + txtEmail: Input
+    + txtPassword: Input
+    + txtConfirmPassword: Input
+    + btnTogglePassword: Button
+    + btnRegister: Button
     + handleRegister(): void
 }
 

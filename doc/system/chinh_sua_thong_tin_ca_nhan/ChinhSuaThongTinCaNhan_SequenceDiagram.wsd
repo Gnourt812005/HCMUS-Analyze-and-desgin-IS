@@ -1,5 +1,5 @@
 @startuml ChinhSuaThongTinCaNhan_SequenceDiagram
-title Sequence Diagram - UC27: Quản lý thông tin cá nhân
+title Sequence Diagram - UC27: Chỉnh sửa thông tin cá nhân
 
 skinparam {
     BackgroundColor White
@@ -8,10 +8,11 @@ skinparam {
     DefaultFontSize 24
     ParticipantPadding 20
     BoxPadding 10
+    SequenceGroupBodyBackgroundColor #F8F9FA
 }
 
-actor "Khách hàng" as Actor
-boundary "ProfilePage" as GUI <<boundary>>
+actor "Người dùng" as Actor
+boundary "ScreenProfile" as GUI <<boundary>>
 participant "UserProfileDTO" as DTO <<dto>>
 participant "ChangePasswordDTO" as PWDTO <<dto>>
 control "User" as BUS <<control>>
@@ -19,36 +20,38 @@ database "UserDB" as DB <<database>>
 
 autonumber
 
-group Xem hồ sơ
-    Actor -> GUI: Mở trang Profile
+group 1. Xem hồ sơ cá nhân
+    Actor -> GUI: Mở trang cá nhân
     GUI -> BUS: getProfile(email)
     BUS -> DB: fetchCredentialByEmail(email)
 end
 
-group Cập nhật thông tin
-    Actor -> GUI: Sửa field & Nhấn "Cập nhật"
-    GUI -> GUI: handleUpdate()
-    GUI -> DTO **: new UserProfileDTO(...)
+group 2. Cập nhật thông tin cơ bản
+    Actor -> GUI: Thay đổi thông tin & Nhấn "Cập nhật"
     GUI -> BUS: updateProfile(email, userProfileDTO)
     BUS -> DB: update(email, userProfileDTO)
+    deactivate GUI
 end
 
-group Đổi mật khẩu
-    Actor -> GUI: Điền MK cũ, MK mới & Nhấn "Đổi mật khẩu"
-    GUI -> GUI: handlePasswordChange()
-    GUI -> PWDTO **: new ChangePasswordDTO(...)
+group 3. Đổi mật khẩu
+    Actor -> GUI: Nhập MK cũ, MK mới & Nhấn "Đổi mật khẩu"
     GUI -> BUS: changePassword(email, changePasswordDTO)
     BUS -> DB: fetchCredentialByEmail(email)
     BUS -> BUS: verifyPassword(oldPassword)
-    alt Sai mật khẩu cũ
-        BUS --> GUI: Error("Sai mật khẩu cũ")
-        GUI --> Actor: Báo lỗi MK cũ
-    else Đúng mật khẩu cũ
+    
+    alt Mật khẩu cũ không khớp
+        BUS --> GUI: Error("Mật khẩu cũ không chính xác")
+        GUI --> Actor: Hiển thị thông báo lỗi
+    else Mật khẩu cũ hợp lệ
         BUS -> DB: updatePassword(email, newPassword)
+        activate DB
         DB --> BUS: true
+        deactivate DB
         BUS --> GUI: true
-        GUI --> Actor: Báo "Đổi mật khẩu thành công"
+        GUI --> Actor: Thông báo "Đổi mật khẩu thành công"
     end
+    deactivate BUS
+    deactivate GUI
 end
 
 @enduml

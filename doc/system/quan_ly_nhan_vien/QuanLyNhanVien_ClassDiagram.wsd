@@ -19,22 +19,34 @@ class "AdminStaff" <<boundary>> {
     - setLoading: void
     - searchQuery: string
     - setSearchQuery: void
+    + btnAddStaff: Button
+    + txtSearch: Input
+    + tblStaff: Table
+    + btnEdit: Button
+    + btnDelete: Button
     + fetchStaff(): void
     + handleDelete(email: string): void
 }
 
 class "AdminStaffDetail" <<boundary>> {
-    - formData: UserDTO
-    - dorms: DormDTO[]
-    - setFormData: void
-    - setDorms: void
+    - staff: UserProfileDTO | null
+    - setStaff: void
     - loading: boolean
     - setLoading: void
-    - isSubmitting: boolean
-    - setIsSubmitting: void
-    + fetchStaff(): void
-    + fetchDorms(): void
-    + handleSubmit(): void
+    - isEditing: boolean
+    - setIsEditing: void
+    - formData: UserProfileDTO
+    - setFormData: void
+    + lblStaffName: Label
+    + btnBack: Button
+    + txtFullName: Input
+    + txtEmail: Input
+    + txtPhone: Input
+    + selRole: Select
+    + txtAddress: Input
+    + btnSave: Button
+    + fetchData(): void
+    + handleSave(): void
 }
 
 ' --- DTO LAYER ---

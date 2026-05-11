@@ -23,6 +23,15 @@ class "AdminRooms" <<boundary>> {
     - setLimit: void
     - searchQuery: string
     - setSearchQuery: void
+    + lblTitle: Label
+    + btnAddRoom: Button
+    + txtSearch: Input
+    + tblRooms: Table
+    + btnEdit: Button
+    + btnDelete: Button
+    + lblPaginationInfo: Label
+    + btnPrevPage: Button
+    + btnNextPage: Button
     + fetchRooms(): void
     + handleDelete(id: string): void
 }
@@ -42,6 +51,25 @@ class "AdminRoomDetail" <<boundary>> {
     - setEditingBed: void
     - formData: CreateRoomDTO | UpdateRoomDTO
     - setFormData: void
+    + lblRoomName: Input
+    + btnEditMode: Button
+    + btnBack: Button
+    + txtRoomName: Input
+    + selDorm: Select
+    + txtBlock: Input
+    + txtFloor: Input
+    + selStatus: Select
+    + tblUtilities: Table
+    + selAddUtility: Select
+    + btnSaveRoom: Button
+    + btnAddBed: Button
+    + tblBeds: Table
+    + btnEditBed: Button
+    + btnDeleteBed: Button
+    + txtBedNumber: Input
+    + txtBedPrice: Input
+    + selBedStatus: Select
+    + btnSaveBed: Button
     + fetchData(): void
     + handleSaveRoom(): void
     + handleAddBed(): void

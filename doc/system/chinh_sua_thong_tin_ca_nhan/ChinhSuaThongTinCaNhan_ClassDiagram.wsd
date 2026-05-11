@@ -1,7 +1,7 @@
 @startuml ChinhSuaThongTinCaNhan_ClassDiagram
+title Class Diagram - UC27: Chỉnh sửa thông tin cá nhân
 
-title Class Diagram - UC27: Quản lý thông tin cá nhân
-
+' --- STYLE CONFIGURATION ---
 skinparam {
     ClassBackgroundColor White
     ClassBorderColor #2D3E50
@@ -12,11 +12,18 @@ skinparam {
 }
 
 ' --- BOUNDARY LAYER ---
-class "ProfilePage" <<boundary>> {
+class "ScreenProfile" <<boundary>> {
     - profile: UserProfileDTO
-    - setProfile: void
     - isLoading: boolean
-    - setIsLoading: void
+    + txtFullName: Input
+    + txtPhone: Input
+    + txtCCCD: Input
+    + txtAddress: Input
+    + dpBirthday: DatePicker
+    + btnSave: Button
+    + txtOldPassword: Input
+    + txtNewPassword: Input
+    + btnChangePassword: Button
     + fetchProfile(): void
     + handleUpdate(): void
     + handlePasswordChange(): void
@@ -31,6 +38,7 @@ interface "UserProfileDTO" <<dto>> {
     + gender: string
     + phone: string
     + address: string
+    + role: string
 }
 
 interface "ChangePasswordDTO" <<dto>> {
@@ -40,15 +48,6 @@ interface "ChangePasswordDTO" <<dto>> {
 
 ' --- BUSINESS LAYER ---
 class "User" <<control>> {
-    - email: string
-    - fullName: string
-    - password: string
-    - cccd: string
-    - birthday: string
-    - gender: string
-    - phone: string
-    - address: string
-    - role: UserRole
     + <<static>> getProfile(email: string): UserProfileDTO
     + <<static>> updateProfile(email: string, data: UserProfileDTO): boolean
     + <<static>> changePassword(email: string, data: ChangePasswordDTO): boolean
@@ -61,10 +60,11 @@ class "UserDB" <<entity>> {
     + <<static>> updatePassword(email: string, newPassword: string): boolean
 }
 
-ProfilePage ..> UserProfileDTO
-ProfilePage ..> ChangePasswordDTO
-ProfilePage "1" --> "1" User
-User "1" --> "1" UserDB
+' --- RELATIONSHIPS ---
+ScreenProfile ..> UserProfileDTO
+ScreenProfile ..> ChangePasswordDTO
+ScreenProfile --> User
+User --> UserDB
 
 @enduml
 

@@ -25,6 +25,14 @@ class "AdminDorm" <<boundary>> {
     - setTotal: void
     - searchQuery: string
     - setSearchQuery: void
+    + btnAddDorm: Button
+    + txtSearch: Input
+    + tblDorms: Table
+    + btnEdit: Button
+    + btnDelete: Button
+    + lblPaginationInfo: Label
+    + btnPrevPage: Button
+    + btnNextPage: Button
     + fetchDorms(): void
     + handleDelete(id: string): void
 }
@@ -46,6 +54,25 @@ class "AdminDormDetail" <<boundary>> {
     - setFormData: void
     - feeFormData: UpdateDormFeeDTO
     - setFeeFormData: void
+    + lblDormName: Input
+    + btnEditMode: Button
+    + btnBack: Button
+    + txtDormName: Input
+    + txtAddress: Input
+    + txtPhone: Input
+    + txtTotalRooms: Label
+    + selStatus: Select
+    + txtManagerEmail: Input
+    + tblUtilities: Table
+    + selAddUtility: Select
+    + btnSaveDorm: Button
+    + btnEditFees: Button
+    + txtWaterFee: Input
+    + txtElectricityFee: Input
+    + txtWifiFee: Input
+    + txtCleaningFee: Input
+    + btnSaveFees: Button
+    + tblRooms: Table
     + fetchData(): void
     + handleSave(): void
     + handleSaveFees(): void

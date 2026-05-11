@@ -1,5 +1,5 @@
 @startuml QuanLyTienIch_SequenceDiagram
-title Sequence Diagram - UC20: Quản lý tiện ích
+title Sequence Diagram - UC29: Quản lý tiện ích
 
 ' --- STYLE CONFIGURATION ---
 skinparam {

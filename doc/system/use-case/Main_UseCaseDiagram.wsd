@@ -49,14 +49,18 @@ rectangle "Màn hình chung" #F2F2F2 {
   UC_XemDanhSachPhong <.. UC_XemChiTietPhong: <<extend>>
 }
 
-rectangle "Màn hình của nhân viên quản lý chi nhánh" #FFE082 {
+rectangle "Màn hình của nhân viên quản lý chi nhánh và admin " #FFE082 {
   usecase "Lập biên bản bàn giao phòng" as UC_LapBienBanBanGiaoPhong <<UC21>> #FFE082;line:Orange
   usecase "Xem yêu cầu trả phòng" as UC_XemYeuCauTraPhong <<UC23>> #FFE082;line:Orange
   usecase "Thanh lý hợp đồng" as UC_ThanhLyHopDong <<UC25>> #FFE082;line:Orange
+  usecase "Quản lý hợp đồng khách hàng" as UC_QuanLyHopDongKH <<UC30>> #FFE082;line:Orange
+  usecase "Quản lý phòng" as UC_QuanLyPhong <<UC19>> #FFE082;line:Orange
+
 
   UC_DangNhap <.. UC_LapBienBanBanGiaoPhong: <<extend>>
   UC_LapBienBanBanGiaoPhong <.. UC_XemYeuCauTraPhong: <<extend>>
   UC_XemYeuCauTraPhong <.. UC_ThanhLyHopDong: <<extend>>
+  UC_DangNhap <.. UC_QuanLyHopDongKH: <<extend>>
 }
 
 rectangle "Màn hình của nhân viên sale" #C8E6C9 {
@@ -67,6 +71,7 @@ rectangle "Màn hình của nhân viên sale" #C8E6C9 {
   UC_DangNhap <.. UC_QuanLyDonDangKyXemPhong: <<extend>>
   UC_QuanLyDonDangKyXemPhong <.. UC_DoiDonDangKyXemPhong: <<extend>>
   UC_QuanLyDonDangKyXemPhong <.. UC_TaoDonDangKyXemPhong: <<extend>>
+  UC_DangNhap <.. UC_QuanLyPhong: <<extend>>
 }
 
 ' Customer sub-system'
@@ -112,12 +117,12 @@ rectangle "Màn hình của khách hàng" #B2EBF2 {
 
 rectangle "Màn hình ADMIN quản lý" #FFCDD2 {
   usecase "Quản lý ký túc xá" as UC_QuanLyKyTucXa <<UC18>> #FFCDD2;line:Red
-  usecase "Quản lý phòng" as UC_QuanLyPhong <<UC19>> #FFCDD2;line:Red
   usecase "Quản lý nhân viên" as UC_QuanLyNhanVien <<UC17>> #FFCDD2;line:Red
+  usecase "Quản lý tiện ích" as UC_QuanLyTienIch <<UC29>> #FFCDD2;line:Red
 
   UC_DangNhap <.. UC_QuanLyKyTucXa: <<extend>>
-  UC_DangNhap <.. UC_QuanLyPhong: <<extend>>
   UC_DangNhap <.. UC_QuanLyNhanVien: <<extend>>
+  UC_DangNhap <.. UC_QuanLyTienIch: <<extend>>
 }
 
 @enduml

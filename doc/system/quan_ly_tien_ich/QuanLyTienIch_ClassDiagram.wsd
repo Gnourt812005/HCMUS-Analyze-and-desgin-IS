@@ -1,5 +1,5 @@
 @startuml QuanLyTienIch_ClassDiagram
-title Class Diagram - UC20: Quản lý tiện ích
+title Class Diagram - UC29: Quản lý tiện ích
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -27,6 +27,15 @@ class "AdminUtilities" <<boundary>> {
     - setIsSubmitting: void
     - formData: CreateUtilityDto
     - setFormData: void
+    + btnAddUtility: Button
+    + txtSearch: Input
+    + tblUtilities: Table
+    + btnEdit: Button
+    + btnDelete: Button
+    + txtTitle: Input
+    + selType: Select
+    + txtPrice: Input
+    + btnSave: Button
     + fetchUtilities(): void
     + handleOpenModal(util?: UtilityDTO): void
     + handleSave(): void

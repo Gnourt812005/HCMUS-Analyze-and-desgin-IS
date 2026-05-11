@@ -12,17 +12,9 @@ skinparam {
 }
 
 ' --- BOUNDARY LAYER ---
-class "ScreenHome" as ScreenHome <<boundary>> {
-    - btnLogout: Button
-    + btnLogoutClick(): void
+class "Header" as Header <<boundary>> {
+    + btnLogout: Button
+    + handleLogout(): void
 }
-
-' --- BUSINESS LAYER ---
-class "User" <<control>> {
-    + <<static>> logout(): boolean
-}
-
-' --- RELATIONSHIPS ---
-ScreenHome "1" --> "1" User
 
 @enduml

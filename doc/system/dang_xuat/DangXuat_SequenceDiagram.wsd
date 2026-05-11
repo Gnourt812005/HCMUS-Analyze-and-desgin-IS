@@ -12,8 +12,7 @@ skinparam {
 }
 
 actor "Khách hàng / Nhân viên" as Actor
-boundary "ScreenHome" as GUI <<boundary>>
-control "User" as BUS <<control>>
+boundary "Header" as GUI <<boundary>>
 
 autonumber
 
