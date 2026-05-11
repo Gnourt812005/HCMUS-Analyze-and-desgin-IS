@@ -1,5 +1,5 @@
-@startuml QuanLyDonXemPhongKH_ClassDiagram
-title Class Diagram - UC8, 9, 10: Quản lý đơn đăng ký xem phòng
+@startuml QuanLyDonXemPhongKH_ClassDiagram_Perfect
+title Class Diagram - UC8, 9, 10: Quản lý đơn phòng khách hàng (Strict BCE)
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -7,141 +7,137 @@ skinparam {
     ClassBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
+    DefaultFontSize 18
     Padding 5
+    Nodesep 60
+    Ranksep 80
 }
 
-' --- BOUNDARY LAYER ---
+' ==========================================
+' 1. SHARED LAYER (DTOs)
+' ==========================================
+package "Data Transfer Objects" <<Rectangle>> {
+    class "PreviewBriefDTO" as PreviewBriefDTO <<DTO>> {
+        + id: string
+        + roomName: string
+        + dormName: string
+        + dormAddress: string
+        + previewDate: string
+        + previewTime: string
+        + status: string
+    }
+
+    class "ClientPreviewDetailDTO" as ClientPreviewDetailDTO <<DTO>> {
+        + id: string
+        + roomId: string
+        + roomName: string
+        + dormId: string
+        + dormName: string
+        + dormAddress: string
+        + date: string
+        + time: string
+        + customerInfo: Object
+        + createdAt: string
+    }
+}
+
+' ==========================================
+' 2. BOUNDARY LAYER (UI CONCEPTS)
+' ==========================================
 class "EmployeePreviewScheduleManagementScreen" as PreviewManagementScreen <<boundary>> {
     - listPreviewSchedules: ListView
-    - btnCreatePreviewSchedule: Button
 
-    + showEmployeePreviewSchedules(EmployeeID: int): void
-    + listPreviewSchedules_ItemClick(): int ' returns selected  PreviewFormID
-    + btnCreatePreviewSchedule_Click(EmployeeID: int): void
+    + showEmployeePreviewSchedules(): void
+    + listPreviewSchedulesItemClick(formId: string): void
 }
 
 class "ScreenPreviewScheduleDetailsView" as PreviewScheduleDetailsView <<boundary>> {
-    - ClientID: int
-    - EmployeeID: int
-    - lblPreviewDate: Label
-
-    - lblRoomID: Label
     - lblDormName: Label
-    - lblBlock: Label
-    - lblRoommateCount: Label
-    - lblAvailSlots: Label
-    - lblFavoriteCount: Label
-    - txtblockUltilities: TextBlock
-    - txtblockSpecialDescription: TextBlock
+    - lblRoomName: Label
+    - lblAddress: Label
+    - lblDate: Label
+    - lblTime: Label
+    - lblCustomerName: Label
+    - lblCustomerPhone: Label
 
-    - btnReschedulePreviewSchedule: Button
-    - btnBack: IconButton
+    - btnReschedule: Button
+    - btnClose: IconButton
 
-    + showPreviewScheduleDetails(PreviewScheduleID: int): void
-    + btnBack_Click(): void
-    + btnReschedulePreviewSchedule_Click(): void
-}
-
-class "CreatePreviewScheduleScreen" as CreatePreviewScreen <<boundary>> {
-    - txtUserID: TextBox
-    - txtRoomID: TextBox
-    - datepickerPreviewDate: DateTimePicker
-    - btnConfirmCreate: Button
-    - btnBack: Button
-
-    + showCreatePreviewScreen(): void
-    + btnBack_Click(): void
-    + btnConfirmCreate_Click(newForm: PreviewForm): bool
+    + showPreviewScheduleDetails(formId: string): void
+    + btnRescheduleClick(): void
 }
 
 class "ReschedulePreviewScreen" as ReschedulePreviewScreen <<boundary>> {
-    - datepickerPreviewDate: DateTimePicker
+    - datepickerWantedDate: DateTimePicker
+    - timepickerWantedTime: TimePicker
+    
     - btnConfirmReschedule: Button
-    - btnBack: Button
+    - btnCancel: Button
 
     + showReschedulePreviewScreen(): void
-    + btnBack_Click(): void
-    + btnConfirmReschedule_Click(newForm: PreviewForm): bool
+    + btnConfirmRescheduleClick(wantedDate: string, wantedTime: string): void
 }
 
-' --- BUSINESS LAYER ---
+' ==========================================
+' 3. CONTROL LAYER (BUSINESS LOGIC)
+' ==========================================
 class "PreviewForm" as PreviewForm <<control>> {
-    - roomID: int
-    - userID: int
-    - previewDate: DateTime
-    - employeeID: int
+    + formId: string
+    + roomId: string
+    + userId: string
+    + previewDatetime: string
+    + createdDatetime: string
+    + status: string
+    + staffId: string
 
-    + <<static>> getPreviewFormsByEmployeeID(employeeID: int): List<PreviewForm>
-
-    + <<static>> getPreviewFormDetails(previewFormID: int): PreviewForm
-
-    + <<static>> createEmployeePreviewForm(roomID: int, userID: int, employeeID: int, previewDate: DateTime): bool
-    + <<static>> reschedulePreviewForm(previewFormID: int, newPreviewDate: DateTime): bool
+    + <<static>> getPreviewsByStaffId(staffId: string): {code: int, data: any}
+    + <<static>> getStaffPreviewDetails(formId: string, staffId: string): {code: int, data: any}
+    + <<static>> reschedulePreviewByStaff(formId: string, staffId: string, wantedDate: string, wantedTime: string): {code: int, data: any}
+    + <<static>> getRoomAndDormInfo(roomId: string): any
 }
 
-class "Room" as Room <<control>> {
-    - roomImage: byte[]
-    - roomID: int
-    - dormID: int
-    - roomNumber: string
-    - eachBedPrice: decimal
-    - roommateCount: int
-    - availSlots: int
-    - roomUtilities: string
-    - specialDescription: string
-
-    + <<static>> getRoomsList(List<int>): List<Room>
-}
-
-' --- DATABASE LAYER ---
-class "PreviewFormDB" as PreviewDB <<entity>> {
-    + <<static>>getPreviewFormsByEmployeeID(employeeID: int): List<PreviewForm>
-
-    + <<static>>createEmployeePreviewForm(roomID: int, userID: int, previewDate: DateTime, employeeID: int): bool
-    + <<static>>reschedulePreviewForm(previewFormID: int, newPreviewDate: DateTime): bool
-
-    + <<static>>checkEmployeesDuplicatedPreviewDate(employeeID: int, previewDate: DateTime): bool
-    + <<static>>checkRoomsDuplicatedPreviewDate(roomID: int, previewDate: DateTime): bool
+' ==========================================
+' 4. ENTITY LAYER (DATABASE)
+' ==========================================
+class "PreviewFormDB" as PreviewFormDB <<entity>> {
+    + <<static>> getAll(): List<PreviewForm>
+    + <<static>> getById(formId: string): PreviewForm
+    + <<static>> updateDatetime(formId: string, previewDatetime: string): boolean
 }
 
 class "RoomDB" as RoomDB <<entity>> {
-    + <<static>>getRoomList(roomIDs: List<int>): List<Room>
+    + <<static>> fetchAll(query: any): {rooms: List<any>, total: int}
 }
 
-class "UtilitiesDB" as UtilitiesDB <<entity>> {
-    + <<static>>getUtilitiesByRoomID(roomID: int): string
+class "DormDB" as DormDB <<entity>> {
+    + <<static>> fetchAll(query: any): {dorms: List<any>, total: int}
 }
 
-class "BedDB" as BedDB <<entity>> {
-    + <<static>>getBedPrice(roomID: int): decimal
+class "UserDB" as UserDB <<entity>> {
+    + <<static>> fetchCredentialByEmail(email: string): any
 }
 
-' --- RELATIONSHIPS ---
-' 1. Screen flows (Navigation)
-PreviewManagementScreen ..> PreviewScheduleDetailsView : "navigates on item click >"
-PreviewManagementScreen ..> CreatePreviewScreen : "navigates on create click >"
-PreviewScheduleDetailsView ..> ReschedulePreviewScreen : "navigates on reschedule click >"
+' ==========================================
+' RELATIONSHIPS
+' ==========================================
 
-' 2. Boundary to Business connections
-PreviewManagementScreen "1" --> "1" PreviewForm : "bulk fetches forms"
-PreviewManagementScreen "1" --> "1" Room : "bulk fetches associated rooms"
+' UI Navigation 
+PreviewManagementScreen ..> PreviewScheduleDetailsView : "navigates to (Modal) >"
+PreviewScheduleDetailsView ..> ReschedulePreviewScreen : "navigates to (UI Form) >"
 
-PreviewScheduleDetailsView "1" --> "1" PreviewForm : "fetches in-memory details"
-PreviewScheduleDetailsView "1" --> "1" Room : "fetches in-memory room info"
+' DTO Usage
+PreviewManagementScreen ..> PreviewBriefDTO : "displays list >"
+PreviewScheduleDetailsView ..> ClientPreviewDetailDTO : "displays detail >"
 
-CreatePreviewScreen "1" --> "1" PreviewForm : "creates >"
-ReschedulePreviewScreen "1" --> "1" PreviewForm : "reschedules >"
+' Boundary -> Control (Backend Calls)
+PreviewManagementScreen "1" --> "1" PreviewForm : "fetch assigned list"
+PreviewScheduleDetailsView "1" --> "1" PreviewForm : "fetch form details"
+ReschedulePreviewScreen "1" --> "1" PreviewForm : "submit reschedule"
 
-' 3. Business Dependencies
-PreviewForm ..> Room : "extracts roomIDs to load"
-
-' 4. Business to Database connections
-PreviewForm "1" --> "1" PreviewDB : "queries/updates"
-Room "1" --> "1" RoomDB : "mass fetches by IDs"
-
-' 5. Entity / Database connections
-RoomDB "1" *-- "many" UtilitiesDB : "contains >"
-RoomDB "1" *-- "many" BedDB : "contains >"
+' Control -> Entity (Database Calls - Phản ánh đúng logic trong PreviewForm.ts)
+PreviewForm "1" --> "1" PreviewFormDB : "CRUD forms"
+PreviewForm "1" --> "1" RoomDB : "get room info"
+PreviewForm "1" --> "1" DormDB : "get dorm info"
+PreviewForm "1" --> "1" UserDB : "fetch customer info"
 
 @enduml

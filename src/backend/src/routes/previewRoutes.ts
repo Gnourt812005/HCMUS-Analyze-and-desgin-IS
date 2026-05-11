@@ -1,32 +1,6 @@
-import { Router } from 'express';
-import { PreviewFormDB } from '../database/PreviewFormDB';
-import { RoomDB } from '../database/RoomDB';
-import { DormDB } from '../database/DormDB';
-import { UserDB } from '../database/UserDB';
+﻿import { Router } from 'express';
 import { PreviewForm } from '../business/PreviewForm';
 import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
-
-import { UserRole } from '@dormarch/shared';
-
-// Helper function to extract Room and Dorm details
-async function getRoomAndDormInfo(roomId: string) {
-  const dorms = await DormDB.fetchAll({});
-  for (const dorm of dorms.dorms) {
-    if (!dorm.id) continue;
-    const result = await RoomDB.fetchAll({ dormId: dorm.id });
-    const rooms = result.rooms;
-    const match = rooms.find((r) => r.id === roomId);
-    if (match) {
-      return {
-        roomName: match.name || '',
-        dormId: dorm.id,
-        dormName: dorm.name || '',
-        dormAddress: dorm.address || ''
-      };
-    }
-  }
-  return { roomName: '', dormId: '', dormName: '', dormAddress: '' };
-}
 
 export const previewRoutes = Router();
 
@@ -34,67 +8,23 @@ previewRoutes.post('/', async (req, res) => {
   try {
     const { roomId, userId, previewDatetime } = req.body;
 
-    const allForms = await PreviewFormDB.getAll();
-    const newFormDate = new Date(previewDatetime);
-
-    // Helper: check if two dates are functionally identically close (e.g. within an hour or exactly same date to avoid double booking)
-    const isSameDate = (d1: Date, d2: Date) => d1.toDateString() === d2.toDateString() && d1.getHours() === d2.getHours();
-
-    // 1. Check room availability
-    const roomConflict = allForms.find(f => 
-      f.roomId === roomId && 
-      isSameDate(new Date(f.previewDatetime), newFormDate) && 
-      f.status === 'pending'
-    );
-
-    if (roomConflict) {
-      return res.status(400).json({ message: 'Phòng đã có lịch hẹn xem vào thời gian này', status: 400, data: null });
-    }
-
-    // 2. Check guest availability
-    const userConflict = allForms.find(f => 
-      f.userId === userId && 
-      isSameDate(new Date(f.previewDatetime), newFormDate) && 
-      f.status === 'pending'
-    );
-
-    if (userConflict) {
-      return res.status(400).json({ message: 'Bạn đã có một lịch hẹn xem phòng khác vào thời gian này', status: 400, data: null });
-    }
-
-    // 3. Automatic Employee Assignment
-    const staffs = await UserDB.fetchEmployeesByRole(UserRole.SALE_STAFF);
-    let assignedStaffId = null;
-
-    // Find a staff member that does NOT have a scheduling conflict
-    for (const staff of staffs) {
-      const staffConflict = allForms.find(f => 
-        f.staffId === staff.email && 
-        isSameDate(new Date(f.previewDatetime), newFormDate) && 
-        f.status === 'pending'
-      );
-      if (!staffConflict) {
-        assignedStaffId = staff.email;
-        break;
-      }
-    }
-
-    if (!assignedStaffId) {
-      return res.status(400).json({ message: 'Không có nhân viên trống vào khung giờ này', status: 400, data: null });
-    }
+    const {code, data} = await PreviewForm.createPreviewForm(userId, roomId, previewDatetime);
     
-    const newForm = new PreviewForm({
-      formId: `prev-${Date.now()}`,
-      roomId,
-      userId,
-      previewDatetime,
-      status: 'pending',
-      staffId: assignedStaffId
-    });
-
-    await PreviewFormDB.insert(newForm);
-
-    res.json({ message: 'Success', status: 200, data: newForm });
+    if (code === 1) {
+      return res.status(400).json({ message: 'Phòng đã được đặt lịch hẹn vào thời gian này', status: 400, data: null });
+    }
+    else if (code === 2) {
+      return res.status(400).json({ message: 'Bạn đã có một lịch hẹn khác vào thời gian này', status: 400, data: null });
+    }
+    else if (code === 3) {
+      return res.status(400).json({ message: 'Không có nhân viên nào sẵn sàng vào thời gian này', status: 400, data: null });
+    }
+    else if (code === 4) {
+      return res.status(500).json({ message: 'Lỗi server', status: 500, data: null });
+    }
+    else{
+      res.json({ message: 'Success', status: 200, data: data });
+    }
   } catch (error) {
     res.status(500).json({ message: 'Internal Server Error', status: 500, data: null });
   }
@@ -106,26 +36,13 @@ previewRoutes.get('/', authMiddleware, async (req: AuthRequest, res) => {
     const email = req.user?.email;
     if (!email) return res.status(401).json({ message: 'Unauthorized' });
 
-    // Find preview forms for this user directly from PreviewFormDB
-    const allForms = await PreviewFormDB.getAll();
-    const userForms = allForms.filter(f => f.userId === email);
+    const {code, data} = await PreviewForm.getPreviewsByUserId(email);
 
-    // Map to PreviewBriefDTO
-    const data = await Promise.all(userForms.map(async (f) => {
-      const { roomName, dormName, dormAddress } = await getRoomAndDormInfo(f.roomId);
-
-      return {
-        id: f.formId,
-        roomName,
-        dormName,
-        dormAddress,
-        previewDate: f.previewDatetime.split('T')[0],
-        previewTime: f.previewDatetime.split('T')[1].substring(0, 5),
-        status: f.status
-      };
-    }));
-
-    res.json({ message: 'Success', status: 200, data });
+    if (code === 1) {
+      res.status(500).json({ message: 'Server error', status: 500, data: null });
+    } else {
+      res.json({ message: 'Success', status: 200, data });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -138,24 +55,13 @@ previewRoutes.get('/staff', authMiddleware, async (req: AuthRequest, res) => {
     const email = req.user?.email;
     if (!email) return res.status(401).json({ message: 'Unauthorized' });
 
-    const allForms = await PreviewFormDB.getAll();
-    const staffForms = allForms.filter((f) => f.staffId === email);
-
-    const data = await Promise.all(staffForms.map(async (f) => {
-      const { roomName, dormName, dormAddress } = await getRoomAndDormInfo(f.roomId);
-
-      return {
-        id: f.formId,
-        roomName,
-        dormName,
-        dormAddress,
-        previewDate: f.previewDatetime.split('T')[0],
-        previewTime: f.previewDatetime.split('T')[1].substring(0, 5),
-        status: f.status
-      };
-    }));
-
-    res.json({ message: 'Success', status: 200, data });
+    const {code, data} = await PreviewForm.getPreviewsByStaffId(email);
+    if (code === 1) {
+      res.status(500).json({ message: 'Server error', status: 500, data: null });
+    } 
+    else {
+      res.json({ message: 'Success', status: 200, data });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -172,40 +78,21 @@ previewRoutes.get('/staff/:id', authMiddleware, async (req: AuthRequest, res) =>
        return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const form = await PreviewFormDB.getById(id);
-    if (!form) return res.status(404).json({ message: 'Not found' });
+    const {code, data} = await PreviewForm.getStaffPreviewDetails(id, email);
 
-    if (form.staffId !== email) {
-      return res.status(403).json({ message: 'Forbidden' });
+    if (code === 1) {
+      res.status(404).json({ message: 'Not found' });
     }
-
-    const { roomName, dormId, dormName, dormAddress } = await getRoomAndDormInfo(form.roomId);
-
-    let customerInfo = null;
-    if (form.userId) {
-      const customer = await UserDB.fetchCredentialByEmail(form.userId);
-      if (customer) {
-        customerInfo = {
-          name: customer.fullName,
-          phone: customer.phone || 'Chưa cung cấp'
-        };
-      }
+    if (code === 2) {
+      res.status(403).json({ message: 'Forbidden' });
     }
-
-    const data = {
-      id: form.formId,
-      roomId: form.roomId,
-      roomName,
-      dormId,
-      dormName,
-      dormAddress,
-      date: form.previewDatetime.split('T')[0],
-      time: form.previewDatetime.split('T')[1].substring(0, 5),
-      customerInfo,
-      createdAt: form.createdDatetime
-    };
-
-    res.json({ message: 'Success', status: 200, data });
+    if (code === 3) {
+      console.error("Error fetching staff preview details");
+      res.status(500).json({ message: 'Server error' });
+    }
+    else{
+      res.json({ message: 'Success', status: 200, data });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -222,41 +109,21 @@ previewRoutes.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
        return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const form = await PreviewFormDB.getById(id);
-    if (!form) return res.status(404).json({ message: 'Not found' });
+    const {code, data} = await PreviewForm.getUserPreviewDetails(id, email);
 
-    if (form.userId !== email) {
-      return res.status(403).json({ message: 'Forbidden' });
+    if (code === 1) {
+      res.status(404).json({ message: 'Not found' });
     }
-
-    const { roomName, dormId, dormName, dormAddress } = await getRoomAndDormInfo(form.roomId);
-
-    let salesStaff = null;
-    if (form.staffId) {
-      const staff = await UserDB.fetchCredentialByEmail(form.staffId);
-      if (staff) {
-        salesStaff = {
-          name: staff.fullName,
-          phone: staff.phone
-        };
-      }
+    else if (code === 2) {
+      res.status(403).json({ message: 'Forbidden' });
     }
-
-    const data = {
-      id: form.formId,
-      roomId: form.roomId,
-      roomName,
-      dormId,
-      dormName,
-      dormAddress,
-      date: form.previewDatetime.split('T')[0],
-      time: form.previewDatetime.split('T')[1].substring(0, 5),
-      salesStaff,
-      createdAt: form.createdDatetime,
-      status: form.status
-    };
-
-    res.json({ message: 'Success', status: 200, data });
+    else if (code === 3) {
+      console.error("Error fetching preview details");
+      res.status(500).json({ message: 'Server error' });
+    }
+    else{
+      res.json({ message: 'Success', status: 200, data });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -271,27 +138,30 @@ previewRoutes.put('/staff/:id/reschedule', authMiddleware, async (req: AuthReque
     const email = req.user?.email;
 
     if (!email) {
-       return res.status(401).json({ message: 'Unauthorized' });
+      return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const form = await PreviewFormDB.getById(id);
-    if (!form) return res.status(404).json({ message: 'Not found' });
+    const {code, data} = await PreviewForm.reschedulePreviewByStaff(id, email, wantedPreviewDate, wantedPreviewTime);
 
-    if (form.staffId !== email) {
-      return res.status(403).json({ message: 'Forbidden' });
+    if (code === 1) {
+      res.status(404).json({ message: 'Not found' });
     }
-
-    if (form.status !== 'pending') {
-      return res.status(400).json({ message: 'Chỉ có thể dời lịch đơn đang chờ xử lý' });
+    if (code === 2) {
+      res.status(403).json({ message: 'Forbidden' });
     }
-
-    const newDatetime = `${wantedPreviewDate}T${wantedPreviewTime}:00.000Z`;
-    const success = await PreviewFormDB.updateDatetime(id, newDatetime);
-    if (!success) {
-      return res.status(500).json({ message: 'Failed to update' });
+    if (code === 3) {
+      res.status(400).json({ message: 'Chỉ có thể dời lịch đơn đang chờ xử lý' });
     }
-
-    res.json({ message: 'Dời lịch thành công', status: 200, data: null });
+    if (code === 4) {
+      res.status(500).json({ message: 'Failed to update' });
+    }
+    if (code === 5) {
+      console.error("Error rescheduling preview");
+      res.status(500).json({ message: 'Server error' });
+    }
+    else {
+      res.json({ message: 'Dời lịch thành công', status: 200, data: null });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -305,27 +175,30 @@ previewRoutes.put('/:id/cancel', authMiddleware, async (req: AuthRequest, res) =
     const email = req.user?.email;
 
     if (!email) {
-       return res.status(401).json({ message: 'Unauthorized' });
+      return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const form = await PreviewFormDB.getById(id);
-    if (!form) return res.status(404).json({ message: 'Not found' });
+    const {code, data} = await PreviewForm.cancelPreviewByUser(id, email);
 
-    if (form.userId !== email) {
-      return res.status(403).json({ message: 'Forbidden' });
+    if (code === 1) {
+      res.status(404).json({ message: 'Not found' });
     }
-
-    // Only allow canceling if status is pending
-    if (form.status !== 'pending') {
-      return res.status(400).json({ message: 'Only pending previews can be cancelled' });
+    else if (code === 2) {
+      res.status(403).json({ message: 'Forbidden' });
     }
-
-    const success = await PreviewFormDB.updateStatus(id, 'cancelled');
-    if (!success) {
-      return res.status(500).json({ message: 'Failed to update' });
+    else if (code === 3) {
+      res.status(400).json({ message: 'Chỉ có thể hủy lịch đơn đang chờ xử lý' });
     }
-
-    res.json({ message: 'Hủy lịch hẹn thành công', status: 200, data: null });
+    else if (code === 4) {
+      res.status(500).json({ message: 'Failed to update' });
+    }
+    else if (code === 5) {
+      console.error("Error canceling preview");
+      res.status(500).json({ message: 'Server error' });
+    }
+    else {
+      res.json({ message: 'Hủy lịch hẹn thành công', status: 200, data: null });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

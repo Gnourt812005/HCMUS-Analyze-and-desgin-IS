@@ -237,7 +237,7 @@ export const RoomList = () => {
                 body: JSON.stringify({
                     roomId: selectedRoomId,
                     userId: user?.email || "unknown", // in real app, might use user.id
-                    previewDatetime: selectedDateTime.toISOString()
+                    previewDatetime: `${previewDate}T${previewTime}:00`
                 })
             });
 
