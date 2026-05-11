@@ -6,133 +6,157 @@ skinparam {
     BackgroundColor White
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
-    ParticipantPadding 20
+    DefaultFontSize 16
+    ParticipantPadding 15
     BoxPadding 10
 }
 
-actor "Nhân viên phụ trách" as Actor
-boundary "ScreenContractManagement" as MainGUI <<boundary>>
-boundary "ScreenContractDetail" as DetailGUI <<boundary>>
-boundary "FormContract" as FormGUI <<boundary>>
-control "ContractBUS" as BUS <<control>>
-database "ContractDAO" as DAO <<database>>
-
 autonumber
 
-== Kịch bản 1: Xem danh sách, Tìm kiếm và Chi tiết ==
+actor "Nhân viên phụ trách" as Admin
+actor "Khách hàng" as User
 
-' --- XEM DANH SÁCH MẶC ĐỊNH ---
-Actor -> MainGUI: Chọn tab "Quản lý hợp đồng"
-activate MainGUI
-MainGUI -> BUS: getContracts()
-activate BUS
-BUS -> DAO: fetchAll()
-activate DAO
-DAO --> BUS: Danh sách Hợp đồng
-deactivate DAO
-BUS --> MainGUI: Trả về dữ liệu
-deactivate BUS
-MainGUI --> Actor: Hiển thị danh sách (Mã HD, KH, Giường, Ngày ký, TT)
+boundary "ContractManagementScreen" as GUI_Admin <<boundary>>
+boundary "ContractFormScreen" as GUI_Create <<boundary>>
+boundary "ContractDetailScreen" as GUI_Detail <<boundary>>
+boundary "UserContractScreen" as GUI_User <<boundary>>
 
-' --- BỔ SUNG LUỒNG TÌM KIẾM ---
-Actor -> MainGUI: Nhập từ khóa & Nhấn "Tìm kiếm"
-MainGUI -> BUS: getContracts(keyword)
-activate BUS
-BUS -> DAO: fetchByKeyword(keyword)
-activate DAO
-DAO --> BUS: Danh sách kết quả lọc
-deactivate DAO
-BUS --> MainGUI: Trả về dữ liệu
-deactivate BUS
-MainGUI --> Actor: Hiển thị danh sách đã lọc lên dgvContract
+control "Contract" as BUS <<control>>
 
-' --- XEM CHI TIẾT ---
-Actor -> MainGUI: Chọn một hợp đồng cụ thể
-MainGUI -> DetailGUI: Mở màn hình Chi tiết (id)
-activate DetailGUI
-DetailGUI -> BUS: getContractDetail(id)
-activate BUS
-BUS -> DAO: fetchById(id)
-activate DAO
-DAO --> BUS: Chi tiết Hợp đồng
-deactivate DAO
-BUS --> DetailGUI: Trả về dữ liệu chi tiết
-deactivate BUS
-DetailGUI --> Actor: Hiển thị thông tin lên màn hình
-deactivate MainGUI
+database "ContractDB" as DAO <<entity>>
 
-== Kịch bản 2: Thêm hợp đồng mới ==
-Actor -> MainGUI: Nhấn nút "Lập hợp đồng mới"
-activate MainGUI
-MainGUI -> FormGUI: Mở Form Thêm mới
-activate FormGUI
-deactivate MainGUI
+' ============================================================
+== Kịch bản 1: Admin xem danh sách hợp đồng ==
+' ============================================================
 
-FormGUI -> BUS: getPendingDepositForms()
-activate BUS
-BUS -> DAO: fetchPendingDepositForms()
-activate DAO
-DAO --> BUS: DS Phiếu đặt cọc (từ bảng deposit_form)
-deactivate DAO
-BUS --> FormGUI: Trả về dữ liệu
-deactivate BUS
-FormGUI --> Actor: Hiển thị DS Phiếu đặt cọc chờ
-
-Actor -> FormGUI: Chọn 1 phiếu đặt cọc
-FormGUI -> FormGUI: Tự động điền (Mã KH, Số người)
-
-Actor -> FormGUI: Nhập Ngày bắt đầu, Ngày kết thúc, Kỳ thanh toán, Số phòng, Số giường & nhấn "Lưu"
-FormGUI -> FormGUI: Kiểm tra tính hợp lệ (A2)
-alt Hợp lệ
-    FormGUI -> BUS: createContract(data)
+Admin -> GUI_Admin: Mở trang Quản lý hợp đồng
+activate GUI_Admin
+    GUI_Admin -> BUS: getAll(dormId)
     activate BUS
-    BUS -> DAO: insert(data)
-    activate DAO
-    DAO --> BUS: Lưu thành công
-    deactivate DAO
-    BUS --> FormGUI: Trả kết quả thành công
+        BUS -> DAO: getAll(dormId)
+        activate DAO
+        deactivate DAO
     deactivate BUS
-    FormGUI --> Actor: Thông báo "Lập hợp đồng thành công"
-    FormGUI -> MainGUI: Tải lại danh sách
-    destroy FormGUI
-end
+    note right of GUI_Admin: Hiển thị danh sách bằng ContractAdminDTO\n(Mã HD, Khách hàng, Phòng, Giường, Trạng thái)
+deactivate GUI_Admin
 
-== Kịch bản 3: Cập nhật hợp đồng ==
-Actor -> DetailGUI: Nhấn nút "Cập nhật"
-activate DetailGUI
-DetailGUI -> DetailGUI: Mở khóa các trường nhập liệu (Input fields)
+' ============================================================
+== Kịch bản 2: Admin lập hợp đồng mới ==
+' ============================================================
 
-Actor -> DetailGUI: Thay đổi thông tin và nhấn "Lưu thay đổi"
-DetailGUI -> DetailGUI: Kiểm tra tính hợp lệ (A2)
+Admin -> GUI_Admin: Nhấn "Lập hợp đồng mới"
+activate GUI_Admin
+    GUI_Admin -> GUI_Create: openCreateModal()
+    activate GUI_Create
 
-alt Hợp lệ
-    DetailGUI -> BUS: updateContract(id, data)
+        GUI_Create -> BUS: getRentalFormsWithoutContract(dormId)
+        activate BUS
+            BUS -> DAO: getRentalFormsWithoutContract(dormId)
+            activate DAO
+            deactivate DAO
+        deactivate BUS
+        note right of GUI_Create: Hiển thị danh sách phiếu ĐK bằng RentalFormOptionDTO\n
+
+    deactivate GUI_Create
+deactivate GUI_Admin
+
+Admin -> GUI_Create: Chọn phiếu ĐK, nhập ngày bắt đầu & thời hạn (tháng) rồi nhấn "Lưu"
+activate GUI_Create
+    GUI_Create -> GUI_Create: Kiểm tra tính hợp lệ\n(startDate >= ngày hiện tại, stayDuration >= 1)
+
+    alt Hợp lệ
+        GUI_Create -> BUS: insert(rentalFormId, startDate, stayDuration)
+        activate BUS
+            BUS -> DAO: insert(rentalFormId, startDate, stayDuration)
+            activate DAO
+        
+            deactivate DAO
+        deactivate BUS
+        GUI_Create --> Admin: Thông báo "Lập hợp đồng thành công"
+        GUI_Create -> GUI_Admin: Tải lại danh sách
+    end
+deactivate GUI_Create
+
+' ============================================================
+== Kịch bản 3: Admin cập nhật hợp đồng ==
+' ============================================================
+
+Admin -> GUI_Admin: Chọn một hợp đồng trong danh sách
+activate GUI_Admin
+    GUI_Admin -> GUI_Detail: openDetailModal(contractId)
+    activate GUI_Detail
+        note right of GUI_Detail: Hiển thị chi tiết bằng ContractAdminDTO\n& phí dịch vụ bằng DormFeesDTO
+
+        GUI_Detail -> BUS: getFeesByContractId(contractId)
+        activate BUS
+            BUS -> DAO: getFeesByContractId(contractId)
+            activate DAO
+            deactivate DAO
+        deactivate BUS
+
+    deactivate GUI_Detail
+deactivate GUI_Admin
+
+Admin -> GUI_Detail: Chỉnh ngày bắt đầu / thời hạn & nhấn "Lưu thay đổi"
+activate GUI_Detail
+    GUI_Detail -> GUI_Detail: Kiểm tra tính hợp lệ (startDate >= ngày hiện tại)
+
+    alt Hợp lệ
+        GUI_Detail -> BUS: adminUpdate(contractId, startDate, stayDuration)
+        activate BUS
+            BUS -> DAO: adminUpdate(contractId, startDate, stayDuration)
+            activate DAO
+            deactivate DAO
+        deactivate BUS
+        GUI_Detail --> Admin: Thông báo "Cập nhật thành công"
+        GUI_Detail -> GUI_Admin: Tải lại danh sách
+    end
+deactivate GUI_Detail
+
+' ============================================================
+== Kịch bản 4: Admin huỷ hợp đồng ==
+' ============================================================
+
+Admin -> GUI_Detail: Nhấn nút "Huỷ hợp đồng"
+activate GUI_Detail
+    GUI_Detail -> GUI_Detail: Hiển thị hộp thoại xác nhận
+
+    Admin -> GUI_Detail: Xác nhận huỷ
+    GUI_Detail -> BUS: cancel(contractId)
     activate BUS
-    BUS -> DAO: update(id, data)
-    activate DAO
-    DAO --> BUS: Cập nhật thành công
-    deactivate DAO
-    BUS --> DetailGUI: Trả kết quả thành công
+        BUS -> DAO: cancel(contractId)
+        activate DAO
+            note right of DAO: UPDATE contracts\nSET status = 'TERMINATED'
+        deactivate DAO
     deactivate BUS
-    
-    DetailGUI --> Actor: Thông báo cập nhật thành công
-    DetailGUI -> DetailGUI: Khóa các trường & Hiển thị thông tin mới
-end
+    GUI_Detail --> Admin: Thông báo "Đã huỷ hợp đồng"
+    GUI_Detail -> GUI_Admin: Tải lại danh sách
+deactivate GUI_Detail
 
-== Kịch bản 4: Huỷ/Xoá hợp đồng ==
-Actor -> DetailGUI: Nhấn nút "Huỷ hợp đồng"
-DetailGUI -> DetailGUI: Hiển thị Popup cảnh báo
-Actor -> DetailGUI: Nhấn "Xác nhận"
-DetailGUI -> BUS: cancelContract(id)
-activate BUS
-BUS -> DAO: updateStatus(id, "Đã hủy")
-activate DAO
-DAO --> BUS: Cập nhật thành công
-deactivate DAO
-BUS --> DetailGUI: Trả kết quả thành công
-deactivate BUS
-DetailGUI --> Actor: Thông báo thành công & Cập nhật trạng thái
-deactivate DetailGUI
+' ============================================================
+== Kịch bản 5: Khách hàng xem hợp đồng của mình ==
+' ============================================================
+
+User -> GUI_User: Mở trang Hợp đồng của tôi
+activate GUI_User
+    GUI_User -> BUS: getAllByUserEmail(email)
+    activate BUS
+        BUS -> DAO: getAllByUserEmail(email)
+        activate DAO
+        deactivate DAO
+    deactivate BUS
+    note right of GUI_User: Hiển thị danh sách tất cả hợp đồng bằng ContractDTO\n
+deactivate GUI_User
+
+User -> GUI_User: Chọn một hợp đồng & chuyển tab "Phí dịch vụ"
+activate GUI_User
+    GUI_User -> BUS: getFeesByContractId(contractId)
+    activate BUS
+        BUS -> DAO: getFeesByContractId(contractId)
+        activate DAO
+        deactivate DAO
+    deactivate BUS
+    note right of GUI_User: Hiển thị phí dịch vụ bằng DormFeesDTO\n(điện, nước, wifi, vệ sinh)
+deactivate GUI_User
 
 @enduml

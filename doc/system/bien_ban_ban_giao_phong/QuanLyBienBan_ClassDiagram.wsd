@@ -7,61 +7,158 @@ skinparam {
     ClassBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
+    DefaultFontSize 18
     Padding 5
+    Nodesep 60
+    Ranksep 80
 }
 
-' --- BOUNDARY LAYER ---
-class "ScreenContractDetail" as ScreenCD <<boundary>> {
-    - btnHandoverReport: Button
-    + btnHandoverReportClick(): void
+' ==========================================
+' 1. SHARED LAYER (DTOs)
+' ==========================================
+package "Data Transfer Objects" <<Rectangle>> {
+
+    class "HandoverUtilityStatusDTO" as UtilStatusDTO <<DTO>> {
+        + utilityId: string
+        + title: string
+        + status: string
+    }
+
+    class "HandoverBedDTO" as BedDTO <<DTO>> {
+        + bedId: string
+        + bedNumber: string
+        + utilities: HandoverUtilityStatusDTO[]
+    }
+
+    class "HandoverReportDTO" as ReportDTO <<DTO>> {
+        + id: string
+        + handoverCode: string
+        + contractId: string
+        + contractCode: string
+        + customerName: string
+        + roomName: string
+        + type: string
+        + createdAt: string
+        + beds: HandoverBedDTO[]
+        + note: string
+    }
+
+    class "BedForHandoverDTO" as BedForHandoverDTO <<DTO>> {
+        + id: string
+        + bedNumber: string
+        + utilities: object[]
+    }
+
+    class "ActiveContractForHandoverDTO" as ActiveContractDTO <<DTO>> {
+        + contractId: string
+        + contractCode: string
+        + customerName: string
+        + roomName: string
+        + beds: BedForHandoverDTO[]
+    }
+
+    class "CreateHandoverBedDTO" as CreateBedDTO <<DTO>> {
+        + bedId: string
+        + utilities: object[]
+    }
+
+    class "CreateHandoverDTO" as CreateDTO <<DTO>> {
+        + contractId: string
+        + type: string
+        + beds: CreateHandoverBedDTO[]
+        + note: string
+    }
 }
 
-class "ScreenReportList" as ScreenRL <<boundary>> {
-    - dgvReports: GridView
-    - btnAddNew: Button
-    + loadReports(contractId: string): void
-    + btnAddNewClick(): void
+' ==========================================
+' 2. BOUNDARY LAYER (FRONTEND VIEWS)
+' ==========================================
+class "HandoverManagementScreen" as GUI_List <<boundary>> {
+    - handoverList: HandoverReportDTO[]
+    - selectedHandover: HandoverReportDTO
+    - searchKeyword: string
+
+    + loadAll(): void
+    + selectHandover(id: string): void
+    + openCreateModal(): void
 }
 
-class "FormReport" as FormReport <<boundary>> {
-    - chkBed: CheckBox
-    - chkMattress: CheckBox
-    - chkCabinet: CheckBox
-    - chkKey: CheckBox
-    - txtNote: TextBox
-    - btnSaveAndSign: Button
-    - btnCancel: Button
-    + btnSaveAndSignClick(): void
-}
-
-' --- BUSINESS LAYER ---
-class "Report" as Report <<control>> {
-    - id: string
+class "HandoverFormScreen" as GUI_Form <<boundary>> {
+    - contracts: ActiveContractForHandoverDTO[]
     - contractId: string
-    - bedStatus: string
-    - mattressStatus: string
-    - cabinetStatus: string
-    - keyStatus: string
+    - reportType: string
+    - beds: HandoverBedDTO[]
     - note: string
-    - createdDate: date
-    - createdBy: string
-    + <<static>> getReportsByContract(contractId: string): List<Report>
-    + <<static>> createHandoverReport(data: Report, bedId: string): boolean
+
+    + loadActiveContracts(): void
+    + handleSelectContract(id: string): void
+    + handleSave(): void
 }
 
-' --- DATABASE LAYER ---
-class "ReportDB" as ReportDB <<entity>> {
-    + <<static>> fetchByContractId(contractId: string): List<Report>
-    + <<static>> insert(data: Report): boolean
-    + <<static>> updateBedStatus(bedId: string, status: string): boolean
+class "HandoverDetailScreen" as GUI_Detail <<boundary>> {
+    - report: HandoverReportDTO
+
+    + onClose(): void
 }
 
-' --- RELATIONSHIPS ---
-ScreenCD ..> ScreenRL : Open Report List
-ScreenRL "1" --> "1" Report
-FormReport "1" --> "1" Report
-Report "1" --> "1" ReportDB
-ScreenRL ..> FormReport : Open New Form
+' ==========================================
+' 3. CONTROL LAYER (BUSINESS LOGIC)
+' ==========================================
+class "Handover" as Handover <<control>> {
+    - id: string
+    - handoverCode: string
+    - contractId: string
+    - type: string
+    - note: string
+    - createdAt: string
+
+    + <<static>> getAll(): HandoverReportDTO[]
+    + <<static>> getById(id: string): HandoverReportDTO
+    + <<static>> getByContractId(contractId: string): HandoverReportDTO[]
+    + <<static>> getActiveContracts(): ActiveContractForHandoverDTO[]
+    + <<static>> create(data: CreateHandoverDTO): string
+}
+
+' ==========================================
+' 4. ENTITY LAYER (DATABASE)
+' ==========================================
+class "HandoverDB" as HandoverDB <<entity>> {
+    + <<static>> getAll(): HandoverReportDTO[]
+    + <<static>> getById(id: string): HandoverReportDTO
+    + <<static>> getByContractId(contractId: string): HandoverReportDTO[]
+    + <<static>> getActiveContracts(): ActiveContractForHandoverDTO[]
+    + <<static>> insert(contractId: string, type: string, beds: CreateHandoverBedDTO[], overallNote: string): string
+}
+
+' ==========================================
+' RELATIONSHIPS
+' ==========================================
+
+' Quan hệ nội bộ giữa các DTO
+ReportDTO      ..> BedDTO        : "chứa >"
+BedDTO         ..> UtilStatusDTO : "chứa >"
+ActiveContractDTO ..> BedForHandoverDTO : "chứa >"
+CreateDTO      ..> CreateBedDTO  : "chứa >"
+
+' Luồng điều hướng UI
+GUI_List ..> GUI_Form   : "Mở Form Lập biên bản >"
+GUI_List ..> GUI_Detail : "Mở Chi tiết biên bản >"
+
+' UI sử dụng DTO để hiển thị
+GUI_List   ..> ReportDTO        : "hiển thị danh sách biên bản >"
+GUI_Detail ..> ReportDTO        : "hiển thị chi tiết biên bản >"
+GUI_Form   ..> ActiveContractDTO : "hiển thị hợp đồng ACTIVE >"
+GUI_Form   ..> CreateDTO         : "gửi dữ liệu tạo biên bản >"
+
+' UI gọi Business (Boundary -> Control)
+GUI_List "1" --> "1" Handover : "lấy danh sách"
+GUI_Form "1" --> "1" Handover : "lấy hợp đồng ACTIVE / tạo biên bản"
+
+' Business gọi DB (Control -> Entity)
+Handover "1" --> "1" HandoverDB : "CRUD handovers"
+
+' Business trả về DTO
+Handover ..> ReportDTO        : "returns >"
+Handover ..> ActiveContractDTO : "returns >"
 
 @enduml
