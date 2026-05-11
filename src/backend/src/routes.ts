@@ -56,7 +56,7 @@ router.use('/admin/utilities', adminUtilityRoutes);
 router.use('/admin/users', adminUserRoutes);
 
 router.get('/', (req, res) => {
-  res.json({ message: 'Welcome to DormArch API' });
+  res.json({ message: 'Welcome to HappyHome API' });
 });
 
 export default router;

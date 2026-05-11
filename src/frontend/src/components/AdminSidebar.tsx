@@ -18,7 +18,7 @@ export const AdminSidebar = () => {
     { path: '/admin/utilities', icon: 'settings_accessibility', label: 'Tiện ích', roles: [UserRole.ADMIN, UserRole.MANAGER] },
   ];
 
-  const filteredItems = navItems.filter(item => 
+  const filteredItems = navItems.filter(item =>
     !item.roles || (role && item.roles.includes(role as UserRole))
   );
 
@@ -31,7 +31,7 @@ export const AdminSidebar = () => {
     <aside className="fixed left-0 top-0 h-screen flex flex-col z-50 overflow-y-auto bg-slate-50 w-64 border-r border-slate-200 shadow-sm">
       {/* Brand Identity */}
       <div className="p-6 flex flex-col gap-1 cursor-pointer" onClick={() => navigate('/')}>
-        <span className="text-xl font-black tracking-tighter text-blue-800">DormArch</span>
+        <span className="text-xl font-black tracking-tighter text-blue-800">HappyHome</span>
         <span className="font-manrope font-bold tracking-tight text-xs uppercase opacity-60">Cổng quản lý</span>
       </div>
 

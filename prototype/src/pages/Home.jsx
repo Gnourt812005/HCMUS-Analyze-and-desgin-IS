@@ -160,7 +160,7 @@ const Home = () => {
 
       {/* Bento Features Section */}
       <section className="max-w-7xl mx-auto px-6 mt-24">
-        <h2 className="font-headline text-3xl font-extrabold text-on-surface tracking-tight mb-12 text-center">Trải nghiệm dịch vụ tuyệt vời cùng DormArch</h2>
+        <h2 className="font-headline text-3xl font-extrabold text-on-surface tracking-tight mb-12 text-center">Trải nghiệm dịch vụ tuyệt vời cùng HappyHome</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[240px]">
           <div className="md:col-span-2 bg-primary-container rounded-3xl p-8 flex flex-col justify-end relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-150 transition-transform duration-700"></div>

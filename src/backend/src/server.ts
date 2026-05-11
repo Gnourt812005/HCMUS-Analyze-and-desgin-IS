@@ -53,5 +53,5 @@ app.listen(PORT, () => {
   }
   startServer();
   BackgroundTasks.start();
-  console.log(`🚀 DormArch Backend running at http://localhost:${PORT}`);
+  console.log(`🚀 HappyHome Backend running at http://localhost:${PORT}`);
 });

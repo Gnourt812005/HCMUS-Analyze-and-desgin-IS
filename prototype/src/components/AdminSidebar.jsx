@@ -24,7 +24,7 @@ const AdminSidebar = () => {
     <aside className="fixed left-0 top-0 h-screen flex flex-col z-50 overflow-y-auto bg-slate-50 dark:bg-slate-950 w-64 border-r border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none">
       {/* Brand Identity */}
       <div className="p-6 flex flex-col gap-1 cursor-pointer" onClick={() => navigate('/')}>
-        <span className="text-xl font-black tracking-tighter text-blue-800 dark:text-blue-400">DormArch</span>
+        <span className="text-xl font-black tracking-tighter text-blue-800 dark:text-blue-400">HappyHome</span>
         <span className="font-manrope font-bold tracking-tight text-xs uppercase opacity-60">Management Portal</span>
       </div>
 

@@ -123,7 +123,7 @@ const BookingStep1 = () => {
                   <span className="material-symbols-outlined">arrow_forward</span>
                 </button>
                 <p className="text-center mt-4 text-xs text-outline">
-                  Tôi đồng ý với các <a className="text-primary underline" href="#">Điều khoản dịch vụ</a> của DormArch.
+                  Tôi đồng ý với các <a className="text-primary underline" href="#">Điều khoản dịch vụ</a> của HappyHome.
                 </p>
               </div>
             </form>

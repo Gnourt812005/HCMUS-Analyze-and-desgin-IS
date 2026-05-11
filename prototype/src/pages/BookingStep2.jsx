@@ -203,7 +203,7 @@ const BookingStep2 = () => {
                   Xác nhận thanh toán
                 </button>
                 <p className="text-[11px] text-on-surface-variant text-center leading-relaxed">
-                  Tôi đã đọc và đồng ý với <a className="text-primary underline" href="#">Điều khoản dịch vụ</a> và <a className="text-primary underline" href="#">Chính sách bảo mật</a> của DormArch.
+                  Tôi đã đọc và đồng ý với <a className="text-primary underline" href="#">Điều khoản dịch vụ</a> và <a className="text-primary underline" href="#">Chính sách bảo mật</a> của HappyHome.
                 </p>
               </div>
             </div>

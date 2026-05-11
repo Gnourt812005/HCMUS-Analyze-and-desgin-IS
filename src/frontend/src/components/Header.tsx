@@ -30,7 +30,7 @@ export const Header = () => {
     <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm font-manrope antialiased tracking-tight">
       <div className="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
         <div className="flex items-center gap-8">
-          <Link to="/" className="text-2xl font-bold tracking-tighter text-blue-700">DormArch</Link>
+          <Link to="/" className="text-2xl font-bold tracking-tighter text-blue-700">HappyHome</Link>
         </div>
         <div className="flex items-center gap-4">
           {authState.isLoggedIn ? (
