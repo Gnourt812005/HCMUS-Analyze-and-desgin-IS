@@ -6,62 +6,90 @@ skinparam {
     BackgroundColor White
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
-    ParticipantPadding 20
+    DefaultFontSize 16
+    ParticipantPadding 15
     BoxPadding 10
 }
 
-actor "Nhân viên quản lý" as Actor
-boundary "ScreenContractDetail" as DetailGUI <<boundary>>
-boundary "ScreenReportList" as ListGUI <<boundary>>
-boundary "FormReport" as FormGUI <<boundary>>
-control "Report" as BUS <<control>>
-database "ReportDB" as DB <<database>>
-
 autonumber
 
-== Kịch bản 1: Xem danh sách biên bản bàn giao ==
-Actor -> DetailGUI: Nhấn "Biên bản bàn giao"
-DetailGUI -> ListGUI: showReportList()
-ListGUI -> BUS: getReportsByContract(contractId)
-BUS -> DB: fetchByContractId(contractId)
-DB --> BUS: Dữ liệu biên bản
-BUS --> ListGUI: Danh sách biên bản
-ListGUI --> Actor: Hiển thị danh sách
+actor "Nhân viên phụ trách" as Admin
 
-== Kịch bản 2: Lập biên bản bàn giao ==
-Actor -> ListGUI: Nhấn "Lập biên bản mới"
-ListGUI -> FormGUI: showReportForm()
+boundary "HandoverManagementScreen" as GUI_List <<boundary>>
+boundary "HandoverFormScreen" as GUI_Form <<boundary>>
 
-' --- Tự động lấy danh sách thiết bị ---
-FormGUI -> BUS: getEquipmentsByBed(bedId)
-BUS -> DB: fetchEquipments(bedId)
-DB --> BUS: Danh sách thiết bị (Giường, nệm, tủ, chìa khóa)
-BUS --> FormGUI: Kết quả
-FormGUI --> Actor: Hiển thị checklist
+control "Handover" as BUS <<control>>
 
-' --- Hành động của người dùng ---
-Actor -> FormGUI: Chọn trạng thái (Tốt/Hư hỏng/Mất)
-Actor -> FormGUI: Nhập ghi chú
+database "HandoverDB" as DAO <<entity>>
 
-alt Lưu & Ký
-    Actor -> FormGUI: Nhấn "Lưu & Ký"
-    FormGUI -> BUS: createHandoverReport(data, bedId)
-    
-    ' Transaction: Chèn biên bản và cập nhật trạng thái giường
-    BUS -> DB: insert(data)
-    DB --> BUS: Thành công
-    
-    BUS -> DB: updateBedStatus(bedId, "Occupied")
-    DB --> BUS: Thành công
-    
-    BUS --> FormGUI: Trả về kết quả (Thành công)
-    FormGUI --> Actor: Thông báo thành công
-    FormGUI -> ListGUI: refreshList()
-else Hủy
-    Actor -> FormGUI: Nhấn "Hủy"
-    FormGUI -> FormGUI: clearData()
-    FormGUI --> Actor: Đóng Form
-end
+' ============================================================
+== Kịch bản 1: Admin xem danh sách biên bản bàn giao ==
+' ============================================================
+
+Admin -> GUI_List: Mở trang Quản lý biên bản bàn giao
+activate GUI_List
+    GUI_List -> BUS: getAll()
+    activate BUS
+        BUS -> DAO: getAll()
+        activate DAO
+        deactivate DAO
+    deactivate BUS
+    note right of GUI_List: Hiển thị danh sách bằng HandoverReportDTO\n(Mã biên bản, Hợp đồng, Khách hàng, Loại IN/OUT, Ngày lập)
+deactivate GUI_List
+
+' ============================================================
+== Kịch bản 2: Admin lập biên bản bàn giao mới ==
+' ============================================================
+
+Admin -> GUI_List: Nhấn "Lập biên bản mới"
+activate GUI_List
+    GUI_List -> GUI_Form: openCreateModal()
+    activate GUI_Form
+
+        GUI_Form -> BUS: getActiveContracts()
+        activate BUS
+            BUS -> DAO: getActiveContracts()
+            activate DAO
+                note right of DAO: Lấy hợp đồng ACTIVE kèm\ndanh sách giường & thiết bị (bed_utilities)
+            deactivate DAO
+        deactivate BUS
+    deactivate GUI_Form
+deactivate GUI_List
+
+Admin -> GUI_Form: Chọn hợp đồng
+activate GUI_Form
+    GUI_Form -> GUI_Form: handleSelectContract(contractId)\nTự động điền danh sách giường & thiết bị
+deactivate GUI_Form
+
+Admin -> GUI_Form: Chọn loại biên bản (IN / OUT),\ntick tình trạng thiết bị & nhập ghi chú, nhấn "Lưu"
+activate GUI_Form
+    GUI_Form -> GUI_Form: Kiểm tra tính hợp lệ\n(contractId bắt buộc, beds.length >= 1)
+
+    alt Hợp lệ
+        GUI_Form -> BUS: create(CreateHandoverDTO)
+        activate BUS
+            BUS -> DAO: insert(contractId, type, beds, note)
+            activate DAO
+            deactivate DAO
+        deactivate BUS
+        GUI_Form --> Admin: Thông báo "Tạo biên bản thành công"
+        GUI_Form -> GUI_List: Tải lại danh sách
+    end
+deactivate GUI_Form
+
+' ============================================================
+== Kịch bản 3: Admin xem chi tiết biên bản ==
+' ============================================================
+
+Admin -> GUI_List: Chọn một biên bản trong danh sách
+activate GUI_List
+    GUI_List -> BUS: getById(id)
+    activate BUS
+        BUS -> DAO: getById(id)
+        activate DAO
+        deactivate DAO
+    deactivate BUS
+    note right of GUI_List: Hiển thị chi tiết biên bản bằng HandoverReportDTO\n(từng giường, từng thiết bị, trạng thái, ghi chú)
+deactivate GUI_List
 
 @enduml

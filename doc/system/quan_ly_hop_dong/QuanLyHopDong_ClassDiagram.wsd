@@ -7,85 +7,196 @@ skinparam {
     ClassBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
+    DefaultFontSize 18
     Padding 5
+    Nodesep 60
+    Ranksep 80
 }
 
-' --- BOUNDARY LAYER ---
-class "ScreenContractManagement" as ScreenCM <<boundary>> {
-    - dgvContract: GridView
-    - txtSearch: TextBox
-    - btnSearch: Button
-    - btnAddNew: Button
-    + dgvContract_Load(): void
-    + btnSearch_Click(): void
-    + btnAddNew_Click(): void
+' ==========================================
+' 1. SHARED LAYER (DTOs)
+' ==========================================
+package "Data Transfer Objects" <<Rectangle>> {
+    class "ContractDTO" as ContractDTO <<DTO>> {
+        + contractId: string
+        + contractCode: string
+        + userEmail: string
+        + rentalFormId: string
+        + roomId: string
+        + roomName: string
+        + dormName: string
+        + floor: number
+        + bedNumbers: string
+        + monthlyRent: number
+        + startDate: string
+        + depositAmount: number
+        + stayDuration: number
+        + status: string
+        + signatureUrl: string
+        + createdAt: string
+    }
+
+    class "ContractAdminDTO" as ContractAdminDTO <<DTO>> {
+        + id: string
+        + contractCode: string
+        + userEmail: string
+        + rentalFormId: string
+        + startDate: string
+        + stayDuration: number
+        + status: string
+        + signatureUrl: string
+        + createdAt: string
+        + customerName: string
+        + phone: string
+        + cccd: string
+        + roomName: string
+        + bedNumbers: string[]
+        + monthlyRent: number
+    }
+
+    class "DormFeesDTO" as DormFeesDTO <<DTO>> {
+        + electricityFee: number
+        + waterFee: number
+        + wifiFee: number
+        + cleaningFee: number
+    }
+
+    class "RentalFormOptionDTO" as RentalFormOptionDTO <<DTO>> {
+        + id: string
+        + customerName: string
+        + phone: string
+        + cccd: string
+        + roomName: string
+        + bedNumbers: string[]
+        + monthlyRent: number
+        + rentalMonths: number
+        + totalAmount: number
+        + createdAt: string
+    }
 }
 
-class "ScreenContractDetail" as ScreenCD <<boundary>> {
-    - lblCustomerName: Label
-    - lblBedId: Label
-    - lblStatus: Label
-    - btnUpdate: Button
-    - btnCancelContract: Button
-    + ScreenContractDetail_Load(): void
-    + btnUpdate_Click(): void
-    + btnCancelContract_Click(): void
+' ==========================================
+' 2. BOUNDARY LAYER (FRONTEND VIEWS)
+' ==========================================
+class "UserContractPage" as UserContractPage <<boundary>> {
+    - contractList: ContractDTO[]
+    - selectedContract: ContractDTO
+    - feesInfo: DormFeesDTO
+    - activeTab: string
+
+    + loadContracts(): void
+    + selectContract(contractId: string): void
+    + loadFees(contractId: string): void
 }
 
-class "FormContract" as FormContract <<boundary>> {
-    - txtStartDate: TextBox
-    - txtEndDate: TextBox
-    - txtNumberOfCustomer: TextBox
-    - panelBedSelection: Panel
-    - btnSave: Button
-    - btnCancel: Button
-    + txtNumberOfCustomer_Changed(): void
-    + cbRoom_SelectedIndexChanged(): void
-    + btnSave_Click(): void
+class "AdminContracts" as AdminContracts <<boundary>> {
+    - contractList: ContractAdminDTO[]
+    - searchKeyword: string
+    - statusFilter: string
+
+    + loadAll(): void
+    + handleSearch(): void
+    + openCreateModal(): void
+    + openDetailModal(contractId: string): void
 }
 
-' --- BUSINESS LAYER ---
+class "CreateContractModal" as CreateContractModal <<boundary>> {
+    - rentalFormOptions: RentalFormOptionDTO[]
+    - rentalFormId: string
+    - startDate: string
+    - stayDuration: number
+
+    + loadRentalForms(): void
+    + handleSubmit(): void
+}
+
+class "ContractDetailModal" as ContractDetailModal <<boundary>> {
+    - contract: ContractAdminDTO
+    - feesInfo: DormFeesDTO
+    - editMode: boolean
+
+    + handleUpdate(): void
+    + handleCancel(): void
+}
+
+' ==========================================
+' 3. CONTROL LAYER (BUSINESS LOGIC)
+' ==========================================
 class "Contract" as Contract <<control>> {
     - id: string
-    - customer_id: string
-    - bed_id: string
-    - branch_manager_id: string
-    - start_date: date
-    - end_date: date
+    - contractCode: string
+    - userEmail: string
+    - rentalFormId: string
+    - startDate: string
+    - stayDuration: number
     - status: string
-    - number_of_customer: int
-    - file_id: string
-    - selected_beds: List<string>
-    + <<static>> getContracts(keyword: string): List<Contract>
-    + <<static>> getContractDetail(id: string): Contract
-    + <<static>> getRooms(): List<Room>
-    + <<static>> getAvailableBedsByRoom(roomId: string): List<Bed>
-    + <<static>> createContract(data: Contract, bedList: List<string>): boolean
-    + <<static>> updateContract(id: string, data: Contract): boolean
-    + <<static>> cancelContract(id: string): boolean
-}
+    - signatureUrl: string
+    - feesSnapshot: DormFeesDTO
+    - createdAt: string
 
-' --- DATABASE LAYER ---
-class "ContractDB" as ContractDB <<entity>> {
-    + <<static>> fetchAll(): List
-    + <<static>> fetchByKeyword(keyword: string): List
-    + <<static>> fetchById(id: string): Contract
-    + <<static>> fetchRooms(): List
-    + <<static>> fetchAvailableBeds(roomId: string): List
-    + <<static>> insertContract(data: Contract): string
-    + <<static>> insertContractDetails(contractId: string, bedId: string): boolean
-    + <<static>> update(id: string, data: Contract): boolean
+    + <<static>> getByUserEmail(email: string): ContractDTO
+    + <<static>> getByContractId(id: string): ContractDTO
+    + <<static>> getByRentalFormId(rentalFormId: string): ContractDTO
+    + <<static>> getActiveByUserEmail(email: string): ContractDTO[]
+    + <<static>> getAllByUserEmail(email: string): ContractDTO[]
+    + <<static>> getAll(dormId: string): ContractAdminDTO[]
+    + <<static>> getRentalFormsWithoutContract(dormId: string): RentalFormOptionDTO[]
+    + <<static>> getBedsInfoByContractId(id: string): object
+    + <<static>> getFeesByContractId(id: string): DormFeesDTO
+    + <<static>> insert(rentalFormId: string, startDate: string, stayDuration: number): string
+    + <<static>> adminUpdate(id: string, startDate: string, stayDuration: number): boolean
+    + <<static>> cancel(id: string): boolean
     + <<static>> updateStatus(id: string, status: string): boolean
 }
 
-' --- RELATIONSHIPS ---
-ScreenCM "1" --> "1" Contract
-ScreenCD "1" --> "1" Contract
-FormContract "1" --> "1" Contract
-Contract "1" --> "1" ContractDB
-ScreenCM ..> ScreenCD : Mở Chi tiết
-ScreenCM ..> FormContract : Mở Form Thêm
-ScreenCD ..> FormContract : Mở Form Sửa
+' ==========================================
+' 4. ENTITY LAYER (DATABASE)
+' ==========================================
+class "ContractDB" as ContractDB <<entity>> {
+    + <<static>> getAll(dormId: string): ContractAdminDTO[]
+    + <<static>> getRentalFormsWithoutContract(dormId: string): RentalFormOptionDTO[]
+    + <<static>> insert(rentalFormId: string, startDate: string, stayDuration: number): string
+    + <<static>> adminUpdate(id: string, startDate: string, stayDuration: number): boolean
+    + <<static>> cancel(id: string): boolean
+    + <<static>> getByContractId(id: string): ContractDTO
+    + <<static>> getByRentalFormId(rentalFormId: string): ContractDTO
+    + <<static>> getByUserEmail(email: string): ContractDTO
+    + <<static>> getAllByUserEmail(email: string): ContractDTO[]
+    + <<static>> getActiveByUserEmail(email: string): ContractDTO[]
+    + <<static>> getBedsInfoByContractId(id: string): object
+    + <<static>> getFeesByContractId(id: string): DormFeesDTO
+    + <<static>> updateStatus(id: string, status: string): boolean
+}
+
+' ==========================================
+' RELATIONSHIPS
+' ==========================================
+
+' Luồng điều hướng UI
+AdminContracts ..> CreateContractModal : "Mở Form Thêm >"
+AdminContracts ..> ContractDetailModal : "Mở Form Chi tiết >"
+
+' UI sử dụng DTO để hiển thị
+UserContractPage ..> ContractDTO : "hiển thị danh sách hợp đồng >"
+UserContractPage ..> DormFeesDTO : "hiển thị phí dịch vụ >"
+AdminContracts ..> ContractAdminDTO : "hiển thị danh sách (admin) >"
+CreateContractModal ..> RentalFormOptionDTO : "hiển thị phiếu đăng ký >"
+ContractDetailModal ..> ContractAdminDTO : "hiển thị chi tiết hợp đồng >"
+ContractDetailModal ..> DormFeesDTO : "hiển thị phí dịch vụ >"
+
+' UI gọi Business (Boundary -> Control)
+UserContractPage "1" --> "1" Contract : "xem hợp đồng / lấy phí"
+AdminContracts "1" --> "1" Contract : "lấy danh sách / tạo / cập nhật / huỷ"
+CreateContractModal "1" --> "1" Contract : "lấy phiếu ĐK / tạo hợp đồng"
+ContractDetailModal "1" --> "1" Contract : "cập nhật / huỷ hợp đồng"
+
+' Business gọi DB (Control -> Entity)
+Contract "1" --> "1" ContractDB : "CRUD contracts"
+
+' Business trả về DTO (Control -> DTO)
+Contract ..> ContractDTO : "returns >"
+Contract ..> ContractAdminDTO : "returns >"
+Contract ..> DormFeesDTO : "returns >"
+Contract ..> RentalFormOptionDTO : "returns >"
 
 @enduml
