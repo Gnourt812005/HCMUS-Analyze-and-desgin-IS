@@ -10,6 +10,14 @@ class "ScreenPayment" <<boundary>> {
 }
 
 class "Payment" <<control>> {
+    - sessionId: String
+    - registrationId: String
+    - action: String
+    - method: String
+    - status: String
+    - qrCode: String
+    - expiresAt: Date
+    - invoiceId: String
     + <<static>> createPaymentCode(payload)
     + <<static>> verifyTransaction(payload)
     + <<static>> finalizePayment(payload)
@@ -17,6 +25,11 @@ class "Payment" <<control>> {
 }
 
 class "Rental" <<control>> {
+    - registrationId: String
+    - roomId: String
+    - bedIds: String[]
+    - roomPrice: Double
+    - alreadyDeposited: Boolean
     + <<static>> previewPayment(payload)
 }
 

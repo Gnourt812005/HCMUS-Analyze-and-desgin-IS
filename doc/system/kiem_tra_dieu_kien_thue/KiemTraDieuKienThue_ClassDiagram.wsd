@@ -11,10 +11,22 @@ class "ScreenPolicy" as ScreenPolicy <<boundary>> {
 
 ' --- BUSINESS LAYER ---
 class "Policy" as Policy <<control>> {
+    - policyId: String
+    - title: String
+    - content: String
+    - updatedAt: Date
     + <<static>> hasConfirmed(idCard)
 }
 
 class "Rental" as Rental <<control>> {
+    - registrationId: String
+    - roomId: String
+    - bedIds: String[]
+    - customerName: String
+    - idCard: String
+    - roomPrice: Double
+    - alreadyDeposited: Boolean
+    - action: String
     + <<static>> checkEligibility(payload)
 }
 

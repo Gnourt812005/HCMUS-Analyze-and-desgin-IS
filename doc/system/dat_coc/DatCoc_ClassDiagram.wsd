@@ -11,6 +11,16 @@ class "ScreenRoomList" as ScreenRoomList <<boundary>> {
 
 ' --- BUSINESS LAYER ---
 class "Rental" as Rental <<control>> {
+    - registrationId: String
+    - roomId: String
+    - bedIds: String[]
+    - customerName: String
+    - idCard: String
+    - phone: String
+    - email: String
+    - roomPrice: Double
+    - alreadyDeposited: Boolean
+    - action: String
     + <<static>> register(payload)
     + <<static>> checkEligibility(payload)
     + <<static>> previewPayment(payload)
