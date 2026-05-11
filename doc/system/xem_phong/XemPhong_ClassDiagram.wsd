@@ -1,125 +1,216 @@
-@startuml Dormarch_SequenceDiagram_XemPhong_Perfect
-title Sequence Diagram - UC1, 2, 3, 6: Xem Phòng, Lọc và Đặt Lịch (Strict Source Code)
+@startuml Dormarch_ClassDiagram_XemPhong_Perfect
+title Class Diagram - UC1, 2, 3, 6: Xem KTX, Lọc Phòng và Đặt Lịch (Strict BCE)
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
-    BackgroundColor White
+    ClassBackgroundColor White
+    ClassBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 16
-    ParticipantPadding 15
-    BoxPadding 10
+    DefaultFontSize 18
+    Padding 5
+    Nodesep 60
+    Ranksep 80
 }
 
-autonumber
+' ==========================================
+' 1. SHARED LAYER (DTOs)
+' ==========================================
+package "Data Transfer Objects" <<Rectangle>> {
+    class "DormSelectionDTO" as DormSelectionDTO <<DTO>> {
+        + id: string
+        + name: string
+        + address: string
+        + status: string
+        + availableRooms: int
+        + totalRooms: int
+    }
 
-actor "Khách hàng" as Actor
-boundary "ScreenDormsView" as GUI_Dorms <<boundary>>
-boundary "ScreenRoomsView" as GUI_Rooms <<boundary>>
-boundary "ScreenRoomDetailsView" as GUI_Details <<boundary>>
-boundary "ScreenPreviewRequestView" as GUI_Preview <<boundary>>
+    class "RoomBriefDTO" as RoomBriefDTO <<DTO>> {
+        + id: string
+        + name: string
+        + block: string
+        + price: decimal
+        + availableBeds: int
+        + totalBeds: int
+        + imageUrl: string
+    }
 
-control "Dorm" as BUS_Dorm <<control>>
-control "Room" as BUS_Room <<control>>
-control "Favourite" as BUS_Fav <<control>>
-control "PreviewForm" as BUS_Preview <<control>>
+    class "RoomDetailDTO" as RoomDetailDTO <<DTO>> {
+        + id: string
+        + dormId: string
+        + name: string
+        + block: string
+        + floor: int
+        + price: decimal
+        + totalBeds: int
+        + availableBeds: int
+        + amenities: List<string>
+        + favoriteCount: int
+        + isFavorite: bool
+    }
 
-database "DormDB" as DAO_Dorm <<entity>>
-database "RoomDB" as DAO_Room <<entity>>
-database "FavouriteRoomsDB" as DAO_Fav <<entity>>
-database "PreviewFormDB" as DAO_Preview <<entity>>
-database "UserDB (Staff)" as DAO_User <<entity>>
+    class "LocalRoomFilterCriteria" as LocalRoomFilterCriteria <<DTO>> {
+        + priceRange: Tuple<decimal, decimal>
+        + block: string
+        + availableBeds: int
+        + totalBeds: int
+    }
+}
 
-== Mở danh sách ký túc xá ==
-Actor -> GUI_Dorms: Yêu cầu xem danh sách KTX
-activate GUI_Dorms
-    GUI_Dorms -> BUS_Dorm: getAll(query)
-    activate BUS_Dorm
-        BUS_Dorm -> DAO_Dorm: fetchAll(query)
-        activate DAO_Dorm
-        deactivate DAO_Dorm
-    deactivate BUS_Dorm
-deactivate GUI_Dorms
+' ==========================================
+' 2. BOUNDARY LAYER (FRONTEND VIEWS)
+' ==========================================
+class "ScreenDormsView" as ScreenDormsView <<boundary>> {
+    - gridDorms: GridView
+    + showDormsList(): void
+    + gridDormsCellClick(dormId: string): void
+}
 
-== Chọn ký túc xá & Lấy danh sách phòng ==
-Actor -> GUI_Dorms: Bấm chọn 1 KTX (gridDormsCellClick)
-activate GUI_Dorms
-    GUI_Dorms -> GUI_Rooms: Mở màn hình Phòng (truyền dormId)
-deactivate GUI_Dorms
+class "ScreenRoomsView" as ScreenRoomsView <<boundary>> {
+    - gridRooms: GridView
+    - sliderPriceRange: RangeSlider
+    - cbbBlockSelect: ComboBox
+    - numAvailableBeds: NumericUpDown
+    - numTotalBeds: ComboBox
+    - btnApplyFilter: Button
 
-activate GUI_Rooms
-    GUI_Rooms -> BUS_Room: fetchAll(query)
-    activate BUS_Room
-        BUS_Room -> DAO_Room: fetchAll(query)
-        activate DAO_Room
-        deactivate DAO_Room
-    deactivate BUS_Room
-deactivate GUI_Rooms
+    + showRoomsList(dormId: string): void
+    + btnApplyFilterClick(): void
+    + gridRoomsCellClick(roomId: string): void
+}
 
-== Lọc phòng (Local / Client-side) ==
-Actor -> GUI_Rooms: Thay đổi bộ lọc & Nhấn "Áp dụng" (btnApplyFilterClick)
-activate GUI_Rooms
-    GUI_Rooms -> GUI_Rooms: Lọc danh sách phòng bằng LocalRoomFilterCriteria
-    note right of GUI_Rooms: Lọc trực tiếp trên giao diện UI,\nkhông gọi lại tầng Control/Database
-deactivate GUI_Rooms
-
-== Xem chi tiết phòng ==
-Actor -> GUI_Rooms: Bấm chọn 1 phòng (gridRoomsCellClick)
-activate GUI_Rooms
-    GUI_Rooms -> GUI_Details: Hiển thị Modal chi tiết (truyền RoomDetailDTO)
-deactivate GUI_Rooms
-
-== Thao tác: Quan tâm phòng ==
-Actor -> GUI_Details: Bấm "Quan tâm / Bỏ quan tâm" (btnFavoriteClick)
-activate GUI_Details
-    alt Nếu Thêm quan tâm
-        GUI_Details -> BUS_Fav: addFavourite(userId, roomId)
-        activate BUS_Fav
-            BUS_Fav -> DAO_Fav: insert(userId, roomId)
-            activate DAO_Fav
-            deactivate DAO_Fav
-        deactivate BUS_Fav
-    else Nếu Bỏ quan tâm
-        GUI_Details -> BUS_Fav: deleteFavourite(userId, roomId)
-        activate BUS_Fav
-            BUS_Fav -> DAO_Fav: delete(userId, roomId)
-            activate DAO_Fav
-            deactivate DAO_Fav
-        deactivate BUS_Fav
-    end
-deactivate GUI_Details
-
-== Đăng ký lịch xem phòng ==
-Actor -> GUI_Details: Bấm "Đăng ký xem phòng" (btnOpenPreviewFormClick)
-activate GUI_Details
-    GUI_Details -> GUI_Preview: Mở form đăng ký (showPreviewRequestScreen)
-deactivate GUI_Details
-
-activate GUI_Preview
-    Actor -> GUI_Preview: Chọn ngày, giờ và bấm "Xác nhận" (btnConfirmPreviewClick)
-    GUI_Preview -> BUS_Preview: createPreviewForm(userId, roomId, previewDatetime)
+class "ScreenRoomDetailsView" as ScreenRoomDetailsView <<boundary>> {
+    - imgRoom: PictureBox
+    - lblRoomName: Label
+    - lblPrice: Label
+    - lblBlock: Label
+    - lblFloor: Label
+    - lblTotalBeds: Label
+    - lblAvailableBeds: Label
+    - txtAmenities: TextBlock
     
-    activate BUS_Preview
-        BUS_Preview -> DAO_Preview: getAll()
-        activate DAO_Preview
-        deactivate DAO_Preview
+    - btnFavorite: IconButton
+    - btnOpenPreviewForm: Button
 
-        BUS_Preview -> BUS_Preview: Kiểm tra trùng lịch phòng
-        BUS_Preview -> BUS_Preview: Kiểm tra trùng lịch khách hàng
+    + showRoomDetails(roomData: RoomDetailDTO): void
+    + btnFavoriteClick(): void
+    + btnOpenPreviewFormClick(): void
+}
 
-        BUS_Preview -> DAO_User: fetchEmployeesByRole("SALE_STAFF")
-        activate DAO_User
-        deactivate DAO_User
-        note right of DAO_User: Lấy danh sách nhân viên Sale\nđể tìm người rảnh rỗi
+class "ScreenPreviewRequestView" as ScreenPreviewRequestView <<boundary>> {
+    - datepickerPreviewDate: DateTimePicker
+    - timepickerPreviewTime: TimePicker
+    - btnConfirmPreview: Button
 
-        BUS_Preview -> BUS_Preview: Tìm nhân viên Sale rảnh rỗi (assignSalesEmployee)
+    + showPreviewRequestScreen(): void
+    + btnConfirmPreviewClick(date: string, time: string): void
+}
 
-        opt Có nhân viên rảnh rỗi
-            BUS_Preview -> DAO_Preview: insert(newForm)
-            activate DAO_Preview
-            deactivate DAO_Preview
-        end
-    deactivate BUS_Preview
-deactivate GUI_Preview
+' ==========================================
+' 3. CONTROL LAYER (BUSINESS LOGIC / DOMAIN MODELS)
+' ==========================================
+class "Dorm" as Dorm <<control>> {
+    + id: string
+    + name: string
+    + address: string
+    + phone: string
+    + status: string
+    + totalRooms: int
+    + availableRooms: int
+
+    + <<static>> getAll(query: any): {dorms: List<DormDTO>, total: int}
+}
+
+class "Room" as Room <<control>> {
+    + id: string
+    + dormId: string
+    + name: string
+    + block: string
+    + floor: int
+    + price: decimal
+    + totalBeds: int
+    + availableBeds: int
+    + amenities: List<string>
+    + imageUrl: string
+
+    + <<static>> fetchAll(query: any): {rooms: List<RoomDTO>, total: int}
+}
+
+class "Favourite" as Favourite <<control>> {
+    + userId: string
+    + roomId: string
+    + createdAt: string
+
+    + <<static>> addFavourite(userId: string, roomId: string): int
+    + <<static>> deleteFavourite(userId: string, roomId: string): int
+}
+
+class "PreviewForm" as PreviewForm <<control>> {
+    + id: string
+    + roomId: string
+    + userId: string
+    + previewDatetime: string
+    + status: string
+    + staffId: string
+
+    + <<static>> createPreviewForm(userId: string, roomId: string, previewDatetime: string): {code: int, data: any}
+}
+
+' ==========================================
+' 4. ENTITY LAYER (DATABASE)
+' ==========================================
+class "DormDB" as DormDB <<entity>> {
+    + <<static>> fetchAll(query: any): {dorms: List<any>, total: int}
+}
+
+class "RoomDB" as RoomDB <<entity>> {
+    + <<static>> fetchAll(query: any): {rooms: List<any>, total: int}
+}
+
+class "FavouriteRoomsDB" as FavouriteRoomsDB <<entity>> {
+    + <<static>> insert(userId: string, roomId: string): boolean
+    + <<static>> delete(userId: string, roomId: string): boolean
+}
+
+class "PreviewFormDB" as PreviewFormDB <<entity>> {
+    + <<static>> getAll(): List<any>
+    + <<static>> insert(data: any): boolean
+}
+
+class "UserDB (Staff)" as UserDB <<entity>> {
+    + <<static>> fetchEmployeesByRole(role: string): List<any>
+}
+
+' ==========================================
+' RELATIONSHIPS
+' ==========================================
+
+' 1. Luồng điều hướng UI (UI Flow)
+ScreenDormsView ..> ScreenRoomsView : "navigates to >"
+ScreenRoomsView ..> ScreenRoomDetailsView : "navigates to (Modal) >"
+ScreenRoomDetailsView ..> ScreenPreviewRequestView : "navigates to (Modal) >"
+
+' 2. DTO Usage
+ScreenDormsView ..> DormSelectionDTO : "displays list >"
+ScreenRoomsView ..> RoomBriefDTO : "displays list >"
+ScreenRoomDetailsView ..> RoomDetailDTO : "displays detail >"
+
+' 3. Sử dụng Filter cục bộ (Theo src code RoomList.tsx)
+ScreenRoomsView ..> LocalRoomFilterCriteria : "uses local filter >"
+
+' 4. Boundary gọi Control (Backend Calls)
+ScreenDormsView "1" --> "1" Dorm : "fetch dorms"
+ScreenRoomsView "1" --> "1" Room : "fetch rooms"
+ScreenRoomDetailsView "1" --> "1" Favourite : "add/delete favorite"
+ScreenPreviewRequestView "1" --> "1" PreviewForm : "submit preview form"
+
+' 5. Control gọi Entity (Database Operations)
+Dorm "1" --> "1" DormDB
+Room "1" --> "1" RoomDB
+Favourite "1" --> "1" FavouriteRoomsDB
+
+PreviewForm "1" --> "1" PreviewFormDB : "CRUD forms"
+PreviewForm "1" --> "1" UserDB : "fetch sales staff"
 
 @enduml
