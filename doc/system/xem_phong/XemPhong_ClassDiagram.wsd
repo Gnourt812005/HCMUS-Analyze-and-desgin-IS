@@ -1,5 +1,5 @@
-@startuml XemPhong_ClassDiagram
-title Class Diagram - UC1, 2, 3, 6
+@startuml Dormarch_ClassDiagram_XemPhong_Perfect
+title Class Diagram - UC1, 2, 3, 6: Xem KTX, Lọc Phòng và Đặt Lịch (Strict BCE)
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
@@ -7,196 +7,210 @@ skinparam {
     ClassBorderColor #2D3E50
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
+    DefaultFontSize 18
     Padding 5
+    Nodesep 60
+    Ranksep 80
 }
 
-' --- BOUNDARY LAYER ---
+' ==========================================
+' 1. SHARED LAYER (DTOs)
+' ==========================================
+package "Data Transfer Objects" <<Rectangle>> {
+    class "DormSelectionDTO" as DormSelectionDTO <<DTO>> {
+        + id: string
+        + name: string
+        + address: string
+        + status: string
+        + availableRooms: int
+        + totalRooms: int
+    }
+
+    class "RoomBriefDTO" as RoomBriefDTO <<DTO>> {
+        + id: string
+        + name: string
+        + block: string
+        + price: decimal
+        + availableBeds: int
+        + totalBeds: int
+        + imageUrl: string
+    }
+
+    class "RoomDetailDTO" as RoomDetailDTO <<DTO>> {
+        + id: string
+        + dormId: string
+        + name: string
+        + block: string
+        + floor: int
+        + price: decimal
+        + totalBeds: int
+        + availableBeds: int
+        + amenities: List<string>
+        + favoriteCount: int
+        + isFavorite: bool
+    }
+
+    class "LocalRoomFilterCriteria" as LocalRoomFilterCriteria <<DTO>> {
+        + priceRange: Tuple<decimal, decimal>
+        + block: string
+        + availableBeds: int
+        + totalBeds: int
+    }
+}
+
+' ==========================================
+' 2. BOUNDARY LAYER (FRONTEND VIEWS)
+' ==========================================
 class "ScreenDormsView" as ScreenDormsView <<boundary>> {
-    ' - txtEmail: TextBox
-    ' - txtPassword: TextBox
-    ' - btnLogin: Button
-    ' + btnLogin_Click(): void
-
     - gridDorms: GridView
-
     + showDormsList(): void
-    + gridDormsCellClick(): int ' returns selected dorm ID
+    + gridDormsCellClick(dormId: string): void
 }
 
 class "ScreenRoomsView" as ScreenRoomsView <<boundary>> {
     - gridRooms: GridView
-    - cbbBlockSelect: ComboBox
     - sliderPriceRange: RangeSlider
-    - numRommateCount: NumericUpDown
-    - checkboxHasAC: CheckBox
-    - checkboxHasPrivateBathroom: CheckBox
-    - btnSearchRoom: Button
-    - btnBack: IconButton
-    - btnNextPage: IconButton
-    - btnPreviousPage: IconButton
+    - cbbBlockSelect: ComboBox
+    - numAvailableBeds: NumericUpDown
+    - numTotalBeds: ComboBox
+    - btnApplyFilter: Button
 
-    + showRoomsList(): void
-    + btnBackClick(): void
-    + btnNextPageClick(): void
-    + btnPreviousPageClick(): void
-    + btnSearchRoomClick(): void
-    + gridRoomsCellClick(): int ' returns selected room ID
+    + showRoomsList(dormId: string): void
+    + btnApplyFilterClick(): void
+    + gridRoomsCellClick(roomId: string): void
 }
-note right of ScreenRoomsView
-    May include more filters options in the future.
-end note
 
 class "ScreenRoomDetailsView" as ScreenRoomDetailsView <<boundary>> {
-    - imageRoom: PictureBox
-    - lblRoomID: Label
-    - lblDormName: Label
+    - imgRoom: PictureBox
+    - lblRoomName: Label
+    - lblPrice: Label
     - lblBlock: Label
-    - lbleachBedPrice: Label
-    - lblRoommateCount: Label
-    - lblAvailSlots: Label
-    - lblFavoriteCount: Label
-    - txtblockUltilities: TextBlock
-    - txtblockSpecialDescription: TextBlock
-
-    - btnPreviewRequest: Button
+    - lblFloor: Label
+    - lblTotalBeds: Label
+    - lblAvailableBeds: Label
+    - txtAmenities: TextBlock
+    
     - btnFavorite: IconButton
+    - btnOpenPreviewForm: Button
 
-    - btnBack: IconButton
-
-    + showRoomDetails(roomID: int): void
-    + btnBackClick(): void
-
-    + btnPreviewRequestClick(): void
+    + showRoomDetails(roomData: RoomDetailDTO): void
     + btnFavoriteClick(): void
+    + btnOpenPreviewFormClick(): void
 }
 
 class "ScreenPreviewRequestView" as ScreenPreviewRequestView <<boundary>> {
     - datepickerPreviewDate: DateTimePicker
-    - btnConfirmPreviewDate: Button
-
-    - btnBack: IconButton
+    - timepickerPreviewTime: TimePicker
+    - btnConfirmPreview: Button
 
     + showPreviewRequestScreen(): void
-    + btnBackClick(): void
-    + btnConfirmPreviewDateClick(): void
+    + btnConfirmPreviewClick(date: string, time: string): void
 }
 
-' --- BUSINESS LAYER ---
+' ==========================================
+' 3. CONTROL LAYER (BUSINESS LOGIC / DOMAIN MODELS)
+' ==========================================
 class "Dorm" as Dorm <<control>> {
-    - dormImage: byte[]
-    - dormID: int
-    - dormName: string
-    - address: string
-    - specialDescription: string
-    - dormStatus: string
+    + id: string
+    + name: string
+    + address: string
+    + phone: string
+    + status: string
+    + totalRooms: int
+    + availableRooms: int
 
-    + <<static>> getDormsList(): List<Dorm>
-}
-
-class "RoomSearchCriteria" as RoomSearchCriteria <<control>> {
-    - block: string
-    - priceRange: Tuple<decimal, decimal>
-    - roommateCount: int
-    - hasAC: bool
-    - hasPrivateBathroom: bool
+    + <<static>> getAll(query: any): {dorms: List<DormDTO>, total: int}
 }
 
 class "Room" as Room <<control>> {
-    - roomImage: byte[]
-    - roomID: int
-    - dormID: int
-    - roomNumber: string
-    - eachBedPrice: decimal
-    - roommateCount: int
-    - availSlots: int
-    - roomUtilities: string
-    - specialDescription: string
+    + id: string
+    + dormId: string
+    + name: string
+    + block: string
+    + floor: int
+    + price: decimal
+    + totalBeds: int
+    + availableBeds: int
+    + amenities: List<string>
+    + imageUrl: string
 
-    + <<static>> getRoomsList(dormID: int, criteria: RoomSearchCriteria): List<Room>
+    + <<static>> fetchAll(query: any): {rooms: List<RoomDTO>, total: int}
 }
 
-class "FavoriteRequest" as FavoriteRequest <<control>> {
-    - roomID: int
-    - userID: int
+class "Favourite" as Favourite <<control>> {
+    + userId: string
+    + roomId: string
+    + createdAt: string
 
-    + <<static>> addFavoriteRoom(roomID: int, userID: int): void
-    + <<static>> removeFavoriteRoom(roomID: int, userID: int): void
+    + <<static>> addFavourite(userId: string, roomId: string): int
+    + <<static>> deleteFavourite(userId: string, roomId: string): int
 }
 
 class "PreviewForm" as PreviewForm <<control>> {
-    - roomID: int
-    - userID: int
-    - previewDate: DateTime
-    - employeeID: int
+    + id: string
+    + roomId: string
+    + userId: string
+    + previewDatetime: string
+    + status: string
+    + staffId: string
 
-    + <<static>> addUserPreviewForm(roomID: int, userID: int, previewDate: DateTime): bool
-    + <<static>> assignSalesEmployee(previewDate: DateTime): bool
+    + <<static>> createPreviewForm(userId: string, roomId: string, previewDatetime: string): {code: int, data: any}
 }
 
-' --- DATABASE LAYER ---
+' ==========================================
+' 4. ENTITY LAYER (DATABASE)
+' ==========================================
 class "DormDB" as DormDB <<entity>> {
-    + <<static>>getDormsList(): List<Dorm>
+    + <<static>> fetchAll(query: any): {dorms: List<any>, total: int}
 }
 
 class "RoomDB" as RoomDB <<entity>> {
-    + <<static>>getRoomsList(dormID: int, criteria: RoomSearchCriteria): List<Room>
+    + <<static>> fetchAll(query: any): {rooms: List<any>, total: int}
 }
 
-class "UtilitiesDB" as UtilitiesDB <<entity>> {
-    + <<static>>getUtilitiesByRoomID(roomID: int): string
+class "FavouriteRoomsDB" as FavouriteRoomsDB <<entity>> {
+    + <<static>> insert(userId: string, roomId: string): boolean
+    + <<static>> delete(userId: string, roomId: string): boolean
 }
 
-class "BedDB" as BedDB <<entity>> {
-    + <<static>>getBedPrice(roomID: int): decimal
+class "PreviewFormDB" as PreviewFormDB <<entity>> {
+    + <<static>> getAll(): List<any>
+    + <<static>> insert(data: any): boolean
 }
 
-class "FavoriteRoomDB" as FavoriteDB <<entity>> {
-    + <<static>>addFavoriteRoom(roomID: int, userID: int): void
-    + <<static>>removeFavoriteRoom(roomID: int, userID: int): void
+class "UserDB (Staff)" as UserDB <<entity>> {
+    + <<static>> fetchEmployeesByRole(role: string): List<any>
 }
 
-class "PreviewFormDB" as PreviewDB <<entity>> {
-    + <<static>>addUserPreviewForm(roomID: int, userID: int, previewDate: DateTime, employeeID: int): bool
+' ==========================================
+' RELATIONSHIPS
+' ==========================================
 
-    + <<static>>checkUsersDuplicatedPreviewDate(userID: int, previewDate: DateTime): bool
-    + <<static>>checkRoomsDuplicatedPreviewDate(roomID: int, previewDate: DateTime): bool
-}
-
-class "SalesEmployeeDB" as SalesEmployeeDB <<entity>> {
-    + <<static>>getAvailableSalesEmployee(previewDate: DateTime): int ' returns employee ID
-}
-
-' --- RELATIONSHIPS ---
-
-' 1. Screen flows (Navigation)
+' 1. Luồng điều hướng UI (UI Flow)
 ScreenDormsView ..> ScreenRoomsView : "navigates to >"
-ScreenRoomsView ..> ScreenRoomDetailsView : "navigates to >"
-ScreenRoomDetailsView ..> ScreenPreviewRequestView : "navigates to >"
+ScreenRoomsView ..> ScreenRoomDetailsView : "navigates to (Modal) >"
+ScreenRoomDetailsView ..> ScreenPreviewRequestView : "navigates to (Modal) >"
 
-' 2. Boundary to Business connections
-ScreenDormsView "1" --> "1" Dorm
-ScreenRoomsView "1" --> "1" Room
-ScreenRoomsView ..> RoomSearchCriteria : "creates >"
+' 2. DTO Usage
+ScreenDormsView ..> DormSelectionDTO : "displays list >"
+ScreenRoomsView ..> RoomBriefDTO : "displays list >"
+ScreenRoomDetailsView ..> RoomDetailDTO : "displays detail >"
 
-ScreenRoomDetailsView "1" --> "1" Room
-ScreenRoomDetailsView "1" --> "1" FavoriteRequest : "favorite action"
+' 3. Sử dụng Filter cục bộ (Theo src code RoomList.tsx)
+ScreenRoomsView ..> LocalRoomFilterCriteria : "uses local filter >"
 
-ScreenPreviewRequestView "1" --> "1" PreviewForm : "submits form"
+' 4. Boundary gọi Control (Backend Calls)
+ScreenDormsView "1" --> "1" Dorm : "fetch dorms"
+ScreenRoomsView "1" --> "1" Room : "fetch rooms"
+ScreenRoomDetailsView "1" --> "1" Favourite : "add/delete favorite"
+ScreenPreviewRequestView "1" --> "1" PreviewForm : "submit preview form"
 
-' 3. Business dependencies
-Room ..> RoomSearchCriteria : "uses >"
-Dorm "1" *-- "many" Room : "contains"
-
-' 4. Business to Database connections
+' 5. Control gọi Entity (Database Operations)
 Dorm "1" --> "1" DormDB
 Room "1" --> "1" RoomDB
-FavoriteRequest "1" --> "1" FavoriteDB
-PreviewForm "1" --> "1" PreviewDB
+Favourite "1" --> "1" FavouriteRoomsDB
 
-' 5. Entity / Database dependencies
-RoomDB "1" *-- "many" UtilitiesDB : "contains >"
-RoomDB "1" *-- "many" BedDB : "contains >"
-PreviewDB "1" --> "1" SalesEmployeeDB
+PreviewForm "1" --> "1" PreviewFormDB : "CRUD forms"
+PreviewForm "1" --> "1" UserDB : "fetch sales staff"
 
 @enduml

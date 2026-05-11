@@ -1,54 +1,109 @@
-@startuml QuanLyLichXemPhong_SequenceDiagram
-title Sequence Diagram - UC4, 5: Quản lý lịch xem phòng
+@startuml QuanLyLichXemPhong_SequenceDiagram_StrictSrc
+title Sequence Diagram - UC4, 5: Quản lý lịch xem phòng (Strict Execution)
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
     BackgroundColor White
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
-    ParticipantPadding 20
+    DefaultFontSize 16
+    ParticipantPadding 15
     BoxPadding 10
 }
 
-actor "Customer" as Actor
-boundary "ScreenViewingSchedule" as GUI_List <<boundary>>
-boundary "ScreenViewingScheduleDetail" as GUI_Details <<boundary>>
-
-control "ViewingSchedule" as BUS_Preview <<control>>
-control "Room" as BUS_Room <<control>>
-
-database "ViewingScheduleDB" as DB_Preview <<database>>
-database "RoomDB" as DB_Room <<database>>
-database "UtilitiesDB" as DB_Utils <<database>>
-database "BedDB" as DB_Bed <<database>>
-
 autonumber
 
-== Xem danh sách lịch hẹn xem phòng ==
+actor "Khách hàng" as Actor
+boundary "PreviewManagementScreen" as GUI_List <<boundary>>
+boundary "PreviewScheduleDetailsView" as GUI_Details <<boundary>>
 
-Actor -> GUI_List: showClientPreviewSchedules(userID)
-GUI_List -> BUS_Preview: getViewingSchedulesByUserID(userID)
-BUS_Preview -> DB_Preview: getViewingSchedulesByUserID(userID)
+control "PreviewForm" as BUS_Preview <<control>>
 
-GUI_List -> BUS_Room: getRoomsList(roomIDs)
-BUS_Room -> DB_Room: getRoomsList(roomIDs)
+database "PreviewFormDB" as DAO_Preview <<entity>>
+database "DormDB" as DAO_Dorm <<entity>>
+database "RoomDB" as DAO_Room <<entity>>
+database "UserDB" as DAO_User <<entity>>
 
-loop cho từng roomID trong danh sách roomIDs
-    DB_Room -> DB_Utils: getUtilitiesByRoomID(roomID)
-    DB_Room -> DB_Bed: getBedPrice(roomID)
-end
+== Mở danh sách lịch hẹn xem phòng ==
+Actor -> GUI_List: Mở màn hình quản lý lịch hẹn
+activate GUI_List
+    GUI_List -> BUS_Preview: getPreviewsByUserId(userId)
+    activate BUS_Preview
+        
+        BUS_Preview -> DAO_Preview: getAll()
+        activate DAO_Preview
+        deactivate DAO_Preview
+
+        loop Cho từng lịch hẹn tìm được
+            BUS_Preview -> BUS_Preview: getRoomAndDormInfo(roomId)
+            
+            BUS_Preview -> DAO_Dorm: fetchAll(query)
+            activate DAO_Dorm
+            deactivate DAO_Dorm
+            
+            loop Lặp qua từng KTX (cho đến khi tìm thấy phòng)
+                BUS_Preview -> DAO_Room: fetchAll({ dormId })
+                activate DAO_Room
+                deactivate DAO_Room
+            end
+        end
+    deactivate BUS_Preview
+    note right of GUI_List: Hiển thị danh sách bằng PreviewBriefDTO
+deactivate GUI_List
 
 == Xem chi tiết lịch hẹn ==
+Actor -> GUI_List: Bấm vào 1 lịch hẹn trên danh sách
+activate GUI_List
+    GUI_List -> GUI_Details: showPreviewScheduleDetails(formId)
+    activate GUI_Details
+        
+        GUI_Details -> BUS_Preview: getUserPreviewDetails(formId, userId)
+        activate BUS_Preview
+            
+            BUS_Preview -> DAO_Preview: getById(formId)
+            activate DAO_Preview
+            deactivate DAO_Preview
 
-Actor -> GUI_List: listPreviewSchedulesItemClick()
-GUI_List -> GUI_Details: showPreviewScheduleDetails(viewingScheduleID)
-GUI_Details -> BUS_Preview: getViewingScheduleDetails(viewingScheduleID)
+            BUS_Preview -> BUS_Preview: getRoomAndDormInfo(roomId)
+            
+            BUS_Preview -> DAO_Dorm: fetchAll(query)
+            activate DAO_Dorm
+            deactivate DAO_Dorm
+            
+            loop Lặp qua từng KTX (cho đến khi tìm thấy phòng)
+                BUS_Preview -> DAO_Room: fetchAll({ dormId })
+                activate DAO_Room
+                deactivate DAO_Room
+            end
+
+            opt Nếu form có mã nhân viên phụ trách (staffId)
+                BUS_Preview -> DAO_User: fetchCredentialByEmail(staffId)
+                activate DAO_User
+                deactivate DAO_User
+            end
+
+        deactivate BUS_Preview
+        note right of GUI_Details: Hiển thị Modal chi tiết bằng PreviewDetailDTO
+    deactivate GUI_Details
+deactivate GUI_List
 
 == Hủy lịch hẹn xem phòng ==
+Actor -> GUI_List: Bấm "Hủy lịch hẹn" và Xác nhận
+activate GUI_List
+    GUI_List -> BUS_Preview: cancelPreviewByUser(formId, userId)
+    activate BUS_Preview
+        
+        BUS_Preview -> DAO_Preview: getById(formId)
+        activate DAO_Preview
+        deactivate DAO_Preview
 
-Actor -> GUI_Details: Nhấn nút Hủy lịch hẹn (btnCancelPreviewScheduleClick)
-GUI_Details -> BUS_Preview: cancelPreviewSchedule(viewingScheduleID)
-BUS_Preview -> DB_Preview: cancelPreviewSchedule(viewingScheduleID)
+        BUS_Preview -> BUS_Preview: Kiểm tra trạng thái form (phải là "pending")
+
+        BUS_Preview -> DAO_Preview: updateStatus(formId, "cancelled")
+        activate DAO_Preview
+        deactivate DAO_Preview
+
+    deactivate BUS_Preview
+deactivate GUI_List
 
 @enduml

@@ -1,94 +1,125 @@
-﻿@startuml XemPhong_SequenceDiagram
-title Sequence Diagram - UC1, 2, 3, 6
+﻿@startuml Dormarch_SequenceDiagram_XemPhong_Perfect
+title Sequence Diagram - UC1, 2, 3, 6: Xem Phòng, Lọc và Đặt Lịch (Strict Source Code)
 
 ' --- STYLE CONFIGURATION ---
 skinparam {
     BackgroundColor White
     ArrowColor #2D3E50
     DefaultFontName "Arial"
-    DefaultFontSize 24
-    ParticipantPadding 20
+    DefaultFontSize 16
+    ParticipantPadding 15
     BoxPadding 10
 }
+
+autonumber
 
 actor "Khách hàng" as Actor
 boundary "ScreenDormsView" as GUI_Dorms <<boundary>>
 boundary "ScreenRoomsView" as GUI_Rooms <<boundary>>
 boundary "ScreenRoomDetailsView" as GUI_Details <<boundary>>
 boundary "ScreenPreviewRequestView" as GUI_Preview <<boundary>>
+
 control "Dorm" as BUS_Dorm <<control>>
 control "Room" as BUS_Room <<control>>
-control "FavoriteRequest" as BUS_Fav <<control>>
-control "PreviewRequest" as BUS_Preview <<control>>
-database "DormDB" as DAO_Dorm <<database>>
-database "RoomDB" as DAO_Room <<database>>
-database "UtilitiesDB" as DAO_Utils <<database>>
-database "BedDB" as DAO_Bed <<database>>
-database "FavoriteRoomDB" as DAO_Fav <<database>>
-database "PreviewFormDB" as DAO_Preview <<database>>
-database "SalesEmployeeDB" as DAO_Sales <<database>>
+control "Favourite" as BUS_Fav <<control>>
+control "PreviewForm" as BUS_Preview <<control>>
 
-autonumber
+database "DormDB" as DAO_Dorm <<entity>>
+database "RoomDB" as DAO_Room <<entity>>
+database "FavouriteRoomsDB" as DAO_Fav <<entity>>
+database "PreviewFormDB" as DAO_Preview <<entity>>
+database "UserDB (Staff)" as DAO_User <<entity>>
 
 == Mở danh sách ký túc xá ==
-Actor -> GUI_Dorms: Yêu cầu danh sách KTX
-GUI_Dorms -> BUS_Dorm: getDormsList()
+Actor -> GUI_Dorms: Yêu cầu xem danh sách KTX
+activate GUI_Dorms
+    GUI_Dorms -> BUS_Dorm: getAll(query)
+    activate BUS_Dorm
+        BUS_Dorm -> DAO_Dorm: fetchAll(query)
+        activate DAO_Dorm
+        deactivate DAO_Dorm
+    deactivate BUS_Dorm
+deactivate GUI_Dorms
 
-== Chọn ký túc xá ==
-Actor -> GUI_Dorms: Chọn KTX cụ thể (gridDormsCellClick)
-GUI_Dorms -> GUI_Rooms: Truyền dormID và mở màn hình Danh sách phòng
+== Chọn ký túc xá & Lấy danh sách phòng ==
+Actor -> GUI_Dorms: Bấm chọn 1 KTX (gridDormsCellClick)
+activate GUI_Dorms
+    GUI_Dorms -> GUI_Rooms: Mở màn hình Phòng (truyền dormId)
+deactivate GUI_Dorms
 
-== Lọc danh sách phòng ==
-Actor -> GUI_Rooms: Tùy chỉnh bộ lọc (Criteria)
-Actor -> GUI_Rooms: Nhấn "Tìm kiếm" (btnSearchRoomClick)
+activate GUI_Rooms
+    GUI_Rooms -> BUS_Room: fetchAll(query)
+    activate BUS_Room
+        BUS_Room -> DAO_Room: fetchAll(query)
+        activate DAO_Room
+        deactivate DAO_Room
+    deactivate BUS_Room
+deactivate GUI_Rooms
 
-GUI_Rooms -> BUS_Room: getRoomsList(dormID, criteria)
-BUS_Room -> DAO_Room: getRoomsList(dormID, criteria)
-
-opt Lấy tiện ích phòng
-    DAO_Room -> DAO_Utils: getUtilitiesByRoomID(roomID)
-end
-
-opt Lấy giá giường
-    DAO_Room -> DAO_Bed: getBedPrice(roomID)
-end
+== Lọc phòng (Local / Client-side) ==
+Actor -> GUI_Rooms: Thay đổi bộ lọc & Nhấn "Áp dụng" (btnApplyFilterClick)
+activate GUI_Rooms
+    GUI_Rooms -> GUI_Rooms: Lọc danh sách phòng bằng LocalRoomFilterCriteria
+    note right of GUI_Rooms: Lọc trực tiếp trên giao diện UI,\nkhông gọi lại tầng Control/Database
+deactivate GUI_Rooms
 
 == Xem chi tiết phòng ==
-Actor -> GUI_Rooms: Chọn 1 phòng (gridRoomsCellClick)
-GUI_Rooms -> GUI_Details: Truyền roomID và mở màn hình Chi tiết phòng
+Actor -> GUI_Rooms: Bấm chọn 1 phòng (gridRoomsCellClick)
+activate GUI_Rooms
+    GUI_Rooms -> GUI_Details: Hiển thị Modal chi tiết (truyền RoomDetailDTO)
+deactivate GUI_Rooms
 
-== Quan tâm phòng ==
-Actor -> GUI_Details: Nhấn "Quan tâm" (btnFavoriteClick)
-
-alt Đã nằm trong danh sách Quan tâm
-    GUI_Details -> BUS_Fav: removeFavoriteRoom(roomID, userID)
-    BUS_Fav -> DAO_Fav: removeFavoriteRoom(roomID, userID)
-else Chưa nằm trong danh sách Quan tâm
-    GUI_Details -> BUS_Fav: addFavoriteRoom(roomID, userID)
-    BUS_Fav -> DAO_Fav: addFavoriteRoom(roomID, userID)
-end
+== Thao tác: Quan tâm phòng ==
+Actor -> GUI_Details: Bấm "Quan tâm / Bỏ quan tâm" (btnFavoriteClick)
+activate GUI_Details
+    alt Nếu Thêm quan tâm
+        GUI_Details -> BUS_Fav: addFavourite(userId, roomId)
+        activate BUS_Fav
+            BUS_Fav -> DAO_Fav: insert(userId, roomId)
+            activate DAO_Fav
+            deactivate DAO_Fav
+        deactivate BUS_Fav
+    else Nếu Bỏ quan tâm
+        GUI_Details -> BUS_Fav: deleteFavourite(userId, roomId)
+        activate BUS_Fav
+            BUS_Fav -> DAO_Fav: delete(userId, roomId)
+            activate DAO_Fav
+            deactivate DAO_Fav
+        deactivate BUS_Fav
+    end
+deactivate GUI_Details
 
 == Đăng ký lịch xem phòng ==
-Actor -> GUI_Details: Nhấn "Đăng ký xem phòng" (btnPreviewRequestClick)
-GUI_Details -> GUI_Preview: showPreviewRequestScreen()
+Actor -> GUI_Details: Bấm "Đăng ký xem phòng" (btnOpenPreviewFormClick)
+activate GUI_Details
+    GUI_Details -> GUI_Preview: Mở form đăng ký (showPreviewRequestScreen)
+deactivate GUI_Details
 
-Actor -> GUI_Preview: Chọn ngày/giờ (datepickerPreviewDate)
-Actor -> GUI_Preview: Nhấn "Xác nhận" (btnConfirmPreviewDateClick)
+activate GUI_Preview
+    Actor -> GUI_Preview: Chọn ngày, giờ và bấm "Xác nhận" (btnConfirmPreviewClick)
+    GUI_Preview -> BUS_Preview: createPreviewForm(userId, roomId, previewDatetime)
+    
+    activate BUS_Preview
+        BUS_Preview -> DAO_Preview: getAll()
+        activate DAO_Preview
+        deactivate DAO_Preview
 
-GUI_Preview -> BUS_Preview: addUserPreviewForm(roomID, userID, previewDate)
-BUS_Preview -> DAO_Preview: checkUsersDuplicatedPreviewDate(userID, previewDate)
-BUS_Preview -> DAO_Preview: checkRoomsDuplicatedPreviewDate(roomID, previewDate)
+        BUS_Preview -> BUS_Preview: Kiểm tra trùng lịch phòng
+        BUS_Preview -> BUS_Preview: Kiểm tra trùng lịch khách hàng
 
-alt Không trùng lịch
-    BUS_Preview -> BUS_Preview: assignSalesEmployee(previewDate)
-    BUS_Preview -> DAO_Sales: getAvailableSalesEmployee(previewDate)
+        BUS_Preview -> DAO_User: fetchEmployeesByRole("SALE_STAFF")
+        activate DAO_User
+        deactivate DAO_User
+        note right of DAO_User: Lấy danh sách nhân viên Sale\nđể tìm người rảnh rỗi
 
-    alt Có nhân viên sẵn sàng
-        BUS_Preview -> DAO_Preview: addUserPreviewForm(roomID, userID, previewDate, employeeID)
-    end
-end
+        BUS_Preview -> BUS_Preview: Tìm nhân viên Sale rảnh rỗi (assignSalesEmployee)
 
-deactivate BUS_Preview
+        opt Có nhân viên rảnh rỗi
+            BUS_Preview -> DAO_Preview: insert(newForm)
+            activate DAO_Preview
+            deactivate DAO_Preview
+        end
+    deactivate BUS_Preview
 deactivate GUI_Preview
 
 @enduml
